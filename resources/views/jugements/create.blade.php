@@ -8,8 +8,11 @@
 
     <label>Dossier</label>
     <select name="id_dossier_tribunal">
-        @foreach($dossiers as $d)
-            <option value="{{ $d->id }}">{{ $d->id }}</option>
+        @foreach($dossierTribunaux as $dt)
+            <option value="{{ $dt->id }}">
+                Dossier #{{ $dt->dossier->numero_dossier_interne ?? $dt->id }}
+                - {{ $dt->tribunal->nom ?? '' }}
+            </option>
         @endforeach
     </select>
 

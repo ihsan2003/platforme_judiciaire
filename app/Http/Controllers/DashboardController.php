@@ -1,77 +1,87 @@
 <?php
+// app/Http/Controllers/DashboardController.php
 
 namespace App\Http\Controllers;
 
+use App\Models\Audience;
 use App\Models\DossierJudiciaire;
+use App\Models\Jugement;
 use App\Models\Reclamation;
 use App\Models\StatutDossier;
-use App\Models\StatutReclamation;
-use App\Models\Audience;
-use App\Models\Jugement;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
-
+    public function __construct()
     {
-      
+        $this->middleware('auth');
+    }
 
-        // 📊 DOSSIERS
-        $totalDossiers = DossierJudiciaire::count();
+    public function index()
+    {
+        // ─── DOSSIERS ───────────────────────────────────────────────
+        // Utilise les scopes du modèle + un seul count par statut via DB groupBy
+        $statsDossiers = DossierJudiciaire::query()
+            ->join('statut_dossiers', 'dossier_judiciaires.id_statut_dossier', '=', 'statut_dossiers.id')
+            ->selectRaw('statut_dossiers.statut_dossier, COUNT(*) as total')
+            ->groupBy('statut_dossiers.statut_dossier')
+            ->pluck('total', 'statut_dossier');
 
-        $dossiersEnCours = DossierJudiciaire::whereHas('statut', function ($q) {
-            $q->where('statut_dossier', 'En cours');
-        })->count();
+        $dossiers = [
+            'total'     => DossierJudiciaire::count(),
+            'actifs'    => DossierJudiciaire::actifs()->count(),
+            'en_cours'  => $statsDossiers->get('En cours', 0),
+            'juges'     => $statsDossiers->get('Jugé', 0),
+            'executes'  => $statsDossiers->get('Exécuté', 0),
+            'ce_mois'   => DossierJudiciaire::whereMonth('date_ouverture', now()->month)->count(),
+        ];
 
-        $dossiersJuges = DossierJudiciaire::whereHas('statut', function ($q) {
-            $q->where('statut_dossier', 'Jugé');
-        })->count();
+        // ─── RÉCLAMATIONS ────────────────────────────────────────────
+        // Idem, un seul groupBy au lieu de 4 requêtes whereHas répétées
+        $statsReclamations = Reclamation::query()
+            ->join('statut_reclamations', 'reclamations.id_statut_reclamation', '=', 'statut_reclamations.id')
+            ->selectRaw('statut_reclamations.statut_reclamation, COUNT(*) as total')
+            ->groupBy('statut_reclamations.statut_reclamation')
+            ->pluck('total', 'statut_reclamation');
 
-        $dossiersExecutes = DossierJudiciaire::whereHas('statut', function ($q) {
-            $q->where('statut_dossier', 'Exécuté');
-        })->count();
+        $reclamations = [
+            'total'     => Reclamation::count(),
+            'recues'    => $statsReclamations->get('Reçue', 0),
+            'en_cours'  => $statsReclamations->get('En cours', 0),
+            'cloturees' => $statsReclamations->get('Clôturée', 0),
+            'en_attente'=> Reclamation::enAttente()->count(),
+        ];
 
-        // 📊 RÉCLAMATIONS
-        $totalReclamations = Reclamation::count();
+        // ─── ALERTES / AGENDA ─────────────────────────────────────────
+        // Audiences à venir dans les 7 prochains jours, chargées avec relations
+        $audiencesAVenir = Audience::with([
+                'dossierTribunal.dossier',
+                'dossierTribunal.tribunal',
+                'juge',
+                'typeAudience',
+            ])
+            ->whereBetween('date_audience', [today(), today()->addDays(7)])
+            ->orderBy('date_audience')
+            ->limit(10)
+            ->get();
 
-        $reclamationsRecues = Reclamation::whereHas('statut', function ($q) {
-            $q->where('statut_reclamation', 'Reçue');
-        })->count();
+        $alertes = [
+            'audiences_proches'       => $audiencesAVenir->count(),
+            'jugements_non_definitifs'=> Jugement::where('est_definitif', false)->count(),
+            'reclamations_en_attente' => $reclamations['en_attente'],
+        ];
 
-        $reclamationsEnCours = Reclamation::whereHas('statut', function ($q) {
-            $q->where('statut_reclamation', 'En cours');
-        })->count();
-
-        $reclamationsCloturees = Reclamation::whereHas('statut', function ($q) {
-            $q->where('statut_reclamation', 'Clôturée');
-        })->count();
-
-        // ⏰ AUDIENCES PROCHES (3 jours)
-        $audiencesProches = Audience::whereDate('date_prochaine_audience', '<=', Carbon::now()->addDays(3))
-            ->whereDate('date_prochaine_audience', '>=', Carbon::now())
-            ->count();
-
-        // ⚖️ JUGEMENTS NON DEFINITIFS
-        $jugementsNonDefinitifs = Jugement::where('est_definitif', false)->count();
-
-        // ⚠️ RECLAMATIONS SANS ACTION (simple version)
-        $reclamationsEnAttente = Reclamation::whereHas('statut', function ($q) {
-            $q->whereIn('statut_reclamation', ['Reçue', 'En cours']);
-        })->count();
+        // ─── DERNIERS DOSSIERS ────────────────────────────────────────
+        $derniersDossiers = DossierJudiciaire::with(['typeAffaire', 'statut', 'dossierTribunaux.tribunal'])
+            ->latest()
+            ->limit(5)
+            ->get();
 
         return view('dashboard.index', compact(
-            'totalDossiers',
-            'dossiersEnCours',
-            'dossiersJuges',
-            'dossiersExecutes',
-            'totalReclamations',
-            'reclamationsRecues',
-            'reclamationsEnCours',
-            'reclamationsCloturees',
-            'audiencesProches',
-            'jugementsNonDefinitifs',
-            'reclamationsEnAttente'
+            'dossiers',
+            'reclamations',
+            'alertes',
+            'audiencesAVenir',
+            'derniersDossiers'
         ));
     }
 }

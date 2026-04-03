@@ -1,8 +1,10 @@
 <?php
+// app/Http/Controllers/ExecutionController.php
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\Executions\StoreExecutionRequest;
+use App\Http\Requests\Executions\UpdateExecutionRequest;
 use App\Models\Execution;
 use App\Models\Jugement;
 use App\Models\StatutExecution;
@@ -10,79 +12,124 @@ use App\Models\User;
 
 class ExecutionController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        $executions = Execution::with(['jugement', 'statut', 'responsable'])
-            ->latest('date_notification')
-            ->paginate(10);
-
-        return view('executions.index', compact('executions'));
+        $this->middleware('auth');
     }
 
+    // ─────────────────────────────────────────
+    // INDEX
+    // ─────────────────────────────────────────
+    public function index()
+    {
+        $executions = Execution::with([
+                'jugement.dossierTribunal.dossier',
+                'jugement.dossierTribunal.tribunal',
+                'jugement.juge',
+                'statut',
+                'responsable',
+            ])
+            ->when(request('statut'),      fn($q, $v) => $q->where('statut_execution', $v))
+            ->when(request('responsable'), fn($q, $v) => $q->where('responsable_id', $v))
+            ->latest('date_notification')
+            ->paginate(15)
+            ->withQueryString();
+
+        $stats = [
+            'total'       => Execution::count(),
+            'en_cours'    => Execution::whereHas('statut', fn($q) => $q->where('statut_execution', 'En cours'))->count(),
+            'terminees'   => Execution::whereNotNull('date_execution')->count(),
+            'ce_mois'     => Execution::whereMonth('date_notification', now()->month)->count(),
+        ];
+
+        $statuts      = StatutExecution::orderBy('statut_execution')->get();
+        $responsables = User::orderBy('name')->get();
+
+        return view('executions.index', compact('executions', 'stats', 'statuts', 'responsables'));
+    }
+
+    // ─────────────────────────────────────────
+    // CREATE — seulement les jugements définitifs non encore exécutés
+    // ─────────────────────────────────────────
     public function create()
     {
-        $jugements = Jugement::all();
-        $statuts = StatutExecution::all();
-        $responsables = User::all();
+        // Jugements définitifs sans exécution en cours ou terminée
+        $jugements = Jugement::with(['dossierTribunal.dossier', 'dossierTribunal.tribunal', 'juge'])
+            ->where('est_definitif', true)
+            ->doesntHave('executions')
+            ->orderBy('date_jugement', 'desc')
+            ->get();
+
+        $statuts      = StatutExecution::orderBy('statut_execution')->get();
+        $responsables = User::orderBy('name')->get();
 
         return view('executions.create', compact('jugements', 'statuts', 'responsables'));
     }
 
-    public function store(Request $request)
+    // ─────────────────────────────────────────
+    // STORE
+    // ─────────────────────────────────────────
+    public function store(StoreExecutionRequest $request)
     {
-        $data = $request->validate([
-            'id_jugement' => 'required|exists:jugements,id',
-            'numero_dossier_execution' => 'required|string|max:255',
-            'date_notification' => 'required|date',
-            'statut_execution' => 'required|exists:statut_executions,id',
-            'date_execution' => 'nullable|date|after_or_equal:date_notification',
-            'responsable_id' => 'required|exists:users,id',
-        ]);
+        $execution = Execution::create($request->validated());
 
-        Execution::create($data);
-
-        return redirect()->route('executions.index')
-            ->with('success', 'Exécution créée avec succès');
+        return redirect()
+            ->route('executions.show', $execution)
+            ->with('success', "Exécution « {$execution->numero_dossier_execution} » créée avec succès.");
     }
 
+    // ─────────────────────────────────────────
+    // SHOW
+    // ─────────────────────────────────────────
     public function show(Execution $execution)
     {
-        $execution->load(['jugement', 'statut', 'responsable', 'finance']);
+        $execution->load([
+            'jugement.dossierTribunal.dossier.typeAffaire',
+            'jugement.dossierTribunal.dossier.parties.typePartie',
+            'jugement.dossierTribunal.tribunal',
+            'jugement.juge',
+            'jugement.finance',
+            'statut',
+            'responsable',
+        ]);
 
         return view('executions.show', compact('execution'));
     }
 
+    // ─────────────────────────────────────────
+    // EDIT
+    // ─────────────────────────────────────────
     public function edit(Execution $execution)
     {
-        $jugements = Jugement::all();
-        $statuts = StatutExecution::all();
-        $responsables = User::all();
+        $jugements    = Jugement::with(['dossierTribunal.dossier', 'dossierTribunal.tribunal'])->get();
+        $statuts      = StatutExecution::orderBy('statut_execution')->get();
+        $responsables = User::orderBy('name')->get();
 
         return view('executions.edit', compact('execution', 'jugements', 'statuts', 'responsables'));
     }
 
-    public function update(Request $request, Execution $execution)
+    // ─────────────────────────────────────────
+    // UPDATE
+    // ─────────────────────────────────────────
+    public function update(UpdateExecutionRequest $request, Execution $execution)
     {
-        $data = $request->validate([
-            'id_jugement' => 'required|exists:jugements,id',
-            'numero_dossier_execution' => 'required|string|max:255',
-            'date_notification' => 'required|date',
-            'statut_execution' => 'required|exists:statut_executions,id',
-            'date_execution' => 'nullable|date|after_or_equal:date_notification',
-            'responsable_id' => 'required|exists:users,id',
-        ]);
+        $execution->update($request->validated());
 
-        $execution->update($data);
-
-        return redirect()->route('executions.index')
-            ->with('success', 'Exécution mise à jour avec succès');
+        return redirect()
+            ->route('executions.show', $execution)
+            ->with('success', 'Exécution mise à jour.');
     }
 
+    // ─────────────────────────────────────────
+    // DESTROY
+    // ─────────────────────────────────────────
     public function destroy(Execution $execution)
     {
+        $numero = $execution->numero_dossier_execution;
         $execution->delete();
 
-        return redirect()->route('executions.index')
-            ->with('success', 'Exécution supprimée');
+        return redirect()
+            ->route('executions.index')
+            ->with('success', "Exécution « {$numero} » supprimée.");
     }
 }
