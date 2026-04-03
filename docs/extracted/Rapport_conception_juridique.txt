@@ -1,0 +1,1432 @@
+﻿
+RAPPORT DE CONCEPTION
+Plateforme Intégrée de Gestion Judiciaire et des Réclamations
+Version 1.2
+Date : 03/03/2026
+
+Table des matières
+Table des matières
+ TOC \o "1-3" \h \z \u Table des matières	 PAGEREF _Toc223431550 \h 2
+1. Introduction	 PAGEREF _Toc223431551 \h 4
+1.1 Contexte du Projet	 PAGEREF _Toc223431552 \h 4
+1.2 Objectifs de la Plateforme	 PAGEREF _Toc223431553 \h 4
+1.3 Périmètre Fonctionnel	 PAGEREF _Toc223431554 \h 4
+2. Architecture et Modélisation	 PAGEREF _Toc223431555 \h 5
+2.1 Vue d’Ensemble	 PAGEREF _Toc223431556 \h 5
+2.2 Architecture Modulaire de la Plateforme	 PAGEREF _Toc223431557 \h 5
+2.3 Modèle Conceptuel (Diagramme Entité-Association)	 PAGEREF _Toc223431558 \h 6
+2.4 Modèle Relationnel	 PAGEREF _Toc223431559 \h 7
+3. Processus et Flux de Données	 PAGEREF _Toc223431560 \h 9
+3.1 Flux du Processus Judiciaire et des Réclamations	 PAGEREF _Toc223431561 \h 9
+4. Description Détaillée des Phases	 PAGEREF _Toc223431562 \h 11
+4.1 Parcours d’un Dossier Judiciaire	 PAGEREF _Toc223431563 \h 11
+Phase 1 : Ouverture du Dossier	 PAGEREF _Toc223431564 \h 11
+Phase 2 : Attribution au Tribunal	 PAGEREF _Toc223431565 \h 11
+Phase 3 : Instruction et Audiences	 PAGEREF _Toc223431566 \h 11
+Phase 4 : Jugement	 PAGEREF _Toc223431567 \h 11
+Phase 5 : Recours (le cas échéant)	 PAGEREF _Toc223431568 \h 11
+Phase 6 : Exécution	 PAGEREF _Toc223431569 \h 11
+4.2 Parcours d’une Réclamation	 PAGEREF _Toc223431570 \h 11
+Phase 1 : Réception et Enregistrement	 PAGEREF _Toc223431571 \h 11
+Phase 2 : Traitement Direct	 PAGEREF _Toc223431572 \h 11
+Phase 3 : Transfert (si nécessaire)	 PAGEREF _Toc223431573 \h 12
+Phase 4 : Clôture	 PAGEREF _Toc223431574 \h 12
+5. Description Détaillée des Tables	 PAGEREF _Toc223431575 \h 12
+5.1 Module Dossier	 PAGEREF _Toc223431576 \h 12
+DOSSIER_JUDICIAIRE	 PAGEREF _Toc223431577 \h 12
+TYPE_AFFAIRE	 PAGEREF _Toc223431578 \h 12
+STATUT_DOSSIER	 PAGEREF _Toc223431579 \h 12
+5.2 Module Parties & Avocats	 PAGEREF _Toc223431580 \h 13
+PARTIE	 PAGEREF _Toc223431581 \h 13
+TYPE_PARTIE	 PAGEREF _Toc223431582 \h 13
+DOSSIER_PARTIE	 PAGEREF _Toc223431583 \h 13
+AVOCAT	 PAGEREF _Toc223431584 \h 13
+5.3 Module Géographique & Tribunaux	 PAGEREF _Toc223431585 \h 14
+REGION	 PAGEREF _Toc223431586 \h 14
+PROVINCE	 PAGEREF _Toc223431587 \h 14
+TRIBUNAL	 PAGEREF _Toc223431588 \h 14
+TYPE_TRIBUNAL	 PAGEREF _Toc223431589 \h 14
+5.4 Module Juridictionnel	 PAGEREF _Toc223431590 \h 14
+DEGRE_JURIDICTION	 PAGEREF _Toc223431591 \h 14
+DOSSIER_TRIBUNAL	 PAGEREF _Toc223431592 \h 15
+JUGE	 PAGEREF _Toc223431593 \h 15
+5.5 Module Audiences	 PAGEREF _Toc223431594 \h 15
+AUDIENCE	 PAGEREF _Toc223431595 \h 15
+TYPE_AUDIENCE	 PAGEREF _Toc223431596 \h 16
+5.6 Module Jugements	 PAGEREF _Toc223431597 \h 16
+JUGEMENT	 PAGEREF _Toc223431598 \h 16
+JUGEMENT_PARTIE	 PAGEREF _Toc223431599 \h 16
+POSITION_INSTITUTION	 PAGEREF _Toc223431600 \h 16
+5.7 Module Recours	 PAGEREF _Toc223431601 \h 17
+RECOURS	 PAGEREF _Toc223431602 \h 17
+TYPE_RECOURS	 PAGEREF _Toc223431603 \h 17
+5.8 Module Exécution	 PAGEREF _Toc223431604 \h 17
+EXECUTION	 PAGEREF _Toc223431605 \h 17
+STATUT_EXECUTION	 PAGEREF _Toc223431606 \h 18
+5.9 Module Finance	 PAGEREF _Toc223431607 \h 18
+FINANCE	 PAGEREF _Toc223431608 \h 18
+5.10 Module Document	 PAGEREF _Toc223431609 \h 18
+DOCUMENT	 PAGEREF _Toc223431610 \h 18
+TYPE_DOCUMENT	 PAGEREF _Toc223431611 \h 19
+5.11 Module Réclamation	 PAGEREF _Toc223431612 \h 19
+RECLAMATION	 PAGEREF _Toc223431613 \h 19
+STATUT_RECLAMATION	 PAGEREF _Toc223431614 \h 19
+5.12 Module Réclamants	 PAGEREF _Toc223431615 \h 19
+RECLAMANT	 PAGEREF _Toc223431616 \h 19
+TYPE_RECLAMANT	 PAGEREF _Toc223431617 \h 20
+5.13 Module Actions sur Réclamations	 PAGEREF _Toc223431618 \h 20
+ACTION_RECLAMATION	 PAGEREF _Toc223431619 \h 20
+TYPE_ACTION	 PAGEREF _Toc223431620 \h 20
+5.14 Module Structures Organisationnelles	 PAGEREF _Toc223431621 \h 20
+STRUCTURE	 PAGEREF _Toc223431622 \h 20
+TYPE_STRUCTURE	 PAGEREF _Toc223431623 \h 21
+6. Types de Recours et Délais Légaux	 PAGEREF _Toc223431624 \h 21
+7. Règles de Gestion Principales	 PAGEREF _Toc223431625 \h 21
+8. Gestion des Accès et Sécurité	 PAGEREF _Toc223431626 \h 22
+8.1 Principe Général	 PAGEREF _Toc223431627 \h 22
+8.2 Définition des Rôles	 PAGEREF _Toc223431628 \h 22
+8.3 Matrice des Droits	 PAGEREF _Toc223431629 \h 22
+8.4 Traçabilité des Actions	 PAGEREF _Toc223431630 \h 23
+8.5 Règles de Gestion Complémentaires	 PAGEREF _Toc223431631 \h 23
+9. Gestion des Notifications et Délais	 PAGEREF _Toc223431632 \h 23
+9.1 Principe Général	 PAGEREF _Toc223431633 \h 23
+9.2 Table NOTIFICATION	 PAGEREF _Toc223431634 \h 23
+9.3 Déclencheurs de Notifications	 PAGEREF _Toc223431635 \h 24
+9.4 Règles de Gestion	 PAGEREF _Toc223431636 \h 24
+10. Conclusion	 PAGEREF _Toc223431637 \h 24
+
+1. Introduction
+
+1.1 Contexte du Projet
+Ce rapport couvre la conception de la plateforme intégrée de l’Entraide Nationale, constituée de deux sous-systèmes complémentaires : le système de gestion des dossiers judiciaires et le système de gestion des réclamations. Ces deux sous-systèmes partagent une infrastructure commune et des référentiels partagés au sein d’une seule et même plateforme.
+1.2 Objectifs de la Plateforme
+• Automatiser et centraliser le suivi des dossiers judiciaires
+• Gérer le cycle complet des réclamations citoyennes et institutionnelles
+• Fournir une traçabilité complète des actions sur les deux sous-systèmes
+• Faciliter le suivi des délais, échéances et escalades
+• Partager les référentiels géographiques et organisationnels entre les deux modules
+1.3 Périmètre Fonctionnel
+La plateforme couvre deux périmètres fonctionnels distincts mais intégrés :
+Sous-système 1 — Dossiers Judiciaires : L’intégralité du cycle de vie d’un dossier judiciaire : ouverture, instruction, audiences, jugements, recours et exécution. Inclut les aspects financiers et documentaires.
+Sous-système 2 — Gestion des Réclamations : Réception, classification, traitement et clôture des réclamations adressées à l’institution. Inclut l’historique des actions, le transfert entre structures et le suivi des statuts.
+
+2. Architecture et Modélisation
+2.1 Vue d’Ensemble
+La base de données de la plateforme est structurée en 31 tables interconnectées, réparties en 14 modules fonctionnels. Ces modules sont organisés en deux sous-systèmes cohérents qui partagent certains référentiels communs (géographie, structures organisationnelles).
+2.2 Architecture Modulaire de la Plateforme
+La plateforme est structurée en 14 modules fonctionnels répartis sur 2 sous-systèmes. Le sous-système Dossiers Judiciaires compte 10 modules (22 tables) et le sous-système Réclamations compte 4 modules (8 tables). Certaines tables de référence (STRUCTURE, REGION, PROVINCE) sont partagées entre les deux sous-systèmes.
+ (10 modules)
+Sous-Système
+Module
+Fonction
+Tables
+Rôle Clé
+
+Gestion des
+Dossiers Judiciaires
+MODULE DOSSIER
+Gestion des dossiers
+DOSSIER_JUDICIAIRE, TYPE_AFFAIRE, STATUT_DOSSIER
+Cœur du système - référentiel central
+
+MODULE PARTIES
+Gestion des intervenants
+PARTIE, TYPE_PARTIE, DOSSIER_PARTIE, AVOCAT
+Lie personnes physiques/morales aux dossiers
+
+MODULE TRIBUNAUX
+Référentiel territorial
+REGION, PROVINCE, TRIBUNAL, TYPE_TRIBUNAL
+Cartographie judiciaire marocaine
+
+MODULE JURIDICTIONNEL
+Gestion des instances
+DEGRE_JURIDICTION, DOSSIER_TRIBUNAL, JUGE
+Pilotage multi-instance
+
+MODULE AUDIENCES
+Suivi des séances
+AUDIENCE, TYPE_AUDIENCE
+Calendrier et résultats des audiences
+
+MODULE JUGEMENTS
+Décisions judiciaires
+JUGEMENT, JUGEMENT_PARTIE, POSITION_INSTITUTION
+Dispositifs et positions de l’EN
+
+MODULE RECOURS
+Voies de recours
+RECOURS, TYPE_RECOURS
+Appel, Cassation, Opposition...
+
+MODULE EXÉCUTION
+Exécution des décisions
+EXECUTION, STATUT_EXECUTION
+Suivi post-jugement
+
+MODULE FINANCE
+Suivi financier
+FINANCE
+Montants réclamés, payés, restants
+
+MODULE DOCUMENTS
+GED des pièces
+DOCUMENT, TYPE_DOCUMENT
+Archivage électronique des pièces
+
+Gestion
+des Réclamations
+MODULE RÉCLAMATION
+Gestion des réclamations
+RECLAMATION, RECLAMANT, STATUT_RECLAMATION
+Enregistrement et suivi des réclamations
+
+MODULE INTERVENANTS
+Types de réclamants
+TYPE_RECLAMANT
+Directe, Institution, Autre
+
+MODULE ACTIONS
+Traitement des réclamations
+ACTION_RECLAMATION, TYPE_ACTION
+Historique : enregistrer, réponse, transfert
+
+MODULE STRUCTURES
+Organisation interne
+STRUCTURE, TYPE_STRUCTURE
+Hiérarchie Service → Direction
+
+2.3 Modèle Conceptuel (Diagramme Entité-Association)
+-30289542989500Ce diagramme présente le modèle conceptuel des données avec les entités principales et leurs relations.
+1731645377952000
+2.4 Modèle Relationnel
+Le tableau ci-dessous représente l’ensemble des relations entre les entités du sous-système Dossiers Judiciaires.
+Relations du Sous-système 1 — Dossiers Judiciaires :
+Table Source
+Clé Étrangère
+Table Cible
+Clé Primaire
+Card.
+Description
+DOSSIER_JUDICIAIRE
+id_type_affaire
+TYPE_AFFAIRE
+id_type_affaire
+N:1
+Type de l’affaire
+DOSSIER_JUDICIAIRE
+id_statut_dossier
+STATUT_DOSSIER
+id_statut_dossier
+N:1
+Statut du dossier
+DOSSIER_PARTIE
+id_dossier
+DOSSIER_JUDICIAIRE
+id_dossier
+N:1
+Lie partie au dossier
+DOSSIER_PARTIE
+id_partie
+PARTIE
+id_partie
+N:1
+Identifie la partie
+DOSSIER_PARTIE
+id_type_partie
+TYPE_PARTIE
+id_type_partie
+N:1
+Rôle (Demandeur/Défendeur)
+DOSSIER_PARTIE
+id_avocat
+AVOCAT
+id_avocat
+N:1
+Avocat représentant
+DOSSIER_TRIBUNAL
+id_dossier
+DOSSIER_JUDICIAIRE
+id_dossier
+N:1
+Dossier traité
+DOSSIER_TRIBUNAL
+id_tribunal
+TRIBUNAL
+id_tribunal
+N:1
+Tribunal compétent
+DOSSIER_TRIBUNAL
+id_degre
+DEGRE_JURIDICTION
+id_degre
+N:1
+Degré de juridiction
+TRIBUNAL
+id_type_tribunal
+TYPE_TRIBUNAL
+id_type_tribunal
+N:1
+Type de tribunal
+TRIBUNAL
+id_province
+PROVINCE
+id_province
+N:1
+Province du tribunal
+PROVINCE
+id_region
+REGION
+id_region
+N:1
+Région administrative
+JUGEMENT
+id_dossier_tribunal
+DOSSIER_TRIBUNAL
+id_dossier_tribunal
+N:1
+Jugement du dossier
+JUGEMENT
+id_juge
+JUGE
+id_juge
+N:1
+Juge ayant statué
+JUGEMENT_PARTIE
+id_jugement
+JUGEMENT
+id_jugement
+N:1
+Jugement concerné
+JUGEMENT_PARTIE
+id_partie
+PARTIE
+id_partie
+N:1
+Partie concernée
+JUGEMENT_PARTIE
+id_position_institution
+POSITION_INSTITUTION
+id_position_institution
+N:1
+Position de l’EN
+AUDIENCE
+id_dossier_tribunal
+DOSSIER_TRIBUNAL
+id_dossier_tribunal
+N:1
+Dossier en audience
+AUDIENCE
+id_type_audience
+TYPE_AUDIENCE
+id_type_audience
+N:1
+Type d’audience
+AUDIENCE
+id_juge
+JUGE
+id_juge
+N:1
+Juge présidant
+EXECUTION
+id_jugement
+JUGEMENT
+id_jugement
+N:1
+Jugement à exécuter
+EXECUTION
+statut_execution
+STATUT_EXECUTION
+id_statut_execution
+N:1
+Statut d’exécution
+RECOURS
+id_jugement
+JUGEMENT
+id_jugement
+N:1
+Jugement contesté
+RECOURS
+id_dossier_recours
+DOSSIER_JUDICIAIRE
+id_dossier
+N:1
+Nouveau dossier de recours
+RECOURS
+id_type_recours
+TYPE_RECOURS
+id_type_recours
+N:1
+Appel, Cassation...
+FINANCE
+id_jugement
+JUGEMENT
+id_jugement
+N:1
+Suivi financier du jugement
+DOCUMENT
+id_dossier
+DOSSIER_JUDICIAIRE
+id_dossier
+N:1
+Dossier propriétaire
+DOCUMENT
+id_type_document
+TYPE_DOCUMENT
+id_type_document
+N:1
+Catégorie document
+JUGE
+id_tribunal
+TRIBUNAL
+id_tribunal
+N:1
+Tribunal d’affectation
+
+Relations du Sous-système 2 — Réclamations :
+
+Table Source
+Clé Étrangère
+Table Cible
+Clé Primaire
+Card.
+Description
+RECLAMATION
+id_reclamant
+RECLAMANT
+id_reclamant
+N:1
+Auteur de la réclamation
+RECLAMATION
+id_statut_reclamation
+STATUT_RECLAMATION
+id_statut_reclamation
+N:1
+Statut de la réclamation
+RECLAMANT
+id_type_reclamant
+TYPE_RECLAMANT
+id_type_reclamant
+N:1
+Catégorie du réclamant
+ACTION_RECLAMATION
+id_reclamation
+RECLAMATION
+id_reclamation
+N:1
+Réclamation concernée
+ACTION_RECLAMATION
+id_type_action
+TYPE_ACTION
+id_type_action
+N:1
+Type d’action
+ACTION_RECLAMATION
+id_structure
+STRUCTURE
+id_structure
+N:1
+Structure destinataire
+STRUCTURE
+id_type_structure
+TYPE_STRUCTURE
+id_type_structure
+N:1
+Type de structure
+STRUCTURE
+id_parent
+STRUCTURE
+id_structure
+N:1
+Structure parente
+
+3. Processus et Flux de Données
+
+3.1 Flux du Processus Judiciaire et des Réclamations
+Ce diagramme illustre le flux complet du traitement d’un dossier judiciaire, depuis son ouverture jusqu’à son exécution et de même pour une réclamation.
+
+-414655000
+306705314960
+
+4. Description Détaillée des Phases
+4.1 Parcours d’un Dossier Judiciaire
+Phase 1 : Ouverture du Dossier
+1. Création d’un enregistrement dans DOSSIER_JUDICIAIRE avec statut ‘En cours’
+2. Association des parties via DOSSIER_PARTIE (demandeur, défendeur)
+3. Identification de l’établissement public (est_institution = Oui)
+4. Affectation d’un avocat si nécessaire
+Phase 2 : Attribution au Tribunal
+1. Création d’un enregistrement DOSSIER_TRIBUNAL
+2. Liaison avec le tribunal compétent et le degré de juridiction
+3. Affectation d’un juge
+Phase 3 : Instruction et Audiences
+1. Enregistrement des audiences successives dans AUDIENCE
+2. Suivi de la présence des parties
+3. Enregistrement des décisions intermédiaires
+Phase 4 : Jugement
+1. Création d’un enregistrement JUGEMENT
+2. Enregistrement du dispositif et de la position pour chaque partie (JUGEMENT_PARTIE)
+3. Saisie des aspects financiers dans FINANCE
+4. Mise à jour du statut du dossier
+Phase 5 : Recours (le cas échéant)
+1. Création d’un enregistrement RECOURS lié au jugement contesté
+2. Création d’un nouveau DOSSIER_JUDICIAIRE pour le recours
+3. Nouvelle entrée DOSSIER_TRIBUNAL avec degré supérieur
+4. Reprise du processus d’instruction
+Phase 6 : Exécution
+1. Création d’un dossier EXECUTION pour les jugements définitifs
+2. Suivi des paiements dans FINANCE
+3. Mise à jour du statut jusqu’à ‘Exécuté’
+4.2 Parcours d’une Réclamation
+Phase 1 : Réception et Enregistrement
+1. Création ou identification du RECLAMANT (personne ou institution)
+2. Création d’un enregistrement RECLAMATION avec statut ‘Reçue’
+3. Action de type ‘save’ enregistrée dans ACTION_RECLAMATION
+Phase 2 : Traitement Direct
+1. Analyse de la réclamation par l’agent responsable
+2. Rédaction d’une réponse - action de type ‘réponse’ enregistrée
+3. Mise à jour du statut en ‘En cours’
+Phase 3 : Transfert (si nécessaire)
+1. Identification de la structure compétente via STRUCTURE
+2. Action de type ‘transfert’ enregistrée avec id_structure obligatoire
+3. La structure destinataire prend en charge la réclamation
+Phase 4 : Clôture
+1. Réponse finale fournie au réclamant
+2. Statut mis à jour en ‘Traitée’ puis ‘Clôturée’
+
+5. Description Détaillée des Tables
+5.1 Module Dossier
+DOSSIER_JUDICIAIRE
+Colonne
+Type
+Contrainte
+Description
+id_dossier (PK)
+INT / UUID
+NOT NULL, PK
+Identifiant unique du dossier
+numero_dossier_interne
+VARCHAR(50)
+NOT NULL, UNIQUE
+Référence interne de l’EN
+numero_dossier_tribunal
+VARCHAR(100)
+NULLABLE
+Numéro attribué par le greffe
+id_type_affaire (FK)
+INT
+NOT NULL, FK → TYPE_AFFAIRE
+Catégorie de l’affaire
+id_statut_dossier (FK)
+INT
+NOT NULL, FK → STATUT_DOSSIER
+État courant du dossier
+date_ouverture
+DATE
+NOT NULL
+Date d’enregistrement du dossier
+date_cloture
+DATE
+NULLABLE
+Date de clôture définitive
+TYPE_AFFAIRE
+Colonne
+Type
+Contrainte
+Description
+id_type_affaire (PK)
+INT
+NOT NULL, PK
+Identifiant du type d’affaire
+affaire
+VARCHAR(100)
+NOT NULL, UNIQUE
+Civil, Administratif, Commercial, Social, Pénal
+STATUT_DOSSIER
+Colonne
+Type
+Contrainte
+Description
+id_statut_dossier (PK)
+INT
+NOT NULL, PK
+Identifiant du statut
+statut_dossier
+VARCHAR(100)
+NOT NULL, UNIQUE
+En cours, Jugé, Exécuté, Clôturé, Suspendu
+5.2 Module Parties & Avocats
+PARTIE
+Colonne
+Type
+Contrainte
+Description
+id_partie (PK)
+INT
+NOT NULL, PK
+Identifiant unique de la partie
+nom_partie
+VARCHAR(200)
+NOT NULL
+Nom complet ou dénomination sociale
+type_personne
+ENUM
+NOT NULL
+Physique ou Morale
+identifiant_unique
+VARCHAR(50)
+NOT NULL
+CIN (physique) ou ICE/RC (morale)
+telephone
+VARCHAR(20)
+NULLABLE
+Numéro de téléphone
+email
+VARCHAR(150)
+NULLABLE
+Adresse email
+adresse
+TEXT
+NULLABLE
+Adresse postale complète
+TYPE_PARTIE
+Colonne
+Type
+Contrainte
+Description
+id_type_partie (PK)
+INT
+NOT NULL, PK
+Identifiant
+type_partie
+VARCHAR(50)
+NOT NULL
+Demandeur, Défendeur, Intervenant...
+DOSSIER_PARTIE
+Colonne
+Type
+Contrainte
+Description
+id (PK)
+INT
+NOT NULL, PK
+Identifiant de la liaison
+id_dossier (FK)
+INT
+NOT NULL, FK → DOSSIER_JUDICIAIRE
+Dossier concerné
+id_partie (FK)
+INT
+NOT NULL, FK → PARTIE
+Partie impliquée
+id_type_partie (FK)
+INT
+NOT NULL, FK → TYPE_PARTIE
+Rôle dans le dossier
+id_avocat (FK)
+INT
+NULLABLE, FK → AVOCAT
+Avocat représentant
+est_institution
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Indique si la partie est l’EN
+date_entree
+DATE
+NOT NULL
+Date d’entrée en qualité de partie
+AVOCAT
+Colonne
+Type
+Contrainte
+Description
+id_avocat (PK)
+INT
+NOT NULL, PK
+Identifiant de l’avocat
+nom_avocat
+VARCHAR(200)
+NOT NULL
+Nom complet de l’avocat
+telephone
+VARCHAR(20)
+NULLABLE
+Téléphone
+email
+VARCHAR(150)
+NULLABLE
+Email professionnel
+5.3 Module Géographique & Tribunaux
+REGION
+Colonne
+Type
+Contrainte
+Description
+id_region (PK)
+INT
+NOT NULL, PK
+Identifiant région
+region
+VARCHAR(150)
+NOT NULL, UNIQUE
+Nom de la région (ex: Casablanca-Settat)
+PROVINCE
+Colonne
+Type
+Contrainte
+Description
+id_province (PK)
+INT
+NOT NULL, PK
+Identifiant province
+province
+VARCHAR(150)
+NOT NULL
+Nom de la province
+id_region (FK)
+INT
+NOT NULL, FK → REGION
+Région de rattachement
+TRIBUNAL
+Colonne
+Type
+Contrainte
+Description
+id_tribunal (PK)
+INT
+NOT NULL, PK
+Identifiant du tribunal
+nom_tribunal
+VARCHAR(200)
+NOT NULL
+Dénomination officielle
+id_type_tribunal (FK)
+INT
+NOT NULL, FK → TYPE_TRIBUNAL
+Catégorie du tribunal
+id_province (FK)
+INT
+NOT NULL, FK → PROVINCE
+Province du tribunal
+TYPE_TRIBUNAL
+Colonne
+Type
+Contrainte
+Description
+id_type_tribunal (PK)
+INT
+NOT NULL, PK
+Identifiant
+tribunal
+VARCHAR(100)
+NOT NULL
+TPI, Tribunal de Commerce, Cour d’Appel...
+
+5.4 Module Juridictionnel
+DEGRE_JURIDICTION
+Colonne
+Type
+Contrainte
+Description
+id_degre (PK)
+INT
+NOT NULL, PK
+Identifiant du degré
+degre_juridiction
+VARCHAR(100)
+NOT NULL
+Première instance, Appel, Cassation
+
+DOSSIER_TRIBUNAL
+Colonne
+Type
+Contrainte
+Description
+id_dossier_tribunal (PK)
+INT
+NOT NULL, PK
+Identifiant de la liaison dossier-tribunal
+id_dossier (FK)
+INT
+NOT NULL, FK → DOSSIER_JUDICIAIRE
+Dossier traité
+id_tribunal (FK)
+INT
+NOT NULL, FK → TRIBUNAL
+Tribunal saisi
+id_degre (FK)
+INT
+NOT NULL, FK → DEGRE_JURIDICTION
+Degré de juridiction
+date_debut
+DATE
+NOT NULL
+Date de saisine du tribunal
+date_fin
+DATE
+NULLABLE
+Date de clôture à cette instance
+JUGE
+Colonne
+Type
+Contrainte
+Description
+id_juge (PK)
+INT
+NOT NULL, PK
+Identifiant du juge
+nom_complet
+VARCHAR(200)
+NOT NULL
+Nom et prénom du magistrat
+grade
+VARCHAR(100)
+NULLABLE
+Grade dans la hiérarchie judiciaire
+specialisation
+VARCHAR(150)
+NULLABLE
+Spécialité (commercial, social, civil...)
+id_tribunal (FK)
+INT
+NOT NULL, FK → TRIBUNAL
+Tribunal d’affectation
+
+5.5 Module Audiences
+AUDIENCE
+Colonne
+Type
+Contrainte
+Description
+id_audience (PK)
+INT
+NOT NULL, PK
+Identifiant de l’audience
+id_dossier_tribunal (FK)
+INT
+NOT NULL, FK → DOSSIER_TRIBUNAL
+Dossier-tribunal concerné
+id_type_audience (FK)
+INT
+NOT NULL, FK → TYPE_AUDIENCE
+Catégorie d’audience
+id_juge (FK)
+INT
+NOT NULL, FK → JUGE
+Juge présidant l’audience
+presence_demandeur
+BOOLEAN
+NOT NULL
+Présence du demandeur ou représentant
+presence_defendeur
+BOOLEAN
+NOT NULL
+Présence du défendeur ou représentant
+date_audience
+DATE
+NOT NULL
+Date de tenue de l’audience
+date_prochaine_audience
+DATE
+NULLABLE
+Prochaine audience fixée
+resultat_audience
+TEXT
+NULLABLE
+Résumé du résultat ou de l’issue
+actions_demandees
+TEXT
+NULLABLE
+Actions à réaliser avant la prochaine audience
+TYPE_AUDIENCE
+Colonne
+Type
+Contrainte
+Description
+id_type_audience (PK)
+INT
+NOT NULL, PK
+Identifiant
+type_audience
+VARCHAR(100)
+NOT NULL
+Instruction, Plaidoirie, Mise en état, Jugement
+
+5.6 Module Jugements
+JUGEMENT
+Colonne
+Type
+Contrainte
+Description
+id_jugement (PK)
+INT
+NOT NULL, PK
+Identifiant du jugement
+id_dossier_tribunal (FK)
+INT
+NOT NULL, FK → DOSSIER_TRIBUNAL
+Instance concernée
+id_juge (FK)
+INT
+NOT NULL, FK → JUGE
+Juge ayant rendu le jugement
+date_jugement
+DATE
+NOT NULL
+Date de prononcé du jugement
+contenu_dispositif
+TEXT
+NOT NULL
+Texte intégral du dispositif
+est_definitif
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Jugement définitif (non susceptible de recours)
+JUGEMENT_PARTIE
+Colonne
+Type
+Contrainte
+Description
+id_jugement_partie (PK)
+INT
+NOT NULL, PK
+Identifiant de la ligne
+id_jugement (FK)
+INT
+NOT NULL, FK → JUGEMENT
+Jugement concerné
+id_partie (FK)
+INT
+NOT NULL, FK → PARTIE
+Partie concernée
+id_position_institution (FK)
+INT
+NULLABLE, FK → POSITION_INSTITUTION
+Position de l’EN (si partie)
+montant_condamne
+DECIMAL(15,2)
+NULLABLE
+Montant de condamnation pour cette partie
+POSITION_INSTITUTION
+Colonne
+Type
+Contrainte
+Description
+id_position_institution (PK)
+INT
+NOT NULL, PK
+Identifiant
+position
+VARCHAR(100)
+NOT NULL
+Favorable, Défavorable, Partiellement favorable
+5.7 Module Recours
+RECOURS
+Colonne
+Type
+Contrainte
+Description
+id_recours (PK)
+INT
+NOT NULL, PK
+Identifiant du recours
+id_jugement (FK)
+INT
+NOT NULL, FK → JUGEMENT
+Jugement attaqué
+id_dossier_tribunal (FK)
+INT
+NOT NULL, FK → DOSSIER_TRIBUNAL
+Instance d’origine
+id_dossier_recours (FK)
+INT
+NOT NULL, FK → DOSSIER_JUDICIAIRE
+Nouveau dossier créé pour ce recours
+id_type_recours (FK)
+INT
+NOT NULL, FK → TYPE_RECOURS
+Nature du recours
+date_recours
+DATE
+NOT NULL
+Date de dépôt du recours
+motifs
+TEXT
+NULLABLE
+Motifs développés dans le mémoire
+TYPE_RECOURS
+Colonne
+Type
+Contrainte
+Description
+id_type_recours (PK)
+INT
+NOT NULL, PK
+Identifiant
+type_recours
+VARCHAR(100)
+NOT NULL
+Appel, Cassation, Opposition, Pourvoi...
+delai_legal_jours
+INT
+NOT NULL
+Délai légal en jours (7, 10, 15, 30, 60...)
+
+5.8 Module Exécution
+EXECUTION
+Colonne
+Type
+Contrainte
+Description
+id_execution (PK)
+INT
+NOT NULL, PK
+Identifiant de la procédure d’exécution
+id_jugement (FK)
+INT
+NOT NULL, FK → JUGEMENT
+Jugement à exécuter
+numero_dossier_execution
+VARCHAR(100)
+NULLABLE
+Numéro du dossier d’exécution au tribunal
+date_notification
+DATE
+NULLABLE
+Date de notification du jugement aux parties
+statut_execution (FK)
+INT
+NOT NULL, FK → STATUT_EXECUTION
+État de l’exécution
+date_execution
+DATE
+NULLABLE
+Date d’exécution effective ou complète
+
+STATUT_EXECUTION
+Colonne
+Type
+Contrainte
+Description
+id_statut_execution (PK)
+INT
+NOT NULL, PK
+Identifiant
+statut_execution
+VARCHAR(100)
+NOT NULL
+En attente, En cours, Partielle, Complète, Abandonnée
+
+5.9 Module Finance
+FINANCE
+Colonne
+Type
+Contrainte
+Description
+id_finance (PK)
+INT
+NOT NULL, PK
+Identifiant du suivi financier
+id_jugement (FK)
+INT
+NOT NULL, FK → JUGEMENT
+Jugement source
+montant_reclame_demandeur
+DECIMAL(15,2)
+NULLABLE
+Montant réclamé par le demandeur
+montant_reclame_defendeur
+DECIMAL(15,2)
+NULLABLE
+Montant réclamé par le défendeur
+montant_condamne
+DECIMAL(15,2)
+NULLABLE
+Montant prononcé par le jugement
+montant_paye
+DECIMAL(15,2)
+DEFAULT 0
+Montant effectivement payé
+montant_restant
+DECIMAL(15,2)
+COMPUTED
+montant_condamne - montant_paye
+date_paiement
+DATE
+NULLABLE
+Date du dernier paiement enregistré
+statut_paiement
+ENUM
+NOT NULL
+En attente, Partiel, Complet
+
+5.10 Module Document
+DOCUMENT
+Colonne
+Type
+Contrainte
+Description
+id_document (PK)
+INT
+NOT NULL, PK
+Identifiant du document
+id_dossier (FK)
+INT
+NOT NULL, FK → DOSSIER_JUDICIAIRE
+Dossier propriétaire
+id_type_document (FK)
+INT
+NOT NULL, FK → TYPE_DOCUMENT
+Catégorie du document
+id_partie (FK)
+INT
+NULLABLE, FK → PARTIE
+Partie ayant fourni le document
+titre_document
+VARCHAR(300)
+NOT NULL
+Titre ou libellé du document
+date_depot
+DATE
+NOT NULL
+Date de dépôt ou réception
+fichier_path
+VARCHAR(500)
+NULLABLE
+Chemin vers le fichier numérisé
+TYPE_DOCUMENT
+Colonne
+Type
+Contrainte
+Description
+id_type_document (PK)
+INT
+NOT NULL, PK
+Identifiant
+type_document
+VARCHAR(150)
+NOT NULL
+Assignation, Requête, Jugement, PV, Contrat, Acte...
+5.11 Module Réclamation
+RECLAMATION
+Colonne
+Type
+Contrainte
+Description
+id_reclamation (PK)
+INT
+NOT NULL, PK
+Identifiant unique de la réclamation
+id_reclamant (FK)
+INT
+NOT NULL, FK → RECLAMANT
+Auteur de la réclamation
+Objet
+VARCHAR(300)
+NOT NULL
+Objet / sujet de la réclamation
+date_reception
+DATE
+NOT NULL
+Date de réception de la réclamation
+id_statut_reclamation (FK)
+INT
+NOT NULL, FK → STATUT_RECLAMATION
+État courant de la réclamation
+details
+TEXT
+NULLABLE
+Description détaillée de la réclamation
+STATUT_RECLAMATION
+Colonne
+Type
+Contrainte
+Description
+id_statut_reclamation (PK)
+INT
+NOT NULL, PK
+Identifiant du statut
+statut_reclamation
+VARCHAR(100)
+NOT NULL
+Reçue, En cours, Traitée, Clôturée
+
+5.12 Module Réclamants
+RECLAMANT
+Colonne
+Type
+Contrainte
+Description
+id_reclamant (PK)
+INT
+NOT NULL, PK
+Identifiant unique du réclamant
+nom
+VARCHAR(200)
+NOT NULL
+Nom complet du réclamant
+id_type_reclamant (FK)
+INT
+NOT NULL, FK → TYPE_RECLAMANT
+Catégorie du réclamant
+telephone
+VARCHAR(20)
+NULLABLE
+Téléphone de contact
+email
+VARCHAR(150)
+NULLABLE
+Adresse e-mail
+adresse
+TEXT
+NULLABLE
+Adresse postale
+TYPE_RECLAMANT
+Colonne
+Type
+Contrainte
+Description
+id_type_reclamant (PK)
+INT
+NOT NULL, PK
+Identifiant du type
+type_reclamant
+VARCHAR(100)
+NOT NULL
+Directe, Institution, Autre
+
+5.13 Module Actions sur Réclamations
+ACTION_RECLAMATION
+Colonne
+Type
+Contrainte
+Description
+id_action (PK)
+INT
+NOT NULL, PK
+Identifiant de l’action
+id_reclamation (FK)
+INT
+NOT NULL, FK → RECLAMATION
+Réclamation concernée
+id_type_action (FK)
+INT
+NOT NULL, FK → TYPE_ACTION
+Type de l’action effectuée
+statut_action
+VARCHAR(50)
+NULLABLE
+Statut propre à cette action
+date_action
+DATE
+NOT NULL
+Date de réalisation de l’action
+id_structure (FK)
+INT
+NULLABLE, FK → STRUCTURE
+Structure destinataire (obligatoire si transfert)
+commentaire
+TEXT
+NULLABLE
+Commentaire libre sur l’action
+TYPE_ACTION
+Colonne
+Type
+Contrainte
+Description
+id_type_action (PK)
+INT
+NOT NULL, PK
+Identifiant du type d’action
+type_action
+VARCHAR(100)
+NOT NULL
+Save, Réponse, Transfert
+
+5.14 Module Structures Organisationnelles
+STRUCTURE
+Colonne
+Type
+Contrainte
+Description
+id_structure (PK)
+INT
+NOT NULL, PK
+Identifiant de la structure
+nom
+VARCHAR(200)
+NOT NULL
+Nom de la structure
+id_type_structure (FK)
+INT
+NOT NULL, FK → TYPE_STRUCTURE
+Catégorie de la structure
+id_parent (FK)
+INT
+NULLABLE, FK → STRUCTURE
+Structure parente (auto-référence hiérarchique)
+TYPE_STRUCTURE
+Colonne
+Type
+Contrainte
+Description
+id_type_structure (PK)
+INT
+NOT NULL, PK
+Identifiant du type
+type_structure
+VARCHAR(100)
+NOT NULL
+Service, Division, Direction provinciale, Direction régionale
+
+6. Types de Recours et Délais Légaux
+Le tableau ci-dessous récapitule les voies de recours disponibles selon le droit procédural marocain, avec les délais légaux correspondants.
+Type de Recours
+Juridiction
+Délai Légal
+Portée & Description
+Appel
+Cour d’Appel
+30 jours
+Remet en cause le fond et la forme du jugement de 1ère instance
+Opposition
+Même tribunal
+15 jours
+Contre jugement par défaut - permet au condamné de se défendre
+Pourvoi en Cassation
+Cour de Cassation
+30 jours
+Contrôle de légalité - pas de réexamen des faits
+Révision
+Cour de Cassation
+À tout moment
+Erreur judiciaire - fait nouveau découvert
+
+7. Règles de Gestion Principales
+Règles du Sous-système 1 — Dossiers Judiciaires :
+RG01 — Unicité des dossiers : Chaque dossier doit avoir un numéro interne unique. Le numéro de tribunal peut évoluer lors des recours.
+RG02 — Identification de l’institution : Dans chaque dossier, une et une seule partie doit avoir est_institution = Oui.
+RG03 — Progression des degrés de juridiction : L’ordre est : Première instance → Appel → Cassation. Un dossier ne peut passer à un degré supérieur que si un recours est formé.
+RG04 — Délais de recours : Le système doit alerter sur les délais légaux de recours définis dans TYPE_RECOURS.delai_legal_jours.
+RG05 — Jugements définitifs : Un jugement est définitif si : est_definitif = Oui OU aucun recours n’a été formé dans les délais légaux.
+RG06 — Exécution : Seuls les jugements définitifs peuvent faire l’objet d’une procédure d’exécution.
+Règles du Sous-système 2 — Réclamations :
+RG07 — Transfert obligatoire : Si le type d’action est ‘transfert’, le champ id_structure doit être renseigné obligatoirement.
+RG08 — Statut cohérent : Le statut de la réclamation doit progresser logiquement : Reçue → En cours → Traitée → Clôturée.
+RG09 — Traçabilité complète : Toute action sur une réclamation doit être enregistrée dans ACTION_RECLAMATION avec la date et l’agent.
+RG10 — Partage de référentiels : Les tables STRUCTURE, REGION et PROVINCE sont partagées entre les deux sous-systèmes. Aucune duplication n’est tolérée.
+
+8. Gestion des Accès et Sécurité
+8.1 Principe Général
+La plateforme intègre un système de gestion des accès basé sur deux rôles distincts : ADMIN et UTILISATEUR. Ce système garantit que seules les personnes autorisées peuvent créer ou modifier des données, tout en permettant à l’ensemble des utilisateurs de consulter les informations.
+Note technique : La gestion des rôles et permissions est implémentée via le package Spatie Laravel Permission. Les tables techniques associées sont générées automatiquement par Laravel et ne font pas partie du modèle conceptuel métier.
+8.2 Définition des Rôles
+ADMIN : Accès complet. Peut créer, modifier, supprimer et consulter tous les enregistrements des deux sous-systèmes. Gère également les comptes utilisateurs.
+UTILISATEUR : Accès en lecture seule. Peut uniquement enregistrer des actions de type “réponse” sur les réclamations qui lui sont assignées.
+8.3 Matrice des Droits
+Action
+ADMIN
+UTILISATEUR
+Créer un dossier / réclamation
+✓
+✗
+Modifier un dossier / réclamation
+✓
+✗
+Supprimer un enregistrement
+✓
+✗
+Consulter / lire les données
+✓
+✓
+Enregistrer une action (réponse) sur réclamation assignée
+✓
+✓
+Gérer les comptes utilisateurs
+✓
+✗
+
+8.4 Traçabilité des Actions
+Un champ id_utilisateur (FK vers la table utilisateurs gérée par Laravel) est ajouté dans les tables : ACTION_RECLAMATION (agent ayant effectué l’action), DOSSIER_JUDICIAIRE (utilisateur ayant ouvert le dossier), JUGEMENT (agent ayant saisi le jugement) et EXECUTION (responsable du suivi).
+8.5 Règles de Gestion Complémentaires
+RG11 — Contrôle d’accès : Seul un utilisateur avec le rôle ADMIN peut créer, modifier ou supprimer un enregistrement dans la plateforme.
+RG12 — Accès restreint : Un UTILISATEUR dispose d’un accès en lecture seule, à l’exception des actions de type “réponse” sur les réclamations qui lui sont assignées.
+RG13 — Traçabilité obligatoire : Toute création ou modification d’un enregistrement sensible doit être horodatée et associée à l’identifiant de l’utilisateur responsable.
+
+9. Gestion des Notifications et Délais
+9.1 Principe Général
+La plateforme intègre un système de notifications automatiques destiné à alerter les utilisateurs concernés avant l’expiration de délais critiques. Ces notifications sont générées quotidiennement par le système de tâches planifiées de Laravel (Scheduled Jobs) et stockées dans la table NOTIFICATION. Elles peuvent également être envoyées par email.
+9.2 Table NOTIFICATION
+Cette table stocke l’ensemble des notifications générées par le système à destination des utilisateurs.
+Colonne
+Type
+Contrainte
+Description
+id_notification (PK)
+INT
+NOT NULL, PK
+Identifiant unique
+id_utilisateur (FK)
+INT
+NOT NULL, FK → UTILISATEURS
+Destinataire de la notification
+type_notification
+VARCHAR(100)
+NOT NULL
+DELAI_RECOURS, AUDIENCE_PROCHE, RECLAMATION_EN_ATTENTE
+message
+TEXT
+NOT NULL
+Contenu lisible de la notification
+id_dossier (FK)
+INT
+NULLABLE, FK → DOSSIER_JUDICIAIRE
+Dossier concerné (si applicable)
+id_reclamation (FK)
+INT
+NULLABLE, FK → RECLAMATION
+Réclamation concernée (si applicable)
+est_lue
+BOOLEAN
+DEFAULT FALSE
+Notification consultée ou non
+date_notification
+DATETIME
+NOT NULL
+Date et heure de création
+date_lecture
+DATETIME
+NULLABLE
+Date et heure de lecture
+
+9.3 Déclencheurs de Notifications
+Le système surveille trois types d’événements critiques et génère une notification automatique dans chaque cas :
+Type
+Condition de déclenchement
+Seuil d’alerte
+Destinataire
+DELAI_RECOURS
+Jugement non définitif sans recours formé : date_jugement + delai_legal_jours
+≤ 5 jours avant expiration
+ADMIN
+AUDIENCE_PROCHE
+Audience planifiée dans AUDIENCE.date_prochaine_audience
+≤ 3 jours avant la date
+ADMIN + UTILISATEUR concerné
+RECLAMATION_EN_ATTENTE
+Réclamation en statut “Reçue” ou “En cours” sans action dans ACTION_RECLAMATION
+> 7 jours sans action
+ADMIN
+
+9.4 Règles de Gestion
+RG14 — Délai de recours : Le système génère une notification ADMIN lorsque le délai légal de recours d’un jugement non définitif expire dans 5 jours ou moins. Le délai est calculé à partir de JUGEMENT.date_jugement + TYPE_RECOURS.delai_legal_jours.
+RG15 — Audience proche : Une notification est générée automatiquement 3 jours avant toute audience planifiée dans AUDIENCE.date_prochaine_audience, à destination de l’ADMIN et de l’utilisateur concerné.
+RG16 — Réclamation en attente : Une notification est générée si une réclamation reste en statut “Reçue” ou “En cours” sans aucune action enregistrée dans ACTION_RECLAMATION depuis plus de 7 jours.
+
+10. Conclusion
+Cette plateforme intégrée offre une solution complète et cohérente pour la gestion judiciaire et des réclamations de l’Entraide Nationale. Son architecture en deux sous-systèmes distincts mais intégrés permet de couvrir l’ensemble des besoins métier tout en garantissant la cohérence des données.
+Les 30 tables interconnectées, organisées en 14 modules fonctionnels, couvrent l’intégralité des cycles de vie : du dossier judiciaire jusqu’à son exécution, et de la réclamation jusqu’à sa clôture. Le partage de référentiels communs (géographie, structures organisationnelles) renforce la cohérence globale de la plateforme.
+La conception proposée garantit l’intégrité des données, la traçabilité complète des opérations et offre une base solide pour le développement et la maintenance de la plateforme.
+
+                                                                                                                          --- Fin du Document ---
+
