@@ -49,4 +49,20 @@ class Finance extends Model
     {
         return $query->whereRaw('montant_condamne > montant_paye');
     }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($finance) {
+            if ($finance->montant_paye >= $finance->montant_condamne) {
+                $finance->statut_paiement = 'Complet';
+            } elseif ($finance->montant_paye > 0) {
+                $finance->statut_paiement = 'Partiel';
+            } else {
+                $finance->statut_paiement = 'En attente';
+            }
+        });
+    }
 }

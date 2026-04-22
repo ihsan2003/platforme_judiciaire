@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/JugementController.php
 
 namespace App\Http\Controllers;
 
@@ -32,17 +31,15 @@ class JugementController extends Controller
                 'recours',
                 'executions.statut',
             ])
-            ->when(request('definitif'), fn($q, $v) => $q->where('est_definitif', $v === 'oui'))
-            ->when(request('juge'),      fn($q, $v) => $q->where('id_juge', $v))
             ->latest('date_jugement')
             ->paginate(15)
             ->withQueryString();
 
         $stats = [
-            'total'           => Jugement::count(),
-            'definitifs'      => Jugement::where('est_definitif', true)->count(),
-            'en_appel'        => Jugement::whereHas('recours')->count(),
-            'executes'        => Jugement::whereHas('executions')->count(),
+            'total'      => Jugement::count(),
+            'definitifs' => Jugement::where('est_definitif', true)->count(),
+            'en_appel'   => Jugement::whereHas('recours')->count(),
+            'executes'   => Jugement::whereHas('executions')->count(),
         ];
 
         $juges = Juge::orderBy('nom_complet')->get();
@@ -51,38 +48,52 @@ class JugementController extends Controller
     }
 
     // ─────────────────────────────────────────
-    // CREATE
+    // CREATE (filtré correctement)
     // ─────────────────────────────────────────
     public function create()
     {
-        // Uniquement les dossiers_tribunaux dont le dossier est actif
-        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal'])
+        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal', 'audiences.typeAudience'])
             ->whereHas('dossier', fn($q) => $q->actifs())
-            ->get();
+            ->get()
+            ->filter(fn($dt) => $dt->peutAvoirJugement());
 
-        $juges  = Juge::with('tribunal')->orderBy('nom_complet')->get();
+        $juges   = Juge::with('tribunal')->orderBy('nom_complet')->get();
         $parties = Partie::orderBy('nom_partie')->get();
 
-        return view('jugements.create', compact('dossierTribunaux', 'juges', 'parties'));
+        return view('jugements.create', compact(
+            'dossierTribunaux',
+            'juges',
+            'parties'
+        ));
     }
 
     // ─────────────────────────────────────────
-    // STORE — transaction + sync parties pivot
+    // STORE (sécurité obligatoire)
     // ─────────────────────────────────────────
     public function store(StoreJugementRequest $request)
     {
+        $dossierTribunal = DossierTribunal::with('audiences.typeAudience')
+            ->findOrFail($request->id_dossier_tribunal);
+
+        // 🔒 sécurité backend
+        if (!$dossierTribunal->peutAvoirJugement()) {
+            return redirect()->back()
+                ->with('error', "Impossible de créer un jugement sans audience de type 'الحكم'.");
+        }
+
         $jugement = DB::transaction(function () use ($request) {
+
             $jugement = Jugement::create([
                 ...$request->safe()->except('parties', 'montants'),
                 'created_by' => Auth::id(),
             ]);
 
-            // Sync parties avec montant_condamne optionnel par partie
+            // Sync parties
             if ($request->filled('parties')) {
                 $syncData = collect($request->parties)->mapWithKeys(function ($partieId) use ($request) {
                     return [$partieId => [
                         'id_position_institution' => null,
-                        'montant_condamne'        => $request->montants[$partieId] ?? null,
+                        'montant_condamne' => $request->montants[$partieId] ?? null,
                     ]];
                 })->all();
 
@@ -94,7 +105,7 @@ class JugementController extends Controller
 
         return redirect()
             ->route('jugements.show', $jugement)
-            ->with('success', 'Jugement du ' . $jugement->date_jugement->format('d/m/Y') . ' créé avec succès.');
+            ->with('success', 'Jugement créé avec succès.');
     }
 
     // ─────────────────────────────────────────
@@ -125,15 +136,18 @@ class JugementController extends Controller
     {
         $jugement->load('parties');
 
-        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal'])->get();
+        $dossiers = DossierTribunal::with(['dossier', 'tribunal'])->get();
         $juges   = Juge::with('tribunal')->orderBy('nom_complet')->get();
         $parties = Partie::orderBy('nom_partie')->get();
 
-        // IDs des parties déjà liées (pour pré-cocher)
         $partiesLiees = $jugement->parties->pluck('id')->toArray();
 
         return view('jugements.edit', compact(
-            'jugement', 'dossierTribunaux', 'juges', 'parties', 'partiesLiees'
+            'jugement',
+            'dossiers',
+            'juges',
+            'parties',
+            'partiesLiees'
         ));
     }
 
@@ -143,14 +157,18 @@ class JugementController extends Controller
     public function update(UpdateJugementRequest $request, Jugement $jugement)
     {
         DB::transaction(function () use ($request, $jugement) {
-            $jugement->update($request->safe()->except('parties', 'montants'));
 
-            $syncData = collect($request->parties ?? [])->mapWithKeys(function ($partieId) use ($request) {
-                return [$partieId => [
-                    'id_position_institution' => null,
-                    'montant_condamne'        => $request->montants[$partieId] ?? null,
-                ]];
-            })->all();
+            $jugement->update(
+                $request->safe()->except('parties', 'montants')
+            );
+
+            $syncData = collect($request->parties ?? [])
+                ->mapWithKeys(function ($partieId) use ($request) {
+                    return [$partieId => [
+                        'id_position_institution' => null,
+                        'montant_condamne' => $request->montants[$partieId] ?? null,
+                    ]];
+                })->all();
 
             $jugement->parties()->sync($syncData);
         });
@@ -165,7 +183,6 @@ class JugementController extends Controller
     // ─────────────────────────────────────────
     public function destroy(Jugement $jugement)
     {
-        // Empêcher la suppression d'un jugement définitif exécuté
         if ($jugement->est_definitif && $jugement->executions()->exists()) {
             return redirect()
                 ->route('jugements.show', $jugement)

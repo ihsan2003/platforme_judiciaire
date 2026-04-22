@@ -18,4 +18,9 @@ class DegreeJuridiction extends Model
     {
         return $this->hasMany(DossierTribunal::class, 'id_degre');
     }
+
+    public function tribunaux()
+    {
+        return $this->hasMany(Tribunal::class, 'id_degre');
+    }
 }

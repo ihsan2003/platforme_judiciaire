@@ -3,8 +3,9 @@
 @section('content')
 <h1>Créer un jugement</h1>
 
-<form method="POST" action="{{ route('jugements.update') }}">
+<form action="{{ route('jugements.update', $jugement) }}" method="POST">
     @csrf
+    @method('PUT')
 
     <label>Dossier</label>
     <select name="id_dossier_tribunal">

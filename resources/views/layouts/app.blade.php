@@ -156,6 +156,12 @@
                 <i class="bi bi-check2-circle"></i> Exécutions
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('finances.*') ? 'active' : '' }}"
+               href="{{ route('finances.index') }}">
+                <i class="bi bi-check2-circle"></i> Finances
+            </a>
+        </li>
 
         <div class="nav-section">Réclamations</div>
         <li class="nav-item">

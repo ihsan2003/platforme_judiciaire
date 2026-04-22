@@ -15,7 +15,8 @@ class Tribunal extends Model
     protected $fillable = [
         'nom_tribunal',
         'id_type_tribunal',
-        'id_province'
+        'id_province',
+        'id_degre',
     ];
 
     public function typeTribunal()
@@ -28,6 +29,11 @@ class Tribunal extends Model
         return $this->belongsTo(Province::class, 'id_province');
     }
 
+    public function degre()
+    {
+        return $this->belongsTo(DegreeJuridiction::class, 'id_degre');
+    }
+
     public function juges()
     {
         return $this->hasMany(Juge::class, 'id_tribunal');
@@ -37,4 +43,5 @@ class Tribunal extends Model
     {
         return $this->hasMany(DossierTribunal::class, 'id_tribunal');
     }
+
 }

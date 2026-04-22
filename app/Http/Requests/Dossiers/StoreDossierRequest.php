@@ -20,7 +20,6 @@ class StoreDossierRequest extends FormRequest
             'numero_dossier_interne'   => 'required|string|unique:dossier_judiciaires',
             'numero_dossier_tribunal'  => 'nullable|string',
             'id_type_affaire'          => 'required|exists:type_affaires,id',
-            'id_statut_dossier'        => 'required|exists:statut_dossiers,id',
             'date_ouverture'           => 'required|date',
             'date_cloture'             => 'nullable|date|after:date_ouverture',
         ];

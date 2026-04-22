@@ -14,6 +14,7 @@ use App\Http\Controllers\JugeController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RecoursController;
+use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\StructureController;
 use App\Http\Controllers\DossierPartieController;
@@ -33,6 +34,38 @@ require __DIR__.'/auth.php';
 | Routes protégées
 |--------------------------------------------------------------------------
 */
+
+// web.php — Routes AJAX cascade (à placer AVANT le middleware auth si besoin, ou dedans)
+Route::middleware('auth')->prefix('api')->group(function () {
+
+    // Provinces d'une région
+    Route::get('/regions/{regionId}/provinces', function ($regionId) {
+        $provinces = \App\Models\Province::where('id_region', $regionId)
+            ->orderBy('province')
+            ->get(['id', 'province']);
+        return response()->json($provinces);
+    });
+
+    Route::get('/provinces/{provinceId}/degres', function ($provinceId) {
+        $degres = \App\Models\DegreeJuridiction::whereHas('tribunaux',
+                fn($q) => $q->where('id_province', $provinceId)
+            )
+            ->orderBy('degre_juridiction')
+            ->get(['id', 'degre_juridiction']);
+        return response()->json($degres);
+    });
+
+    Route::get('/provinces/{provinceId}/degres/{degreId}/tribunaux', function ($provinceId, $degreId) {
+        $tribunaux = \App\Models\Tribunal::where('id_province', $provinceId)
+            ->where('id_degre', $degreId)
+            ->orderBy('nom_tribunal')
+            ->get(['id', 'nom_tribunal']);
+        return response()->json($tribunaux);
+    });
+
+});
+
+
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard
@@ -48,7 +81,8 @@ Route::middleware(['auth'])->group(function () {
     // ── Parties d'un dossier ──────────────────────────────────────────────
     Route::prefix('dossiers/{dossier}/parties')->name('dossiers.parties.')->group(function () {
         Route::get('/', fn($dossier) => redirect()->route('dossiers.show', $dossier)); // ← ajout
-        Route::post('/',           [DossierPartieController::class, 'store'])  ->name('store');
+        Route::get('/search', [DossierPartieController::class, 'search']) ->name('search');
+            Route::post('/',           [DossierPartieController::class, 'store'])  ->name('store');
         Route::put('/{partie}',    [DossierPartieController::class, 'update']) ->name('update');
         Route::delete('/{partie}', [DossierPartieController::class, 'destroy'])->name('destroy');
     });
@@ -59,6 +93,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{tribunal}',    [DossierTribunalController::class, 'update']) ->name('update');
         Route::delete('/{tribunal}', [DossierTribunalController::class, 'destroy'])->name('destroy');
     });
+
+    // ✅ Correct — dossier en paramètre
+    Route::post('/dossiers/{dossier}/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::get('/dossiers/{dossier}/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::delete('/dossiers/{dossier}/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -72,6 +111,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('audiences', AudienceController::class);
     Route::resource('jugements', JugementController::class);
     Route::resource('executions', ExecutionController::class);
+    Route::resource('finances', FinanceController::class);
+
+
+    // Dépôt d'un recours sur un jugement spécifique
+    Route::post('jugements/{jugement}/recours', [RecoursController::class, 'store'])
+        ->name('jugements.recours.store');
+    
+    // Clôture manuelle sans recours (marque le jugement comme définitif)
+    Route::post('jugements/{jugement}/cloture-sans-recours', [RecoursController::class, 'cloturerSansRecours'])
+        ->name('jugements.cloture-sans-recours');
 
     /*
     |--------------------------------------------------------------------------
@@ -142,7 +191,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     | Documents
     |--------------------------------------------------------------------------
-    */
+    
     Route::prefix('documents')->name('documents.')->group(function () {
         Route::post('/',                      [DocumentController::class, 'store'])   ->name('store');
         Route::get('/{document}/download',    [DocumentController::class, 'download'])->name('download');

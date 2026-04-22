@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/AudienceController.php
 
 namespace App\Http\Controllers;
 
@@ -7,9 +6,9 @@ use App\Http\Requests\Audiences\StoreAudienceRequest;
 use App\Http\Requests\Audiences\UpdateAudienceRequest;
 use App\Models\Audience;
 use App\Models\DossierTribunal;
+use App\Models\DossierJudiciaire;
 use App\Models\TypeAudience;
 use App\Models\Juge;
-use Carbon\Carbon;
 
 class AudienceController extends Controller
 {
@@ -19,7 +18,7 @@ class AudienceController extends Controller
     }
 
     // ─────────────────────────────────────────
-    // INDEX : liste paginée avec filtres + stats
+    // INDEX
     // ─────────────────────────────────────────
     public function index()
     {
@@ -29,15 +28,15 @@ class AudienceController extends Controller
                 'typeAudience',
                 'juge',
             ])
-            ->when(request('juge'),    fn($q, $v) => $q->where('id_juge', $v))
-            ->when(request('type'),    fn($q, $v) => $q->where('id_type_audience', $v))
+            ->when(request('juge'), fn($q, $v) => $q->where('id_juge', $v))
+            ->when(request('type'), fn($q, $v) => $q->where('id_type_audience', $v))
             ->when(request('periode'), function ($q, $v) {
-                return match($v) {
-                    'passees'  => $q->whereDate('date_audience', '<', today()),
-                    'today'    => $q->whereDate('date_audience', today()),
-                    'futures'  => $q->whereDate('date_audience', '>', today()),
-                    'semaine'  => $q->whereBetween('date_audience', [today(), today()->addDays(7)]),
-                    default    => $q,
+                return match ($v) {
+                    'passees' => $q->whereDate('date_audience', '<', today()),
+                    'today'   => $q->whereDate('date_audience', today()),
+                    'futures' => $q->whereDate('date_audience', '>', today()),
+                    'semaine' => $q->whereBetween('date_audience', [today(), today()->addDays(7)]),
+                    default   => $q,
                 };
             })
             ->latest('date_audience')
@@ -55,32 +54,82 @@ class AudienceController extends Controller
         $juges = Juge::orderBy('nom_complet')->get();
         $typesAudience = TypeAudience::orderBy('type_audience')->get();
 
-        return view('audiences.index', compact('audiences', 'stats', 'juges', 'typesAudience'));
+        return view('audiences.index', compact(
+            'audiences',
+            'stats',
+            'juges',
+            'typesAudience'
+        ));
     }
 
     // ─────────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────────
-    public function create()
-    {
-        // Charger les dossier_tribunaux actifs avec leurs relations pour l'affichage
-        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal'])
-            ->whereHas('dossier', fn($q) => $q->whereHas('statut', fn($q) =>
-                $q->where('statut_dossier', '!=', 'Clôturé')
-            ))
-            ->get();
+public function create()
+{
+    $dossierId = request('dossier_id');
 
-        $typesAudience = TypeAudience::orderBy('type_audience')->get();
-        $juges = Juge::with('tribunal')->orderBy('nom_complet')->get();
-
-        return view('audiences.create', compact('dossierTribunaux', 'typesAudience', 'juges'));
+    if (!$dossierId) {
+        return redirect()
+            ->route('audiences.index')
+            ->with('error', 'Dossier non spécifié.');
     }
+
+    // 🔹 Charger le dossier + parties
+    $dossier = DossierJudiciaire::with('parties')->findOrFail($dossierId);
+
+    // 🔒 règle métier : minimum 2 parties
+    if (! $dossier->peutAvoirAudience()) {
+        return redirect()
+            ->route('dossiers.show', $dossier->id)
+            ->with('error', 'Vous devez associer au moins 2 parties avant de créer une audience.');
+    }
+
+    // 🔹 Dossier tribunaux liés
+    $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal'])
+        ->where('id_dossier', $dossierId)
+        ->get();
+
+    // 🔹 Données formulaire
+    $typesAudience = TypeAudience::orderBy('type_audience')->get();
+    $juges = Juge::with('tribunal')->orderBy('nom_complet')->get();
+
+    // 🔹 Valeur par défaut date prochaine audience
+    $dateAudienceParDefaut = null;
+
+    $derniereAudience = Audience::whereHas('dossierTribunal', function ($q) use ($dossierId) {
+            $q->where('id_dossier', $dossierId);
+        })
+        ->latest('date_audience')
+        ->first();
+
+    if ($derniereAudience && $derniereAudience->date_prochaine_audience) {
+        $dateAudienceParDefaut = $derniereAudience->date_prochaine_audience->format('Y-m-d');
+    }
+
+    return view('audiences.create', compact(
+        'dossierTribunaux',
+        'typesAudience',
+        'juges',
+        'dateAudienceParDefaut'
+    ));
+}
 
     // ─────────────────────────────────────────
     // STORE
     // ─────────────────────────────────────────
     public function store(StoreAudienceRequest $request)
     {
+        $dossierTribunal = DossierTribunal::with('dossier.parties')
+            ->findOrFail($request->id_dossier_tribunal);
+
+        // 🔒 sécurité backend obligatoire
+        if (! $dossierTribunal->dossier->peutAvoirAudience()) {
+            return back()->withErrors([
+                'id_dossier_tribunal' => 'Ce dossier doit contenir au moins 2 parties.'
+            ]);
+        }
+
         $audience = Audience::create($request->validated());
 
         return redirect()
@@ -102,7 +151,6 @@ class AudienceController extends Controller
             'juge.tribunal',
         ]);
 
-        // Prochaine et précédente audience du même dossier_tribunal
         $autresAudiences = Audience::where('id_dossier_tribunal', $audience->id_dossier_tribunal)
             ->where('id', '!=', $audience->id)
             ->orderBy('date_audience', 'desc')
@@ -120,11 +168,16 @@ class AudienceController extends Controller
         $typesAudience = TypeAudience::orderBy('type_audience')->get();
         $juges = Juge::with('tribunal')->orderBy('nom_complet')->get();
 
-        return view('audiences.edit', compact('audience', 'dossierTribunaux', 'typesAudience', 'juges'));
+        return view('audiences.edit', compact(
+            'audience',
+            'dossierTribunaux',
+            'typesAudience',
+            'juges'
+        ));
     }
 
     // ─────────────────────────────────────────
-    // UPDATE — corrige aussi le bug table 'dossier_tribunals' vs 'dossier_tribunaux'
+    // UPDATE
     // ─────────────────────────────────────────
     public function update(UpdateAudienceRequest $request, Audience $audience)
     {
@@ -136,7 +189,7 @@ class AudienceController extends Controller
     }
 
     // ─────────────────────────────────────────
-    // DESTROY
+    // DELETE
     // ─────────────────────────────────────────
     public function destroy(Audience $audience)
     {

@@ -74,23 +74,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">
-                            Statut <span class="text-danger">*</span>
-                        </label>
-                        <select name="id_statut_dossier"
-                                class="form-select @error('id_statut_dossier') is-invalid @enderror">
-                            <option value="">— Sélectionner —</option>
-                            @foreach($statutDossiers as $statut)
-                                <option value="{{ $statut->id }}" @selected(old('id_statut_dossier') == $statut->id)>
-                                    {{ $statut->statut_dossier }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('id_statut_dossier')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">
                             Date d'ouverture <span class="text-danger">*</span>
@@ -117,68 +101,6 @@
 
     </div>
 
-    {{-- ══ COLONNE DROITE : Tribunal initial ══ --}}
-    <div class="col-lg-5">
-
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
-                <h6 class="mb-0 fw-semibold"><i class="bi bi-bank me-2 text-primary"></i>Tribunal initial</h6>
-                <span class="badge bg-secondary bg-opacity-10 text-secondary">Optionnel</span>
-            </div>
-            <div class="card-body">
-                <p class="text-muted small mb-3">
-                    Vous pouvez assigner un tribunal dès la création, ou le faire plus tard depuis la fiche du dossier.
-                </p>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold small">Tribunal</label>
-                    <select name="id_tribunal" class="form-select" id="selectTribunal">
-                        <option value="">— Aucun pour l'instant —</option>
-                        @foreach($tribunaux as $t)
-                            <option value="{{ $t->id }}" @selected(old('id_tribunal') == $t->id)>
-                                {{ $t->nom_tribunal }}
-                                @if($t->typeTribunal) ({{ $t->typeTribunal->nom }}) @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div id="champsComplementsTribunal" style="{{ old('id_tribunal') ? '' : 'display:none' }}">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Degré de juridiction</label>
-                        <select name="id_degre" class="form-select">
-                            <option value="">— Sélectionner —</option>
-                            @foreach($degresJuridiction as $d)
-                                <option value="{{ $d->id }}" @selected(old('id_degre') == $d->id)>
-                                    {{ $d->degre_juridiction }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <label class="form-label fw-semibold small">Date de saisine</label>
-                            <input type="date" name="date_debut_tribunal" class="form-control"
-                                   value="{{ old('date_debut_tribunal') }}">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label fw-semibold small">Date de fin</label>
-                            <input type="date" name="date_fin_tribunal" class="form-control"
-                                   value="{{ old('date_fin_tribunal') }}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Aide --}}
-        <div class="alert alert-info border-0 small">
-            <i class="bi bi-info-circle-fill me-2"></i>
-            Après création, vous pourrez ajouter des <strong>parties</strong>, des <strong>audiences</strong>
-            et des <strong>jugements</strong> directement depuis la fiche du dossier.
-        </div>
-
-    </div>
-
 </div>
 
 {{-- ══ ACTIONS ══ --}}
@@ -195,12 +117,3 @@
 
 @endsection
 
-@push('scripts')
-<script>
-    // Afficher / masquer les champs complémentaires du tribunal
-    document.getElementById('selectTribunal').addEventListener('change', function () {
-        const champs = document.getElementById('champsComplementsTribunal');
-        champs.style.display = this.value ? 'block' : 'none';
-    });
-</script>
-@endpush

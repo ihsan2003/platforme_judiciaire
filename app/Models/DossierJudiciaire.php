@@ -90,6 +90,22 @@ class DossierJudiciaire extends Model
         return $this->hasMany(Notification::class, 'id_dossier');
     }
 
+    public function peutAvoirAudience(): bool
+    {
+        return $this->parties()->count() >= 2;
+    }
+
+
+    protected static function booted()
+    {
+        static::creating(function ($dossier) {
+            if (!$dossier->id_statut_dossier) {
+                $statut = StatutDossier::where('statut_dossier', 'جاري')->first();
+                $dossier->id_statut_dossier = $statut?->id;
+            }
+        });
+    }
+
     // Accesseurs
     public function getEstActifAttribute(): bool
     {

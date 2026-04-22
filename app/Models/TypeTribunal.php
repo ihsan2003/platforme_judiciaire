@@ -18,4 +18,10 @@ class TypeTribunal extends Model
     {
         return $this->hasMany(Tribunal::class, 'id_type_tribunal');
     }
+
+    public function degres()
+    {
+        return $this->belongsToMany(DegreeJuridiction::class, 'type_tribunal_degre', 
+                                    'id_type_tribunal', 'id_degre');
+    }
 }

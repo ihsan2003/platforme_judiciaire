@@ -3,50 +3,44 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Jugement;
-use App\Models\Notification;
-use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Console\Command;
 
+/**
+ * Job quotidien qui parcourt tous les jugements non définitifs
+ * et les marque automatiquement comme définitifs si le délai
+ * légal de recours est expiré sans qu'un recours ait été déposé.
+ *
+ * Règle métier : Si aucun recours → jugement devient définitif
+ *
+ * Enregistrement dans app/Console/Kernel.php :
+ *   $schedule->command('recours:check-delais')->daily();
+ */
 class CheckDelaisRecours extends Command
 {
-    protected $signature = 'notifications:delais-recours';
-    protected $description = 'Vérifie les délais de recours et génère des notifications';
+    protected $signature   = 'recours:check-delais';
+    protected $description = 'Marque les jugements comme définitifs si le délai de recours est expiré';
 
-    public function handle()
+    public function handle(): int
     {
         $jugements = Jugement::where('est_definitif', false)
-            ->whereHas('recours', null)
-            ->with('dossierTribunal.dossier')
+            ->whereDoesntHave('recours')
+            ->with(['dossierTribunal.dossier'])
             ->get();
 
+        $count = 0;
+
         foreach ($jugements as $jugement) {
-            $typeRecours = $jugement->dossierTribunal->dossier->recours()
-                ->first()?->typeRecours;
-
-            if ($typeRecours) {
-                $dateLimite = Carbon::parse($jugement->date_jugement)
-                    ->addDays($typeRecours->delai_legal_jours);
-                
-                $joursRestants = Carbon::now()->diffInDays($dateLimite, false);
-
-                if ($joursRestants <= 5 && $joursRestants > 0) {
-                    $admins = User::role('ADMIN')->get();
-
-                    foreach ($admins as $admin) {
-                        Notification::create([
-                            'id_utilisateur' => $admin->id,
-                            'type_notification' => 'DELAI_RECOURS',
-                            'message' => "Délai de recours expire dans {$joursRestants} jours pour le jugement du dossier {$jugement->dossierTribunal->dossier->numero_dossier_interne}",
-                            'id_dossier' => $jugement->dossierTribunal->dossier->id,
-                            'date_notification' => now()
-                        ]);
-                    }
-                }
+            if ($jugement->verifierEtMarquerDefinitif()) {
+                $count++;
+                $this->line(
+                    "  ✓ Jugement #{$jugement->id} du {$jugement->date_jugement->format('d/m/Y')} → Définitif"
+                );
             }
         }
 
-        $this->info('Notifications de délais de recours générées avec succès.');
+        $this->info("{$count} jugement(s) marqué(s) comme définitif(s).");
+
+        return self::SUCCESS;
     }
 }

@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('recours:check-delais')->daily();
         $schedule->command('notifications:delais-recours')->daily();
         $schedule->command('notifications:audiences-proches')->daily();
         $schedule->command('notifications:reclamations-attente')->daily();
