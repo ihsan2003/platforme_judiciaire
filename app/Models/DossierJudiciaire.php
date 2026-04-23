@@ -12,7 +12,7 @@ class DossierJudiciaire extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'dossier_judiciaires';
-    
+
     protected $fillable = [
         'numero_dossier_interne',
         'numero_dossier_tribunal',
@@ -25,18 +25,35 @@ class DossierJudiciaire extends Model
 
     protected $casts = [
         'date_ouverture' => 'date',
-        'date_cloture' => 'date',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'date_cloture'   => 'date',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
     ];
 
-    // Relations
+    // ─────────────────────────────────────────
+    // RELATIONS
+    // ─────────────────────────────────────────
+
     public function typeAffaire()
     {
         return $this->belongsTo(TypeAffaire::class, 'id_type_affaire');
     }
 
+    /**
+     * Relation principale — utilisée partout dans les controllers.
+     */
     public function statut()
+    {
+        return $this->belongsTo(StatutDossier::class, 'id_statut_dossier');
+    }
+
+    /**
+     * Alias pour la compatibilité avec les vues et la Policy
+     * qui appellent $dossier->statutDossier->statut_dossier.
+     *
+     * Les deux noms pointent sur la même table / clé étrangère.
+     */
+    public function statutDossier()
     {
         return $this->belongsTo(StatutDossier::class, 'id_statut_dossier');
     }
@@ -90,26 +107,42 @@ class DossierJudiciaire extends Model
         return $this->hasMany(Notification::class, 'id_dossier');
     }
 
+    // ─────────────────────────────────────────
+    // RÈGLES MÉTIER
+    // ─────────────────────────────────────────
+
     public function peutAvoirAudience(): bool
     {
         return $this->parties()->count() >= 2;
     }
 
+    // ─────────────────────────────────────────
+    // HOOKS
+    // ─────────────────────────────────────────
 
     protected static function booted()
     {
         static::creating(function ($dossier) {
             if (!$dossier->id_statut_dossier) {
-                $statut = StatutDossier::where('statut_dossier', 'جاري')->first();
+                // Cherche d'abord le statut arabe 'جاري', puis 'Actif' en fallback
+                $statut = StatutDossier::where('statut_dossier', 'جاري')->first()
+                       ?? StatutDossier::whereRaw("LOWER(statut_dossier) LIKE '%actif%'")->first()
+                       ?? StatutDossier::first();
+
                 $dossier->id_statut_dossier = $statut?->id;
             }
         });
     }
 
-    // Accesseurs
+    // ─────────────────────────────────────────
+    // ACCESSEURS
+    // ─────────────────────────────────────────
+
     public function getEstActifAttribute(): bool
     {
-        return $this->statut->statut_dossier !== 'Clôturé';
+        $statut = $this->statut?->statut_dossier ?? '';
+        return !str_contains(strtolower($statut), 'clôturé')
+            && !str_contains(strtolower($statut), 'cloturé');
     }
 
     public function getDureeTraitementAttribute(): ?int
@@ -120,11 +153,15 @@ class DossierJudiciaire extends Model
         return null;
     }
 
-    // Scopes
+    // ─────────────────────────────────────────
+    // SCOPES
+    // ─────────────────────────────────────────
+
     public function scopeActifs($query)
     {
-        return $query->whereHas('statut', function($q) {
-            $q->where('statut_dossier', '!=', 'Clôturé');
+        return $query->whereHas('statut', function ($q) {
+            $q->whereRaw("LOWER(statut_dossier) NOT LIKE '%clôturé%'")
+              ->whereRaw("LOWER(statut_dossier) NOT LIKE '%cloture%'");
         });
     }
 

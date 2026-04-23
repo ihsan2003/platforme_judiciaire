@@ -47,7 +47,7 @@ class Recours extends Model
 
     public function getEstDansDelaisAttribute(): bool
     {
-        $dateLimite = $this->jugement->date_jugement->addDays($this->typeRecours->delai_legal_jours);
+        $dateLimite = $this->jugement->date_jugement->copy()->addDays($this->typeRecours->delai_legal_jours);
         return $this->date_recours <= $dateLimite;
     }
 }

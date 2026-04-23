@@ -92,7 +92,7 @@ class Jugement extends Model
             return false;
         }
 
-        $dateLimite = $this->date_jugement->addDays($delaiMinimal);
+        $dateLimite = $this->date_jugement->copy()->addDays($delaiMinimal);
 
         if (now()->gt($dateLimite)) {
             $this->update(['est_definitif' => true]);
@@ -133,7 +133,7 @@ class Jugement extends Model
             return false;
         }
 
-        return now()->lte($this->date_jugement->addDays($delaiMinimal));
+        return now()->lte($this->date_jugement->copy()->addDays($this->delaiMinimal));
     }
 
     // ─────────────────────────────────────────
@@ -156,7 +156,7 @@ class Jugement extends Model
             return null;
         }
 
-        $dateLimite = $this->date_jugement->addDays($premierRecours->delai_legal_jours);
+        $dateLimite = $this->date_jugement->copy()->addDays($premierRecours->delai_legal_jours);
 
         // diffInDays avec false → négatif si dateLimite est passée
         return now()->diffInDays($dateLimite, false);
