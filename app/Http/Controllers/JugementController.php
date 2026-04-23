@@ -52,19 +52,23 @@ class JugementController extends Controller
     // ─────────────────────────────────────────
     public function create()
     {
+        $dossierId = request('dossier_id');
+
         $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal', 'audiences.typeAudience'])
+            ->when($dossierId, fn($q) => $q->where('id_dossier', $dossierId))
             ->whereHas('dossier', fn($q) => $q->actifs())
             ->get()
-            ->filter(fn($dt) => $dt->peutAvoirJugement());
+            ->filter(function ($dt) {
+                // Autoriser si la règle métier est satisfaite (audience الحكم)
+                // OU si c'est une instance active sans jugement (nouvelle instance après recours)
+                return $dt->peutAvoirJugement()
+                    || ($dt->estOuverte() && $dt->jugements()->doesntExist());
+            });
 
         $juges   = Juge::with('tribunal')->orderBy('nom_complet')->get();
         $parties = Partie::orderBy('nom_partie')->get();
 
-        return view('jugements.create', compact(
-            'dossierTribunaux',
-            'juges',
-            'parties'
-        ));
+        return view('jugements.create', compact('dossierTribunaux', 'juges', 'parties'));
     }
 
     // ─────────────────────────────────────────
@@ -75,11 +79,15 @@ class JugementController extends Controller
         $dossierTribunal = DossierTribunal::with('audiences.typeAudience')
             ->findOrFail($request->id_dossier_tribunal);
 
-        // 🔒 sécurité backend
-        if (!$dossierTribunal->peutAvoirJugement()) {
+        // Règle assouplie : audience الحكم OU instance active sans jugement existant
+        $peutJuger = $dossierTribunal->peutAvoirJugement()
+            || ($dossierTribunal->estOuverte() && $dossierTribunal->jugements()->doesntExist());
+
+        if (!$peutJuger) {
             return redirect()->back()
                 ->with('error', "Impossible de créer un jugement sans audience de type 'الحكم'.");
         }
+
 
         $jugement = DB::transaction(function () use ($request) {
 

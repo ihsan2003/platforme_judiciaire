@@ -105,9 +105,9 @@ class RecoursController extends Controller
     {
         $degreAppel = $this->trouverDegre('استئناف');
         if ($degreAppel) {
-            // Forcer la mise à jour directement en DB sans passer par le modèle en mémoire
-            DossierTribunal::where('id', $dtOrigine->id)
-                ->update(['date_fin' => now()->toDateString()]);
+            // Clôturer l'instance d'origine avec la date du jour
+            $dtOrigine->update(['date_fin' => today()->toDateString()]);
+            $dtOrigine->refresh(); // ← forcer le rechargement depuis la BDD
 
             $nouvelle = DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
