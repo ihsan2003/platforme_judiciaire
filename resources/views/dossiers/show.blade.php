@@ -294,9 +294,8 @@
          ONGLET 2 : TRIBUNAUX
     ══════════════════════════════════════════════════════ --}}
     <div class="tab-pane fade" id="tab-tribunaux">
-
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-bank me-2 text-primary"></i>Tribunaux assignés</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-bank me-2 text-primary"></i>Progression judiciaire</h6>
             @can('update', $dossier)
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterTribunal">
                     <i class="bi bi-plus-lg me-1"></i>Assigner un tribunal
@@ -310,233 +309,274 @@
                 Aucun tribunal assigné à ce dossier.
             </div>
         @else
-        <div class="row g-3">
-            @foreach($dossier->dossierTribunaux as $dt)
-            <div class="col-md-6">
-                <div class="card border h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between">
+        {{-- Timeline des instances --}}
+        <div class="position-relative">
+            {{-- Ligne verticale de connexion --}}
+            @if($dossier->dossierTribunaux->count() > 1)
+            <div style="position:absolute; left:23px; top:40px; bottom:40px; width:2px; background: linear-gradient(to bottom, #0d6efd, #6c757d); z-index:0;"></div>
+            @endif
+
+            @foreach($dossier->dossierTribunaux->sortBy('date_debut') as $index => $dt)
+            @php
+                $estCloture  = !is_null($dt->date_fin);
+                $estActif    = is_null($dt->date_fin);
+                $aJugement   = $dt->jugements->isNotEmpty();
+                $dernierJugement = $dt->jugements->sortByDesc('date_jugement')->first();
+                $aRecours    = $dernierJugement?->recours->isNotEmpty();
+            @endphp
+
+            <div class="d-flex gap-3 mb-3 position-relative" style="z-index:1;">
+                {{-- Icône de degré --}}
+                <div class="flex-shrink-0 d-flex flex-column align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                        style="width:48px; height:48px; font-size:.8rem;
+                                background: {{ $estCloture ? '#6c757d' : '#0d6efd' }};
+                                box-shadow: 0 0 0 4px {{ $estCloture ? '#e9ecef' : '#cfe2ff' }};">
+                        {{ $index + 1 }}
+                    </div>
+                </div>
+
+                {{-- Contenu --}}
+                <div class="card border w-100 {{ $estCloture ? 'opacity-75' : '' }}"
+                    style="{{ $estCloture ? 'border-color:#dee2e6!important;' : 'border-color:#0d6efd!important; border-width:2px!important;' }}">
+                    <div class="card-body py-3">
+
+                        {{-- En-tête --}}
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                             <div>
-                                <div class="fw-semibold">
-                                    <i class="bi bi-bank me-2 text-primary"></i>
+                                <div class="fw-bold">
+                                    <i class="bi bi-bank me-1 {{ $estCloture ? 'text-muted' : 'text-primary' }}"></i>
                                     {{ $dt->tribunal->nom_tribunal ?? '—' }}
                                 </div>
-                                @if($dt->tribunal?->typeTribunal)
-                                    <span class="badge bg-light text-secondary border small mt-1">
-                                        {{ $dt->tribunal->typeTribunal->nom }}
+                                <span class="badge mt-1" style="background:{{ $estCloture ? '#6c757d' : '#0d6efd' }}">
+                                    {{ $dt->degre->degre_juridiction ?? '—' }}
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($estActif)
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Instance active
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-lock me-1"></i>Clôturée
+                                        @if($aRecours) — recours déposé @endif
                                     </span>
                                 @endif
-                            </div>
-                            @can('update', $dossier)
-                            <div class="d-flex gap-1">
+                                @can('update', $dossier)
                                 <button class="btn btn-sm btn-outline-warning"
                                         data-bs-toggle="modal"
-                                        data-bs-target="#modalEditTribunal{{ $dt->id }}"
-                                        title="Modifier">
+                                        data-bs-target="#modalEditTribunal{{ $dt->id }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="{{ route('dossiers.tribunaux.destroy', [$dossier, $dt]) }}" method="POST"
-                                      onsubmit="return confirm('Retirer ce tribunal ?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" title="Retirer">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                @endcan
                             </div>
-                            @endcan
                         </div>
 
-                        <hr class="my-2">
-                        <div class="row small text-muted">
-                            <div class="col-6">
-                                <i class="bi bi-layers me-1"></i>
-                                <strong>Degré :</strong> {{ $dt->degre->degre_juridiction ?? '—' }}
-                            </div>
-                            <div class="col-6">
+                        {{-- Dates --}}
+                        <div class="row small text-muted g-2 mb-2">
+                            <div class="col-auto">
                                 <i class="bi bi-calendar-event me-1"></i>
-                                <strong>Début :</strong> {{ $dt->date_debut?->format('d/m/Y') ?? '—' }}
+                                Saisine : <strong>{{ $dt->date_debut?->format('d/m/Y') ?? '—' }}</strong>
                             </div>
-                            <div class="col-6 mt-1">
+                            <div class="col-auto">
                                 <i class="bi bi-calendar-check me-1"></i>
-                                <strong>Fin :</strong> {{ $dt->date_fin?->format('d/m/Y') ?? 'En cours' }}
+                                Fin : <strong>{{ $dt->date_fin?->format('d/m/Y') ?? 'En cours' }}</strong>
                             </div>
-                            <div class="col-6 mt-1">
+                            <div class="col-auto">
                                 <i class="bi bi-calendar3 me-1"></i>
-                                <strong>Audiences :</strong> {{ $dt->audiences->count() }}
+                                {{ $dt->audiences->count() }} audience(s)
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-hammer me-1"></i>
+                                {{ $dt->jugements->count() }} jugement(s)
                             </div>
                         </div>
 
-                        @if($dt->audiences->isNotEmpty())
-                        <div class="mt-2 pt-2 border-top">
-                            <div class="small text-muted fw-semibold mb-1">Prochaines audiences :</div>
-                            @foreach($dt->audiences->take(3) as $aud)
-                                <div class="small d-flex align-items-center gap-2 mb-1">
-                                    <i class="bi bi-dot text-primary fs-5 lh-1"></i>
-                                    <span>{{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</span>
-                                    @if($aud->typeAudience)
-                                        <span class="badge bg-light text-secondary border">
-                                            {{ $aud->typeAudience->nom }}
-                                        </span>
+                        {{-- Jugement + Recours de cette instance --}}
+                        @if($dernierJugement)
+                        <div class="border-top pt-2 mt-2">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div class="small">
+                                    <i class="bi bi-hammer text-primary me-1"></i>
+                                    <strong>Jugement du {{ $dernierJugement->date_jugement->format('d/m/Y') }}</strong>
+                                    — {{ $dernierJugement->juge->nom_complet ?? '—' }}
+                                    @if($dernierJugement->est_definitif)
+                                        <span class="badge bg-success ms-1">Définitif</span>
                                     @endif
                                 </div>
-                            @endforeach
+                                <a href="{{ route('jugements.show', $dernierJugement) }}"
+                                class="btn btn-xs btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye me-1"></i>Voir jugement
+                                </a>
+                            </div>
+
+                            {{-- Recours sur ce jugement --}}
+                            @if($aRecours)
+                                @foreach($dernierJugement->recours as $recours)
+                                <div class="mt-2 p-2 rounded small"
+                                    style="background:#fff3cd; border-left: 3px solid #ffc107;">
+                                    <i class="bi bi-arrow-repeat text-warning me-1"></i>
+                                    <strong>{{ $recours->typeRecours->type_recours ?? '—' }}</strong>
+                                    déposé le {{ $recours->date_recours->format('d/m/Y') }}
+                                    @if($recours->motifs)
+                                        — <em class="text-muted">{{ Str::limit($recours->motifs, 60) }}</em>
+                                    @endif
+                                </div>
+                                @endforeach
+                            @endif
                         </div>
                         @endif
+
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
         @endif
-
     </div>{{-- /tab-tribunaux --}}
 
 
  {{-- ══════════════════════════════════════════════════════
      ONGLET 3 : AUDIENCES
 ══════════════════════════════════════════════════════ --}}
-<div class="tab-pane fade" id="tab-audiences">
+    <div class="tab-pane fade" id="tab-audiences">
 
-    @php
-        $toutesAudiences = $dossier->dossierTribunaux->flatMap(function($dt) {
-            return $dt->audiences->map(fn($a) => $a->setRelation('dossierTribunal', $dt));
-        })->sortByDesc('date_audience');
+        @php
+            $toutesAudiences = $dossier->dossierTribunaux->flatMap(function($dt) {
+                return $dt->audiences->map(fn($a) => $a->setRelation('dossierTribunal', $dt));
+            })->sortByDesc('date_audience');
 
-        $derniereAudience = $toutesAudiences->sortByDesc('date_audience')->first();
+            $derniereAudience = $toutesAudiences->sortByDesc('date_audience')->first();
 
-        $prochaineDate = $derniereAudience?->date_prochaine_audience;
+            $prochaineDate = $derniereAudience?->date_prochaine_audience;
 
-        $audienceFutureExiste = $toutesAudiences->contains(function($aud) {
-            return $aud->date_audience && $aud->date_audience->isFuture();
-        });
-    @endphp
+            $audienceFutureExiste = $toutesAudiences->contains(function($aud) {
+                return $aud->date_audience && $aud->date_audience->isFuture();
+            });
+        @endphp
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h6 class="fw-semibold mb-0">
-                <i class="bi bi-calendar3 me-2 text-primary"></i>Audiences
-            </h6>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h6 class="fw-semibold mb-0">
+                    <i class="bi bi-calendar3 me-2 text-primary"></i>Audiences
+                </h6>
 
-            @if($prochaineDate)
-                <small class="text-muted">
-                    Prochaine audience prévue :
-                    <strong>{{ $prochaineDate->format('d/m/Y') }}</strong>
-                </small>
+                @if($prochaineDate)
+                    <small class="text-muted">
+                        Prochaine audience prévue :
+                        <strong>{{ $prochaineDate->format('d/m/Y') }}</strong>
+                    </small>
+                @endif
+            </div>
+
+            @if($dossier->peutAvoirAudience() && $dossier->dossierTribunaux->isNotEmpty())
+                <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id]) }}"
+                    class="btn btn-primary">
+                        Planifier une audience
+                    </a>
+            @else
+                    <button class="btn btn-secondary" disabled>
+                        Ajoutez au moins 2 parties
+                    </button>
+                
             @endif
         </div>
 
-        @if($dossier->peutAvoirAudience() && $dossier->dossierTribunaux->isNotEmpty())
-            <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id]) }}"
-                class="btn btn-primary">
-                    Planifier une audience
-                </a>
+        @if($toutesAudiences->isEmpty())
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
+                Aucune audience enregistrée.
+                @if($dossier->dossierTribunaux->isEmpty())
+                    <div class="small mt-1">
+                        Assignez d'abord un tribunal au dossier.
+                    </div>
+                @endif
+            </div>
         @else
-                <button class="btn btn-secondary" disabled>
-                    Ajoutez au moins 2 parties
-                </button>
-            
-        @endif
-    </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="small text-muted fw-semibold">Date</th>
+                        <th class="small text-muted fw-semibold">Type</th>
+                        <th class="small text-muted fw-semibold">Tribunal</th>
+                        <th class="small text-muted fw-semibold">Résultat / Renvoi</th>
+                        <th class="small text-muted fw-semibold text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($toutesAudiences as $aud)
+                    <tr>
+                        <td>
+                            <strong>{{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</strong>
 
-    @if($toutesAudiences->isEmpty())
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
-            Aucune audience enregistrée.
-            @if($dossier->dossierTribunaux->isEmpty())
-                <div class="small mt-1">
-                    Assignez d'abord un tribunal au dossier.
-                </div>
-            @endif
-        </div>
-    @else
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th class="small text-muted fw-semibold">Date</th>
-                    <th class="small text-muted fw-semibold">Type</th>
-                    <th class="small text-muted fw-semibold">Tribunal</th>
-                    <th class="small text-muted fw-semibold">Résultat / Renvoi</th>
-                    <th class="small text-muted fw-semibold text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($toutesAudiences as $aud)
-                <tr>
-                    <td>
-                        <strong>{{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</strong>
+                            @if($aud->date_audience && $aud->date_audience->isToday())
+                                <span class="badge bg-danger ms-1">Aujourd'hui</span>
+                            @elseif($aud->date_audience && $aud->date_audience->isFuture())
+                                <span class="badge bg-primary bg-opacity-15 text-primary ms-1">À venir</span>
+                            @endif
 
-                        @if($aud->date_audience && $aud->date_audience->isToday())
-                            <span class="badge bg-danger ms-1">Aujourd'hui</span>
-                        @elseif($aud->date_audience && $aud->date_audience->isFuture())
-                            <span class="badge bg-primary bg-opacity-15 text-primary ms-1">À venir</span>
-                        @endif
+                            @if($aud->date_prochaine_audience)
+                                <div class="small text-muted mt-1">
+                                    Renvoi :
+                                    <strong>{{ $aud->date_prochaine_audience->format('d/m/Y') }}</strong>
+                                </div>
+                            @endif
+                        </td>
 
-                        @if($aud->date_prochaine_audience)
-                            <div class="small text-muted mt-1">
-                                Renvoi :
-                                <strong>{{ $aud->date_prochaine_audience->format('d/m/Y') }}</strong>
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                {{ $aud->typeAudience->nom ?? '—' }}
+                            </span>
+                        </td>
+
+                        <td class="text-muted small">
+                            <i class="bi bi-bank me-1"></i>
+                            {{ $aud->dossierTribunal->tribunal->nom_tribunal ?? '—' }}
+                        </td>
+
+                        <td class="text-muted small">
+                            {{ $aud->resultat_audience ?? $aud->actions_demandees ?? '—' }}
+                        </td>
+
+                        <td class="text-end">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="{{ route('audiences.show', $aud) }}"
+                                class="btn btn-sm btn-outline-primary"
+                                title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                @can('update', $aud)
+                                <a href="{{ route('audiences.edit', $aud) }}"
+                                class="btn btn-sm btn-outline-warning"
+                                title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                @endcan
                             </div>
-                        @endif
-                    </td>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
 
-                    <td>
-                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
-                            {{ $aud->typeAudience->nom ?? '—' }}
-                        </span>
-                    </td>
-
-                    <td class="text-muted small">
-                        <i class="bi bi-bank me-1"></i>
-                        {{ $aud->dossierTribunal->tribunal->nom_tribunal ?? '—' }}
-                    </td>
-
-                    <td class="text-muted small">
-                        {{ $aud->resultat_audience ?? $aud->actions_demandees ?? '—' }}
-                    </td>
-
-                    <td class="text-end">
-                        <div class="d-flex gap-1 justify-content-end">
-                            <a href="{{ route('audiences.show', $aud) }}"
-                               class="btn btn-sm btn-outline-primary"
-                               title="Voir">
-                                <i class="bi bi-eye"></i>
-                            </a>
-
-                            @can('update', $aud)
-                            <a href="{{ route('audiences.edit', $aud) }}"
-                               class="btn btn-sm btn-outline-warning"
-                               title="Modifier">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            @endcan
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    @endif
-
-</div>{{-- /tab-audiences --}}
+    </div>{{-- /tab-audiences --}}
 
 {{-- ══════════════════════════════════════════════════════
      ONGLET 4 : JUGEMENTS
 ══════════════════════════════════════════════════════ --}}
 <div class="tab-pane fade" id="tab-jugements">
-
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h6 class="fw-semibold mb-0">
             <i class="bi bi-hammer me-2 text-primary"></i>Jugements
         </h6>
-
         @php
-            $peutAvoirJugement = $dossier->dossierTribunaux->contains(function ($dt) {
-                return $dt->peutAvoirJugement();
-            });
+            $peutAvoirJugement = $dossier->dossierTribunaux->contains(fn($dt) => $dt->peutAvoirJugement());
         @endphp
-
         @if($peutAvoirJugement)
             <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}"
                class="btn btn-primary btn-sm">
@@ -545,9 +585,7 @@
         @endif
     </div>
 
-    @php
-        $jugements = $dossier->dossierTribunaux->flatMap->jugements;
-    @endphp
+    @php $jugements = $dossier->dossierTribunaux->flatMap->jugements->sortByDesc('date_jugement'); @endphp
 
     @if($jugements->isEmpty())
         <div class="text-center py-5 text-muted">
@@ -555,43 +593,144 @@
             Aucun jugement enregistré.
         </div>
     @else
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Tribunal</th>
-                        <th>Décision</th>
-                        <th>Finance</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($jugements as $jugement)
-                    <tr>
-                        <td>{{ $jugement->date_jugement?->format('d/m/Y') ?? '—' }}</td>
-                        <td>{{ $jugement->dossierTribunal->tribunal->nom_tribunal ?? '—' }}</td>
-                        <td>{{ Str::limit($jugement->decision ?? '—', 40) }}</td>
-                        <td>
-                            @if($jugement->finance)
-                                <span class="badge bg-success">Oui</span>
-                            @else
-                                <span class="badge bg-warning text-dark">Non</span>
-                            @endif
-                        </td>
-                        <td class="text-end">
-                            <a href="{{ route('jugements.show', $jugement) }}"
-                               class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    @endif
+        @foreach($jugements as $jugement)
+        @php
+            $dtJugement = $jugement->dossierTribunal;
+            $delaiRestant = $jugement->delai_recours_restant;
+            $peutRecours = $jugement->peutFaireObjetRecours();
+        @endphp
+        <div class="card border mb-3 {{ $jugement->est_definitif ? 'border-success' : ($peutRecours ? 'border-primary' : 'border-secondary') }}"
+             style="border-width: 2px !important;">
+            <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <i class="bi bi-hammer me-1 text-primary"></i>
+                    <strong>Jugement du {{ $jugement->date_jugement->format('d/m/Y') }}</strong>
+                    <span class="text-muted small ms-2">
+                        — {{ $dtJugement->tribunal->nom_tribunal ?? '—' }}
+                        ({{ $dtJugement->degre->degre_juridiction ?? '—' }})
+                    </span>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    @if($jugement->est_definitif)
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Définitif</span>
+                    @elseif($peutRecours)
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-clock me-1"></i>
+                            {{ $delaiRestant }} j restants
+                        </span>
+                    @elseif($jugement->recours->isNotEmpty())
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-arrow-repeat me-1"></i>Recours déposé
+                        </span>
+                    @else
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-lock me-1"></i>Délai expiré
+                        </span>
+                    @endif
+                    <a href="{{ route('jugements.show', $jugement) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </div>
+            </div>
 
+            <div class="card-body py-2 small">
+                <div class="row g-2 mb-2">
+                    <div class="col-auto text-muted">
+                        <i class="bi bi-person me-1"></i>{{ $jugement->juge->nom_complet ?? '—' }}
+                    </div>
+                    @if($jugement->finance)
+                    <div class="col-auto text-muted">
+                        <i class="bi bi-cash me-1"></i>
+                        Condamné : <strong>{{ number_format($jugement->finance->montant_condamne, 2) }} DH</strong>
+                        — Payé : <strong class="text-success">{{ number_format($jugement->finance->montant_paye, 2) }} DH</strong>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Recours déjà déposés --}}
+                @if($jugement->recours->isNotEmpty())
+                    @foreach($jugement->recours as $r)
+                    <div class="p-2 rounded mb-1" style="background:#fff3cd; border-left:3px solid #ffc107;">
+                        <i class="bi bi-arrow-repeat text-warning me-1"></i>
+                        <strong>{{ $r->typeRecours->type_recours ?? '—' }}</strong>
+                        — {{ $r->date_recours->format('d/m/Y') }}
+                        @if($r->motifs) <em class="text-muted">— {{ Str::limit($r->motifs, 80) }}</em> @endif
+                    </div>
+                    @endforeach
+                @endif
+
+                {{-- Formulaire de recours inline --}}
+                @if($peutRecours && !$jugement->est_definitif && $jugement->recours->isEmpty())
+                <div class="border-top pt-3 mt-2">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-arrow-repeat text-warning"></i>
+                        <strong class="small">Déposer un recours</strong>
+                        @if($delaiRestant <= 5)
+                            <span class="badge bg-danger">Urgent — {{ $delaiRestant }}j restants</span>
+                        @endif
+                    </div>
+                    <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
+                        @csrf
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold mb-1">Type de recours *</label>
+                                <select name="id_type_recours" class="form-select form-select-sm" required>
+                                    <option value="">— Sélectionner —</option>
+                                    @foreach(\App\Models\TypeRecours::where('delai_legal_jours', '>', 0)->orderBy('type_recours')->get() as $tr)
+                                        <option value="{{ $tr->id }}">
+                                            {{ $tr->type_recours }} ({{ $tr->delai_legal_jours }}j)
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold mb-1">Date du recours *</label>
+                                <input type="date" name="date_recours"
+                                       class="form-control form-control-sm"
+                                       value="{{ date('Y-m-d') }}"
+                                       min="{{ $jugement->date_jugement->format('Y-m-d') }}"
+                                       required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold mb-1">Motifs</label>
+                                <input type="text" name="motifs"
+                                       class="form-control form-control-sm"
+                                       placeholder="Motifs (optionnel)">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-warning btn-sm w-100"
+                                        onclick="return confirm('Confirmer le dépôt du recours ?')">
+                                    <i class="bi bi-send me-1"></i>Déposer
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
+                          method="POST" class="mt-2"
+                          onsubmit="return confirm('Clôturer sans recours ?')">
+                        @csrf
+                        <button class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle me-1"></i>Clôturer sans recours
+                        </button>
+                    </form>
+                </div>
+                @elseif(!$jugement->est_definitif && !$peutRecours && $jugement->recours->isEmpty())
+                <div class="border-top pt-2 mt-2">
+                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
+                          method="POST"
+                          onsubmit="return confirm('Clôturer sans recours ?')">
+                        @csrf
+                        <button class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-lock me-1"></i>Clôturer sans recours
+                        </button>
+                    </form>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endforeach
+    @endif
 </div>
 
 

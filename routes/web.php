@@ -117,6 +117,11 @@ Route::middleware(['auth'])->group(function () {
     // Dépôt d'un recours sur un jugement spécifique
     Route::post('jugements/{jugement}/recours', [RecoursController::class, 'store'])
         ->name('jugements.recours.store');
+
+    // Redirection de secours si quelqu'un arrive en GET sur cette URL
+    Route::get('jugements/{jugement}/recours', function($jugement) {
+        return redirect()->route('jugements.show', $jugement);
+    })->name('jugements.recours.index');
     
     // Clôture manuelle sans recours (marque le jugement comme définitif)
     Route::post('jugements/{jugement}/cloture-sans-recours', [RecoursController::class, 'cloturerSansRecours'])

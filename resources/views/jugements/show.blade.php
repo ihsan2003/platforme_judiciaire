@@ -192,6 +192,24 @@
         </div>
         @endif
 
+
+@php
+    use App\Models\TypeRecours;
+
+    $dr = TypeRecours::orderBy('delai_legal_jours')->first();
+    dump([
+        'date_jugement' => $jugement->date_jugement->toDateString(),
+        'today' => today()->toDateString(),
+        'delai_minimal' => $dr?->delai_legal_jours,
+        'type_recours' => $dr?->type_recours,
+        'date_limite' => $dr ? $jugement->date_jugement->copy()->addDays($dr->delai_legal_jours)->toDateString() : null,
+        'peut_recours' => $jugement->peutFaireObjetRecours(),
+        'delai_restant' => $jugement->delai_recours_restant,
+        'est_definitif' => $jugement->est_definitif,
+        'recours_existe' => $jugement->recours()->exists(),
+    ]);
+@endphp
+
         {{-- ══ BLOC RECOURS (cœur des règles métier) ══ --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">

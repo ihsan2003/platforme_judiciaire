@@ -36,7 +36,7 @@ class RecoursController extends Controller
 
         // ✅ Correct — ne mute pas l'objet original
         $dateLimite = $jugement->date_jugement->copy()->addDays($typeRecours->delai_legal_jours);
-        if (now()->gt($dateLimite)) {
+        if (today()->gt($dateLimite)) {
             return redirect()->back()
                 ->with('error', "Délai de recours dépassé. La date limite était le {$dateLimite->format('d/m/Y')}.");
         }
@@ -51,6 +51,7 @@ class RecoursController extends Controller
             $recours = Recours::create([
                 'id_jugement'         => $jugement->id,
                 'id_dossier_tribunal' => $dossierTribunal->id,
+                'id_dossier_recours'  => $dossier->id,
                 'id_type_recours'     => $typeRecours->id,
                 'date_recours'        => $request->date_recours,
                 'motifs'              => $request->motifs,
@@ -102,14 +103,17 @@ class RecoursController extends Controller
 
     private function traiterAppel(DossierJudiciaire $dossier, DossierTribunal $dtOrigine, Recours $recours): void
     {
-        $degreAppel = $this->trouverDegre('Appel');
+        $degreAppel = $this->trouverDegre('استئناف');
         if ($degreAppel) {
-            $dtOrigine->update(['date_fin' => now()]);
+            // Forcer la mise à jour directement en DB sans passer par le modèle en mémoire
+            DossierTribunal::where('id', $dtOrigine->id)
+                ->update(['date_fin' => now()->toDateString()]);
+
             $nouvelle = DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
                 'id_tribunal' => $dtOrigine->id_tribunal,
                 'id_degre'    => $degreAppel->id,
-                'date_debut'  => now(),
+                'date_debut'  => now()->toDateString(),
                 'date_fin'    => null,
             ]);
             $recours->update(['id_dossier_tribunal' => $nouvelle->id]);
@@ -119,18 +123,39 @@ class RecoursController extends Controller
 
     private function traiterPourvoi(DossierJudiciaire $dossier, DossierTribunal $dtOrigine): void
     {
-        $degreCassation = $this->trouverDegre('Cassation');
+        $degreCassation = $this->trouverDegre('نقض');
         if ($degreCassation) {
-            $dtOrigine->update(['date_fin' => now()]);
+            DossierTribunal::where('id', $dtOrigine->id)
+                ->update(['date_fin' => now()->toDateString()]);
+
             DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
                 'id_tribunal' => $dtOrigine->id_tribunal,
                 'id_degre'    => $degreCassation->id,
-                'date_debut'  => now(),
+                'date_debut'  => now()->toDateString(),
                 'date_fin'    => null,
             ]);
         }
         $this->changerStatutDossier($dossier, 'En cassation');
+    }
+
+    private function traiterCassationRenvoi(DossierJudiciaire $dossier, DossierTribunal $dtOrigine, Recours $recours): void
+    {
+        $degreAppel = $this->trouverDegre('استئناف');
+        if ($degreAppel) {
+            DossierTribunal::where('id', $dtOrigine->id)
+                ->update(['date_fin' => now()->toDateString()]);
+
+            $nouvelle = DossierTribunal::create([
+                'id_dossier'  => $dossier->id,
+                'id_tribunal' => $dtOrigine->id_tribunal,
+                'id_degre'    => $degreAppel->id,
+                'date_debut'  => now()->toDateString(),
+                'date_fin'    => null,
+            ]);
+            $recours->update(['id_dossier_tribunal' => $nouvelle->id]);
+        }
+        $this->changerStatutDossier($dossier, 'Réouvert');
     }
 
     private function traiterCassationRejet(DossierJudiciaire $dossier, Jugement $jugement): void
@@ -139,22 +164,6 @@ class RecoursController extends Controller
         $this->changerStatutDossier($dossier, 'Clôturé');
     }
 
-    private function traiterCassationRenvoi(DossierJudiciaire $dossier, DossierTribunal $dtOrigine, Recours $recours): void
-    {
-        $degreAppel = $this->trouverDegre('Appel');
-        if ($degreAppel) {
-            $dtOrigine->update(['date_fin' => now()]);
-            $nouvelle = DossierTribunal::create([
-                'id_dossier'  => $dossier->id,
-                'id_tribunal' => $dtOrigine->id_tribunal,
-                'id_degre'    => $degreAppel->id,
-                'date_debut'  => now(),
-                'date_fin'    => null,
-            ]);
-            $recours->update(['id_dossier_tribunal' => $nouvelle->id]);
-        }
-        $this->changerStatutDossier($dossier, 'Réouvert');
-    }
 
     // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -183,7 +192,7 @@ class RecoursController extends Controller
     // Pourvoi pur = contient "pourvoi" ou "cassation" MAIS PAS rejet/renvoi
     private function estUnPourvoi(string $nom): bool
     {
-        return (str_contains($nom, 'pourvoi') || str_contains($nom, 'cassation'))
+        return (str_contains($nom, 'pourvoi') || str_contains($nom, 'نقض'))
             && !str_contains($nom, 'rejet')
             && !str_contains($nom, 'renvoi');
     }
@@ -191,6 +200,6 @@ class RecoursController extends Controller
     // Appel = contient "appel" mais pas "cassation"
     private function estUnAppel(string $nom): bool
     {
-        return str_contains($nom, 'appel') && !str_contains($nom, 'cassation');
+        return str_contains($nom, 'استئناف') && !str_contains($nom, 'نقض');
     }
 }
