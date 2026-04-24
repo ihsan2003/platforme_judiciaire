@@ -1,44 +1,171 @@
 @extends('layouts.app')
 
+@section('title', 'Créer un jugement')
+
+@section('breadcrumb') <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li> <li class="breadcrumb-item"><a href="{{ route('jugements.index') }}">Jugements</a></li> <li class="breadcrumb-item active">Créer</li>
+@endsection
+
 @section('content')
-<h1>Créer un jugement</h1>
 
-<form method="POST" action="{{ route('jugements.store') }}">
-    @csrf
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
 
-    <label>Dossier</label>
-    <select name="id_dossier_tribunal">
-        @foreach($dossierTribunaux as $dt)
-            <option value="{{ $dt->id }}">
-                Dossier #{{ $dt->dossier->numero_dossier_interne ?? $dt->id }}
-                - {{ $dt->tribunal->nom ?? '' }}
-            </option>
-        @endforeach
-    </select>
+    <h5 class="fw-bold mb-3">
+        <i class="bi bi-plus-circle me-2 text-primary"></i>
+        Nouveau jugement
+    </h5>
 
-    <label>Juge</label>
-    <select name="id_juge">
-        @foreach($juges as $j)
-            <option value="{{ $j->id }}">{{ $j->nom_complet }}</option>
-        @endforeach
-    </select>
+    <form action="{{ route('jugements.store') }}" method="POST">
+        @csrf
 
-    <label>Date jugement</label>
-    <input type="date" name="date_jugement">
+        <div class="row g-3">
 
-    <label>Contenu</label>
-    <textarea name="contenu_dispositif"></textarea>
+            {{-- Dossier Tribunal --}}
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small">
+                    Instance / Tribunal <span class="text-danger">*</span>
+                </label>
 
-    <label>Définitif</label>
-    <input type="checkbox" name="est_definitif" value="1">
+                <select name="id_dossier_tribunal"
+                        class="form-select @error('id_dossier_tribunal') is-invalid @enderror"
+                        required>
+                    <option value="">— Sélectionner —</option>
+                    @foreach($dossierTribunaux as $dt)
+                        <option value="{{ $dt->id }}">
+                            {{ $dt->dossier->numero_dossier_interne ?? '—' }}
+                            · {{ $dt->tribunal->nom_tribunal ?? '—' }}
+                        </option>
+                    @endforeach
+                </select>
 
-    <label>Parties</label>
-    <select name="parties[]" multiple>
-        @foreach($parties as $p)
-            <option value="{{ $p->id }}">{{ $p->nom_partie }}</option>
-        @endforeach
-    </select>
+                @error('id_dossier_tribunal')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
-    <button type="submit">Enregistrer</button>
-</form>
+            {{-- Juge --}}
+            <div class="col-md-6">
+                <label class="form-label fw-semibold small">
+                    Juge <span class="text-danger">*</span>
+                </label>
+
+                <select name="id_juge"
+                        class="form-select @error('id_juge') is-invalid @enderror"
+                        required>
+                    <option value="">— Sélectionner —</option>
+                    @foreach($juges as $juge)
+                        <option value="{{ $juge->id }}">
+                            {{ $juge->nom_complet }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('id_juge')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Date --}}
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">
+                    Date du jugement <span class="text-danger">*</span>
+                </label>
+
+                <input type="date"
+                       name="date_jugement"
+                       class="form-control @error('date_jugement') is-invalid @enderror"
+                       value="{{ old('date_jugement', date('Y-m-d')) }}"
+                       required>
+
+                @error('date_jugement')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Est définitif --}}
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check mt-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="est_definitif"
+                           value="1"
+                           id="est_definitif">
+
+                    <label class="form-check-label small" for="est_definitif">
+                        Jugement définitif
+                    </label>
+                </div>
+            </div>
+
+            {{-- Dispositif --}}
+            <div class="col-12">
+                <label class="form-label fw-semibold small">
+                    Dispositif
+                </label>
+
+                <textarea name="contenu_dispositif"
+                          class="form-control @error('contenu_dispositif') is-invalid @enderror"
+                          rows="5"
+                          placeholder="Contenu du jugement...">{{ old('contenu_dispositif') }}</textarea>
+
+                @error('contenu_dispositif')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+        </div>
+
+        <hr class="my-4">
+
+        {{-- Parties --}}
+        <h6 class="fw-semibold mb-3">
+            <i class="bi bi-people me-2 text-primary"></i>Parties
+        </h6>
+
+        <div class="row g-3">
+            @foreach($parties as $partie)
+                <div class="col-md-6">
+                    <div class="border rounded p-2">
+
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="parties[]"
+                                   value="{{ $partie->id }}"
+                                   id="partie_{{ $partie->id }}">
+
+                            <label class="form-check-label small fw-semibold">
+                                {{ $partie->nom_partie }}
+                            </label>
+                        </div>
+
+                        <input type="number"
+                               step="0.01"
+                               name="montants[{{ $partie->id }}]"
+                               class="form-control form-control-sm mt-2"
+                               placeholder="Montant condamné (DH)">
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-between">
+            <a href="{{ route('jugements.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle me-1"></i>Créer le jugement
+            </button>
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
 @endsection
