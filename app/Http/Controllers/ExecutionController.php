@@ -9,6 +9,8 @@ use App\Models\Execution;
 use App\Models\Jugement;
 use App\Models\StatutExecution;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+
 
 class ExecutionController extends Controller
 {
@@ -71,7 +73,20 @@ class ExecutionController extends Controller
     // ─────────────────────────────────────────
     public function store(StoreExecutionRequest $request)
     {
-        $execution = Execution::create($request->validated());
+        // Générer numéro automatique EXE-2026-001
+        $last = Execution::latest('id')->first();
+
+        $nextNumber = $last ? $last->id + 1 : 1;
+
+        $numero = 'EXE-' . date('Y') . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        $execution = Execution::create([
+            ...$request->validated(),
+
+            'numero_dossier_execution' => $numero,
+            'responsable_id' => Auth::id(),
+            'statut_execution' => 1, // statut "في الانتظار"
+        ]);
 
         return redirect()
             ->route('executions.show', $execution)
@@ -85,7 +100,7 @@ class ExecutionController extends Controller
     {
         $execution->load([
             'jugement.dossierTribunal.dossier.typeAffaire',
-            'jugement.dossierTribunal.dossier.parties.typePartie',
+            'jugement.dossierTribunal.dossier.statut',
             'jugement.dossierTribunal.tribunal',
             'jugement.juge',
             'jugement.finance',
@@ -93,7 +108,14 @@ class ExecutionController extends Controller
             'responsable',
         ]);
 
-        return view('executions.show', compact('execution'));
+        $dossierParties = \App\Models\DossierPartie::with(['partie', 'typePartie', 'avocat'])
+            ->where('id_dossier', $execution->jugement->dossierTribunal->id_dossier)
+            ->get();
+
+        $institution = $dossierParties->firstWhere('est_institution', true);
+        $autresParties = $dossierParties->where('est_institution', false);
+
+        return view('executions.show', compact('execution', 'dossierParties', 'institution', 'autresParties'));
     }
 
     // ─────────────────────────────────────────
@@ -113,7 +135,34 @@ class ExecutionController extends Controller
     // ─────────────────────────────────────────
     public function update(UpdateExecutionRequest $request, Execution $execution)
     {
-        $execution->update($request->validated());
+        // ⛔ Bloquer si déjà terminée
+        if ($execution->date_execution) {
+            abort(403, 'Exécution déjà terminée.');
+        }
+
+        $data = $request->validated();
+
+        // 🔒 Empêcher toute modification du jugement (sécurité supplémentaire)
+        unset($data['id_jugement']);
+
+        // ⛔ Empêcher retour en arrière du statut (ex: 3 = terminé)
+        if (
+            $execution->statut_execution == 3 &&
+            isset($data['statut_execution']) &&
+            $data['statut_execution'] != 3
+        ) {
+            return back()->withErrors([
+                'statut_execution' => 'Impossible de revenir en arrière après terminaison.'
+            ]);
+        }
+
+        // ⚡ Option intelligente (bonus)
+        // Si date_execution est remplie → forcer statut = terminé
+        if (!empty($data['date_execution'])) {
+            $data['statut_execution'] = 3;
+        }
+
+        $execution->update($data);
 
         return redirect()
             ->route('executions.show', $execution)

@@ -54,21 +54,6 @@
                         @enderror
                     </div>
 
-                    {{-- Numéro dossier exécution --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">
-                            Numéro dossier exécution <span class="text-danger">*</span>
-                        </label>
-                        <input type="text"
-                               name="numero_dossier_execution"
-                               class="form-control form-control-sm @error('numero_dossier_execution') is-invalid @enderror"
-                               placeholder="EXE-2026-001"
-                               required>
-
-                        @error('numero_dossier_execution')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
 
                     {{-- Date notification --}}
                     <div class="mb-3">
@@ -86,52 +71,7 @@
                         @enderror
                     </div>
 
-                    {{-- Statut --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">
-                            Statut <span class="text-danger">*</span>
-                        </label>
-                        <select name="id_statut_execution"
-                                class="form-select form-select-sm @error('id_statut_execution') is-invalid @enderror"
-                                required>
 
-                            <option value="">— Sélectionner —</option>
-
-                            @foreach($statuts as $s)
-                                <option value="{{ $s->id }}">
-                                    {{ $s->statut_execution }}
-                                </option>
-                            @endforeach
-
-                        </select>
-
-                        @error('id_statut_execution')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Responsable --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">
-                            Responsable
-                        </label>
-                        <select name="responsable_id"
-                                class="form-select form-select-sm @error('responsable_id') is-invalid @enderror">
-
-                            <option value="">— Aucun —</option>
-
-                            @foreach($responsables as $user)
-                                <option value="{{ $user->id }}">
-                                    {{ $user->name }}
-                                </option>
-                            @endforeach
-
-                        </select>
-
-                        @error('responsable_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
 
                     {{-- Date exécution --}}
                     <div class="mb-3">
