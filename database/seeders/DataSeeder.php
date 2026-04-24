@@ -104,7 +104,7 @@ class DataSeeder extends Seeder
             ['type_recours' => 'استئناف', 'delai_legal_jours' => 30],
             ['type_recours' => 'تعرض', 'delai_legal_jours' => 15],
             ['type_recours' => 'الطعن بالنقض', 'delai_legal_jours' => 30],
-            ['type_recours' => 'إعادة النظر', 'delai_legal_jours' => 0],
+            ['type_recours' => 'إعادة النظر', 'delai_legal_jours' => 30],
         ];
         foreach ($recours as $r) {
             DB::table('type_recours')->insert($r);

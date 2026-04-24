@@ -164,6 +164,7 @@ class DossierJudiciaireController extends Controller
             'dossierTribunaux.jugements.juge',
             'dossierTribunaux.jugements.recours.typeRecours',
             'dossierTribunaux.jugements.executions.statut',
+            'dossierTribunaux.jugements.executions.responsable', 
             'dossierTribunaux.jugements.finance',
             // Les parties liées à chaque jugement (table pivot jugement_parties)
             'dossierTribunaux.jugements.parties.pivot',

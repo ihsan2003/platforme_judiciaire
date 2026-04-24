@@ -176,6 +176,14 @@
         </button>
     </li>
     <li class="nav-item">
+        <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-executions">
+            <i class="bi bi-shield-check me-1"></i>Exécutions
+            <span class="badge bg-danger ms-1">
+                {{ $dossier->dossierTribunaux->flatMap->jugements->flatMap->executions->count() }}
+            </span>
+        </button>
+    </li>
+    <li class="nav-item">
         <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-documents">
             <i class="bi bi-paperclip me-1"></i>Documents
             <span class="badge bg-warning text-dark ms-1">{{ $dossier->documents->count() }}</span>
@@ -819,11 +827,211 @@
 
 </div>
 
+{{-- ══════════════════════════════════════════════════════
+     ONGLET 6 : EXÉCUTIONS 
+══════════════════════════════════════════════════════ --}}
 
+<div class="tab-pane fade" id="tab-executions">
+
+    @php
+        $tousJugements = $dossier->dossierTribunaux->flatMap->jugements->sortByDesc('date_jugement');
+        $toutesExecutions = $tousJugements->flatMap->executions->sortByDesc('created_at');
+    @endphp
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h6 class="fw-semibold mb-0">
+            <i class="bi bi-shield-check me-2 text-danger"></i>Exécutions
+        </h6>
+        @php
+            $jugementDefinitifSansExec = $tousJugements->first(fn($j) =>
+                $j->est_definitif && $j->executions->isEmpty()
+            );
+        @endphp
+        @if($jugementDefinitifSansExec)
+            <a href="{{ route('executions.create', ['jugement_id' => $jugementDefinitifSansExec->id]) }}"
+               class="btn btn-danger btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Lancer une exécution
+            </a>
+        @endif
+    </div>
+
+    {{-- Parcours complet du dossier --}}
+    <div class="alert alert-light border small mb-4">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <strong class="text-muted">Parcours :</strong>
+
+            {{-- Étapes du parcours --}}
+            @foreach($dossier->dossierTribunaux->sortBy('date_debut') as $dt)
+                @php
+                    $jugDt = $dt->jugements->sortByDesc('date_jugement')->first();
+                @endphp
+                <span class="badge bg-secondary bg-opacity-15 text-secondary border">
+                    <i class="bi bi-bank me-1"></i>{{ $dt->tribunal->nom_tribunal ?? '?' }}
+                    ({{ $dt->degre->degre_juridiction ?? '?' }})
+                </span>
+
+                @if($jugDt)
+                    <i class="bi bi-arrow-right text-muted"></i>
+                    <span class="badge bg-{{ $jugDt->est_definitif ? 'success' : 'warning text-dark' }} bg-opacity-15 border">
+                        <i class="bi bi-hammer me-1"></i>Jugement {{ $jugDt->date_jugement->format('d/m/Y') }}
+                        @if($jugDt->est_definitif) ✓ @endif
+                    </span>
+
+                    @if($jugDt->recours->isNotEmpty())
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="badge bg-warning bg-opacity-15 text-warning border">
+                            <i class="bi bi-arrow-repeat me-1"></i>{{ $jugDt->recours->first()->typeRecours->type_recours ?? 'Recours' }}
+                        </span>
+                    @endif
+
+                    @foreach($jugDt->executions as $exec)
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="badge bg-danger bg-opacity-15 text-danger border">
+                            <i class="bi bi-shield-check me-1"></i>Exécution
+                            ({{ $exec->statut->statut_execution ?? '?' }})
+                        </span>
+                    @endforeach
+                @endif
+            @endforeach
+        </div>
+    </div>
+
+    @if($toutesExecutions->isEmpty())
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-shield-x fs-1 d-block mb-2 opacity-25"></i>
+            Aucune exécution enregistrée pour ce dossier.
+
+            @if($jugementDefinitifSansExec)
+                <div class="mt-2 small">
+                    Un jugement définitif existe — vous pouvez lancer l'exécution.
+                </div>
+            @elseif($tousJugements->where('est_definitif', true)->isEmpty())
+                <div class="mt-2 small">
+                    Aucun jugement définitif. L'exécution n'est possible qu'après un jugement définitif.
+                </div>
+            @endif
+        </div>
+    @else
+        @foreach($tousJugements as $jugement)
+            @if($jugement->executions->isEmpty()) @continue @endif
+
+            <div class="card border mb-3" style="border-left: 3px solid #dc3545 !important;">
+                <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="small">
+                        <i class="bi bi-hammer text-primary me-1"></i>
+                        <strong>Jugement du {{ $jugement->date_jugement->format('d/m/Y') }}</strong>
+                        <span class="text-muted ms-2">
+                            — {{ $jugement->dossierTribunal->tribunal->nom_tribunal ?? '—' }}
+                        </span>
+                        @if($jugement->est_definitif)
+                            <span class="badge bg-success ms-1">Définitif</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('jugements.show', $jugement) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye me-1"></i>Voir jugement
+                    </a>
+                </div>
+
+                <div class="card-body p-0">
+                    @foreach($jugement->executions as $execution)
+                    @php
+                        $statutLabel = $execution->statut?->statut_execution ?? '—';
+                        $color = match(true) {
+                            str_contains($statutLabel, 'Terminé') => 'success',
+                            str_contains($statutLabel, 'cours')   => 'warning',
+                            default                               => 'secondary',
+                        };
+                    @endphp
+                    <div class="p-3 {{ !$loop->last ? 'border-bottom' : '' }}">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <div class="fw-semibold font-monospace">
+                                    {{ $execution->numero_dossier_execution }}
+                                </div>
+                                <div class="small text-muted mt-1 d-flex flex-wrap gap-3">
+                                    <span>
+                                        <i class="bi bi-bell me-1"></i>
+                                        Notifié le <strong>{{ $execution->date_notification?->format('d/m/Y') ?? '—' }}</strong>
+                                    </span>
+                                    <span>
+                                        <i class="bi bi-person me-1"></i>
+                                        {{ $execution->responsable?->name ?? '—' }}
+                                    </span>
+                                    @if($execution->date_execution)
+                                    <span class="text-success">
+                                        <i class="bi bi-calendar-check me-1"></i>
+                                        Exécuté le <strong>{{ $execution->date_execution->format('d/m/Y') }}</strong>
+                                    </span>
+                                    @else
+                                    <span class="text-warning">
+                                        <i class="bi bi-hourglass-split me-1"></i>
+                                        En attente d'exécution
+                                    </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+                                    {{ $statutLabel }}
+                                </span>
+                                <a href="{{ route('executions.show', $execution) }}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('executions.edit', $execution) }}"
+                                   class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Finance liée --}}
+                        @if($jugement->finance)
+                        @php
+                            $f = $jugement->finance;
+                            $pct = $f->montant_condamne > 0
+                                ? min(100, round(($f->montant_paye / $f->montant_condamne) * 100))
+                                : 0;
+                        @endphp
+                        <div class="mt-3 p-2 rounded bg-light border small">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-muted">
+                                    <i class="bi bi-cash-stack me-1"></i>Finance
+                                </span>
+                                <span class="badge bg-{{ $pct >= 100 ? 'success' : ($pct > 0 ? 'warning text-dark' : 'secondary') }}">
+                                    {{ $pct >= 100 ? 'Soldé' : ($pct > 0 ? 'Partiel' : 'En attente') }}
+                                </span>
+                            </div>
+                            <div class="progress mb-1" style="height:6px;border-radius:3px;">
+                                <div class="progress-bar bg-{{ $pct >= 100 ? 'success' : ($pct > 50 ? 'warning' : 'danger') }}"
+                                     style="width:{{ $pct }}%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted">
+                                <span>
+                                    Condamné : <strong>{{ number_format($f->montant_condamne, 2) }} DH</strong>
+                                </span>
+                                <span>
+                                    Payé : <strong class="text-success">{{ number_format($f->montant_paye, 2) }} DH</strong>
+                                </span>
+                                <span>
+                                    Restant : <strong class="{{ $f->montant_restant > 0 ? 'text-danger' : 'text-success' }}">
+                                        {{ number_format($f->montant_restant, 2) }} DH
+                                    </strong>
+                                </span>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    @endif
+</div>{{-- /tab-executions --}}
 
 
 {{-- ══════════════════════════════════════════════════════
-         ONGLET 6 : DOCUMENTS
+     ONGLET 7 : DOCUMENTS
 ══════════════════════════════════════════════════════ --}}
 <div class="tab-pane fade" id="tab-documents">
 
