@@ -105,13 +105,14 @@ class RecoursController extends Controller
     {
         $degreAppel = $this->trouverDegre('استئناف');
         if ($degreAppel) {
-            // Clôturer l'instance d'origine avec la date du jour
             $dtOrigine->update(['date_fin' => today()->toDateString()]);
-            $dtOrigine->refresh(); // ← forcer le rechargement depuis la BDD
+            $dtOrigine->refresh();
+
+            $idTribunalSuivant = $this->trouverTribunalSuivant($dtOrigine, $degreAppel); // ← ici
 
             $nouvelle = DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
-                'id_tribunal' => $dtOrigine->id_tribunal,
+                'id_tribunal' => $idTribunalSuivant, // ← plus $dtOrigine->id_tribunal
                 'id_degre'    => $degreAppel->id,
                 'date_debut'  => now()->toDateString(),
                 'date_fin'    => null,
@@ -125,12 +126,14 @@ class RecoursController extends Controller
     {
         $degreCassation = $this->trouverDegre('نقض');
         if ($degreCassation) {
+            $idTribunalSuivant = $this->trouverTribunalSuivant($dtOrigine, $degreCassation); // ← ici
+
             DossierTribunal::where('id', $dtOrigine->id)
                 ->update(['date_fin' => now()->toDateString()]);
 
             DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
-                'id_tribunal' => $dtOrigine->id_tribunal,
+                'id_tribunal' => $idTribunalSuivant, // ← plus $dtOrigine->id_tribunal
                 'id_degre'    => $degreCassation->id,
                 'date_debut'  => now()->toDateString(),
                 'date_fin'    => null,
@@ -143,12 +146,14 @@ class RecoursController extends Controller
     {
         $degreAppel = $this->trouverDegre('استئناف');
         if ($degreAppel) {
+            $idTribunalSuivant = $this->trouverTribunalSuivant($dtOrigine, $degreAppel); // ← ici
+
             DossierTribunal::where('id', $dtOrigine->id)
                 ->update(['date_fin' => now()->toDateString()]);
 
             $nouvelle = DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
-                'id_tribunal' => $dtOrigine->id_tribunal,
+                'id_tribunal' => $idTribunalSuivant, // ← plus $dtOrigine->id_tribunal
                 'id_degre'    => $degreAppel->id,
                 'date_debut'  => now()->toDateString(),
                 'date_fin'    => null,
@@ -172,6 +177,30 @@ class RecoursController extends Controller
         return DegreeJuridiction::whereRaw('LOWER(degre_juridiction) LIKE ?', [
             '%' . strtolower($libelle) . '%'
         ])->first();
+    }
+
+    /**
+     * Trouve le tribunal du degré cible dans la même province
+     * que le tribunal d'origine.
+     * Fallback : même tribunal si aucun trouvé.
+     */
+    private function trouverTribunalSuivant(DossierTribunal $dtOrigine, DegreeJuridiction $degreeCible): int
+    {
+        $tribunalOrigine = $dtOrigine->tribunal()->with('province')->first();
+        $provinceId      = $tribunalOrigine?->id_province;
+
+        if ($provinceId) {
+            $tribunalCible = \App\Models\Tribunal::where('id_province', $provinceId)
+                ->where('id_degre', $degreeCible->id)
+                ->first();
+
+            if ($tribunalCible) {
+                return $tribunalCible->id;
+            }
+        }
+
+        // Fallback : on garde le même tribunal (comportement actuel)
+        return $dtOrigine->id_tribunal;
     }
 
     private function changerStatutDossier(DossierJudiciaire $dossier, string $libelleStatut): void
