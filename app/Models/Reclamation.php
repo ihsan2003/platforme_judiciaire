@@ -45,10 +45,10 @@ class Reclamation extends Model
         return $this->hasMany(Document::class, 'id_reclamation');
     }
 
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class, 'id_reclamation');
-    }
+//    public function notifications()
+//    {
+   //     return $this->hasMany(Notification::class, 'id_reclamation');
+    //}
 
     public function getDerniereActionAttribute()
     {

@@ -16,7 +16,6 @@ class Document extends Model
     protected $fillable = [
         'id_dossier',
         'id_reclamation',
-        'id_action',
         'id_type_document',
         'id_partie',
         'titre_document',
@@ -38,10 +37,6 @@ class Document extends Model
         return $this->belongsTo(Reclamation::class, 'id_reclamation');
     }
 
-    public function action()
-    {
-        return $this->belongsTo(ActionReclamation::class, 'id_action');
-    }
 
     public function typeDocument()
     {

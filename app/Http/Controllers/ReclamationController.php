@@ -175,7 +175,6 @@ class ReclamationController extends Controller
             'statut',
             'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy', 'documents'])->latest(),
             'documents.typeDocument',
-            'notifications',
         ]);
 
         $typesAction    = TypeAction::orderBy('type_action')->get();
