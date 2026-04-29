@@ -1150,7 +1150,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-
+ 
                 {{-- ── ÉTAPE 1 : Recherche ── --}}
                 <div class="mb-3 p-3 rounded-3 border bg-light">
                     <label class="form-label fw-semibold small text-muted text-uppercase mb-2"
@@ -1175,13 +1175,13 @@
                         pré-remplir le formulaire, ou cliquez sur <strong>Nouvelle</strong> pour
                         saisir une partie inédite.
                     </div>
-
+ 
                     {{-- Dropdown résultats --}}
                     <div id="resultatRecherche"
                          class="list-group mt-1 shadow-sm"
                          style="display:none; max-height:240px; overflow-y:auto; position:relative; z-index:1060;">
                     </div>
-
+ 
                     {{-- Bandeau partie sélectionnée --}}
                     <div id="partieSelectionnee" class="alert alert-success py-2 px-3 mt-2 d-none small mb-0">
                         <i class="bi bi-check-circle me-1"></i>
@@ -1190,24 +1190,24 @@
                         <a href="#" id="btnDeselectionner" class="ms-2 text-danger small">(changer)</a>
                     </div>
                 </div>
-
+ 
                 {{-- ── ÉTAPE 2 : Formulaire ── --}}
                 <div class="border-top pt-3 mb-3">
                     <p class="small text-muted fw-semibold text-uppercase mb-0" style="letter-spacing:.05em">
                         Étape 2 — Informations de la partie
                     </p>
                 </div>
-
+ 
                 <form id="formAjouterPartie"
                       action="{{ route('dossiers.parties.store', $dossier) }}"
                       method="POST">
                 @csrf
-
+ 
                 {{-- ID caché : rempli quand une partie existante est sélectionnée --}}
                 <input type="hidden" name="partie_id" id="hidden_partie_id">
-
+ 
                 <div class="row g-3">
-
+ 
                     {{-- Identité --}}
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">
@@ -1240,13 +1240,13 @@
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">Téléphone</label>
-                        <input id='field_telephone' type="tel" 
-                        name="telephone"
-                        class="form-control @error('telephone') is-invalid @enderror"
-                        placeholder="Ex : 0612345678"
-                        pattern="^(\+212|00212|0)(5|6|7)[0-9]{8}$"
-                        title="Format attendu : 0612345678 ou +212612345678"
-                        value="{{ old('telephone', $partie->telephone ?? '') }}">
+                        <input type="tel"
+                               name="telephone"
+                               id="field_telephone"
+                               class="form-control"
+                               placeholder="Ex : 0612345678"
+                               pattern="^(\+212|00212|0)(5|6|7)[0-9]{8}$"
+                               title="Format attendu : 0612345678 ou +212612345678">
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">Email</label>
@@ -1258,11 +1258,77 @@
                         <textarea name="adresse" id="field_adresse"
                                   class="form-control" rows="2"></textarea>
                     </div>
-
+ 
                     <div class="col-12"><hr class="my-1"></div>
-
-                    {{-- Rôle / avocat / date --}}
-                    <div class="col-sm-4">
+ 
+                    {{-- ════════════════════════════════════════════════════
+                         RG8 — AVOCAT : lié à la partie, pas au dossier
+                         • Partie existante → affichage lecture seule
+                         • Nouvelle partie  → sélection (stockée sur la partie)
+                    ════════════════════════════════════════════════════ --}}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small d-flex align-items-center gap-2">
+                            Avocat représentant
+                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25"
+                                  style="font-size:.7rem; font-weight:500;">
+                                <i class="bi bi-link-45deg me-1"></i>lié à la partie
+                            </span>
+                        </label>
+ 
+                        {{-- Affiché pour une PARTIE EXISTANTE : lecture seule --}}
+                        <div id="bloc_avocat_existant" class="d-none">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-briefcase text-muted"></i>
+                                </span>
+                                <input type="text"
+                                       id="field_avocat_display"
+                                       class="form-control bg-light border-start-0 text-muted"
+                                       readonly
+                                       placeholder="Aucun avocat enregistré">
+                                <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        id="btnModifierAvocat"
+                                        title="Modifier l'avocat de cette partie">
+                                    <i class="bi bi-pencil me-1"></i>Modifier
+                                </button>
+                            </div>
+                            <div class="form-text text-info">
+                                <i class="bi bi-info-circle me-1"></i>
+                                L'avocat est attaché à cette partie (pas au dossier).
+                                Cliquez sur <strong>Modifier</strong> pour le changer.
+                            </div>
+                            {{-- Zone de modification (cachée par défaut) --}}
+                            <div id="bloc_avocat_modif" class="d-none mt-2">
+                                <select name="id_avocat" id="field_avocat_modif_select" class="form-select">
+                                    <option value="">— Aucun avocat —</option>
+                                    @foreach($avocats as $av)
+                                        <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text text-warning">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Ce changement mettra à jour l'avocat sur la fiche de la partie.
+                                </div>
+                            </div>
+                        </div>
+ 
+                        {{-- Affiché pour une NOUVELLE PARTIE : sélection --}}
+                        <div id="bloc_avocat_nouveau">
+                            <select name="id_avocat" id="field_avocat_nouveau_select" class="form-select">
+                                <option value="">— Aucun avocat —</option>
+                                @foreach($avocats as $av)
+                                    <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">
+                                L'avocat sera enregistré sur la fiche de cette partie.
+                            </div>
+                        </div>
+                    </div>
+ 
+                    {{-- Rôle / date --}}
+                    <div class="col-sm-6">
                         <label class="form-label fw-semibold small">
                             Rôle dans le dossier <span class="text-danger">*</span>
                         </label>
@@ -1273,48 +1339,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-sm-4">
-                        <label class="form-label fw-semibold small">Avocat représentant</label>
-
-                        {{-- Affiché quand une partie existante est sélectionnée --}}
-                        <div id="bloc_avocat_info" class="d-none">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">
-                                    <i class="bi bi-briefcase text-muted"></i>
-                                </span>
-                                <input type="text"
-                                    id="field_avocat_display"
-                                    class="form-control bg-light"
-                                    readonly
-                                    placeholder="Aucun avocat">
-                                <button type="button"
-                                        class="btn btn-outline-secondary btn-sm"
-                                        id="btnChangerAvocat"
-                                        title="Modifier l'avocat de cette partie">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                            </div>
-                            <div class="form-text text-info">
-                                <i class="bi bi-info-circle me-1"></i>
-                                L'avocat est lié à cette partie. Cliquez sur <i class="bi bi-pencil"></i> pour le modifier.
-                            </div>
-                        </div>
-
-                        {{-- Affiché pour une nouvelle partie --}}
-                        <div id="bloc_avocat_select">
-                            <select name="id_avocat" id="field_avocat_select" class="form-select">
-                                <option value="">— Aucun avocat —</option>
-                                @foreach($avocats as $av)
-                                    <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- Champ caché qui envoie toujours la valeur --}}
-                        <input type="hidden" name="id_avocat" id="field_avocat_hidden">
-                    </div>
-                    
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                         <label class="form-label fw-semibold small">
                             Date d'entrée <span class="text-danger">*</span>
                         </label>
@@ -1323,7 +1348,7 @@
                     </div>
                 </div>
                 </form>
-
+ 
             </div>
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-outline-secondary"
@@ -1350,41 +1375,47 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-            <form id="formEditPartie{{ $dp->id }}"
-                  action="{{ route('dossiers.parties.update', [$dossier, $dp]) }}"
-                  method="POST">
-            @csrf @method('PUT')
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label fw-semibold small">
-                            Rôle dans le dossier <span class="text-danger">*</span>
-                        </label>
-                        <select name="id_type_partie" class="form-select" required>
-                            @foreach($typesPartie as $tp)
-                                <option value="{{ $tp->id }}" @selected($dp->id_type_partie == $tp->id)>
-                                    {{ $tp->type_partie }}
-                                </option>
-                            @endforeach
-                        </select>
+                <form id="formEditPartie{{ $dp->id }}"
+                      action="{{ route('dossiers.parties.update', [$dossier, $dp]) }}"
+                      method="POST">
+                @csrf @method('PUT')
+ 
+                    {{-- Info avocat : lecture seule (RG8) --}}
+                    @if($dp->partie?->avocat)
+                    <div class="alert alert-light border d-flex align-items-center gap-2 py-2 small mb-3">
+                        <i class="bi bi-briefcase text-muted"></i>
+                        <div>
+                            <strong>Avocat :</strong> {{ $dp->partie->avocat->nom_avocat }}
+                            <span class="text-muted ms-1">
+                                — lié à la partie.
+                                <a href="{{ route('parties.edit', $dp->partie) }}" target="_blank" class="text-info">
+                                    Modifier sur la fiche partie <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                </a>
+                            </span>
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label fw-semibold small">Avocat représentant</label>
-                        <select name="id_avocat" class="form-select">
-                            <option value="">— Aucun —</option>
-                            @foreach($avocats as $av)
-                                <option value="{{ $av->id }}" @selected($dp->id_avocat == $av->id)>
-                                    {{ $av->nom_avocat }}
-                                </option>
-                            @endforeach
-                        </select>
+                    @endif
+ 
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">
+                                Rôle dans le dossier <span class="text-danger">*</span>
+                            </label>
+                            <select name="id_type_partie" class="form-select" required>
+                                @foreach($typesPartie as $tp)
+                                    <option value="{{ $tp->id }}" @selected($dp->id_type_partie == $tp->id)>
+                                        {{ $tp->type_partie }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">Date d'entrée</label>
+                            <input type="date" name="date_entree" class="form-control"
+                                   value="{{ $dp->date_entree?->format('Y-m-d') }}">
+                        </div>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label fw-semibold small">Date d'entrée</label>
-                        <input type="date" name="date_entree" class="form-control"
-                               value="{{ $dp->date_entree?->format('Y-m-d') }}">
-                    </div>
-                </div>
-            </form>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary"
@@ -1727,17 +1758,26 @@
     }
 })();
 
-// ── Recherche de parties existantes (modal Ajouter une partie) ───────────────
 (function () {
-
+ 
+    // ── Éléments du modal Ajouter une partie ────────────────────────────
     const input        = document.getElementById('recherchePartie');
     const dropdown     = document.getElementById('resultatRecherche');
     const bandeauOK    = document.getElementById('partieSelectionnee');
     const nomOK        = document.getElementById('partieSelectionneeNom');
     const btnDesel     = document.getElementById('btnDeselectionner');
     const btnNouvelle  = document.getElementById('btnNouvellePartie');
-
-    // Champs du formulaire ciblés par leur id
+    const btnModifier  = document.getElementById('btnModifierAvocat');
+ 
+    // Blocs avocat
+    const blocExistant = document.getElementById('bloc_avocat_existant');
+    const blocNouveau  = document.getElementById('bloc_avocat_nouveau');
+    const blocModif    = document.getElementById('bloc_avocat_modif');
+    const avocatDisplay= document.getElementById('field_avocat_display');
+    const avocatModifSel = document.getElementById('field_avocat_modif_select');
+    const avocatNvxSel  = document.getElementById('field_avocat_nouveau_select');
+ 
+    // Champs identité
     const F = {
         id:           document.getElementById('hidden_partie_id'),
         identifiant:  document.getElementById('field_identifiant'),
@@ -1747,13 +1787,12 @@
         email:        document.getElementById('field_email'),
         adresse:      document.getElementById('field_adresse'),
     };
-
+ 
     let timer = null;
-
-    // ── Verrouiller / déverrouiller les champs identité ──
+ 
+    // ── Verrouiller / déverrouiller les champs identité ────────────────
     function lockFields(lock) {
-        const textFields = ['identifiant', 'nom', 'email', 'adresse'];
-        textFields.forEach(k => {
+        ['identifiant', 'nom', 'email', 'adresse', 'telephone'].forEach(k => {
             F[k].readOnly = lock;
             F[k].classList.toggle('bg-light', lock);
             F[k].classList.toggle('text-muted', lock);
@@ -1761,8 +1800,44 @@
         F.type_personne.disabled = lock;
         F.type_personne.classList.toggle('bg-light', lock);
     }
-
-    // ── Remplir le formulaire depuis une partie sélectionnée ──
+ 
+    // ── Afficher le bloc avocat selon le contexte ───────────────────────
+    function afficherAvocatExistant(avocatNom, avocatId) {
+        blocExistant.classList.remove('d-none');
+        blocNouveau.classList.add('d-none');
+        blocModif.classList.add('d-none');
+ 
+        avocatDisplay.value = avocatNom || 'Aucun avocat enregistré';
+ 
+        // Désactiver les selects du bloc "nouveau" pour qu'ils ne soient pas soumis
+        avocatNvxSel.disabled = true;
+        avocatNvxSel.name = ''; // retire du formulaire
+ 
+        // Pré-sélectionner dans le select de modification
+        if (avocatId) {
+            Array.from(avocatModifSel.options).forEach(o => {
+                o.selected = (o.value == avocatId);
+            });
+        }
+        avocatModifSel.disabled = true; // caché par défaut
+        avocatModifSel.name = '';       // pas dans le form tant que non affiché
+    }
+ 
+    function afficherAvocatNouveau() {
+        blocExistant.classList.add('d-none');
+        blocNouveau.classList.remove('d-none');
+        blocModif.classList.add('d-none');
+ 
+        // Réactiver le select "nouveau"
+        avocatNvxSel.disabled = false;
+        avocatNvxSel.name = 'id_avocat';
+ 
+        // Désactiver le select de modification
+        avocatModifSel.disabled = true;
+        avocatModifSel.name = '';
+    }
+ 
+    // ── Sélectionner une partie existante ──────────────────────────────
     function selectionner(p) {
         F.id.value           = p.id;
         F.identifiant.value  = p.identifiant_unique ?? '';
@@ -1770,37 +1845,22 @@
         F.email.value        = p.email              ?? '';
         F.telephone.value    = p.telephone          ?? '';
         F.adresse.value      = p.adresse            ?? '';
-
-        // Synchroniser le <select> type_personne
+ 
         Array.from(F.type_personne.options).forEach(o => {
             o.selected = (o.value === p.type_personne);
         });
-
+ 
         lockFields(true);
         nomOK.textContent = `${p.nom_partie} (${p.identifiant_unique})`;
         bandeauOK.classList.remove('d-none');
         fermerDropdown();
         input.value = '';
-
-        const blocInfo   = document.getElementById('bloc_avocat_info');
-        const blocSelect = document.getElementById('bloc_avocat_select');
-        const display    = document.getElementById('field_avocat_display');
-        const hidden     = document.getElementById('field_avocat_hidden');
-
-        if (p.id_avocat) {
-            display.value        = p.avocat_nom ?? 'Avocat #' + p.id_avocat;
-            hidden.value         = p.id_avocat;
-            blocInfo.classList.remove('d-none');
-            blocSelect.classList.add('d-none');
-        } else {
-            display.value        = '';
-            hidden.value         = '';
-            blocInfo.classList.add('d-none');
-            blocSelect.classList.remove('d-none');
-        }
+ 
+        // RG8 : montrer l'avocat de la partie en lecture seule
+        afficherAvocatExistant(p.avocat_nom, p.id_avocat);
     }
-
-    // ── Vider la sélection ──
+ 
+    // ── Vider la sélection ──────────────────────────────────────────────
     function deselectionner() {
         F.id.value = '';
         lockFields(false);
@@ -1809,34 +1869,30 @@
         F.type_personne.selectedIndex = 0;
         F.type_personne.disabled = false;
         F.type_personne.classList.remove('bg-light');
-        document.getElementById('bloc_avocat_info').classList.add('d-none');
-        document.getElementById('bloc_avocat_select').classList.remove('d-none');
-        document.getElementById('field_avocat_hidden').value = '';
-        document.getElementById('field_avocat_display').value = '';
+ 
+        // Revenir au mode "nouvelle partie"
+        afficherAvocatNouveau();
     }
-
+ 
     function fermerDropdown() {
         dropdown.style.display = 'none';
         dropdown.innerHTML = '';
     }
-
-    // ── Échapper le HTML pour éviter les XSS dans les résultats ──
+ 
     function esc(str) {
         return (str ?? '').replace(/[&<>"']/g, c => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
     }
-
-    // ── Afficher les résultats dans le dropdown ──
+ 
+    // ── Afficher les résultats dans le dropdown ─────────────────────────
     function afficher(parties, query) {
         dropdown.innerHTML = '';
-
+ 
         if (!parties.length && query.length < 2) {
-            fermerDropdown();
-            return;
+            fermerDropdown(); return;
         }
-
-        // Résultats trouvés
+ 
         parties.forEach(p => {
             const btn = document.createElement('button');
             btn.type = 'button';
@@ -1847,19 +1903,18 @@
                         <div class="fw-semibold small">${esc(p.nom_partie)}</div>
                         <div class="text-muted" style="font-size:.75rem">
                             <span class="font-monospace">${esc(p.identifiant_unique)}</span>
-                            ${p.type_personne ? ' &middot; ' + esc(p.type_personne) : ''}
-                            ${p.email         ? ' &middot; ' + esc(p.email)         : ''}
+                            ${p.type_personne ? ' · ' + esc(p.type_personne) : ''}
+                            ${p.avocat_nom
+                                ? ` · <i class="bi bi-briefcase me-1"></i>${esc(p.avocat_nom)}`
+                                : ' · <span class="text-muted fst-italic">sans avocat</span>'}
                         </div>
                     </div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary flex-shrink-0">
-                        Sélectionner
-                    </span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary flex-shrink-0">Sélectionner</span>
                 </div>`;
             btn.addEventListener('click', () => selectionner(p));
             dropdown.appendChild(btn);
         });
-
-        // Option "Créer une nouvelle partie"
+ 
         const creer = document.createElement('button');
         creer.type = 'button';
         creer.className = 'list-group-item list-group-item-action py-2 px-3 text-primary';
@@ -1867,222 +1922,137 @@
             Créer une nouvelle partie <strong>« ${esc(query)} »</strong>`;
         creer.addEventListener('click', () => {
             deselectionner();
-            // Pré-remplir selon si la saisie ressemble à un identifiant ou à un nom
             const ressembleId = /^[A-Za-z0-9\-]{3,}$/.test(query);
-            if (ressembleId) {
-                F.identifiant.value = query;
-            } else {
-                F.nom.value = query;
-            }
+            if (ressembleId) F.identifiant.value = query;
+            else F.nom.value = query;
             fermerDropdown();
             input.value = '';
             (ressembleId ? F.nom : F.identifiant).focus();
         });
-        dropdown.appendChild(creer);
-
-        // Aucun résultat mais query valide : message d'info avant "Créer"
+ 
         if (!parties.length) {
             const info = document.createElement('div');
             info.className = 'list-group-item py-2 px-3 text-muted small';
             info.textContent = 'Aucune partie trouvée pour cette recherche.';
             dropdown.insertBefore(info, creer);
         }
-
+        dropdown.appendChild(creer);
         dropdown.style.display = 'block';
     }
-
-    // ── Appel AJAX avec debounce 280 ms ──
-    input.addEventListener('input', () => {
+ 
+    // ── AJAX avec debounce ──────────────────────────────────────────────
+    input?.addEventListener('input', () => {
         clearTimeout(timer);
         const q = input.value.trim();
-
-        if (q.length < 2) {
-            fermerDropdown();
-            return;
-        }
-
+        if (q.length < 2) { fermerDropdown(); return; }
+ 
         timer = setTimeout(async () => {
             try {
-                const res = await fetch("{{ route('dossiers.parties.search', $dossier) }}?q=" + q, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                    }
+                const res  = await fetch(`{{ route('dossiers.parties.search', $dossier) }}?q=${encodeURIComponent(q)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 });
-                if (!res.ok) throw new Error('Erreur réseau');
-                const data = await res.json();
-                afficher(data, q);
-            } catch (err) {
-                console.error('Recherche partie :', err);
-            }
+                if (!res.ok) throw new Error();
+                afficher(await res.json(), q);
+            } catch { /* silencieux */ }
         }, 280);
     });
-
-    // ── Fermer le dropdown en cliquant hors du modal ──
+ 
     document.addEventListener('click', e => {
-        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-            fermerDropdown();
-        }
+        if (!input?.contains(e.target) && !dropdown?.contains(e.target)) fermerDropdown();
     });
-
-    // ── Bouton "Nouvelle" : vider tout et donner le focus ──
-    btnNouvelle.addEventListener('click', () => {
-        deselectionner();
-        fermerDropdown();
-        input.value = '';
-        F.identifiant.focus();
+ 
+    btnNouvelle?.addEventListener('click', () => {
+        deselectionner(); fermerDropdown(); input.value = ''; F.identifiant.focus();
     });
-
-    // ── Lien "changer" dans le bandeau ──
-    btnDesel.addEventListener('click', e => {
-        e.preventDefault();
-        deselectionner();
-        input.focus();
+ 
+    btnDesel?.addEventListener('click', e => { e.preventDefault(); deselectionner(); input.focus(); });
+ 
+    // ── Bouton "Modifier" avocat (partie existante) ─────────────────────
+    btnModifier?.addEventListener('click', () => {
+        blocModif.classList.toggle('d-none');
+        const visible = !blocModif.classList.contains('d-none');
+        avocatModifSel.disabled = !visible;
+        avocatModifSel.name = visible ? 'id_avocat' : '';
+        btnModifier.innerHTML = visible
+            ? '<i class="bi bi-x me-1"></i>Annuler'
+            : '<i class="bi bi-pencil me-1"></i>Modifier';
     });
-
-    // ── Reset complet à chaque ouverture du modal ──
+ 
+    // ── Reset complet à l'ouverture du modal ────────────────────────────
     document.getElementById('modalAjouterPartie')
-        .addEventListener('show.bs.modal', () => {
+        ?.addEventListener('show.bs.modal', () => {
             deselectionner();
             fermerDropdown();
             input.value = '';
+            avocatNvxSel.value = '';
+            avocatModifSel.value = '';
         });
-
-
-    document.getElementById('checkSolde').addEventListener('change', function () {
-        const paye = document.getElementById('montant_paye');
-        const condamne = document.getElementById('montant_condamne');
-
-        if (this.checked) {
-            paye.value = condamne.value;
-        }
-    });
-
-    document.getElementById('btnChangerAvocat')?.addEventListener('click', () => {
-        const blocInfo   = document.getElementById('bloc_avocat_info');
-        const blocSelect = document.getElementById('bloc_avocat_select');
-        blocInfo.classList.add('d-none');
-        blocSelect.classList.remove('d-none');
-        // Synchroniser la valeur du select avec le hidden
-        const hidden = document.getElementById('field_avocat_hidden');
-        const select = document.getElementById('field_avocat_select');
-        if (hidden.value) {
-            Array.from(select.options).forEach(o => {
-                o.selected = (o.value == hidden.value);
-            });
-        }
-        // Le select prend le relais — vider le hidden pour éviter le doublon
-        hidden.value = '';
-    });
-
-    // Quand le select change, mettre à jour le hidden
-    document.getElementById('field_avocat_select')?.addEventListener('change', function () {
-        document.getElementById('field_avocat_hidden').value = this.value;
-    });
-
+ 
+    // ── État initial : mode "nouvelle partie" ───────────────────────────
+    afficherAvocatNouveau();
+ 
 })();
 
 // ── Cascade Région → Province → Degré → Tribunal (modal assigner tribunal) ──
 (function () {
-
+ 
+    // ── Cascade Région → Province → Degré → Tribunal (modal assigner tribunal) ──
     const selRegion   = document.getElementById('modal_region');
     const selProvince = document.getElementById('modal_province');
     const selDegre    = document.getElementById('modal_degre');
     const selTribunal = document.getElementById('modal_tribunal');
-
+ 
     function reset(sel, placeholder) {
+        if (!sel) return;
         sel.innerHTML = `<option value="">${placeholder}</option>`;
         sel.disabled  = true;
-        sel.value     = '';
     }
-
-    // Région → Provinces
-    selRegion.addEventListener('change', async function () {
+ 
+    selRegion?.addEventListener('change', async function () {
         reset(selProvince, '— Chargement… —');
         reset(selDegre,    '— Sélectionner d\'abord une province —');
         reset(selTribunal, '— Sélectionner d\'abord un degré —');
-
-        if (!this.value) {
-            reset(selProvince, '— Sélectionner d\'abord une région —');
-            return;
-        }
-
+        if (!this.value) { reset(selProvince, '— Sélectionner d\'abord une région —'); return; }
         try {
-            const res  = await fetch(`/api/regions/${this.value}/provinces`);
-            const data = await res.json();
-
+            const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
             selProvince.innerHTML = '<option value="">— Sélectionner une province —</option>';
-            data.forEach(p => {
-                selProvince.innerHTML += `<option value="${p.id}">${p.province}</option>`;
-            });
+            data.forEach(p => selProvince.innerHTML += `<option value="${p.id}">${p.province}</option>`);
             selProvince.disabled = false;
-        } catch (e) {
-            reset(selProvince, '— Erreur de chargement —');
-        }
+        } catch { reset(selProvince, '— Erreur de chargement —'); }
     });
-
-    // Province → Degrés
-    selProvince.addEventListener('change', async function () {
-        reset(selDegre,    '— Chargement… —');
+ 
+    selProvince?.addEventListener('change', async function () {
+        reset(selDegre, '— Chargement… —');
         reset(selTribunal, '— Sélectionner d\'abord un degré —');
-
-        if (!this.value) {
-            reset(selDegre, '— Sélectionner d\'abord une province —');
-            return;
-        }
-
+        if (!this.value) { reset(selDegre, '— Sélectionner d\'abord une province —'); return; }
         try {
-            const res  = await fetch(`/api/provinces/${this.value}/degres`);
-            const data = await res.json();
-
+            const data = await (await fetch(`/api/provinces/${this.value}/degres`)).json();
             selDegre.innerHTML = '<option value="">— Sélectionner un degré —</option>';
-            data.forEach(d => {
-                selDegre.innerHTML += `<option value="${d.id}">${d.degre_juridiction}</option>`;
-            });
+            data.forEach(d => selDegre.innerHTML += `<option value="${d.id}">${d.degre_juridiction}</option>`);
             selDegre.disabled = false;
-        } catch (e) {
-            reset(selDegre, '— Erreur de chargement —');
-        }
+        } catch { reset(selDegre, '— Erreur de chargement —'); }
     });
-
-    // Degré → Tribunaux
-    selDegre.addEventListener('change', async function () {
+ 
+    selDegre?.addEventListener('change', async function () {
         reset(selTribunal, '— Chargement… —');
-
-        if (!this.value) {
-            reset(selTribunal, '— Sélectionner d\'abord un degré —');
-            return;
-        }
-
-        const provinceId = selProvince.value;
-
+        if (!this.value) { reset(selTribunal, '— Sélectionner d\'abord un degré —'); return; }
         try {
-            const res  = await fetch(`/api/provinces/${provinceId}/degres/${this.value}/tribunaux`);
-            const data = await res.json();
-
+            const data = await (await fetch(`/api/provinces/${selProvince.value}/degres/${this.value}/tribunaux`)).json();
             selTribunal.innerHTML = '<option value="">— Sélectionner un tribunal —</option>';
-            data.forEach(t => {
-                selTribunal.innerHTML += `<option value="${t.id}">${t.nom_tribunal}</option>`;
-            });
-            selTribunal.disabled = data.length === 0;
-
-            if (data.length === 0) {
-                selTribunal.innerHTML = '<option value="">— Aucun tribunal disponible —</option>';
-            }
-        } catch (e) {
-            reset(selTribunal, '— Erreur de chargement —');
-        }
+            if (!data.length) { selTribunal.innerHTML = '<option value="">— Aucun tribunal disponible —</option>'; return; }
+            data.forEach(t => selTribunal.innerHTML += `<option value="${t.id}">${t.nom_tribunal}</option>`);
+            selTribunal.disabled = false;
+        } catch { reset(selTribunal, '— Erreur de chargement —'); }
     });
-
-    // Reset complet à chaque ouverture du modal
+ 
     document.getElementById('modalAjouterTribunal')
-        .addEventListener('show.bs.modal', function () {
-            selRegion.value = '';
+        ?.addEventListener('show.bs.modal', function () {
+            if (selRegion) selRegion.value = '';
             reset(selProvince, '— Sélectionner d\'abord une région —');
             reset(selDegre,    '— Sélectionner d\'abord une province —');
             reset(selTribunal, '— Sélectionner d\'abord un degré —');
         });
-
+ 
 })();
 </script>
 @endpush
