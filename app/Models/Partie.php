@@ -18,13 +18,19 @@ class Partie extends Model
         'identifiant_unique',
         'telephone',
         'email',
-        'adresse'
+        'adresse',
+        'est_entraide',
+        'id_avocat',
+    ];
+
+    protected $casts = [
+        'est_entraide' => 'boolean',  
     ];
 
     public function dossiers()
     {
         return $this->belongsToMany(DossierJudiciaire::class, 'dossier_parties', 'id_partie', 'id_dossier')
-                    ->withPivot(['id_type_partie', 'id_avocat', 'est_institution', 'date_entree'])
+                    ->withPivot(['id_type_partie', 'id_avocat', 'date_entree'])
                     ->withTimestamps();
     }
 
@@ -40,12 +46,13 @@ class Partie extends Model
         return $this->hasMany(Document::class, 'id_partie');
     }
 
-    public function getEstInstitutionDansDossierAttribute($dossierId): bool
+    public function avocat()
     {
-        $dossierPartie = $this->dossiers()
-            ->where('dossier_id', $dossierId)
-            ->first();
-        
-        return $dossierPartie ? (bool)$dossierPartie->pivot->est_institution : false;
+        return $this->belongsTo(Avocat::class, 'id_avocat');
+    }
+
+    public function estInstitutionDansDossier($dossierId): bool
+    {
+        return (bool) $this->est_entraide;
     }
 }

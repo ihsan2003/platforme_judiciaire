@@ -26,6 +26,15 @@ class DossierTribunalController extends Controller
             'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
 
+        // RG04 — vérification de l'ordre des degrés
+        $erreurDegre = $dossier->peutAjouterDegre((int) $request->id_degre);
+        if ($erreurDegre) {
+            return redirect()
+                ->route('dossiers.show', $dossier)
+                ->withFragment('tab-tribunaux')
+                ->with('error', $erreurDegre);
+        }
+
         DossierTribunal::create([
             'id_dossier'  => $dossier->id,
             'id_tribunal' => $request->id_tribunal,

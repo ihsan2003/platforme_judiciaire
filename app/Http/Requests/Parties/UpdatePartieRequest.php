@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Requests\Parties;
+use App\Rules\Telephone;
+
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -17,7 +19,7 @@ class UpdatePartieRequest extends FormRequest
             'nom_partie'        => ['required', 'string', 'max:255'],
             'type_personne'     => ['required', 'in:physique,morale'],
             'identifiant_unique'=> ['required', 'string', "unique:parties,identifiant_unique,{$partieId}"],
-            'telephone'         => ['nullable', 'string', 'max:20'],
+            'telephone'          => ['nullable', new Telephone],
             'email'             => ['nullable', 'email', 'max:255'],
             'adresse'           => ['nullable', 'string'],
         ];

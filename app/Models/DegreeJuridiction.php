@@ -12,7 +12,7 @@ class DegreeJuridiction extends Model
 
     protected $table = 'degre_juridictions';
     
-    protected $fillable = ['degre_juridiction'];
+    protected $fillable = ['degre_juridiction', 'ordre'];
 
     public function dossierTribunaux()
     {

@@ -58,17 +58,20 @@ class DossierTribunal extends Model
     // RÈGLES MÉTIER
     // ─────────────────────────────────────────
 
+    public function audienceHoukm(): ?Audience
+    {
+        return $this->audiences()
+            ->whereHas('typeAudience', fn($q) => $q->where('type_audience', 'الحكم'))
+            ->latest('date_audience')
+            ->first();
+    }
     /**
      * RG — Un jugement ne peut être rendu que si une audience
      * de type "الحكم" (délibéré / rendu) a eu lieu dans cette instance.
      */
     public function peutAvoirJugement(): bool
     {
-        return $this->audiences()
-            ->whereHas('typeAudience', function ($q) {
-                $q->where('type_audience', 'الحكم');
-            })
-            ->exists();
+        return $this->audienceHoukm() !== null;
     }
 
     /**

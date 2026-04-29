@@ -38,8 +38,13 @@
 <div class="row">
     <div class="col mb-3">
         <label class="form-label">Téléphone</label>
-        <input type="text" name="telephone" class="form-control"
-               value="{{ old('telephone', $partie->telephone ?? '') }}">
+        <input type="tel"
+        name="telephone"
+        class="form-control @error('telephone') is-invalid @enderror"
+        placeholder="Ex : 0612345678"
+        pattern="^(\+212|00212|0)(5|6|7)[0-9]{8}$"
+        title="Format attendu : 0612345678 ou +212612345678"
+        value="{{ old('telephone', $partie->telephone ?? '') }}">
     </div>
     <div class="col mb-3">
         <label class="form-label">Email</label>

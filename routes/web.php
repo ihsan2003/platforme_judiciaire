@@ -94,6 +94,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{tribunal}', [DossierTribunalController::class, 'destroy'])->name('destroy');
     });
 
+    Route::get('/tribunaux/{tribunalId}/juges', function ($tribunalId) {
+        $juges = \App\Models\Juge::where('id_tribunal', $tribunalId)
+            ->orderBy('nom_complet')
+            ->get(['id', 'nom_complet', 'grade']);
+        return response()->json($juges);
+    });
+
     // ✅ Correct — dossier en paramètre
     Route::post('/dossiers/{dossier}/documents', [DocumentController::class, 'store'])->name('documents.store');
     Route::get('/dossiers/{dossier}/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');

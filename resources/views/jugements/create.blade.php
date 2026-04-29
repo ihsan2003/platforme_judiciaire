@@ -66,16 +66,36 @@
             </div>
 
             {{-- Date --}}
+            {{-- RG02 : date imposée par l'audience "الحكم" --}}
             <div class="col-md-4">
                 <label class="form-label fw-semibold small">
                     Date du jugement <span class="text-danger">*</span>
                 </label>
 
+                @php
+                    // On récupère la date de l'audience الحكم si un seul dossierTribunal est sélectionnable
+                    $dateHoukm = null;
+                    $dtSelectionne = $dossierTribunaux->first(); // ou selon sélection JS
+                    if ($dtSelectionne) {
+                        $ah = $dtSelectionne->audienceHoukm();
+                        $dateHoukm = $ah?->date_audience?->format('Y-m-d');
+                    }
+                @endphp
+
                 <input type="date"
-                       name="date_jugement"
-                       class="form-control @error('date_jugement') is-invalid @enderror"
-                       value="{{ old('date_jugement', date('Y-m-d')) }}"
-                       required>
+                    name="date_jugement"
+                    id="date_jugement"
+                    class="form-control @error('date_jugement') is-invalid @enderror"
+                    value="{{ old('date_jugement', $dateHoukm ?? '') }}"
+                    {{ $dateHoukm ? 'readonly' : '' }}
+                    required>
+
+                @if($dateHoukm)
+                    <div class="form-text text-info">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Date imposée par l'audience "الحكم" du {{ \Carbon\Carbon::parse($dateHoukm)->format('d/m/Y') }}
+                    </div>
+                @endif
 
                 @error('date_jugement')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -164,8 +184,31 @@
     </form>
 
 </div>
-```
 
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+// Map dossierTribunal.id → date audience الحكم
+const dateHoukmMap = {
+    @foreach($dossierTribunaux as $dt)
+        @php $ah = $dt->audienceHoukm(); @endphp
+        {{ $dt->id }}: "{{ $ah?->date_audience?->format('Y-m-d') ?? '' }}",
+    @endforeach
+};
+
+document.getElementById('id_dossier_tribunal')
+    ?.addEventListener('change', function () {
+        const dateInput = document.getElementById('date_jugement');
+        const date      = dateHoukmMap[this.value] ?? '';
+
+        dateInput.value    = date;
+        dateInput.readOnly = !!date;
+
+        const hint = document.getElementById('date_houkm_hint');
+        if (hint) hint.style.display = date ? 'block' : 'none';
+    });
+</script>
+@endpush

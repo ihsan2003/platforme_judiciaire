@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Avocat;
+use App\Rules\Telephone;
+
 
 class AvocatController extends Controller
 {
@@ -31,7 +33,7 @@ class AvocatController extends Controller
     {
         $validated = $request->validate([
             'nom_avocat' => 'required|string|max:255',
-            'telephone' => 'required|string|max:20',
+            'telephone'  => ['required', new Telephone],
             'email' => 'required|email|unique:avocats,email'
         ]);
 
@@ -65,7 +67,7 @@ class AvocatController extends Controller
     {
         $validated = $request->validate([
             'nom_avocat' => 'required|string|max:255',
-            'telephone' => 'required|string|max:20',
+            'telephone'  => ['required', new Telephone],
             'email' => 'required|email|unique:avocats,email,'.$id
         ]);
 

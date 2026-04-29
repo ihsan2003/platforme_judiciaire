@@ -11,7 +11,13 @@
 <form action="{{ route('avocats.store') }}" method="POST">
     @csrf
     <input type="text" name="nom_avocat" placeholder="Nom de l'avocat" value="{{ old('nom_avocat') }}">
-    <input type="text" name="telephone" placeholder="Téléphone" value="{{ old('telephone') }}">
+    <input type="tel"
+        name="telephone"
+        class="form-control @error('telephone') is-invalid @enderror"
+        placeholder="Ex : 0612345678"
+        pattern="^(\+212|00212|0)(5|6|7)[0-9]{8}$"
+        title="Format attendu : 0612345678 ou +212612345678"
+        value="{{ old('telephone', $avocat->telephone ?? '') }}">
     <input type="email" name="email" placeholder="Email" value="{{ old('email') }}">
     <button type="submit">Créer</button>
 </form>

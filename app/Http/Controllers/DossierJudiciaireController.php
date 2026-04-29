@@ -175,7 +175,7 @@ class DossierJudiciaireController extends Controller
         ]);
 
         // Les parties sont chargées séparément via DossierPartie pour avoir
-        // accès aux colonnes pivot (id_type_partie, id_avocat, est_institution, date_entree)
+        // accès aux colonnes pivot (id_type_partie, id_avocat, date_entree)
         $dossierParties = DossierPartie::with([
             'partie',
             'typePartie',
@@ -224,6 +224,7 @@ class DossierJudiciaireController extends Controller
 
         $typesDocuments = TypeDocument::all();
         $regions = \App\Models\Region::orderBy('region')->get();
+        $institution = $dossierParties->first(fn($dp) => $dp->partie?->est_entraide);
 
 
         return view('dossiers.show', compact(

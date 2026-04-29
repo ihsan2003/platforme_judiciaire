@@ -14,11 +14,31 @@ class UpdateAudienceRequest extends FormRequest
 
     public function rules(): array
     {
+        $audience = $this->route('audience'); // récupère le modèle ou l'ID
+        $audienceId = is_object($audience) ? $audience->id : $audience;
+
         return [
-            'id_dossier_tribunal'     => 'required|exists:dossier_tribunaux,id',  // ← corrige 'dossier_tribunals'
-            'id_type_audience'        => 'required|exists:type_audiences,id',
-            'id_juge'                 => 'required|exists:juges,id',
-            'date_audience'           => 'required|date',
+            'id_dossier_tribunal' => 'required|exists:dossier_tribunaux,id',
+            'id_type_audience'    => 'required|exists:type_audiences,id',
+            'id_juge'             => 'required|exists:juges,id',
+            'date_audience'       => [
+                'required',
+                'date',
+                function (string $attribute, mixed $value, \Closure $fail) use ($audienceId) {
+
+                    $idDossierTribunal = $this->input('id_dossier_tribunal');
+                    if (! $idDossierTribunal) return;
+
+                    $existe = \App\Models\Audience::where('id_dossier_tribunal', $idDossierTribunal)
+                        ->whereDate('date_audience', $value)
+                        ->where('id', '!=', $audienceId)
+                        ->exists();
+
+                    if ($existe) {
+                        $fail('Une audience existe déjà à cette date pour ce dossier/tribunal.');
+                    }
+                },
+            ],
             'date_prochaine_audience' => 'nullable|date|after_or_equal:date_audience',
             'presence_demandeur'      => 'boolean',
             'presence_defendeur'      => 'boolean',

@@ -47,25 +47,52 @@
 
                     {{-- Dossier / Tribunal --}}
                     <div class="mb-3">
-                        <label for="id_dossier_tribunal" class="form-label fw-semibold">
-                            Dossier & Tribunal <span class="text-danger">*</span>
+                        <label class="form-label fw-semibold">
+                            Dossier &amp; Tribunal <span class="text-danger">*</span>
                         </label>
                         <select name="id_dossier_tribunal"
                                 id="id_dossier_tribunal"
                                 class="form-select @error('id_dossier_tribunal') is-invalid @enderror"
                                 required>
                             <option value="">— Sélectionner un dossier —</option>
-
                             @foreach($dossierTribunaux as $dt)
                                 <option value="{{ $dt->id }}"
-                                    @selected(
-                                        old('id_dossier_tribunal', $dossierTribunaux->count() === 1 ? $dt->id : null) == $dt->id
-                                    )>
+                                        data-tribunal-id="{{ $dt->id_tribunal }}"
+                                        @selected(old('id_dossier_tribunal',
+                                            $dossierTribunaux->count() === 1 ? $dt->id : null) == $dt->id)>
                                     {{ $dt->dossier?->numero_dossier_interne ?? 'Dossier #'.$dt->id_dossier }}
                                     — {{ $dt->tribunal?->nom_tribunal ?? 'Tribunal #'.$dt->id_tribunal }}
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- Juge — filtré selon le tribunal sélectionné --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Juge <span class="text-danger">*</span>
+                        </label>
+
+                        {{-- État initial : tous les juges (fallback si JS désactivé) --}}
+                        <select name="id_juge" id="id_juge"
+                                class="form-select @error('id_juge') is-invalid @enderror"
+                                required>
+                            <option value="">— Sélectionner d'abord un tribunal —</option>
+                            @foreach($juges as $juge)
+                                <option value="{{ $juge->id }}" @selected(old('id_juge') == $juge->id)>
+                                    {{ $juge->grade ? $juge->grade.' ' : '' }}{{ $juge->nom_complet }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <div id="juge_hint" class="form-text text-info d-none">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Liste filtrée selon le tribunal sélectionné.
+                        </div>
+                        <div id="juge_aucun" class="form-text text-warning d-none">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Aucun juge enregistré pour ce tribunal.
+                        </div>
                     </div>
 
                     {{-- Type --}}
@@ -80,23 +107,6 @@
                             @foreach($typesAudience as $type)
                                 <option value="{{ $type->id }}" @selected(old('id_type_audience') == $type->id)>
                                     {{ $type->libelle ?? $type->type_audience }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Juge --}}
-                    <div class="mb-3">
-                        <label for="id_juge" class="form-label fw-semibold">
-                            Juge <span class="text-danger">*</span>
-                        </label>
-                        <select name="id_juge" id="id_juge"
-                                class="form-select @error('id_juge') is-invalid @enderror"
-                                required>
-                            <option value="">— Sélectionner —</option>
-                            @foreach($juges as $juge)
-                                <option value="{{ $juge->id }}" @selected(old('id_juge') == $juge->id)>
-                                    {{ $juge->nom_complet }}
                                 </option>
                             @endforeach
                         </select>
@@ -191,3 +201,58 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('id_dossier_tribunal')
+    ?.addEventListener('change', async function () {
+        const tribunalId = this.options[this.selectedIndex]?.dataset?.tribunalId;
+        const jugeSelect = document.getElementById('id_juge');
+        const hint       = document.getElementById('juge_hint');
+        const aucun      = document.getElementById('juge_aucun');
+
+        if (!tribunalId) {
+            jugeSelect.innerHTML = '<option value="">— Sélectionner d\'abord un tribunal —</option>';
+            hint.classList.add('d-none');
+            aucun.classList.add('d-none');
+            return;
+        }
+
+        jugeSelect.innerHTML = '<option value="">— Chargement… —</option>';
+        jugeSelect.disabled  = true;
+
+        try {
+            const res   = await fetch(`/api/tribunaux/${tribunalId}/juges`);
+            const juges = await res.json();
+
+            jugeSelect.innerHTML = '<option value="">— Sélectionner un juge —</option>';
+
+            if (juges.length === 0) {
+                aucun.classList.remove('d-none');
+                hint.classList.add('d-none');
+            } else {
+                juges.forEach(j => {
+                    const opt   = document.createElement('option');
+                    opt.value   = j.id;
+                    opt.textContent = (j.grade ? j.grade + ' ' : '') + j.nom_complet;
+                    jugeSelect.appendChild(opt);
+                });
+                hint.classList.remove('d-none');
+                aucun.classList.add('d-none');
+            }
+
+            jugeSelect.disabled = false;
+
+        } catch (e) {
+            jugeSelect.innerHTML = '<option value="">— Erreur de chargement —</option>';
+            jugeSelect.disabled  = false;
+        }
+    });
+
+// Déclencher si un tribunal est déjà sélectionné (retour formulaire avec old())
+window.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('id_dossier_tribunal');
+    if (sel?.value) sel.dispatchEvent(new Event('change'));
+});
+</script>
+@endpush

@@ -65,55 +65,56 @@ class AudienceController extends Controller
     // ─────────────────────────────────────────
     // CREATE
     // ─────────────────────────────────────────
-public function create()
-{
-    $dossierId = request('dossier_id');
+    public function create()
+    {
+        $dossierId = request('dossier_id');
 
-    if (!$dossierId) {
-        return redirect()
-            ->route('audiences.index')
-            ->with('error', 'Dossier non spécifié.');
+        if (!$dossierId) {
+            return redirect()
+                ->route('audiences.index')
+                ->with('error', 'Dossier non spécifié.');
+        }
+
+        // 🔹 Charger le dossier + parties
+        $dossier = DossierJudiciaire::with('parties')->findOrFail($dossierId);
+
+        // 🔒 règle métier : minimum 2 parties
+        if (! $dossier->peutAvoirAudience()) {
+            $manquants = implode('" et "', $dossier->typesPartiesManquants());
+            return redirect()
+                ->route('dossiers.show', $dossier->id)
+                ->with('error', "Impossible de créer une audience : le rôle \"{$manquants}\" est manquant dans ce dossier.");
+        }
+
+        // 🔹 Dossier tribunaux liés
+        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal'])
+            ->where('id_dossier', $dossierId)
+            ->get();
+
+        // 🔹 Données formulaire
+        $typesAudience = TypeAudience::orderBy('type_audience')->get();
+        $juges = Juge::with('tribunal')->orderBy('nom_complet')->get();
+
+        // 🔹 Valeur par défaut date prochaine audience
+        $dateAudienceParDefaut = null;
+
+        $derniereAudience = Audience::whereHas('dossierTribunal', function ($q) use ($dossierId) {
+                $q->where('id_dossier', $dossierId);
+            })
+            ->latest('date_audience')
+            ->first();
+
+        if ($derniereAudience && $derniereAudience->date_prochaine_audience) {
+            $dateAudienceParDefaut = $derniereAudience->date_prochaine_audience->format('Y-m-d');
+        }
+
+        return view('audiences.create', compact(
+            'dossierTribunaux',
+            'typesAudience',
+            'juges',
+            'dateAudienceParDefaut'
+        ));
     }
-
-    // 🔹 Charger le dossier + parties
-    $dossier = DossierJudiciaire::with('parties')->findOrFail($dossierId);
-
-    // 🔒 règle métier : minimum 2 parties
-    if (! $dossier->peutAvoirAudience()) {
-        return redirect()
-            ->route('dossiers.show', $dossier->id)
-            ->with('error', 'Vous devez associer au moins 2 parties avant de créer une audience.');
-    }
-
-    // 🔹 Dossier tribunaux liés
-    $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal'])
-        ->where('id_dossier', $dossierId)
-        ->get();
-
-    // 🔹 Données formulaire
-    $typesAudience = TypeAudience::orderBy('type_audience')->get();
-    $juges = Juge::with('tribunal')->orderBy('nom_complet')->get();
-
-    // 🔹 Valeur par défaut date prochaine audience
-    $dateAudienceParDefaut = null;
-
-    $derniereAudience = Audience::whereHas('dossierTribunal', function ($q) use ($dossierId) {
-            $q->where('id_dossier', $dossierId);
-        })
-        ->latest('date_audience')
-        ->first();
-
-    if ($derniereAudience && $derniereAudience->date_prochaine_audience) {
-        $dateAudienceParDefaut = $derniereAudience->date_prochaine_audience->format('Y-m-d');
-    }
-
-    return view('audiences.create', compact(
-        'dossierTribunaux',
-        'typesAudience',
-        'juges',
-        'dateAudienceParDefaut'
-    ));
-}
 
     // ─────────────────────────────────────────
     // STORE
@@ -125,8 +126,9 @@ public function create()
 
         // 🔒 sécurité backend obligatoire
         if (! $dossierTribunal->dossier->peutAvoirAudience()) {
+            $manquants = implode('" et "', $dossierTribunal->dossier->typesPartiesManquants());
             return back()->withErrors([
-                'id_dossier_tribunal' => 'Ce dossier doit contenir au moins 2 parties.'
+                'id_dossier_tribunal' => "Ce dossier ne peut pas avoir d'audience : le rôle \"{$manquants}\" est manquant."
             ]);
         }
 

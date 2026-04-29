@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Parties;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\Telephone;
 
 class StorePartieRequest extends FormRequest
 {
@@ -17,7 +18,7 @@ class StorePartieRequest extends FormRequest
             'nom_partie'        => ['required', 'string', 'max:255'],
             'type_personne'     => ['required', 'in:physique,morale'],
             'identifiant_unique'=> ['required', 'string', 'unique:parties,identifiant_unique'],
-            'telephone'         => ['nullable', 'string', 'max:20'],
+            'telephone'          => ['nullable', new Telephone],
             'email'             => ['nullable', 'email', 'max:255'],
             'adresse'           => ['nullable', 'string'],
         ];

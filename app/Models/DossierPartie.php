@@ -16,13 +16,10 @@ class DossierPartie extends Model
         'id_dossier',
         'id_partie',
         'id_type_partie',
-        'id_avocat',
-        'est_institution',
         'date_entree'
     ];
 
     protected $casts = [
-        'est_institution' => 'boolean',
         'date_entree' => 'date'
     ];
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DossierJudiciaire;
 use App\Models\DossierPartie;
 use App\Models\Partie;
+use App\Rules\Telephone;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 
@@ -22,11 +23,18 @@ class DossierPartieController extends Controller
             return response()->json([]);
         }
 
-        $parties = Partie::where('identifiant_unique', 'like', "%{$q}%")
+        $parties = Partie::with('avocat')
+            ->where('identifiant_unique', 'like', "%{$q}%")
             ->orWhere('nom_partie', 'like', "%{$q}%")
             ->orderBy('nom_partie')
             ->limit(10)
-            ->get(['id', 'identifiant_unique', 'nom_partie', 'type_personne', 'telephone', 'email', 'adresse']);
+            ->get(['id', 'identifiant_unique', 'nom_partie', 'type_personne',
+                'telephone', 'email', 'adresse', 'id_avocat']);
+
+        // Ajouter le nom de l'avocat pour l'affichage dans le dropdown
+        $parties->transform(fn($p) => array_merge($p->toArray(), [
+            'avocat_nom' => $p->avocat?->nom_avocat,
+        ]));
 
         return response()->json($parties);
     }
@@ -41,22 +49,22 @@ class DossierPartieController extends Controller
             'identifiant_unique' => ['required', 'string', 'max:255'],
             'nom_partie'         => ['required_without:partie_id', 'nullable', 'string', 'max:255'],
             'type_personne'      => ['required_without:partie_id', 'nullable', 'in:Physique,Morale'],
-            'telephone'          => ['nullable', 'string', 'max:20'],
+            'telephone'          => ['nullable', new \App\Rules\TelephoneMaroc],
             'email'              => ['nullable', 'email', 'max:255'],
             'adresse'            => ['nullable', 'string'],
+            'id_avocat'          => ['nullable', 'exists:avocats,id'], // pour nouvelle partie
             'id_type_partie'     => ['required', 'exists:type_parties,id'],
-            'id_avocat'          => ['nullable', 'exists:avocats,id'],
-            'est_institution'    => ['boolean'],
             'date_entree'        => ['required', 'date'],
         ]);
 
-
-
-        // Si une partie existante a été sélectionnée via la recherche AJAX
         if ($request->filled('partie_id')) {
             $partie = Partie::findOrFail($request->partie_id);
+
+            // Mettre à jour l'avocat si on en fournit un différent
+            if ($request->filled('id_avocat') && $partie->id_avocat != $request->id_avocat) {
+                $partie->update(['id_avocat' => $request->id_avocat]);
+            }
         } else {
-            // Sinon, créer ou récupérer par identifiant
             $partie = Partie::firstOrCreate(
                 ['identifiant_unique' => $request->identifiant_unique],
                 [
@@ -65,11 +73,11 @@ class DossierPartieController extends Controller
                     'telephone'     => $request->telephone,
                     'email'         => $request->email,
                     'adresse'       => $request->adresse,
+                    'id_avocat'     => $request->id_avocat, // ← sur la partie directement
                 ]
             );
         }
 
-        // Vérifier qu'elle n'est pas déjà dans ce dossier avec ce rôle
         $existe = DossierPartie::where('id_dossier', $dossier->id)
             ->where('id_partie', $partie->id)
             ->where('id_type_partie', $request->id_type_partie)
@@ -83,12 +91,11 @@ class DossierPartieController extends Controller
         }
 
         DossierPartie::create([
-            'id_dossier'      => $dossier->id,
-            'id_partie'       => $partie->id,
-            'id_type_partie'  => $request->id_type_partie,
-            'id_avocat'       => $request->id_avocat,
-            'est_institution' => $request->boolean('est_institution'),
-            'date_entree'     => $request->date_entree,
+            'id_dossier'     => $dossier->id,
+            'id_partie'      => $partie->id,
+            'id_type_partie' => $request->id_type_partie,
+            'date_entree'    => $request->date_entree,
+            // plus d'id_avocat ici — il est sur la partie
         ]);
 
         return redirect()
@@ -97,21 +104,18 @@ class DossierPartieController extends Controller
             ->with('success', "Partie « {$partie->nom_partie} » ajoutée au dossier.");
     }
 
-    /**
-     * Modifier le rôle ou l'avocat d'une partie dans un dossier.
-     */
     public function update(Request $request, DossierJudiciaire $dossier, DossierPartie $partie): RedirectResponse
     {
         $this->authorize('update', $dossier);
 
         $request->validate([
-            'id_type_partie'  => ['required', 'exists:type_parties,id'],
-            'id_avocat'       => ['nullable', 'exists:avocats,id'],
-            'est_institution' => ['boolean'],
-            'date_entree'     => ['required', 'date'],
+            'id_type_partie' => ['required', 'exists:type_parties,id'],
+            'id_avocat'      => ['nullable', 'exists:avocats,id'],
+            'date_entree'    => ['required', 'date'],
+            // pas de est_entraide ici
         ]);
 
-        $partie->update($request->only(['id_type_partie', 'id_avocat', 'est_institution', 'date_entree']));
+        $partie->update($request->only(['id_type_partie', 'id_avocat', 'date_entree']));
 
         return redirect()
             ->route('dossiers.show', $dossier)

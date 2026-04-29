@@ -225,7 +225,7 @@
                         <th class="small text-muted fw-semibold">Institution</th>
                         <th class="small text-muted fw-semibold">Date d'entrée</th>
                         <th class="small text-muted fw-semibold text-end">Actions</th>
-                    </tr>
+                    </tr>   
                 </thead>
                 <tbody>
                     @foreach($dossierParties as $dp)
@@ -481,13 +481,34 @@
             @if($dossier->peutAvoirAudience() && $dossier->dossierTribunaux->isNotEmpty())
                 <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id]) }}"
                     class="btn btn-primary">
-                        Planifier une audience
-                    </a>
-            @else
+                    <i class="bi bi-calendar-plus me-1"></i>Planifier une audience
+                </a>
+
+            @elseif(!$dossier->peutAvoirAudience())
+                {{-- Cas 1 : rôles manquants --}}
+                <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-secondary" disabled>
-                        Ajoutez au moins 2 parties
+                        <i class="bi bi-lock me-1"></i>Audience impossible
                     </button>
-                
+                    @php $manquants = $dossier->typesPartiesManquants(); @endphp
+                    @if(count($manquants) > 0)
+                        <span class="text-danger small">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Rôle(s) manquant(s) :
+                            @foreach($manquants as $type)
+                                <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 mx-1 ar">
+                                    {{ $type }}
+                                </span>
+                            @endforeach
+                        </span>
+                    @endif
+                </div>
+
+            @else
+                {{-- Cas 2 : parties OK mais aucun tribunal assigné --}}
+                <button class="btn btn-secondary" disabled>
+                    <i class="bi bi-bank me-1"></i>Assignez d'abord un tribunal
+                </button>
             @endif
         </div>
 
@@ -585,11 +606,22 @@
         @php
             $peutAvoirJugement = $dossier->dossierTribunaux->contains(fn($dt) => $dt->peutAvoirJugement());
         @endphp
-        @if($peutAvoirJugement)
+        @if($peutAvoirJugement && $dossier->peutAvoirAudience())
             <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}"
-               class="btn btn-primary btn-sm">
+            class="btn btn-primary btn-sm">
                 <i class="bi bi-plus-lg me-1"></i>Enregistrer un jugement
             </a>
+        @elseif(!$dossier->peutAvoirAudience())
+            @php $manquants = $dossier->typesPartiesManquants(); @endphp
+            <span class="text-danger small">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Rôle(s) manquant(s) :
+                @foreach($manquants as $type)
+                    <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 mx-1 ar">
+                        {{ $type }}
+                    </span>
+                @endforeach
+            </span>
         @endif
     </div>
 
@@ -1208,8 +1240,13 @@
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">Téléphone</label>
-                        <input type="text" name="telephone" id="field_telephone"
-                               class="form-control" placeholder="06XXXXXXXX">
+                        <input id='field_telephone' type="tel" 
+                        name="telephone"
+                        class="form-control @error('telephone') is-invalid @enderror"
+                        placeholder="Ex : 0612345678"
+                        pattern="^(\+212|00212|0)(5|6|7)[0-9]{8}$"
+                        title="Format attendu : 0612345678 ou +212612345678"
+                        value="{{ old('telephone', $partie->telephone ?? '') }}">
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">Email</label>
@@ -1238,29 +1275,51 @@
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">Avocat représentant</label>
-                        <select name="id_avocat" class="form-select">
-                            <option value="">— Aucun —</option>
-                            @foreach($avocats as $av)
-                                <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
-                            @endforeach
-                        </select>
+
+                        {{-- Affiché quand une partie existante est sélectionnée --}}
+                        <div id="bloc_avocat_info" class="d-none">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-briefcase text-muted"></i>
+                                </span>
+                                <input type="text"
+                                    id="field_avocat_display"
+                                    class="form-control bg-light"
+                                    readonly
+                                    placeholder="Aucun avocat">
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        id="btnChangerAvocat"
+                                        title="Modifier l'avocat de cette partie">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-info">
+                                <i class="bi bi-info-circle me-1"></i>
+                                L'avocat est lié à cette partie. Cliquez sur <i class="bi bi-pencil"></i> pour le modifier.
+                            </div>
+                        </div>
+
+                        {{-- Affiché pour une nouvelle partie --}}
+                        <div id="bloc_avocat_select">
+                            <select name="id_avocat" id="field_avocat_select" class="form-select">
+                                <option value="">— Aucun avocat —</option>
+                                @foreach($avocats as $av)
+                                    <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Champ caché qui envoie toujours la valeur --}}
+                        <input type="hidden" name="id_avocat" id="field_avocat_hidden">
                     </div>
+                    
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">
                             Date d'entrée <span class="text-danger">*</span>
                         </label>
                         <input type="date" name="date_entree" class="form-control"
                                value="{{ date('Y-m-d') }}" required>
-                    </div>
-                    <div class="col-12">
-                        <div class="form-check">
-                            <input type="hidden" name="est_institution" value="0">
-                            <input class="form-check-input" type="checkbox"
-                                   name="est_institution" value="1" id="checkInstitution">
-                            <label class="form-check-label small" for="checkInstitution">
-                                Cette partie est une institution
-                            </label>
-                        </div>
                     </div>
                 </div>
                 </form>
@@ -1323,18 +1382,6 @@
                         <label class="form-label fw-semibold small">Date d'entrée</label>
                         <input type="date" name="date_entree" class="form-control"
                                value="{{ $dp->date_entree?->format('Y-m-d') }}">
-                    </div>
-                    <div class="col-12">
-                        <div class="form-check">
-                            <input type="hidden" name="est_institution" value="0">
-                            <input class="form-check-input" type="checkbox"
-                                   name="est_institution" value="1"
-                                   @checked($dp->est_institution)
-                                   id="checkEditInst{{ $dp->id }}">
-                            <label class="form-check-label small" for="checkEditInst{{ $dp->id }}">
-                                Institution
-                            </label>
-                        </div>
                     </div>
                 </div>
             </form>
@@ -1734,6 +1781,23 @@
         bandeauOK.classList.remove('d-none');
         fermerDropdown();
         input.value = '';
+
+        const blocInfo   = document.getElementById('bloc_avocat_info');
+        const blocSelect = document.getElementById('bloc_avocat_select');
+        const display    = document.getElementById('field_avocat_display');
+        const hidden     = document.getElementById('field_avocat_hidden');
+
+        if (p.id_avocat) {
+            display.value        = p.avocat_nom ?? 'Avocat #' + p.id_avocat;
+            hidden.value         = p.id_avocat;
+            blocInfo.classList.remove('d-none');
+            blocSelect.classList.add('d-none');
+        } else {
+            display.value        = '';
+            hidden.value         = '';
+            blocInfo.classList.add('d-none');
+            blocSelect.classList.remove('d-none');
+        }
     }
 
     // ── Vider la sélection ──
@@ -1745,6 +1809,10 @@
         F.type_personne.selectedIndex = 0;
         F.type_personne.disabled = false;
         F.type_personne.classList.remove('bg-light');
+        document.getElementById('bloc_avocat_info').classList.add('d-none');
+        document.getElementById('bloc_avocat_select').classList.remove('d-none');
+        document.getElementById('field_avocat_hidden').value = '';
+        document.getElementById('field_avocat_display').value = '';
     }
 
     function fermerDropdown() {
@@ -1888,6 +1956,28 @@
         if (this.checked) {
             paye.value = condamne.value;
         }
+    });
+
+    document.getElementById('btnChangerAvocat')?.addEventListener('click', () => {
+        const blocInfo   = document.getElementById('bloc_avocat_info');
+        const blocSelect = document.getElementById('bloc_avocat_select');
+        blocInfo.classList.add('d-none');
+        blocSelect.classList.remove('d-none');
+        // Synchroniser la valeur du select avec le hidden
+        const hidden = document.getElementById('field_avocat_hidden');
+        const select = document.getElementById('field_avocat_select');
+        if (hidden.value) {
+            Array.from(select.options).forEach(o => {
+                o.selected = (o.value == hidden.value);
+            });
+        }
+        // Le select prend le relais — vider le hidden pour éviter le doublon
+        hidden.value = '';
+    });
+
+    // Quand le select change, mettre à jour le hidden
+    document.getElementById('field_avocat_select')?.addEventListener('change', function () {
+        document.getElementById('field_avocat_hidden').value = this.value;
     });
 
 })();

@@ -18,7 +18,23 @@ class StoreAudienceRequest extends FormRequest
             'id_dossier_tribunal'     => 'required|exists:dossier_tribunaux,id',
             'id_type_audience'        => 'required|exists:type_audiences,id',
             'id_juge'                 => 'required|exists:juges,id',
-            'date_audience'           => 'required|date',
+            'date_audience'           => [
+                'required',
+                'date',
+                // RG05 — unicité date/tribunal
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $idDossierTribunal = $this->input('id_dossier_tribunal');
+                    if (! $idDossierTribunal) return;
+
+                    $existe = \App\Models\Audience::where('id_dossier_tribunal', $idDossierTribunal)
+                        ->whereDate('date_audience', $value)
+                        ->exists();
+
+                    if ($existe) {
+                        $fail('Une audience existe déjà à cette date pour ce dossier/tribunal.');
+                    }
+                },
+            ],
             'date_prochaine_audience' => 'nullable|date|after_or_equal:date_audience',
             'presence_demandeur'      => 'boolean',
             'presence_defendeur'      => 'boolean',

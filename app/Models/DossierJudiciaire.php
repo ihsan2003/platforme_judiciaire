@@ -107,13 +107,74 @@ class DossierJudiciaire extends Model
         return $this->hasMany(Notification::class, 'id_dossier');
     }
 
+    public function dossierParties()
+    {
+        return $this->hasMany(\App\Models\DossierPartie::class, 'id_dossier');
+    }
+
     // ─────────────────────────────────────────
     // RÈGLES MÉTIER
     // ─────────────────────────────────────────
 
+    /**
+ * RG04 — Le degré 3 nécessite d'avoir déjà eu les degrés 1 et 2.
+ * Retourne null si OK, sinon un message d'erreur.
+ */
+    public function peutAjouterDegre(int $degreId): ?string
+    {
+        $degreVise = \App\Models\DegreeJuridiction::find($degreId);
+        if (! $degreVise) {
+            return 'Degré introuvable.';
+        }
+
+        // On récupère les ordres des degrés déjà présents dans ce dossier
+        $degresExistants = $this->dossierTribunaux()
+            ->with('degre')
+            ->get()
+            ->pluck('degre')
+            ->filter()
+            ->pluck('ordre') // champ "ordre" : 1=premier degré, 2=appel, 3=cassation
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        $ordreVise = $degreVise->ordre;
+
+        // Vérification séquentielle
+        for ($i = 1; $i < $ordreVise; $i++) {
+            if (! in_array($i, $degresExistants)) {
+                $libelle = match($i) {
+                    1 => 'premier degré',
+                    2 => 'appel (2ème degré)',
+                    default => "degré {$i}",
+                };
+                return "Impossible d'ajouter ce degré : le {$libelle} est requis au préalable.";
+            }
+        }
+
+        return null; // OK
+    }
+    
+    public function typesPartiesManquants(): array
+    {
+        $typesRequis = ['المدعي', 'المدعى عليه'];
+
+        $typesPresents = $this->dossierParties()
+            ->with('typePartie')
+            ->get()
+            ->pluck('typePartie.type_partie')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return array_values(array_diff($typesRequis, $typesPresents));
+    }
+
     public function peutAvoirAudience(): bool
     {
-        return $this->parties()->count() >= 2;
+        return $this->typesPartiesManquants() === [];
     }
 
     // ─────────────────────────────────────────
