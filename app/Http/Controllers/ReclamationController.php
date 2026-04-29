@@ -11,6 +11,7 @@ use App\Models\Structure;
 use App\Models\TypeDocument;
 use App\Models\ActionReclamation;
 use App\Models\Document;
+use App\Rules\Telephone;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -104,7 +105,7 @@ class ReclamationController extends Controller
             // Réclamant
             'nom_reclamant'      => 'required|string|max:255',
             'id_type_reclamant'  => 'required|exists:type_reclamants,id',
-            'telephone_reclamant'=> 'nullable|regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/',
+            'telephone_reclamant'=> ['nullable', 'regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/'],
             'email_reclamant'    => 'nullable|email|max:255',
             'adresse_reclamant'  => 'nullable|string|max:500',
             // Réclamation
