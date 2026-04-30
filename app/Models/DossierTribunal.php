@@ -54,10 +54,19 @@ class DossierTribunal extends Model
         return $this->hasMany(Jugement::class, 'id_dossier_tribunal');
     }
 
+    public function recours()
+    {
+        return $this->hasMany(Recours::class, 'id_dossier_tribunal');
+    }
+
     // ─────────────────────────────────────────
     // RÈGLES MÉTIER
     // ─────────────────────────────────────────
 
+    /**
+     * RG — Retourne l'audience de type "الحكم" de cette instance, ou null.
+     * Il ne peut y en avoir qu'une seule par instance.
+     */
     public function audienceHoukm(): ?Audience
     {
         return $this->audiences()
@@ -65,6 +74,7 @@ class DossierTribunal extends Model
             ->latest('date_audience')
             ->first();
     }
+
     /**
      * RG — Un jugement ne peut être rendu que si une audience
      * de type "الحكم" (délibéré / rendu) a eu lieu dans cette instance.
@@ -75,10 +85,32 @@ class DossierTribunal extends Model
     }
 
     /**
-     * RG — Crée la prochaine instance judiciaire selon la transition souhaitée.
+     * RG — Indique si cette instance possède déjà un jugement.
+     * Utilisé par AudienceController pour bloquer les nouvelles audiences
+     * après qu'un jugement a été rendu.
      *
-     * @param  string  $libelleDegreDestination  Ex : 'Appel', 'Cassation'
-     * @return static|null  La nouvelle instance, ou null si le degré est introuvable
+     * Note : on vérifie via la relation pour ne pas charger tout le jugement.
+     */
+    public function aUnJugement(): bool
+    {
+        return $this->jugements()->exists();
+    }
+
+    /**
+     * RG — Indique si cette instance est encore ouverte (sans date de fin).
+     * Une instance clôturée ne peut plus recevoir d'audiences ni de jugement.
+     */
+    public function estOuverte(): bool
+    {
+        return is_null($this->date_fin);
+    }
+
+    /**
+     * RG — Crée la prochaine instance judiciaire selon le degré demandé.
+     * Clôture l'instance courante avant d'ouvrir la nouvelle.
+     *
+     * @param  string  $libelleDegreDestination  Ex : 'استئناف', 'نقض'
+     * @return static|null
      */
     public function creerInstanceSuivante(string $libelleDegreDestination): ?self
     {
@@ -91,24 +123,39 @@ class DossierTribunal extends Model
         }
 
         // Clôturer l'instance courante
-        $this->update(['date_fin' => now()]);
+        $this->update(['date_fin' => now()->toDateString()]);
 
-        // Ouvrir la nouvelle instance sur le même tribunal
+        // Trouver le tribunal du degré cible dans la même province
+        $idTribunal = $this->trouverTribunalDuDegre($degre);
+
         return self::create([
             'id_dossier'  => $this->id_dossier,
-            'id_tribunal' => $this->id_tribunal,
+            'id_tribunal' => $idTribunal,
             'id_degre'    => $degre->id,
-            'date_debut'  => now(),
+            'date_debut'  => now()->toDateString(),
             'date_fin'    => null,
         ]);
     }
 
     /**
-     * RG — Indique si cette instance est encore ouverte (sans date de fin).
+     * Trouve le tribunal du degré cible dans la même province que l'instance courante.
+     * Fallback : même tribunal si aucun trouvé.
      */
-    public function estOuverte(): bool
+    private function trouverTribunalDuDegre(DegreeJuridiction $degre): int
     {
-        return is_null($this->date_fin);
+        $provinceId = $this->tribunal()->with('province')->first()?->id_province;
+
+        if ($provinceId) {
+            $tribunal = Tribunal::where('id_province', $provinceId)
+                ->where('id_degre', $degre->id)
+                ->first();
+
+            if ($tribunal) {
+                return $tribunal->id;
+            }
+        }
+
+        return $this->id_tribunal; // fallback
     }
 
     /**
@@ -127,7 +174,7 @@ class DossierTribunal extends Model
             return false;
         }
 
-        $dateLimite = $dernierJugement->date_jugement->addDays($delaiJours);
+        $dateLimite = $dernierJugement->date_jugement->copy()->addDays($delaiJours);
 
         return $this->jugements()
             ->whereHas('recours', fn($q) =>
@@ -137,5 +184,52 @@ class DossierTribunal extends Model
                   )
             )
             ->exists();
+    }
+
+    // ─────────────────────────────────────────
+    // ACCESSEURS UTILITAIRES
+    // ─────────────────────────────────────────
+
+    /**
+     * Retourne le label du statut de cette instance pour les vues.
+     */
+    public function getStatutLabelAttribute(): string
+    {
+        if ($this->estOuverte()) {
+            if ($this->aUnJugement()) {
+                return 'Jugement rendu';
+            }
+            if ($this->audienceHoukm()) {
+                return 'En délibéré';
+            }
+            return 'En cours';
+        }
+
+        // Clôturée — chercher la raison
+        $jugement = $this->jugements()->with('recours.typeRecours')->latest('date_jugement')->first();
+
+        if ($jugement && $jugement->recours->isNotEmpty()) {
+            $typeRecours = $jugement->recours->first()->typeRecours?->type_recours ?? 'Recours';
+            return "Clôturée — {$typeRecours}";
+        }
+
+        return 'Clôturée';
+    }
+
+    /**
+     * Retourne la couleur Bootstrap associée au statut de l'instance.
+     */
+    public function getCouleurStatutAttribute(): string
+    {
+        if (!$this->estOuverte()) {
+            return 'secondary';
+        }
+        if ($this->aUnJugement()) {
+            return 'info';
+        }
+        if ($this->audienceHoukm()) {
+            return 'warning';
+        }
+        return 'success';
     }
 }
