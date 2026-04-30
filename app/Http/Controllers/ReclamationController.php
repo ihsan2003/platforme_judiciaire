@@ -172,7 +172,7 @@ class ReclamationController extends Controller
         $reclamation->load([
             'reclamant.typeReclamant',
             'statut',
-            'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy', 'documents'])->latest(),
+            'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy'])->latest(),
             'documents.typeDocument',
         ]);
 
@@ -293,6 +293,7 @@ class ReclamationController extends Controller
                 $idTypeDoc = \App\Models\TypeDocument::first()?->id;
                 Document::create([
                     'id_reclamation'   => $reclamation->id,
+                    'id_action'        => $action->id,
                     'titre_document'   => $file->getClientOriginalName(),
                     'date_depot'       => now()->toDateString(),
                     'fichier_path'     => $path,

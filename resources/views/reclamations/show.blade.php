@@ -382,7 +382,6 @@
 
             @foreach($reclamation->actions as $action)
             @php
-                $aDoc          = $action->documents->isNotEmpty();
                 $typeActionLib = $action->typeAction?->type_action ?? '';
 
                 // Déterminer icône et couleur selon le type
@@ -462,21 +461,7 @@
                         @endif
 
                         {{-- Documents --}}
-                        @if($aDoc)
-                        <div class="border-top pt-2 mt-2">
-                            @foreach($action->documents as $doc)
-                            <div class="d-flex align-items-center gap-2 small text-muted">
-                                <i class="bi bi-paperclip text-primary"></i>
-                                <span class="text-truncate">{{ $doc->titre_document }}</span>
-                                <a href="{{ Storage::url($doc->fichier_path) }}"
-                                   target="_blank"
-                                   class="btn btn-xs btn-outline-primary btn-sm ms-auto">
-                                    <i class="bi bi-download me-1"></i>Télécharger
-                                </a>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endif
+                        {{-- Les documents d'action nécessitent la colonne id_action en base --}}
                     </div>
                 </div>
             </div>
