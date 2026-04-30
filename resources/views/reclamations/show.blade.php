@@ -30,10 +30,12 @@
                         @php
                             $statut = $reclamation->statut?->statut_reclamation ?? '—';
                             $color  = match(true) {
-                                $statut === 'Reçue'    => 'info',
-                                $statut === 'En cours' => 'warning',
-                                $statut === 'Clôturée' => 'success',
-                                default               => 'secondary',
+                                $statut === 'قيد المعالجة' => 'warning',
+                                $statut === 'تمت المعالجة' => 'success',
+                                $statut === 'Reçue'        => 'info',
+                                $statut === 'En cours'     => 'warning',
+                                $statut === 'Clôturée'     => 'success',
+                                default                    => 'secondary',
                             };
                         @endphp
                         <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
@@ -205,7 +207,6 @@
                         <hr class="my-3">
                         <form action="{{ route('reclamations.update', $reclamation) }}" method="POST">
                             @csrf @method('PUT')
-                            {{-- Champs obligatoires à repasser --}}
                             <input type="hidden" name="objet" value="{{ $reclamation->objet }}">
                             <input type="hidden" name="date_reception" value="{{ $reclamation->date_reception?->format('Y-m-d') }}">
                             <input type="hidden" name="details" value="{{ $reclamation->details }}">
@@ -250,7 +251,7 @@
     {{-- ══ ONGLET 2 : SUIVI / ACTIONS ══ --}}
     <div class="tab-pane fade" id="tab-suivi">
 
-        {{-- Formulaire ajouter une action --}}
+        {{-- ── Formulaire ajouter une action ── --}}
         <div class="card border mb-4" style="border-color: #0d6efd !important; border-width: 2px !important;">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
@@ -260,21 +261,38 @@
             <div class="card-body">
                 <form action="{{ route('reclamations.actions.store', $reclamation) }}"
                       method="POST"
-                      enctype="multipart/form-data">
+                      enctype="multipart/form-data"
+                      id="form-action-suivi">
                 @csrf
+
+                    {{-- Passer les données TypeAction en JS --}}
+                    @php
+                        $typeActionIhala = $typesAction->firstWhere('type_action', 'إحالة')?->id;
+                        $typeActionRad   = $typesAction->firstWhere('type_action', 'رد')?->id;
+                    @endphp
+
+                    <script>
+                        window._typeActionIhala = {{ $typeActionIhala ?? 'null' }};
+                        window._typeActionRad   = {{ $typeActionRad   ?? 'null' }};
+                    </script>
+
                     <div class="row g-3">
-                        <div class="col-md-4">
+
+                        {{-- Type d'action --}}
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold small">
                                 Type d'action <span class="text-danger">*</span>
                             </label>
-                            <select name="id_type_action" class="form-select" required>
+                            <select name="id_type_action" id="select-type-action" class="form-select" required>
                                 <option value="">— Sélectionner —</option>
                                 @foreach($typesAction as $type)
                                     <option value="{{ $type->id }}">{{ $type->type_action }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
+
+                        {{-- Date --}}
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold small">
                                 Date <span class="text-danger">*</span>
                             </label>
@@ -282,44 +300,59 @@
                                    class="form-control"
                                    value="{{ date('Y-m-d') }}" required>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold small">Statut de l'action <span class="text-danger">*</span></label>
-                            <input type="text" name="statut_action" class="form-control"
-                                   placeholder="Ex : En attente, Traitée…" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label fw-semibold small">Changer le statut réclamation</label>
-                            <select name="nouveau_statut" class="form-select">
-                                <option value="">— Inchangé —</option>
-                                @foreach($statuts as $s)
-                                    <option value="{{ $s->id }}" @selected($reclamation->id_statut_reclamation == $s->id)>
-                                        {{ $s->statut_reclamation }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Structure concernée</label>
-                            <select name="id_structure" class="form-select">
-                                <option value="">— Aucune —</option>
-                                @foreach($structures as $structure)
-                                    <option value="{{ $structure->id }}">{{ $structure->nom }}</option>
-                                    @foreach($structure->enfants as $enfant)
-                                        <option value="{{ $enfant->id }}">&nbsp;&nbsp;↳ {{ $enfant->nom }}</option>
-                                    @endforeach
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Document joint</label>
-                            <input type="file" name="document_action" class="form-control"
-                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                        </div>
+
+                        {{-- Commentaire --}}
                         <div class="col-12">
                             <label class="form-label fw-semibold small">Commentaire</label>
                             <textarea name="commentaire" class="form-control" rows="2"
                                       placeholder="Notes ou observations…"></textarea>
                         </div>
+
+                        {{-- Bloc Structure — affiché uniquement si type = إحالة --}}
+                        <div class="col-12" id="bloc-structure" style="display:none;">
+                            <div class="p-3 rounded-3 border border-warning bg-warning bg-opacity-10">
+                                <label class="form-label fw-semibold small text-warning-emphasis">
+                                    <i class="bi bi-diagram-3 me-1"></i>Structure concernée par l'إحالة
+                                </label>
+                                <select name="id_structure" class="form-select">
+                                    <option value="">— Aucune —</option>
+                                    @foreach($structures as $structure)
+                                        <option value="{{ $structure->id }}">{{ $structure->nom }}</option>
+                                        @foreach($structure->enfants as $enfant)
+                                            <option value="{{ $enfant->id }}">&nbsp;&nbsp;↳ {{ $enfant->nom }}</option>
+                                        @endforeach
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Bloc Réponse — affiché uniquement si type = رد --}}
+                        <div class="col-12" id="bloc-reponse" style="display:none;">
+                            <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
+                                <label class="form-label fw-semibold small text-success-emphasis">
+                                    <i class="bi bi-chat-quote me-1"></i>Contenu de la réponse
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <textarea name="reponse" id="input-reponse" class="form-control" rows="4"
+                                          placeholder="Rédigez la réponse apportée au réclamant…"></textarea>
+                                <div class="form-text text-success-emphasis mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Cette réponse sera enregistrée dans l'historique de suivi.
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Document joint --}}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">
+                                <i class="bi bi-paperclip me-1"></i>Document joint (optionnel)
+                            </label>
+                            <input type="file" name="document_action" class="form-control"
+                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                            <div class="form-text">PDF, Word, Excel, images — max 10 Mo</div>
+                        </div>
+
+                        {{-- Soumettre --}}
                         <div class="col-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-4">
                                 <i class="bi bi-plus-lg me-1"></i>Enregistrer l'action
@@ -330,7 +363,7 @@
             </div>
         </div>
 
-        {{-- Timeline des actions --}}
+        {{-- ── Timeline des actions ── --}}
         @if($reclamation->actions->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-list-check fs-1 d-block mb-2 opacity-25"></i>
@@ -349,15 +382,32 @@
 
             @foreach($reclamation->actions as $action)
             @php
-                $aDoc = $action->documents->isNotEmpty();
+                $aDoc          = $action->documents->isNotEmpty();
+                $typeActionLib = $action->typeAction?->type_action ?? '';
+
+                // Déterminer icône et couleur selon le type
+                [$iconAction, $colorAction] = match(true) {
+                    $typeActionLib === 'إحالة' => ['bi-arrow-right-circle-fill', '#fd7e14'],
+                    $typeActionLib === 'رد'    => ['bi-chat-quote-fill',         '#198754'],
+                    default                    => ['bi-arrow-right-circle',      '#0d6efd'],
+                };
+
+                // Séparer réponse et commentaire si le commentaire contient "**Réponse :**"
+                $commentaire = $action->commentaire ?? '';
+                $reponse     = null;
+                if (str_contains($commentaire, '**Réponse :**')) {
+                    $parts       = explode('**Réponse :**', $commentaire, 2);
+                    $commentaire = trim($parts[0]);
+                    $reponse     = trim($parts[1]);
+                }
             @endphp
             <div class="d-flex gap-3 mb-3 position-relative" style="z-index:1;">
                 {{-- Icône --}}
                 <div class="flex-shrink-0">
                     <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
-                         style="width:48px;height:48px;background:#0d6efd;
-                                box-shadow:0 0 0 4px #cfe2ff;font-size:.75rem">
-                        <i class="bi bi-arrow-right-circle fs-5"></i>
+                         style="width:48px;height:48px;background:{{ $colorAction }};
+                                box-shadow:0 0 0 4px {{ $colorAction }}33;font-size:.75rem">
+                        <i class="bi {{ $iconAction }} fs-5"></i>
                     </div>
                 </div>
 
@@ -367,7 +417,7 @@
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                             <div>
                                 <div class="fw-bold">
-                                    {{ $action->typeAction?->type_action ?? '—' }}
+                                    {{ $typeActionLib ?: '—' }}
                                 </div>
                                 <div class="text-muted small">
                                     <i class="bi bi-calendar3 me-1"></i>
@@ -384,19 +434,36 @@
                                     @endif
                                 </div>
                             </div>
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 small">
-                                {{ $action->statut_action }}
-                            </span>
                         </div>
 
-                        @if($action->commentaire)
-                            <p class="small text-muted mb-2 lh-lg" style="white-space: pre-wrap;">
-                                {{ $action->commentaire }}
-                            </p>
+                        {{-- Commentaire --}}
+                        @if($commentaire)
+                            <p class="small text-muted mb-2 lh-lg" style="white-space: pre-wrap;">{{ $commentaire }}</p>
                         @endif
 
+                        {{-- Réponse (bloc distinct si type = رد) --}}
+                        @if($reponse)
+                            <div class="border border-success rounded-2 p-2 mt-2 bg-success bg-opacity-10">
+                                <div class="small fw-semibold text-success-emphasis mb-1">
+                                    <i class="bi bi-chat-quote me-1"></i>Réponse apportée
+                                </div>
+                                <p class="small mb-0 lh-lg" style="white-space: pre-wrap;">{{ $reponse }}</p>
+                            </div>
+                        @endif
+
+                        {{-- Structure concernée (إحالة) --}}
+                        @if($typeActionLib === 'إحالة' && $action->structure)
+                            <div class="border border-warning rounded-2 p-2 mt-2 bg-warning bg-opacity-10">
+                                <div class="small fw-semibold text-warning-emphasis mb-1">
+                                    <i class="bi bi-diagram-3 me-1"></i>إحالة vers
+                                </div>
+                                <span class="small">{{ $action->structure->nom }}</span>
+                            </div>
+                        @endif
+
+                        {{-- Documents --}}
                         @if($aDoc)
-                        <div class="border-top pt-2 mt-1">
+                        <div class="border-top pt-2 mt-2">
                             @foreach($action->documents as $doc)
                             <div class="d-flex align-items-center gap-2 small text-muted">
                                 <i class="bi bi-paperclip text-primary"></i>
@@ -486,11 +553,41 @@
 @push('scripts')
 <script>
 (function () {
+    // ── Restore tab from URL hash ───────────────────────
     const hash = window.location.hash;
     if (hash) {
         const tab = document.querySelector(`[data-bs-target="${hash}"]`);
         if (tab) new bootstrap.Tab(tab).show();
     }
+
+    // ── Logique conditionnelle du formulaire de suivi ──
+    const selectType   = document.getElementById('select-type-action');
+    const blocStruct   = document.getElementById('bloc-structure');
+    const blocReponse  = document.getElementById('bloc-reponse');
+    const inputReponse = document.getElementById('input-reponse');
+
+    if (!selectType) return;
+
+    function updateBlocs() {
+        const val = parseInt(selectType.value, 10);
+
+        const isIhala = window._typeActionIhala && val === window._typeActionIhala;
+        const isRad   = window._typeActionRad   && val === window._typeActionRad;
+
+        // Structure : visible seulement pour إحالة
+        blocStruct.style.display  = isIhala ? '' : 'none';
+
+        // Réponse : visible seulement pour رد
+        blocReponse.style.display = isRad   ? '' : 'none';
+
+        // Rendre la réponse requise uniquement quand visible
+        if (inputReponse) {
+            inputReponse.required = isRad;
+        }
+    }
+
+    selectType.addEventListener('change', updateBlocs);
+    updateBlocs(); // initialisation
 })();
 </script>
 @endpush

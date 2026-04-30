@@ -112,7 +112,6 @@ class ReclamationController extends Controller
             'objet'              => 'required|string|max:500',
             'date_reception'     => 'required|date',
             'details'            => 'nullable|string',
-            'id_statut_reclamation' => 'nullable|exists:statut_reclamations,id',
         ]);
 
         DB::transaction(function () use ($validated, $request) {
@@ -129,8 +128,8 @@ class ReclamationController extends Controller
                 ]
             );
 
-            // Statut par défaut = "Reçue"
-            $statutId = $validated['id_statut_reclamation']
+            // Statut automatique = "قيد المعالجة" (En traitement)
+            $statutId = StatutReclamation::where('statut_reclamation', 'قيد المعالجة')->first()?->id
                 ?? StatutReclamation::where('statut_reclamation', 'Reçue')->first()?->id
                 ?? StatutReclamation::first()?->id;
 
@@ -255,23 +254,31 @@ class ReclamationController extends Controller
     public function addAction(Request $request, Reclamation $reclamation): RedirectResponse
     {
         $validated = $request->validate([
-            'id_type_action'   => 'required|exists:type_actions,id',
-            'statut_action'    => 'required|string|max:100',
-            'date_action'      => 'required|date',
-            'id_structure'     => 'nullable|exists:structures,id',
-            'commentaire'      => 'nullable|string|max:2000',
-            'document_action'  => 'nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png',
-            'nouveau_statut'   => 'nullable|exists:statut_reclamations,id',
+            'id_type_action'  => 'required|exists:type_actions,id',
+            'date_action'     => 'required|date',
+            'id_structure'    => 'nullable|exists:structures,id',
+            'commentaire'     => 'nullable|string|max:2000',
+            'reponse'         => 'nullable|string|max:5000',
+            'document_action' => 'nullable|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png',
         ]);
 
         DB::transaction(function () use ($validated, $request, $reclamation) {
+            // Fusionner commentaire + réponse en un seul commentaire si les deux sont présents
+            $commentaireFinal = $validated['commentaire'] ?? null;
+            if (!empty($validated['reponse'])) {
+                $reponseFormatee = "**Réponse :** " . $validated['reponse'];
+                $commentaireFinal = $commentaireFinal
+                    ? $commentaireFinal . "\n\n" . $reponseFormatee
+                    : $reponseFormatee;
+            }
+
             $action = ActionReclamation::create([
                 'id_reclamation' => $reclamation->id,
                 'id_type_action' => $validated['id_type_action'],
-                'statut_action'  => $validated['statut_action'],
+                'statut_action'  => 'Traitée', // valeur fixe interne
                 'date_action'    => $validated['date_action'],
                 'id_structure'   => $validated['id_structure'] ?? null,
-                'commentaire'    => $validated['commentaire'] ?? null,
+                'commentaire'    => $commentaireFinal,
                 'created_by'     => Auth::id(),
             ]);
 
@@ -286,7 +293,6 @@ class ReclamationController extends Controller
                 $idTypeDoc = \App\Models\TypeDocument::first()?->id;
                 Document::create([
                     'id_reclamation'   => $reclamation->id,
-                    'id_action'        => $action->id,
                     'titre_document'   => $file->getClientOriginalName(),
                     'date_depot'       => now()->toDateString(),
                     'fichier_path'     => $path,
@@ -294,9 +300,12 @@ class ReclamationController extends Controller
                 ]);
             }
 
-            // Mise à jour du statut de la réclamation si demandée
-            if (!empty($validated['nouveau_statut'])) {
-                $reclamation->update(['id_statut_reclamation' => $validated['nouveau_statut']]);
+            // Mise à jour automatique du statut → "تمت المعالجة"
+            $statutTraite = StatutReclamation::where('statut_reclamation', 'تمت المعالجة')->first()
+                ?? StatutReclamation::where('statut_reclamation', 'Clôturée')->first();
+
+            if ($statutTraite) {
+                $reclamation->update(['id_statut_reclamation' => $statutTraite->id]);
             }
         });
 
