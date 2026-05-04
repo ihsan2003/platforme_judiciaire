@@ -23,6 +23,10 @@
     $badgeLabel = $estAujourd ? "Aujourd'hui" : ($estPassee ? 'Passée' : 'À venir');
 
     $isHoukm = $audience->typeAudience?->type_audience === 'الحكم';
+
+    $textClass = in_array($badgeColor, ['warning','secondary','info'])
+        ? 'text-dark'
+        : 'text-white';
 @endphp
 
 {{-- ══ EN-TÊTE ══ --}}
@@ -40,16 +44,17 @@
                         Audience du {{ $audience->date_audience->format('d/m/Y') }}
                     </h4>
                     <div class="mt-1 d-flex flex-wrap gap-2 align-items-center">
-                        <span class="badge bg-{{ $badgeColor }} bg-opacity-15 text-{{ $badgeColor }} border border-{{ $badgeColor }} border-opacity-25">
+                        <span class="badge bg-{{ $badgeColor }} {{ $textClass }} border border-{{ $badgeColor }} border-opacity-25">
                             <i class="bi bi-circle-fill me-1" style="font-size:.5rem;vertical-align:middle"></i>
                             {{ $badgeLabel }}
                         </span>
+
                         @if($isHoukm)
                             <span class="badge bg-warning text-dark border border-warning border-opacity-25" dir="rtl">
                                 جلسة الحكم
                             </span>
                         @else
-                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25" dir="rtl">
+                            <span class="badge bg-info text-dark border border-info border-opacity-25" dir="rtl">
                                 {{ $audience->typeAudience?->type_audience ?? '—' }}
                             </span>
                         @endif
@@ -128,11 +133,11 @@
                         <div class="p-3 rounded border h-100">
                             <div class="small text-muted fw-semibold mb-2">Présence du demandeur</div>
                             @if($audience->presence_demandeur)
-                                <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                                <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                     <i class="bi bi-check-circle me-1"></i>Présent
                                 </span>
                             @else
-                                <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25">
+                                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25">
                                     <i class="bi bi-x-circle me-1"></i>Absent
                                 </span>
                             @endif
@@ -142,11 +147,11 @@
                         <div class="p-3 rounded border h-100">
                             <div class="small text-muted fw-semibold mb-2">Présence du défendeur</div>
                             @if($audience->presence_defendeur)
-                                <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                                <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                     <i class="bi bi-check-circle me-1"></i>Présent
                                 </span>
                             @else
-                                <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25">
+                                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25">
                                     <i class="bi bi-x-circle me-1"></i>Absent
                                 </span>
                             @endif

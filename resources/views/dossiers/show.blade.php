@@ -24,7 +24,7 @@
 
 /* ── En-tête dossier ─────────────────────────────── */
 .dossier-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    background: #1a3a5c;
     border-radius: 16px;
     padding: 28px 32px;
     color: #fff;
@@ -406,9 +406,9 @@
             <i class="bi bi-exclamation-triangle me-2"></i>
             <strong>Rôle(s) manquant(s) :</strong>
             @foreach($manquants as $m)
-                <span class="badge bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25 mx-1" dir="rtl">{{ $m }}</span>
+                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25 mx-1" dir="rtl">{{ $m }}</span>
             @endforeach
-            — Impossible de créer des audiences tant que ces rôles ne sont pas présents.
+            — Il faut ajouter au moins 2 parties.
         </div>
         @endif
 
@@ -440,8 +440,16 @@
                             @if($dp->partie?->email)<div class="text-muted small">{{ $dp->partie->email }}</div>@endif
                         </td>
                         <td>
-                            <span class="badge bg-{{ $dp->partie->type_personne === 'Morale' ? 'warning' : 'success' }} bg-opacity-15 text-{{ $dp->partie->type_personne === 'Morale' ? 'warning' : 'success' }}">
-                                <i class="bi bi-{{ $dp->partie->type_personne === 'Morale' ? 'building' : 'person' }} me-1"></i>
+                            @php
+                                $isMorale = $dp->partie->type_personne === 'Morale';
+
+                                $badge = $isMorale
+                                    ? ['warning', 'building']
+                                    : ['success', 'person'];
+                            @endphp
+
+                            <span class="badge bg-{{ $badge[0] }} text-white">
+                                <i class="bi bi-{{ $badge[1] }} me-1"></i>
                                 {{ $dp->partie->type_personne ?? '—' }}
                             </span>
                         </td>
@@ -984,8 +992,8 @@
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h6 class="fw-semibold mb-0"><i class="bi bi-cash-stack me-2 text-success"></i>Finances</h6>
             @if($jugSansFinance->isNotEmpty())
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterFinance">
-                    <i class="bi bi-plus-lg me-1"></i>Ajouter finance
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterFinance">
+                    <i class="bi bi-plus-lg me-1"></i>Ajouter un financement
                 </button>
             @endif
         </div>
@@ -1102,7 +1110,7 @@
                 </div>
                 <div class="card-body p-0">
                     @foreach($jug->executions as $exec)
-                    @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') ? 'success' : (str_contains($sl,'cours') ? 'warning' : 'secondary'); @endphp
+                    @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') ? 'success' : (str_contains($sl,'cours') ? 'warning' : 'secondary'); $textClass = in_array($sc, ['warning', 'secondary']) ? 'text-dark': 'text-white'; @endphp
                     <div class="p-3 {{ !$loop->last ? 'border-bottom' : '' }}">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                             <div>
@@ -1116,7 +1124,9 @@
                                 </div>
                             </div>
                             <div class="d-flex gap-2 align-items-center">
-                                <span class="badge bg-{{ $sc }} bg-opacity-15 text-{{ $sc }} border border-{{ $sc }} border-opacity-25">{{ $sl }}</span>
+                                <span class="badge bg-{{ $sc }} {{ in_array($sc, ['warning','secondary']) ? 'text-dark' : 'text-white' }}">
+                                    {{ $sl }}
+                                </span>                                
                                 <a href="{{ route('executions.show', $exec) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                                 <a href="{{ route('executions.edit', $exec) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
                             </div>

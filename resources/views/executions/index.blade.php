@@ -155,14 +155,20 @@
                     <td>
                         @php
                             $statutLabel = $execution->statut?->statut_execution ?? '—';
+
                             $color = match(true) {
-                                str_contains($statutLabel, 'Terminé') => 'success',
-                                str_contains($statutLabel, 'cours')   => 'warning',
-                                str_contains($statutLabel, 'Suspendu')=> 'danger',
-                                default                               => 'secondary',
+                                str_contains($statutLabel, 'Terminé')  => 'success',
+                                str_contains($statutLabel, 'cours')    => 'warning',
+                                str_contains($statutLabel, 'Suspendu') => 'danger',
+                                default                                => 'secondary',
                             };
+
+                            $textClass = in_array($color, ['warning', 'infos'])
+                                ? 'text-dark'
+                                : 'text-white';
                         @endphp
-                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+
+                        <span class="badge bg-{{ $color }} {{ $textClass }} border border-{{ $color }} border-opacity-25">
                             {{ $statutLabel }}
                         </span>
                     </td>

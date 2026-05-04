@@ -33,12 +33,12 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 {{-- Badge statut recours --}}
                 @if($jugement->est_definitif)
-                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fs-6 px-3 py-2">
+                    <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25 fs-6 px-3 py-2">
                         <i class="bi bi-check-circle me-1"></i>Définitif
                     </span>
                 @else
                     @php $delai = $jugement->delai_recours_restant; @endphp
-                    <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25 fs-6 px-3 py-2">
+                    <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25 fs-6 px-3 py-2">
                         <i class="bi bi-clock me-1"></i>
                         {{ $jugement->statut_recours_label }}
                     </span>
@@ -143,16 +143,16 @@
                         @foreach($jugement->recours as $recours)
                         <tr>
                             <td class="ps-3 fw-semibold">
-                                <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25">
+                                <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25">
                                     {{ $recours->typeRecours->type_recours ?? '—' }}
                                 </span>
                             </td>
                             <td class="text-muted small">{{ $recours->date_recours->format('d/m/Y') }}</td>
                             <td>
                                 @if($recours->est_dans_delais)
-                                    <span class="badge bg-success bg-opacity-15 text-success">✓ Dans les délais</span>
+                                    <span class="badge bg-success bg-opacity-15 text-white">✓ Dans les délais</span>
                                 @else
-                                    <span class="badge bg-danger bg-opacity-15 text-danger">✗ Hors délai</span>
+                                    <span class="badge bg-danger bg-opacity-15 text-white">✗ Hors délai</span>
                                 @endif
                             </td>
                             <td class="text-muted small">{{ Str::limit($recours->motifs ?? '—', 60) }}</td>
@@ -192,23 +192,6 @@
         </div>
         @endif
 
-
-@php
-    use App\Models\TypeRecours;
-
-    $dr = TypeRecours::orderBy('delai_legal_jours')->first();
-    dump([
-        'date_jugement' => $jugement->date_jugement->toDateString(),
-        'today' => today()->toDateString(),
-        'delai_minimal' => $dr?->delai_legal_jours,
-        'type_recours' => $dr?->type_recours,
-        'date_limite' => $dr ? $jugement->date_jugement->copy()->addDays($dr->delai_legal_jours)->toDateString() : null,
-        'peut_recours' => $jugement->peutFaireObjetRecours(),
-        'delai_restant' => $jugement->delai_recours_restant,
-        'est_definitif' => $jugement->est_definitif,
-        'recours_existe' => $jugement->recours()->exists(),
-    ]);
-@endphp
 
         {{-- ══ BLOC RECOURS (cœur des règles métier) ══ --}}
         <div class="card border-0 shadow-sm mb-4">

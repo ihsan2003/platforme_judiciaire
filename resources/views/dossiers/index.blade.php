@@ -70,7 +70,7 @@
                     <option value="">Tous les types</option>
                     @foreach($typesAffaire as $type)
                         <option value="{{ $type->id }}" @selected(request('type') == $type->id)>
-                            {{ $type->nom }}
+                            {{ $type->affaire }}
                         </option>
                     @endforeach
                 </select>
@@ -158,14 +158,21 @@
                     <td>
                         @php
                             $statut = $dossier->statutDossier->statut_dossier ?? '—';
-                            $color  = match(true) {
+
+                            $color = match(true) {
                                 str_contains($statut, 'Actif')    => 'success',
                                 str_contains($statut, 'Clôturé')  => 'secondary',
                                 str_contains($statut, 'Suspendu') => 'warning',
                                 default                           => 'primary',
                             };
+
+                            // Texte toujours lisible
+                            $textClass = in_array($color, ['warning', 'secondary']) 
+                                ? 'text-dark' 
+                                : 'text-white';
                         @endphp
-                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+
+                        <span class="badge bg-{{ $color }} {{ $textClass }}">
                             {{ $statut }}
                         </span>
                     </td>
@@ -194,10 +201,7 @@
                                 </button>
                             </form>
                             @endcan
-                            <a href="{{ route('dossiers.cycle-vie', $dossier) }}"
-                            class="btn btn-sm btn-outline-info" title="Cycle de vie">
-                                <i class="bi bi-diagram-3"></i>
-                            </a>
+                            
                         </div>
                     </td>
                 </tr>

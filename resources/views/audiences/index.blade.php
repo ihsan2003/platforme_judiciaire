@@ -74,7 +74,7 @@
                     <option value="">Tous les types</option>
                     @foreach($typesAudience as $type)
                         <option value="{{ $type->id }}" @selected(request('type') == $type->id)>
-                            {{ $type->libelle }}
+                            {{ $type->type_audience }}
                         </option>
                     @endforeach
                 </select>

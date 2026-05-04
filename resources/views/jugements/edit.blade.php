@@ -228,7 +228,7 @@
                     <dd class="col-6">{{ $dt?->tribunal?->nom_tribunal ?? '—' }}</dd>
 
                     <dt class="col-6 text-muted fw-normal">Degré</dt>
-                    <dd class="col-6" dir="rtl">{{ $dt?->degre?->degre_juridiction ?? '—' }}</dd>
+                    <dd class="col-6" >{{ $dt?->degre?->degre_juridiction ?? '—' }}</dd>
 
                     <dt class="col-6 text-muted fw-normal">Audience الحكم</dt>
                     <dd class="col-6">

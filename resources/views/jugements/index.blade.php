@@ -151,7 +151,7 @@
                     </td>
                     <td>
                         @if($jugement->est_definitif)
-                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                 <i class="bi bi-check-circle me-1"></i>Définitif
                             </span>
                         @else
@@ -168,7 +168,7 @@
                     </td>
                     <td>
                         @if($jugement->recours->isNotEmpty())
-                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25">
+                            <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25">
                                 <i class="bi bi-arrow-repeat me-1"></i>{{ $jugement->recours->count() }} recours
                             </span>
                         @else
@@ -177,7 +177,7 @@
                     </td>
                     <td>
                         @if($jugement->executions->isNotEmpty())
-                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-shield-check me-1"></i>{{ $jugement->executions->first()->statut?->statut_execution ?? 'En cours' }}
                             </span>
                         @else
