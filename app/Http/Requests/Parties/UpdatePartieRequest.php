@@ -17,7 +17,7 @@ class UpdatePartieRequest extends FormRequest
 
         return [
             'nom_partie'        => ['required', 'string', 'max:255'],
-            'type_personne'     => ['required', 'in:physique,morale'],
+            'type_personne'     => ['required', 'in:Physique,Morale'],
             'identifiant_unique'=> ['required', 'string', "unique:parties,identifiant_unique,{$partieId}"],
             'telephone'          => ['nullable', new Telephone],
             'email'             => ['nullable', 'email', 'max:255'],
