@@ -338,4 +338,35 @@ class DossierJudiciaireController extends Controller
 
         return $pdf->download("dossier-{$dossier->numero_dossier_interne}.pdf");
     }
+
+    public function cycleVie(DossierJudiciaire $dossier)
+    {
+        $this->authorize('view', $dossier);
+ 
+        $dossier->load([
+            // Instances triées chronologiquement
+            'dossierTribunaux' => fn($q) => $q->orderBy('date_debut'),
+            'dossierTribunaux.tribunal.typeTribunal',
+            'dossierTribunaux.degre',
+ 
+            // Audiences de chaque instance — jamais mélangées entre instances (RG-CYC-05)
+            'dossierTribunaux.audiences'                   => fn($q) => $q->orderBy('date_audience'),
+            'dossierTribunaux.audiences.typeAudience',
+            'dossierTribunauxaudiences.juge',
+ 
+            // Un seul jugement par instance (RG-CYC-06 + RG-CYC-07)
+            'dossierTribunaux.jugements.juge',
+            'dossierTribunaux.jugements.finance',
+            'dossierTribunaux.jugements.recours.typeRecours',
+            'dossierTribunaux.jugements.executions.statut',
+            'dossierTribunaux.jugements.executions.responsable',
+ 
+            // Infos générales
+            'typeAffaire',
+            'statut',
+            'createdBy:id,name',
+        ]);
+ 
+        return view('dossiers.cycle_vie', compact('dossier'));
+    }
 }

@@ -84,6 +84,9 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::resource('dossiers', DossierJudiciaireController::class);
+    Route::get('dossiers/{dossier}/cycle-vie', [DossierJudiciaireController::class, 'cycleVie'])
+     ->name('dossiers.cycle-vie');
+ 
 
     // ── Parties d'un dossier ──────────────────────────────────────────────
     Route::prefix('dossiers/{dossier}/parties')->name('dossiers.parties.')->group(function () {

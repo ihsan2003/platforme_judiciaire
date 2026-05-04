@@ -107,6 +107,9 @@
                         </button>
                     </form>
                 @endcan
+                <a href="{{ route('dossiers.cycle-vie', $dossier) }}" class="btn btn-info btn-sm text-white">
+                    <i class="bi bi-diagram-3 me-1"></i>Cycle de vie
+                </a>
             </div>
 
         </div>

@@ -194,6 +194,10 @@
                                 </button>
                             </form>
                             @endcan
+                            <a href="{{ route('dossiers.cycle-vie', $dossier) }}"
+                            class="btn btn-sm btn-outline-info" title="Cycle de vie">
+                                <i class="bi bi-diagram-3"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>
