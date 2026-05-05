@@ -112,8 +112,8 @@ class ExecutionController extends Controller
             ->where('id_dossier', $execution->jugement->dossierTribunal->id_dossier)
             ->get();
 
-        $institution = $dossierParties->firstWhere('est_institution', true);
-        $autresParties = $dossierParties->where('est_institution', false);
+        $institution = $dossierParties->first(fn($dp) => $dp->partie?->est_entraide);
+        $autresParties = $dossierParties->filter(fn($dp) => !$dp->partie?->est_entraide);
 
         return view('executions.show', compact('execution', 'dossierParties', 'institution', 'autresParties'));
     }

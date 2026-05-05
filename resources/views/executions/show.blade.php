@@ -20,6 +20,10 @@
         default                               => ['bg' => 'secondary','icon' => 'dash-circle'],
     };
 
+    $textColor = $statutColor['bg'] === 'secondary' ? 'white' : $statutColor['bg'];
+
+
+
     $dossier  = $execution->jugement?->dossierTribunal?->dossier;
     $tribunal = $execution->jugement?->dossierTribunal?->tribunal;
     $jugement = $execution->jugement;
@@ -47,7 +51,7 @@
                         </a>
                     @endif
                     <div class="mt-1">
-                        <span class="badge bg-{{ $statutColor['bg'] }} bg-opacity-15 text-{{ $statutColor['bg'] }} border border-{{ $statutColor['bg'] }} border-opacity-25">
+                        <span class="badge bg-{{ $statutColor['bg'] }} bg-opacity-15 text-{{ $textColor }} border border-{{ $statutColor['bg'] }} border-opacity-25">
                             <i class="bi bi-{{ $statutColor['icon'] }} me-1"></i>{{ $statutLabel }}
                         </span>
                     </div>
@@ -256,7 +260,7 @@
                             </td>
                             <td>
                                 @php $tp = $dp->partie?->type_personne; @endphp
-                                <span class="badge bg-{{ $tp === 'Morale' ? 'warning' : 'success' }} bg-opacity-15 text-{{ $tp === 'Morale' ? 'warning' : 'success' }}">
+                                <span class="badge bg-{{ $tp === 'Morale' ? 'warning' : 'success' }} bg-opacity-15 text-{{ $tp === 'Morale' ? 'warning' : 'white' }}">
                                     <i class="bi bi-{{ $tp === 'Morale' ? 'building' : 'person' }} me-1"></i>
                                     {{ $tp ?? '—' }}
                                 </span>
@@ -304,11 +308,11 @@
                     <div class="col-sm-4">
                         <div class="text-muted mb-1">Caractère</div>
                         @if($jugement->est_definitif)
-                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                 <i class="bi bi-check-circle me-1"></i>Définitif
                             </span>
                         @else
-                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25">
+                            <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25">
                                 Non définitif
                             </span>
                         @endif
@@ -357,8 +361,8 @@
 
                     <dt class="col-6 text-muted fw-normal">Statut</dt>
                     <dd class="col-6">
-                        <span class="badge bg-{{ $statutColor['bg'] }} bg-opacity-15 text-{{ $statutColor['bg'] }}">
-                            {{ $statutLabel }}
+                        <span class="badge bg-{{ $statutColor['bg'] }} bg-opacity-15 text-{{ $textColor }}">
+                            <i class="bi bi-{{ $statutColor['icon'] }} me-1"></i>{{ $statutLabel }}
                         </span>
                     </dd>
 
