@@ -171,6 +171,25 @@
             #sidebar { width: 0; }
             #main-content { margin-left: 0; }
         }
+        /* Style de la cloche pour cohérence avec le bouton user */
+        #notifBtn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 4px 10px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
+
+        #notifBtn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        #notifBtn .bi-bell {
+            font-size: 1rem !important;
+        }
     </style>
     @stack('styles')
 </head>
@@ -303,9 +322,9 @@
 
     {{-- Topbar --}}
     <div id="topbar" class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-2">
-            <x-notification-bell />
 
+        {{-- GAUCHE : toggle mobile + breadcrumb --}}
+        <div class="d-flex align-items-center gap-2">
             <button class="btn btn-sm btn-light d-md-none" id="sidebarToggle">
                 <i class="bi bi-list fs-5"></i>
             </button>
@@ -316,15 +335,33 @@
             </nav>
         </div>
 
-        <div class="d-flex align-items-center gap-3">            
-            {{-- User --}}
+        {{-- DROITE : cloche + user --}}
+        <div class="d-flex align-items-center gap-3">
+
+            {{-- 🔔 Notifications --}}
+            <x-notification-bell />
+
+            {{-- 👤 User --}}
             <div class="dropdown">
-                <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
+                <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2"
+                        data-bs-toggle="dropdown">
                     <i class="bi bi-person-circle fs-5"></i>
                     <span class="d-none d-md-inline small">{{ auth()->user()->name }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><span class="dropdown-item-text small text-muted">{{ auth()->user()->email }}</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('notifications.index') }}">
+                            <i class="bi bi-bell me-2"></i>Notifications
+                            @php
+                                $nCount = \App\Models\Notification::pourUtilisateur(auth()->id())->nonLues()->count();
+                            @endphp
+                            @if($nCount > 0)
+                                <span class="badge bg-warning text-dark ms-1">{{ $nCount }}</span>
+                            @endif
+                        </a>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
