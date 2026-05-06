@@ -304,6 +304,8 @@
     {{-- Topbar --}}
     <div id="topbar" class="d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
+            <x-notification-bell />
+
             <button class="btn btn-sm btn-light d-md-none" id="sidebarToggle">
                 <i class="bi bi-list fs-5"></i>
             </button>

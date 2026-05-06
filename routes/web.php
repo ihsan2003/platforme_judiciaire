@@ -219,10 +219,15 @@ Route::middleware(['auth'])->group(function () {
     | Notifications
     |--------------------------------------------------------------------------
     */
+
     Route::prefix('notifications')->name('notifications.')->group(function () {
-        Route::get('/',                          [NotificationController::class, 'index'])        ->name('index');
-        Route::post('/{notification}/lire',      [NotificationController::class, 'marquerLue'])   ->name('lire');
-        Route::post('/tout-lire',                [NotificationController::class, 'toutMarquerLu'])->name('tout-lire');
+        Route::get('/',                              [NotificationController::class, 'index'])        ->name('index');
+        Route::get('/dropdown',                      [NotificationController::class, 'dropdown'])     ->name('dropdown');     // AJAX
+        Route::get('/compteur',                      [NotificationController::class, 'compteur'])     ->name('compteur');     // AJAX badge
+        Route::post('/{notification}/lire',          [NotificationController::class, 'marquerLue'])   ->name('lire');
+        Route::post('/tout-lire',                    [NotificationController::class, 'toutMarquerLu'])->name('tout-lire');
+        Route::delete('/{notification}',             [NotificationController::class, 'destroy'])      ->name('destroy');
+        Route::post('/generer',                      [NotificationController::class, 'generer'])      ->name('generer');      // admin
     });
 
     /*

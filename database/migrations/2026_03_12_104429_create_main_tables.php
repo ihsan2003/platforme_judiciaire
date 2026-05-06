@@ -234,20 +234,11 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Notifications
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary(); // Laravel standard
-            $table->string('type'); // type de notification
-            $table->morphs('notifiable'); // crée notifiable_id et notifiable_type
-            $table->text('data'); // JSON ou texte de la notification
-            $table->timestamp('read_at')->nullable(); // quand la notification a été lue
-            $table->timestamps();
-        });
+        
     }
 
     public function down()
     {
-        Schema::dropIfExists('notifications');
         Schema::dropIfExists('action_reclamations');
         Schema::dropIfExists('reclamations');
         Schema::dropIfExists('reclamants');
