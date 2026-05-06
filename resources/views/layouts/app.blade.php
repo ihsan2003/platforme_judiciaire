@@ -190,6 +190,66 @@
         #notifBtn .bi-bell {
             font-size: 1rem !important;
         }
+        /* ── Notification Bell Dropdown ── */
+        @keyframes bellShake {
+            0%, 100% { transform: rotate(0deg); }
+            15%       { transform: rotate(15deg); }
+            30%       { transform: rotate(-13deg); }
+            45%       { transform: rotate(10deg); }
+            60%       { transform: rotate(-8deg); }
+            75%       { transform: rotate(5deg); }
+        }
+        #notifBtn:hover .bi-bell {
+            animation: bellShake .5s ease-in-out;
+        }
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background .15s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .notif-item:hover { background: #f8f9ff; }
+        .notif-item.non-lue { background: #fff8f0; }
+        .notif-item.non-lue:hover { background: #fff3e0; }
+        .notif-icon {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: .95rem;
+        }
+        .notif-icon.danger  { background: #fee2e2; color: #dc2626; }
+        .notif-icon.warning { background: #fef3c7; color: #d97706; }
+        .notif-icon.info    { background: #dbeafe; color: #2563eb; }
+        .notif-message {
+            font-size: .82rem;
+            font-weight: 500;
+            line-height: 1.3;
+            color: #111827;
+        }
+        .notif-details {
+            font-size: .75rem;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .notif-time {
+            font-size: .7rem;
+            color: #9ca3af;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .dot-non-lue {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #f59e0b;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
     </style>
     @stack('styles')
 </head>

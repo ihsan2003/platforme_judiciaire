@@ -29,7 +29,7 @@ class NotificationService
     // ─── Seuils configurables ─────────────────────────────────────────────
 
     private const SEUIL_AUDIENCE_JOURS       = 7;  // jours avant audience → alerte
-    private const SEUIL_RECOURS_JOURS        = 7;  // jours restants pour recours → alerte
+    private const SEUIL_RECOURS_JOURS        = 29;  // jours restants pour recours → alerte
     private const SEUIL_RECLAMATION_JOURS    = 7;  // jours sans action → alerte
     private const SEUIL_JUGEMENT_JOURS       = 30; // jours sans définitif → alerte
     private const SEUIL_EXECUTION_JOURS      = 30; // jours d'exécution sans fin → alerte
