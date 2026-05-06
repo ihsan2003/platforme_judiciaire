@@ -37,8 +37,14 @@
                                 $statut === 'Clôturée'     => 'success',
                                 default                    => 'secondary',
                             };
+                            $textColor = match($color) {
+                                'warning'   => 'text-dark',
+                                'info'      => 'text-dark',
+                                'success'   => 'text-white',
+                                'secondary' => 'text-white',
+                            };
                         @endphp
-                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+                        <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }} border border-{{ $color }} border-opacity-25">
                             <i class="bi bi-circle-fill me-1" style="font-size:.45rem;vertical-align:middle"></i>
                             {{ $statut }}
                         </span>
@@ -197,7 +203,7 @@
 
                             <dt class="col-5 text-muted fw-semibold">Statut</dt>
                             <dd class="col-7">
-                                <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+                                <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }} border border-{{ $color }} border-opacity-25">
                                     {{ $statut }}
                                 </span>
                             </dd>

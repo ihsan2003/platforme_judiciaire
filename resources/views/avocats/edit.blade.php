@@ -122,22 +122,20 @@
 
                     <dt class="col-6 text-muted fw-normal">Dossiers liés</dt>
                     <dd class="col-6">
-                        @php $nb = $avocat->dossierParties()->count(); @endphp
-                        <span class="badge bg-{{ $nb > 0 ? 'info' : 'secondary' }} bg-opacity-15 text-{{ $nb > 0 ? 'info' : 'secondary' }}">
+                    @php
+                    $nb = $avocat->dossierParties()->count();
+
+                    $color = $nb > 0 ? 'info' : 'secondary';
+
+                    $textColor = $nb > 0 ? 'text-white' : 'text-white';
+                    @endphp     
+                        <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }}">
                             {{ $nb }}
                         </span>
                     </dd>
                 </dl>
             </div>
         </div>
-
-        @if($avocat->dossierParties()->count() > 0)
-        <div class="alert alert-warning border-0 small">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Cet avocat est lié à <strong>{{ $avocat->dossierParties()->count() }} dossier(s)</strong>.
-            Il ne peut pas être supprimé tant que ces liens existent.
-        </div>
-        @endif
     </div>
 
 </div>

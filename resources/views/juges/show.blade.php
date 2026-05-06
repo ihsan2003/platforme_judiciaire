@@ -32,7 +32,7 @@
                             </span>
                         @endif
                         @if($juge->tribunal)
-                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-building me-1"></i>{{ $juge->tribunal->nom_tribunal }}
                             </span>
                         @endif
@@ -148,7 +148,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25 small" dir="rtl">
+                                <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25 small" dir="rtl">
                                     {{ $audience->typeAudience?->type_audience ?? '—' }}
                                 </span>
                             </td>
@@ -209,11 +209,11 @@
                             </td>
                             <td>
                                 @if($jugement->est_definitif)
-                                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                                    <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                         <i class="bi bi-check-circle me-1"></i>Définitif
                                     </span>
                                 @else
-                                    <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25">
+                                    <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25">
                                         <i class="bi bi-clock me-1"></i>En cours
                                     </span>
                                 @endif
@@ -265,7 +265,7 @@
 
                     <dt class="col-6 text-muted fw-normal">Audiences</dt>
                     <dd class="col-6">
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $juge->audiences->count() }} au total
                         </span>
                     </dd>

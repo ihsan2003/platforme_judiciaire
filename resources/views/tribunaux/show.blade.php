@@ -24,7 +24,7 @@
                 <div>
                     <h4 class="fw-bold mb-0">{{ $tribunal->nom_tribunal }}</h4>
                     <div class="mt-1 d-flex flex-wrap gap-2 align-items-center">
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             <i class="bi bi-tag me-1"></i>{{ $tribunal->typeTribunal->tribunal ?? '—' }}
                         </span>
                         @if($tribunal->province)
@@ -172,7 +172,7 @@
 
                     <dt class="col-6 text-muted fw-normal">Juges</dt>
                     <dd class="col-6">
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $tribunal->juges->count() }} juge(s)
                         </span>
                     </dd>

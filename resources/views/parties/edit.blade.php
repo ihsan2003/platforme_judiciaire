@@ -165,7 +165,7 @@
 
                     <dt class="col-6 text-muted fw-normal">Dossiers</dt>
                     <dd class="col-6">
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $partie->dossiers()->count() }} dossier(s)
                         </span>
                     </dd>

@@ -128,6 +128,10 @@
                         $statut === 'Clôturée'  => 'success',
                         default                 => 'secondary',
                     };
+                    $textColor = match($color) {
+                        'warning' => 'text-dark',
+                        default   => 'text-'.$color,
+                    };
                     $derniereAction = $reclamation->actions->first();
                 @endphp
                 <tr>
@@ -152,7 +156,7 @@
                         {{ $reclamation->date_reception?->format('d/m/Y') ?? '—' }}
                     </td>
                     <td>
-                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $color }} border border-{{ $color }} border-opacity-25">
+                        <span class="badge bg-{{ $color }} bg-opacity-15 text-{{ $textColor  }} border border-{{ $color }} border-opacity-25">
                             <i class="bi bi-circle-fill me-1" style="font-size:.45rem;vertical-align:middle"></i>
                             {{ $statut }}
                         </span>

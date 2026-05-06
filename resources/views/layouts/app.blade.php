@@ -21,14 +21,74 @@
         /* Sidebar */
         #sidebar {
             width: var(--sidebar-width);
-            min-height: 100vh;
+            height: 100vh;
             background: var(--primary);
             position: fixed;
             top: 0; left: 0;
             z-index: 1000;
             transition: width .25s;
             overflow-x: hidden;
+            overflow-y: auto; 
+            scrollbar-width: thin;
+            scrollbar-color: rgba(200,168,75,0.6) var(--primary);
+            display: flex;
+            flex-direction: column;
         }
+
+        /* Scrollbar globale du sidebar */
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        /* Background de la track (fond) */
+        #sidebar::-webkit-scrollbar-track {
+            background: var(--primary); /* même couleur que le sidebar */
+        }
+
+        /* Le curseur (thumb) */
+        #sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(200, 168, 75, 0.6); /* accent */
+            border-radius: 10px;
+        }
+
+        /* Hover du curseur */
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(200, 168, 75, 0.9);
+        }
+
+        /* Zone scrollable */
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Footer fixé en bas */
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: var(--primary);
+        }
+
+        .btn-logout {
+            background: rgba(200, 168, 75, 0.08); /* accent léger */
+            color: var(--accent);
+            border: 1px solid rgba(200, 168, 75, 0.25);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: .9rem;
+            transition: all .25s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--accent);
+            color: #1a3a5c; /* couleur du sidebar */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+
         #sidebar .sidebar-brand {
             padding: 1.2rem 1rem;
             border-bottom: 1px solid rgba(255,255,255,.1);
@@ -122,101 +182,120 @@
         <i class="bi bi-bank2 fs-4 text-warning"></i>
         <span>Plateforme Juridique</span>
     </div>
+    
+    <div class="sidebar-content">
+        <ul class="nav flex-column mt-2">
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                href="{{ route('dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Tableau de bord
+                </a>
+            </li>
 
-    <ul class="nav flex-column mt-2">
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-               href="{{ route('dashboard') }}">
-                <i class="bi bi-speedometer2"></i> Tableau de bord
-            </a>
-        </li>
+            <div class="nav-section">Dossiers</div>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('dossiers.*') ? 'active' : '' }}"
+                href="{{ route('dossiers.index') }}">
+                    <i class="bi bi-folder2-open"></i> Dossiers judiciaires
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('audiences.*') ? 'active' : '' }}"
+                href="{{ route('audiences.index') }}">
+                    <i class="bi bi-calendar-event"></i> Audiences
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('jugements.*') ? 'active' : '' }}"
+                href="{{ route('jugements.index') }}">
+                    <i class="bi bi-hammer"></i> Jugements
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('executions.*') ? 'active' : '' }}"
+                href="{{ route('executions.index') }}">
+                    <i class="bi bi-check2-circle"></i> Exécutions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('finances.*') ? 'active' : '' }}"
+                href="{{ route('finances.index') }}">
+                    <i class="bi bi-cash-stack"></i> Finances
+                </a>
+            </li>
 
-        <div class="nav-section">Dossiers</div>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('dossiers.*') ? 'active' : '' }}"
-               href="{{ route('dossiers.index') }}">
-                <i class="bi bi-folder2-open"></i> Dossiers judiciaires
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('audiences.*') ? 'active' : '' }}"
-               href="{{ route('audiences.index') }}">
-                <i class="bi bi-calendar-event"></i> Audiences
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('jugements.*') ? 'active' : '' }}"
-               href="{{ route('jugements.index') }}">
-                <i class="bi bi-hammer"></i> Jugements
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('executions.*') ? 'active' : '' }}"
-               href="{{ route('executions.index') }}">
-                <i class="bi bi-check2-circle"></i> Exécutions
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('finances.*') ? 'active' : '' }}"
-               href="{{ route('finances.index') }}">
-                <i class="bi bi-check2-circle"></i> Finances
-            </a>
-        </li>
+            <div class="nav-section">Réclamations</div>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('reclamations.*') ? 'active' : '' }}"
+                href="{{ route('reclamations.index') }}">
+                    <i class="bi bi-envelope-exclamation"></i> Réclamations
+                    @php $countRecl = \App\Models\Reclamation::enAttente()->count(); @endphp
+                    @if($countRecl > 0)
+                        <span class="badge bg-warning text-dark ms-1">{{ $countRecl }}</span>
+                    @endif
+                </a>
+            </li>
 
-        <div class="nav-section">Réclamations</div>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('reclamations.*') ? 'active' : '' }}"
-               href="{{ route('reclamations.index') }}">
-                <i class="bi bi-envelope-exclamation"></i> Réclamations
-                @php $countRecl = \App\Models\Reclamation::enAttente()->count(); @endphp
-                @if($countRecl > 0)
-                    <span class="badge bg-warning text-dark ms-1">{{ $countRecl }}</span>
-                @endif
-            </a>
-        </li>
+            <div class="nav-section">Référentiels</div>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('parties.*') ? 'active' : '' }}"
+                href="{{ route('parties.index') }}">
+                    <i class="bi bi-people"></i> Parties
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('avocats.*') ? 'active' : '' }}"
+                href="{{ route('avocats.index') }}">
+                    <i class="bi bi-person-badge"></i> Avocats
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('tribunaux.*') ? 'active' : '' }}"
+                href="{{ route('tribunaux.index') }}">
+                    <i class="bi bi-building"></i> Tribunaux
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('juges.*') ? 'active' : '' }}"
+                href="{{ route('juges.index') }}">
+                    <i class="bi bi-person-workspace"></i> Juges
+                </a>
+            </li>
 
-        <div class="nav-section">Référentiels</div>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('parties.*') ? 'active' : '' }}"
-               href="{{ route('parties.index') }}">
-                <i class="bi bi-people"></i> Parties
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('avocats.*') ? 'active' : '' }}"
-               href="{{ route('avocats.index') }}">
-                <i class="bi bi-person-badge"></i> Avocats
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('tribunaux.*') ? 'active' : '' }}"
-               href="{{ route('tribunaux.index') }}">
-                <i class="bi bi-building"></i> Tribunaux
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('juges.*') ? 'active' : '' }}"
-               href="{{ route('juges.index') }}">
-                <i class="bi bi-person-workspace"></i> Juges
-            </a>
-        </li>
+            @can('manage users')
+            <div class="nav-section">Administration</div>
+            <li class="nav-item">
+                <a class="nav-link "
+                href="">
+                    <i class="bi bi-person-circle"></i> Mon profil
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+                href="{{ route('admin.users.index') }}">
+                    <i class="bi bi-people"></i> Utilisateurs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.structures.*') ? 'active' : '' }}"
+                href="{{ route('admin.structures.index') }}">
+                    <i class="bi bi-diagram-3"></i> Structures
+                </a>
+            </li>
+            @endcan
+        </ul>
+    </div>
 
-        @can('manage users')
-        <div class="nav-section">Administration</div>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-               href="{{ route('admin.users.index') }}">
-                <i class="bi bi-shield-person"></i> Utilisateurs
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('admin.structures.*') ? 'active' : '' }}"
-               href="{{ route('admin.structures.index') }}">
-                <i class="bi bi-diagram-3"></i> Structures
-            </a>
-        </li>
-        @endcan
-    </ul>
+    {{-- 🔴 Bloc déconnexion --}}
+    <div class="sidebar-footer">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="btn-logout w-100">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Déconnexion
+            </button>
+        </form>
+    </div>
 </nav>
 
 {{-- Main --}}

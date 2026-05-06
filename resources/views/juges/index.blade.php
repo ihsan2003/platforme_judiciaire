@@ -145,7 +145,7 @@
                     <td class="text-muted small">{{ $juge->specialisation ?? '—' }}</td>
                     <td>
                         @if($juge->tribunal)
-                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-building me-1"></i>{{ $juge->tribunal->nom_tribunal }}
                             </span>
                         @else

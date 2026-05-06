@@ -125,7 +125,7 @@
                     <dt class="col-6 text-muted fw-normal">Juges</dt>
                     <dd class="col-6">
                         @php $nb = $tribunal->juges()->count(); @endphp
-                        <span class="badge bg-{{ $nb > 0 ? 'info' : 'secondary' }} bg-opacity-15 text-{{ $nb > 0 ? 'info' : 'secondary' }}">
+                        <span class="badge bg-{{ $nb > 0 ? 'info' : 'secondary' }} bg-opacity-15 text-white">
                             {{ $nb }} juge(s)
                         </span>
                     </dd>
@@ -133,7 +133,7 @@
                     <dt class="col-6 text-muted fw-normal">Dossiers</dt>
                     <dd class="col-6">
                         @php $nbD = $tribunal->dossierTribunaux()->count(); @endphp
-                        <span class="badge bg-{{ $nbD > 0 ? 'primary' : 'secondary' }} bg-opacity-15 text-{{ $nbD > 0 ? 'primary' : 'secondary' }}">
+                        <span class="badge bg-{{ $nbD > 0 ? 'primary' : 'secondary' }} bg-opacity-15 text-white">
                             {{ $nbD }} dossier(s)
                         </span>
                     </dd>
@@ -141,13 +141,6 @@
             </div>
         </div>
 
-        @if($tribunal->dossierTribunaux()->count() > 0)
-        <div class="alert alert-warning border-0 small">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Ce tribunal est lié à <strong>{{ $tribunal->dossierTribunaux()->count() }} dossier(s)</strong>.
-            Toute modification impactera ces dossiers.
-        </div>
-        @endif
     </div>
 
 </div>

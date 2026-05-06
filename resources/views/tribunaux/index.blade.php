@@ -136,7 +136,7 @@
                         </div>
                     </td>
                     <td>
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $tribunal->typeTribunal->tribunal ?? '—' }}
                         </span>
                     </td>
@@ -149,7 +149,7 @@
                     <td>
                         @php $nbJuges = $tribunal->juges()->count(); @endphp
                         @if($nbJuges > 0)
-                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
+                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                 <i class="bi bi-person-workspace me-1"></i>{{ $nbJuges }} juge{{ $nbJuges > 1 ? 's' : '' }}
                             </span>
                         @else

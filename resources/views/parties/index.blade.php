@@ -145,10 +145,14 @@
                         </span>
                     </td>
                     <td>
-                        <span class="badge bg-{{ $partie->type_personne === 'Morale' ? 'warning' : 'success' }}
-                                          bg-opacity-15 text-{{ $partie->type_personne === 'Morale' ? 'warning' : 'success' }}
-                                          border border-{{ $partie->type_personne === 'Morale' ? 'warning' : 'success' }} border-opacity-25">
-                            <i class="bi bi-{{ $partie->type_personne === 'Morale' ? 'building' : 'person' }} me-1"></i>
+                        @php
+                            $isMorale = $partie->type_personne === 'Morale';
+                            $color = $isMorale ? 'warning' : 'success';
+                            $textColor = $isMorale ? 'text-dark' : 'text-white';
+                            $icon = $isMorale ? 'bi-building' : 'bi-person';
+                        @endphp
+                        <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }} border border-{{ $color }} border-opacity-25">
+                            <i class="bi {{ $icon }} me-1"></i>
                             {{ $partie->type_personne ?? '—' }}
                         </span>
                     </td>
@@ -175,7 +179,7 @@
                     <td>
                         @php $nb = $partie->dossiers()->count(); @endphp
                         @if($nb > 0)
-                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-folder2 me-1"></i>{{ $nb }} dossier{{ $nb > 1 ? 's' : '' }}
                             </span>
                         @else

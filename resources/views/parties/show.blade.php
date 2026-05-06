@@ -26,17 +26,24 @@
                 <div>
                     <h4 class="fw-bold mb-0">{{ $partie->nom_partie }}</h4>
                     <div class="mt-1 d-flex flex-wrap gap-2 align-items-center">
-                        <span class="badge bg-{{ $partie->type_personne === 'Morale' ? 'warning' : 'success' }}
-                                          bg-opacity-15 text-{{ $partie->type_personne === 'Morale' ? 'warning' : 'success' }}
-                                          border border-{{ $partie->type_personne === 'Morale' ? 'warning' : 'success' }} border-opacity-25">
-                            <i class="bi bi-{{ $partie->type_personne === 'Morale' ? 'building' : 'person' }} me-1"></i>
+                        @php
+                            $isMorale = $partie->type_personne === 'Morale';
+                            $color = $isMorale ? 'warning' : 'success';
+                            $icon = $isMorale ? 'bi-building' : 'bi-person';
+                            $textColor = match($color) {
+                                'warning' => 'text-dark',
+                                default   => 'text-white',
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }} border border-{{ $color }} border-opacity-25">
+                            <i class="bi {{ $icon }} me-1"></i>
                             {{ $partie->type_personne ?? '—' }}
                         </span>
                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 font-monospace">
                             {{ $partie->identifiant_unique }}
                         </span>
                         @if($partie->avocat)
-                            <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-briefcase me-1"></i>Me. {{ $partie->avocat->nom_avocat }}
                             </span>
                         @endif
@@ -132,6 +139,13 @@
                             $role = $dossier->pivot->id_type_partie
                                 ? optional(\App\Models\TypePartie::find($dossier->pivot->id_type_partie))->type_partie
                                 : '—';
+
+                            $textColor = match($sc) {
+                                'success'   => 'text-white',
+                                'secondary' => 'text-white',
+                                'primary' => 'text-white',
+                                default     => 'text-dark',
+                            };
                         @endphp
                         <tr>
                             <td class="ps-3">
@@ -147,7 +161,7 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="badge bg-{{ $sc }} bg-opacity-15 text-{{ $sc }} border border-{{ $sc }} border-opacity-25">
+                                <span class="badge bg-{{ $sc }} bg-opacity-15 {{ $textColor }} border border-{{ $sc }} border-opacity-25">
                                     {{ $statut }}
                                 </span>
                             </td>
@@ -197,7 +211,7 @@
 
                     <dt class="col-6 text-muted fw-normal">Dossiers</dt>
                     <dd class="col-6">
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $partie->dossiers->count() }} dossier(s)
                         </span>
                     </dd>
