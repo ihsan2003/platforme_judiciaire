@@ -161,6 +161,134 @@
 
 </div>
 
+<div class="row g-4 mt-2">
+ 
+    {{-- ── Donut : Dossiers par statut ── --}}
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-pie-chart text-primary me-2"></i>Dossiers par statut
+                </h6>
+            </div>
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <div style="position:relative; width:200px; height:200px;">
+                    <canvas id="chartDossiersStatut"></canvas>
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+                        <div class="fs-4 fw-bold lh-1">{{ $dossiers['total'] }}</div>
+                        <div class="text-muted" style="font-size:.7rem;">Total</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+                    <span class="badge" style="background:#e8f4fd;color:#1a6dab;font-size:.72rem;">En cours : {{ $dossiers['en_cours'] }}</span>
+                    <span class="badge" style="background:#e8f7ee;color:#1a6b3a;font-size:.72rem;">Jugés : {{ $dossiers['juges'] }}</span>
+                    <span class="badge" style="background:#fff3cd;color:#856404;font-size:.72rem;">Exécutés : {{ $dossiers['executes'] }}</span>
+                    <span class="badge" style="background:#f0f0f0;color:#555;font-size:.72rem;">Autres : {{ $dossiers['total'] - $dossiers['en_cours'] - $dossiers['juges'] - $dossiers['executes'] }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+ 
+    {{-- ── Barres horizontales : Réclamations par statut ── --}}
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-bar-chart-horizontal text-warning me-2"></i>Réclamations par statut
+                </h6>
+            </div>
+            <div class="card-body py-3" style="position:relative; height:260px;">
+                <canvas id="chartReclamations"></canvas>
+            </div>
+        </div>
+    </div>
+ 
+    {{-- ── Jauge / Indicateurs d'alertes ── --}}
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-activity text-danger me-2"></i>Indicateurs clés
+                </h6>
+            </div>
+            <div class="card-body py-3" style="position:relative; height:260px;">
+                <canvas id="chartIndicateurs"></canvas>
+            </div>
+        </div>
+    </div>
+ 
+</div>
+ 
+{{-- ── Ligne : Dossiers ouverts par mois (12 derniers mois) ── --}}
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-graph-up text-success me-2"></i>Évolution des dossiers — 12 derniers mois
+        </h6>
+    </div>
+    <div class="card-body py-3" style="position:relative; height:280px;">
+        <canvas id="chartEvolution"></canvas>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+
+    {{-- ── 1. Dossiers par type d'affaire ── --}}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-diagram-3 text-primary me-2"></i>Dossiers par type d'affaire
+                </h6>
+            </div>
+            <div class="card-body" style="height:300px;">
+                <canvas id="chartAffaires"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── 2. Jugements pour / contre ── --}}
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-balance-scale text-success me-2"></i>Résultats jugements
+                </h6>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <canvas id="chartPourContre"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── 3. Finances ── --}}
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-cash-stack text-warning me-2"></i>Montants
+                </h6>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <canvas id="chartFinances"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{-- ── 4. Évolution financière mensuelle ── --}}
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-graph-up-arrow text-success me-2"></i>Évolution financière (12 mois)
+        </h6>
+    </div>
+    <div class="card-body" style="height:300px;">
+        <canvas id="chartFinancesMensuel"></canvas>
+    </div>
+</div>
+
 {{-- ══ DERNIERS DOSSIERS ══ --}}
 <div class="card border-0 shadow-sm mt-4">
     <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
@@ -220,3 +348,321 @@
 </div>
 
 @endsection
+
+{{-- ══ SCRIPTS GRAPHIQUES ══ --}}
+{{-- À insérer dans resources/views/dashboard/index.blade.php, à la FIN du fichier --}}
+ 
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+ 
+    /* ─── Données depuis Blade ─────────────────────────────────────── */
+    const dossiersData = {
+        enCours  : {{ $dossiers['en_cours'] }},
+        juges    : {{ $dossiers['juges'] }},
+        executes : {{ $dossiers['executes'] }},
+        autres   : Math.max(0, {{ $dossiers['total'] }} - {{ $dossiers['en_cours'] }} - {{ $dossiers['juges'] }} - {{ $dossiers['executes'] }}),
+        total    : {{ $dossiers['total'] }},
+    };
+ 
+    const reclData = {
+        recues    : {{ $reclamations['recues'] }},
+        enCours   : {{ $reclamations['en_cours'] }},
+        cloturees : {{ $reclamations['cloturees'] }},
+        enAttente : {{ $reclamations['en_attente'] }},
+    };
+ 
+    const alertesData = {
+        audiencesProches       : {{ $alertes['audiences_proches'] }},
+        jugementsNonDefinitifs : {{ $alertes['jugements_non_definitifs'] }},
+        reclamationsEnAttente  : {{ $alertes['reclamations_en_attente'] }},
+    };
+ 
+    /* ─── Données mensuelles (dossiers ouverts par mois) ──────────── */
+    /* Ces données doivent être passées depuis le contrôleur.           */
+    /* Voir DashboardController.php — section "Évolution mensuelle"     */
+    const evolutionLabels = {!! json_encode($evolutionMois['labels'] ?? []) !!};
+    const evolutionValues = {!! json_encode($evolutionMois['values'] ?? []) !!};
+ 
+    const affairesData = {
+        labels: {!! json_encode($dossiersParAffaire['labels']) !!},
+        values: {!! json_encode($dossiersParAffaire['values']) !!},
+    };
+
+    const pourContreData = {
+        pour: {{ $resultatsJugements['pour'] }},
+        contre: {{ $resultatsJugements['contre'] }},
+    };
+
+    const financesData = {
+        pour: {{ $statsFinancesGraphe['montant_pour'] }},
+        contre: {{ $statsFinancesGraphe['montant_contre'] }},
+        total: {{ $statsFinancesGraphe['montant_total'] }},
+    };
+
+    const financesMensuel = {
+        labels: {!! json_encode($statsFinancesGraphe['mensuel_labels']) !!},
+        values: {!! json_encode($statsFinancesGraphe['mensuel_values']) !!}
+    };
+    /* ─── Couleurs ─────────────────────────────────────────────────── */
+    const COLORS = {
+        blue    : '#378ADD',
+        green   : '#639922',
+        amber   : '#BA7517',
+        gray    : '#888780',
+        pink    : '#D4537E',
+        teal    : '#1D9E75',
+        red     : '#E24B4A',
+        purple  : '#7F77DD',
+        blueFill: 'rgba(55,138,221,0.15)',
+    };
+ 
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* 1. DONUT — Dossiers par statut                                  */
+    /* ═══════════════════════════════════════════════════════════════ */
+    new Chart(document.getElementById('chartDossiersStatut'), {
+        type: 'doughnut',
+        data: {
+            labels: ['En cours', 'Jugés', 'Exécutés', 'Autres'],
+            datasets: [{
+                data: [
+                    dossiersData.enCours,
+                    dossiersData.juges,
+                    dossiersData.executes,
+                    dossiersData.autres,
+                ],
+                backgroundColor: [COLORS.blue, COLORS.green, COLORS.amber, COLORS.gray],
+                borderWidth: 0,
+                hoverOffset: 6,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '72%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.label} : ${ctx.raw} (${Math.round(ctx.raw / dossiersData.total * 100)}%)`,
+                    },
+                },
+            },
+        },
+    });
+ 
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* 2. BARRES HORIZONTALES — Réclamations par statut               */
+    /* ═══════════════════════════════════════════════════════════════ */
+    new Chart(document.getElementById('chartReclamations'), {
+        type: 'bar',
+        data: {
+            labels: ['Reçues', 'En cours', 'Clôturées', 'En attente'],
+            datasets: [{
+                label: 'Réclamations',
+                data: [
+                    reclData.recues,
+                    reclData.enCours,
+                    reclData.cloturees,
+                    reclData.enAttente,
+                ],
+                backgroundColor: [COLORS.blue, COLORS.amber, COLORS.green, COLORS.red],
+                borderRadius: 6,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { label: ctx => ` ${ctx.raw} réclamation(s)` },
+                },
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { precision: 0, font: { size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                },
+                y: {
+                    ticks: { font: { size: 12 } },
+                    grid: { display: false },
+                },
+            },
+        },
+    });
+ 
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* 3. BARRES GROUPÉES — Indicateurs / Alertes                     */
+    /* ═══════════════════════════════════════════════════════════════ */
+    new Chart(document.getElementById('chartIndicateurs'), {
+        type: 'bar',
+        data: {
+            labels: ['Audiences\n(7 jours)', 'Jugements\nnon définitifs', 'Réclamations\nen attente'],
+            datasets: [{
+                label: 'Nombre',
+                data: [
+                    alertesData.audiencesProches,
+                    alertesData.jugementsNonDefinitifs,
+                    alertesData.reclamationsEnAttente,
+                ],
+                backgroundColor: [COLORS.blue, COLORS.amber, COLORS.red],
+                borderRadius: 6,
+                borderSkipped: false,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { label: ctx => ` ${ctx.raw}` },
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0, font: { size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                },
+                x: {
+                    ticks: { font: { size: 11 } },
+                    grid: { display: false },
+                },
+            },
+        },
+    });
+ 
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* 4. LIGNE — Évolution mensuelle des dossiers ouverts            */
+    /* ═══════════════════════════════════════════════════════════════ */
+    if (evolutionLabels.length > 0) {
+        new Chart(document.getElementById('chartEvolution'), {
+            type: 'line',
+            data: {
+                labels: evolutionLabels,
+                datasets: [{
+                    label: 'Dossiers ouverts',
+                    data: evolutionValues,
+                    borderColor: COLORS.blue,
+                    backgroundColor: COLORS.blueFill,
+                    borderWidth: 2,
+                    pointBackgroundColor: COLORS.blue,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.35,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: { label: ctx => ` ${ctx.raw} dossier(s) ouverts` },
+                    },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, font: { size: 11 } },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 11 },
+                            autoSkip: false,
+                            maxRotation: 30,
+                        },
+                        grid: { display: false },
+                    },
+                },
+            },
+        });
+    }
+
+    new Chart(document.getElementById('chartAffaires'), {
+        type: 'bar',
+        data: {
+            labels: affairesData.labels,
+            datasets: [{
+                data: affairesData.values,
+                backgroundColor: COLORS.blue,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartPourContre'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Pour', 'Contre'],
+            datasets: [{
+                data: [pourContreData.pour, pourContreData.contre],
+                backgroundColor: [COLORS.green, COLORS.red],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    new Chart(document.getElementById('chartFinances'), {
+        type: 'pie',
+        data: {
+            labels: ['Pour établissement', 'Contre établissement'],
+            datasets: [{
+                data: [financesData.pour, financesData.contre],
+                backgroundColor: [COLORS.teal, COLORS.red],
+            }]
+        },
+        options: {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.raw.toLocaleString()} DH`
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartFinancesMensuel'), {
+        type: 'line',
+        data: {
+            labels: financesMensuel.labels,
+            datasets: [{
+                data: financesMensuel.values,
+                borderColor: COLORS.teal,
+                backgroundColor: 'rgba(29,158,117,0.15)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+ 
+})();
+</script>
+@endpush
