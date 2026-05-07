@@ -86,7 +86,7 @@
                 <tr class="fw-semibold">
                     <td class="ps-3">
                         <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-primary bg-opacity-15 d-flex align-items-center justify-content-center text-primary"
+                            <div class="rounded-circle bg-primary bg-opacity-15 d-flex align-items-center justify-content-center text-white"
                                  style="width:36px;height:36px;flex-shrink:0">
                                 <i class="bi bi-building-fill fs-6"></i>
                             </div>
@@ -101,7 +101,7 @@
                         </div>
                     </td>
                     <td>
-                        <span class="badge bg-primary bg-opacity-15 text-primary border border-primary border-opacity-25">
+                        <span class="badge bg-primary bg-opacity-15 text-white border border-primary border-opacity-25">
                             {{ $structure->typeStructure?->type_structure ?? '—' }}
                         </span>
                     </td>

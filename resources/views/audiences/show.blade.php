@@ -257,54 +257,6 @@
     {{-- ── Colonne latérale ── --}}
     <div class="col-lg-4">
 
-        {{-- Règles métier actives --}}
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-shield-check me-2 text-info"></i>Règles métier
-                </h6>
-            </div>
-            <div class="card-body small">
-
-                @if($isHoukm)
-                    <div class="alert alert-warning py-2 mb-3">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong>Audience الحكم</strong> — unique par instance. Le jugement doit avoir la même date.
-                    </div>
-                @endif
-
-                <dl class="row mb-0">
-                    <dt class="col-7 text-muted fw-normal">Instance</dt>
-                    <dd class="col-5">
-                        @if($dt?->estOuverte())
-                            <span class="badge bg-success bg-opacity-15 text-success">Ouverte</span>
-                        @else
-                            <span class="badge bg-secondary">Clôturée</span>
-                        @endif
-                    </dd>
-
-                    <dt class="col-7 text-muted fw-normal">Jugement rendu</dt>
-                    <dd class="col-5">
-                        @if($dt?->aUnJugement())
-                            <span class="badge bg-warning text-dark">Oui</span>
-                        @else
-                            <span class="badge bg-secondary">Non</span>
-                        @endif
-                    </dd>
-
-                    <dt class="col-7 text-muted fw-normal">Audience الحكم</dt>
-                    <dd class="col-5">
-                        @if($dt?->audienceHoukm())
-                            <span class="badge bg-warning text-dark">Présente</span>
-                        @else
-                            <span class="badge bg-secondary">Absente</span>
-                        @endif
-                    </dd>
-                </dl>
-
-            </div>
-        </div>
-
         {{-- Navigation rapide --}}
         <div class="card border-0 shadow-sm">
             <div class="card-body py-3 d-flex flex-column gap-2">

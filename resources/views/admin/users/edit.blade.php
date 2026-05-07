@@ -220,7 +220,7 @@
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-circle bg-primary bg-opacity-15 d-flex align-items-center justify-content-center fw-bold text-primary"
+                    <div class="rounded-circle bg-primary bg-opacity-15 d-flex align-items-center justify-content-center fw-bold text-white"
                          style="width:48px;height:48px;font-size:1rem;flex-shrink:0">
                         {{ $initials }}
                     </div>
@@ -245,13 +245,6 @@
                 </dl>
             </div>
         </div>
-
-        @if($user->id === auth()->id())
-        <div class="alert alert-warning border-0 small">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Vous modifiez votre propre compte. Soyez prudent lors du changement de rôle.
-        </div>
-        @endif
 
     </div>
 </div>

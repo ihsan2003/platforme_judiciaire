@@ -219,18 +219,6 @@
                 </ul>
             </div>
         </div>
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-info-circle me-2 text-info"></i>À propos des rôles
-                </h6>
-            </div>
-            <div class="card-body small text-muted">
-                <p class="mb-2">Le rôle détermine ce que l'utilisateur peut voir et faire dans l'application.</p>
-                <p class="mb-0">Il peut être modifié à tout moment depuis la fiche de l'utilisateur.</p>
-            </div>
-        </div>
     </div>
 
 </div>

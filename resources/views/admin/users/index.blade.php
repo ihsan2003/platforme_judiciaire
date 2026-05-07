@@ -92,14 +92,14 @@
                                 ->take(2)->implode('');
                         @endphp
                         <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-primary bg-opacity-15 d-flex align-items-center justify-content-center fw-bold text-primary"
+                            <div class="rounded-circle bg-primary bg-opacity-15 d-flex align-items-center justify-content-center fw-bold text-white"
                                  style="width:34px;height:34px;font-size:.78rem;flex-shrink:0">
                                 {{ $initials }}
                             </div>
                             <div>
                                 <div class="fw-semibold small">{{ $user->name }}</div>
                                 @if($user->id === auth()->id())
-                                    <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25" style="font-size:.65rem">
+                                    <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25" style="font-size:.65rem">
                                         <i class="bi bi-person-check me-1"></i>Moi
                                     </span>
                                 @endif

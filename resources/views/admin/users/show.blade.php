@@ -49,7 +49,7 @@
                         @endforeach
 
                         @if($isSelf)
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             <i class="bi bi-person-check me-1"></i>Vous
                         </span>
                         @endif
