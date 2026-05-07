@@ -8,6 +8,7 @@ use App\Http\Controllers\JugementController;
 use App\Http\Controllers\ReclamationController;
 use App\Http\Controllers\ExecutionController;
 use App\Http\Controllers\PartieController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AvocatController;
 use App\Http\Controllers\TribunalController;
 use App\Http\Controllers\JugeController;
@@ -25,7 +26,6 @@ use App\Http\Controllers\DossierTribunalController;
 | Authentification
 |--------------------------------------------------------------------------
 */
-Auth::routes();
 
 require __DIR__.'/auth.php';
 
@@ -229,6 +229,16 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{notification}',             [NotificationController::class, 'destroy'])      ->name('destroy');
         Route::post('/generer',                      [NotificationController::class, 'generer'])      ->name('generer');      // admin
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Profil utilisateur
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/profile',    [ProfileController::class, 'edit'])   ->name('profile.edit');
+    Route::patch('/profile',  [ProfileController::class, 'update']) ->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
 
     /*
     |--------------------------------------------------------------------------

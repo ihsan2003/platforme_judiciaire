@@ -37,7 +37,7 @@
 
         /* Scrollbar globale du sidebar */
         #sidebar::-webkit-scrollbar {
-            width: 8px;
+            width: 2px;
         }
 
         /* Background de la track (fond) */
@@ -344,8 +344,8 @@
             @can('manage users')
             <div class="nav-section">Administration</div>
             <li class="nav-item">
-                <a class="nav-link "
-                href="">
+                <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
+                href="{{ route('profile.edit') }}">
                     <i class="bi bi-person-circle"></i> Mon profil
                 </a>
             </li>

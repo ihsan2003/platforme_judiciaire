@@ -27,7 +27,7 @@
         html, body {
             height: 100%;
             font-family: 'Jost', sans-serif;
-            background: var(--cream);
+            background: #f0f2f5;
             overflow: hidden;
         }
 
@@ -153,39 +153,6 @@
             line-height: 1.7;
         }
 
-        /* Stats row */
-        .brand-stats {
-            display: flex;
-            gap: 2.5rem;
-            margin-top: 3rem;
-            position: relative;
-            z-index: 2;
-            animation: fadeUp .8s .2s ease both;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-        .stat-num {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--gold);
-            line-height: 1;
-        }
-        .stat-label {
-            font-size: .68rem;
-            color: rgba(255,255,255,.35);
-            text-transform: uppercase;
-            letter-spacing: .12em;
-            margin-top: .25rem;
-        }
-
-        .stat-divider {
-            width: 1px;
-            background: rgba(200,168,75,.2);
-            align-self: stretch;
-        }
 
         /* ── Right panel ─────────────────────────────────── */
         .panel-right {
@@ -194,7 +161,7 @@
             align-items: center;
             justify-content: center;
             padding: 2.5rem;
-            background: var(--cream);
+            background: #f0f2f5;
             position: relative;
         }
 
@@ -203,8 +170,20 @@
             content: '';
             position: absolute;
             inset: 0;
-            background-image: radial-gradient(circle at 80% 20%, rgba(200,168,75,.07) 0%, transparent 60%);
+            background-image: radial-gradient(circle at 80% 20%, rgba(200,168,75,.15) 0%, transparent 60%);
             pointer-events: none;
+        }
+
+        .top-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5rem;
+        }
+
+        .top-logo img {
+            height: 150px;
+            width: auto;
+            object-fit: contain;
         }
 
         /* ── Form card ───────────────────────────────────── */
@@ -214,38 +193,7 @@
             animation: fadeUp .6s .1s ease both;
         }
 
-        .form-header {
-            margin-bottom: 2.5rem;
-        }
-
-        .form-eyebrow {
-            font-size: .7rem;
-            font-weight: 500;
-            letter-spacing: .2em;
-            text-transform: uppercase;
-            color: var(--gold-d);
-            margin-bottom: .6rem;
-        }
-
-        .form-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.1rem;
-            font-weight: 600;
-            color: var(--navy);
-            line-height: 1.15;
-        }
-
-        .form-title span {
-            color: var(--gold);
-        }
-
-        .form-desc {
-            margin-top: .5rem;
-            font-size: .82rem;
-            color: #7a8899;
-            font-weight: 300;
-        }
-
+        
         /* ── Alert ───────────────────────────────────────── */
         .alert-session {
             padding: .7rem 1rem;
@@ -442,39 +390,21 @@
                 <i class="bi bi-bank2"></i>
             </div>
             <p class="brand-sub">Entraide Nationale</p>
-            <h1 class="brand-title">Plateforme<br>Juridique</h1>
+            <h1 class="brand-title">Gestion Juridique<br>& Réclamations</h1>
             <div class="divider-gold"></div>
             <p class="brand-quote">
-                « La justice est la première vertu<br>des institutions sociales. »
-            </p>
+            « Plateforme centralisée pour le suivi des dossiers et des réclamations. »           </p>
         </div>
 
-        <div class="brand-stats">
-            <div class="stat-item">
-                <div class="stat-num">100%</div>
-                <div class="stat-label">Sécurisé</div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-num">24/7</div>
-                <div class="stat-label">Disponible</div>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-                <div class="stat-num">∞</div>
-                <div class="stat-label">Dossiers</div>
-            </div>
-        </div>
     </div>
 
     {{-- ── Right panel ─────────────────────────────────────── --}}
     <div class="panel-right">
+    
         <div class="form-card">
 
-            <div class="form-header">
-                <p class="form-eyebrow">Espace sécurisé</p>
-                <h2 class="form-title">Bon retour<br><span>parmi nous</span></h2>
-                <p class="form-desc">Connectez-vous pour accéder à votre espace de gestion juridique.</p>
+            <div class="top-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo entraide">
             </div>
 
             {{-- Session Status --}}
