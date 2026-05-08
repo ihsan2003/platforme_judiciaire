@@ -59,101 +59,160 @@ class JugementController extends Controller
             ->whereHas('dossier', fn($q) => $q->actifs())
             ->get()
             ->filter(function ($dt) {
-                // Autoriser si la règle métier est satisfaite (audience الحكم)
-                // OU si c'est une instance active sans jugement (nouvelle instance après recours)
                 return $dt->peutAvoirJugement()
                     || ($dt->estOuverte() && $dt->jugements()->doesntExist());
             });
 
-        $juges   = Juge::with('tribunal')->orderBy('nom_complet')->get();
-        $parties = Partie::orderBy('nom_partie')->get();
+        $juges              = Juge::with('tribunal')->orderBy('nom_complet')->get();
+        $positionsInstitution = \App\Models\PositionInstitution::orderBy('position')->get();
 
-        return view('jugements.create', compact('dossierTribunaux', 'juges', 'parties'));
+        // Parties du dossier si dossier_id fourni
+        $partiesDossier = collect();
+        if ($dossierId) {
+            $partiesDossier = \App\Models\DossierPartie::with(['partie', 'typePartie'])
+                ->where('id_dossier', $dossierId)
+                ->get();
+        }
+
+        $defaultDossierTribunalId = null;
+        if ($dossierId) {
+            $defaultDossierTribunalId = $dossierTribunaux
+                ->filter(fn($dt) => $dt->estOuverte())
+                ->sortByDesc('date_debut')
+                ->first()
+                ?->id;
+        }
+
+        return view('jugements.create', compact(
+            'dossierTribunaux',
+            'juges',
+            'partiesDossier',
+            'positionsInstitution',
+            'defaultDossierTribunalId'
+        ));
     }
-
     // ─────────────────────────────────────────
     // STORE (sécurité obligatoire)
     // ─────────────────────────────────────────
     public function store(StoreJugementRequest $request)
-    {
-        $dossierTribunal = DossierTribunal::with([
-            'audiences.typeAudience',
-            'dossier.dossierParties.typePartie',
-            'jugements',
-        ])->findOrFail($request->id_dossier_tribunal);
+{
+    $dossierTribunal = DossierTribunal::with([
+        'audiences.typeAudience',
+        'dossier.dossierParties.typePartie',
+        'dossier.dossierParties.partie',
+        'jugements',
+    ])->findOrFail($request->id_dossier_tribunal);
 
-        // RG01
-        if (! $dossierTribunal->dossier->peutAvoirAudience()) {
-            $manquants = implode('" et "', $dossierTribunal->dossier->typesPartiesManquants());
-            return back()->with('error',
-                "Impossible de créer un jugement : le rôle \"{$manquants}\" est manquant."
-            );
-        }
-
-        // RG03 — au moins 1 audience ET 1 audience "الحكم"
-        if ($dossierTribunal->audiences->isEmpty()) {
-            return back()->with('error',
-                'Impossible de créer un jugement : ce dossier/tribunal ne possède aucune audience.'
-            );
-        }
-
-        $audienceHoukm = $dossierTribunal->audienceHoukm();
-
-        if (! $audienceHoukm) {
-            return back()->with('error',
-                'Impossible de créer un jugement : aucune audience de type "الحكم" n\'a été enregistrée.'
-            );
-        }
-
-        // RG03 — un seul jugement par degré
-        if ($dossierTribunal->jugements->isNotEmpty()) {
-            return back()->with('error',
-                'Un jugement existe déjà pour cette instance judiciaire.'
-            );
-        }
-
-        // RG02 — la date du jugement doit être celle de l'audience "الحكم"
-        $dateAttendue = $audienceHoukm->date_audience->toDateString();
-        if ($request->date_jugement !== $dateAttendue) {
-            return back()->withErrors([
-                'date_jugement' =>
-                    "La date du jugement doit correspondre à la date de l'audience \"الحكم\" ({$audienceHoukm->date_audience->format('d/m/Y')}).",
-            ])->withInput();
-        }
-
-        // RG02 — pas dans le futur
-        if ($audienceHoukm->date_audience->isFuture()) {
-            return back()->withErrors([
-                'date_jugement' =>
-                    "La date du jugement ne peut pas être dans le futur.",
-            ])->withInput();
-        }
-
-        $jugement = DB::transaction(function () use ($request) {
-            $jugement = Jugement::create([
-                ...$request->safe()->except('parties', 'montants'),
-                'created_by' => Auth::id(),
-            ]);
-
-            if ($request->filled('parties')) {
-                $syncData = collect($request->parties)->mapWithKeys(fn($id) => [
-                    $id => [
-                        'id_position_institution' => null,
-                        'montant_condamne'        => $request->montants[$id] ?? null,
-                    ],
-                ])->all();
-
-                $jugement->parties()->sync($syncData);
-            }
-
-            return $jugement;
-        });
-
-        return redirect()
-            ->route('jugements.show', $jugement)
-            ->with('success', 'Jugement créé avec succès.');
+    // ── RG01 : vérifier les parties ───────────────────────────
+    if (! $dossierTribunal->dossier->peutAvoirAudience()) {
+        $manquants = implode('" et "', $dossierTribunal->dossier->typesPartiesManquants());
+        return back()->with('error',
+            "Impossible de créer un jugement : le rôle \"{$manquants}\" est manquant."
+        );
     }
 
+    // ── RG03 : audience الحكم obligatoire ─────────────────────
+    if ($dossierTribunal->audiences->isEmpty()) {
+        return back()->with('error',
+            'Impossible de créer un jugement : ce dossier/tribunal ne possède aucune audience.'
+        );
+    }
+
+    $audienceHoukm = $dossierTribunal->audienceHoukm();
+    if (! $audienceHoukm) {
+        return back()->with('error',
+            'Impossible de créer un jugement : aucune audience de type "الحكم" n\'a été enregistrée.'
+        );
+    }
+
+    // ── RG03 : un seul jugement par instance ──────────────────
+    if ($dossierTribunal->jugements->isNotEmpty()) {
+        return back()->with('error',
+            'Un jugement existe déjà pour cette instance judiciaire.'
+        );
+    }
+
+    // ── RG02 : date = date audience الحكم ─────────────────────
+    $dateAttendue = $audienceHoukm->date_audience->toDateString();
+    if ($request->date_jugement !== $dateAttendue) {
+        return back()->withErrors([
+            'date_jugement' =>
+                "La date du jugement doit correspondre à la date de l'audience \"الحكم\" ({$audienceHoukm->date_audience->format('d/m/Y')}).",
+        ])->withInput();
+    }
+
+    if ($audienceHoukm->date_audience->isFuture()) {
+        return back()->withErrors([
+            'date_jugement' => "La date du jugement ne peut pas être dans le futur.",
+        ])->withInput();
+    }
+
+    $jugement = DB::transaction(function () use ($request, $dossierTribunal) {
+
+        // ── Créer le jugement ──────────────────────────────────
+        $jugement = Jugement::create([
+            ...$request->safe()->except('parties', 'montants', 'position_institution_etab'),
+            'created_by' => Auth::id(),
+        ]);
+
+        // ── Sync des parties avec position et montant ──────────
+        if ($request->filled('parties')) {
+            $syncData = collect($request->parties)
+                ->mapWithKeys(function ($id) use ($request) {
+                    $partie     = \App\Models\Partie::find($id);
+                    $positionId = $partie?->est_entraide
+                        ? $request->input('position_institution_etab')
+                        : null;
+
+                    return [$id => [
+                        'id_position_institution' => $positionId,
+                        'montant_condamne'        => $request->montants[$id] ?? null,
+                    ]];
+                })->all();
+
+            $jugement->parties()->sync($syncData);
+        }
+
+        // ── Création automatique de la Finance ─────────────────
+        $montants  = collect($request->montants ?? [])
+            ->filter(fn($v) => is_numeric($v) && $v > 0);
+        $montantTotal = $montants->sum();
+
+        if ($montantTotal > 0) {
+            // Identifier l'établissement
+            $etabPartie = $dossierTribunal->dossier->dossierParties
+                ->first(fn($dp) => $dp->partie?->est_entraide);
+            $etabId = $etabPartie?->partie?->id;
+
+            // Position choisie
+            $positionId = $request->input('position_institution_etab');
+            $position   = \App\Models\PositionInstitution::find($positionId);
+            $posLabel   = strtolower($position?->position ?? '');
+            $estContre  = str_contains($posLabel, 'contre') || str_contains($posLabel, 'partiel');
+
+            // Ventilation des montants
+            $montantEtab    = $etabId ? (float)($request->montants[$etabId] ?? 0) : 0;
+            $montantAdverse = $montants
+                ->filter(fn($v, $k) => (string)$k !== (string)$etabId)
+                ->sum();
+
+            \App\Models\Finance::create([
+                'id_jugement'               => $jugement->id,
+                'montant_reclame_demandeur' => $estContre ? null       : $montantAdverse,
+                'montant_reclame_defendeur' => $estContre ? $montantEtab : null,
+                'montant_condamne'          => $montantTotal,
+                'montant_paye'              => 0,
+                'statut_paiement'           => 'En attente',
+            ]);
+        }
+
+        return $jugement;
+    });
+
+    return redirect()
+        ->route('jugements.show', $jugement)
+        ->with('success', 'Jugement créé avec succès.');
+}
     // ─────────────────────────────────────────
     // SHOW
     // ─────────────────────────────────────────

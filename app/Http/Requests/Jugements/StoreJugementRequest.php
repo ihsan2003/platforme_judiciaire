@@ -24,6 +24,7 @@ class StoreJugementRequest extends FormRequest
             'parties.*'           => 'exists:parties,id',
             'montants'            => 'nullable|array',
             'montants.*'          => 'nullable|numeric|min:0',
+            'position_institution_etab' => ['nullable', 'exists:position_institutions,id'],
         ];
     }
 
