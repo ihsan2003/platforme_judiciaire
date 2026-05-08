@@ -177,9 +177,8 @@ class DossierJudiciaireController extends Controller
         // Les parties sont chargées séparément via DossierPartie pour avoir
         // accès aux colonnes pivot (id_type_partie, id_avocat, date_entree)
         $dossierParties = DossierPartie::with([
-            'partie',
+            'partie.avocat',
             'typePartie',
-            'avocat',
         ])
         ->where('id_dossier', $dossier->id)
         ->get();

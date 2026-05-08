@@ -19,10 +19,7 @@ class Avocat extends Model
     ];
 
     // ─── Relations ────────────────────────────────────────────────────────
-    public function dossierParties()
-    {
-        return $this->hasMany(DossierPartie::class, 'id_avocat');
-    }
+    
 
     /**
      * Tous les dossiers judiciaires dans lesquels cet avocat intervient.

@@ -154,8 +154,8 @@
                         {{ $audience->dossierTribunal?->tribunal?->nom_tribunal ?? '—' }}
                     </td>
                     <td>
-                        <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25">
-                            {{ $audience->typeAudience?->libelle ?? '—' }}
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
+                            {{ $audience->typeAudience?->type_audience ?? '—' }}
                         </span>
                     </td>
                     <td class="text-muted small">

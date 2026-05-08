@@ -60,7 +60,6 @@ class DossierPartieController extends Controller
             'telephone'          => ['nullable', 'regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/'],
             'email'              => ['nullable', 'email', 'max:255'],
             'adresse'            => ['nullable', 'string'],
-            // id_avocat : optionnel, uniquement pour créer/modifier l'avocat de la partie
             'id_avocat'          => ['nullable', 'exists:avocats,id'],
             'id_type_partie'     => ['required', 'exists:type_parties,id'],
             'date_entree'        => ['required', 'date'],

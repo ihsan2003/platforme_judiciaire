@@ -24,7 +24,7 @@
 
     $isHoukm = $audience->typeAudience?->type_audience === 'الحكم';
 
-    $textClass = in_array($badgeColor, ['warning','secondary','info'])
+    $textClass = in_array($badgeColor, ['warning','info'])
         ? 'text-dark'
         : 'text-white';
 @endphp
@@ -168,7 +168,7 @@
                                     {{ $audience->date_prochaine_audience->format('d/m/Y') }}
                                 </span>
                                 <span class="text-muted small ms-2">
-                                    (dans {{ now()->diffInDays($audience->date_prochaine_audience, false) }} jours)
+                                    ({{ $audience->date_prochaine_audience->diffForHumans() }})
                                 </span>
                             @else
                                 <span class="text-muted small">Aucun renvoi enregistré</span>
@@ -228,7 +228,7 @@
                                 @if($a->date_audience->isToday())
                                     <span class="badge bg-danger ms-1">Aujourd'hui</span>
                                 @elseif($a->date_audience->isFuture())
-                                    <span class="badge bg-success bg-opacity-15 text-success ms-1">À venir</span>
+                                    <span class="badge bg-success bg-opacity-15 text-white ms-1">À venir</span>
                                 @endif
                             </td>
                             <td>

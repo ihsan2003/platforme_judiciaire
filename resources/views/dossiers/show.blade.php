@@ -457,7 +457,12 @@
                             <span class="badge bg-primary bg-opacity-10 text-primary">{{ $dp->typePartie->type_partie ?? '—' }}</span>
                         </td>
                         <td class="text-muted small">
-                            @if($dp->avocat)<i class="bi bi-briefcase me-1"></i>{{ $dp->avocat->nom_avocat }}@else —@endif
+                            @if($dp->partie?->avocat)
+                                <i class="bi bi-briefcase me-1"></i>
+                                {{ $dp->partie->avocat->nom_avocat }}
+                            @else
+                                —
+                            @endif 
                         </td>
                         <td class="text-muted small">{{ $dp->date_entree?->format('d/m/Y') ?? '—' }}</td>
                         <td class="text-end">

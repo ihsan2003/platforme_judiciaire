@@ -6,12 +6,36 @@
 @section('content')
 
 {{-- ══ TITRE ══ --}}
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h4 class="fw-bold mb-0">Tableau de bord</h4>
-        <p class="text-muted small mb-0">{{ now()->translatedFormat('l d F Y') }}</p>
+<div class="card border-0 shadow-sm mb-4 overflow-hidden">
+
+    <div
+        class="position-relative"
+        style="
+            background-image: url('{{ asset('images/dashboard-bg.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            height: 220px;
+        "
+    >
+
+        {{-- Contenu --}}
+        <div
+            class="position-relative h-100 d-flex align-items-center px-3 text-white"
+            style="z-index:2;"
+        >
+            <div>
+                <h1 class="fw-bold mb-2">Tableau de bord</h1>
+
+                <p class="mb-0 fs-5 opacity-75">
+                    {{ now()->translatedFormat('l d F Y') }}
+                </p>
+            </div>
+        </div>
+
     </div>
+
 </div>
+
 
 {{-- ══ DOSSIERS ══ --}}
 <h6 class="text-uppercase text-muted small fw-semibold mb-3 letter-spacing-1">
@@ -143,9 +167,8 @@
                         @if($audience->est_today)
                             <span class="badge bg-warning text-dark">Aujourd'hui</span>
                         @else
-                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25">
-                                J-{{ now()->diffInDays($audience->date_audience) }}
-                            </span>
+                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
+                                {{ now()->startOfDay()->diffInDays($audience->date_audience->startOfDay()) }} J                         </span>
                         @endif
                     </div>
                 </div>
@@ -328,14 +351,19 @@
                     <td>
                         @php
                             $s = $dossier->statut?->statut_dossier ?? '—';
+
                             $c = match(true) {
                                 str_contains($s, 'cours')   => 'warning',
                                 str_contains($s, 'Clôturé') => 'secondary',
                                 str_contains($s, 'Jugé')    => 'success',
                                 default                     => 'primary',
                             };
+
+                            // Noir seulement pour warning, sinon blanc
+                            $textClass = $c === 'warning' ? 'text-dark' : 'text-white';
                         @endphp
-                        <span class="badge bg-{{ $c }} bg-opacity-15 text-{{ $c }} border border-{{ $c }} border-opacity-25">
+
+                        <span class="badge bg-{{ $c }} {{ $textClass }}">
                             {{ $s }}
                         </span>
                     </td>

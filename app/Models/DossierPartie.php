@@ -38,8 +38,4 @@ class DossierPartie extends Model
         return $this->belongsTo(TypePartie::class, 'id_type_partie');
     }
 
-    public function avocat()
-    {
-        return $this->belongsTo(Avocat::class, 'id_avocat');
-    }
 }

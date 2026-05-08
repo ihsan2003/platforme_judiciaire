@@ -381,13 +381,14 @@
 <div id="main-content">
 
     {{-- Topbar --}}
-    <div id="topbar" class="d-flex align-items-center justify-content-between">
+    <div id="topbar" class="d-flex align-items-center justify-content-between position-relative">
 
         {{-- GAUCHE : toggle mobile + breadcrumb --}}
         <div class="d-flex align-items-center gap-2">
             <button class="btn btn-sm btn-light d-md-none" id="sidebarToggle">
                 <i class="bi bi-list fs-5"></i>
             </button>
+
             <nav aria-label="breadcrumb" class="mb-0">
                 <ol class="breadcrumb mb-0 small">
                     @yield('breadcrumb')
@@ -408,21 +409,32 @@
                     <i class="bi bi-person-circle fs-5"></i>
                     <span class="d-none d-md-inline small">{{ auth()->user()->name }}</span>
                 </button>
+
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><span class="dropdown-item-text small text-muted">{{ auth()->user()->email }}</span></li>
+                    <li>
+                        <span class="dropdown-item-text small text-muted">
+                            {{ auth()->user()->email }}
+                        </span>
+                    </li>
+
                     <li><hr class="dropdown-divider"></li>
+
                     <li>
                         <a class="dropdown-item" href="{{ route('notifications.index') }}">
                             <i class="bi bi-bell me-2"></i>Notifications
+
                             @php
                                 $nCount = \App\Models\Notification::pourUtilisateur(auth()->id())->nonLues()->count();
                             @endphp
+
                             @if($nCount > 0)
                                 <span class="badge bg-warning text-dark ms-1">{{ $nCount }}</span>
                             @endif
                         </a>
                     </li>
+
                     <li><hr class="dropdown-divider"></li>
+
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
