@@ -63,13 +63,13 @@
                 <a href="{{ route('executions.edit', $execution) }}" class="btn btn-warning btn-sm">
                     <i class="bi bi-pencil me-1"></i>Modifier
                 </a>
-                <form action="{{ route('executions.destroy', $execution) }}" method="POST"
-                      onsubmit="return confirm('Supprimer cette exécution ?')">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i>Supprimer
-                    </button>
-                </form>
+                {{-- Jugement --}}
+                <x-modal-delete
+                                :action="route('executions.destroy', $execution)"
+                                modal-id="deleteExecution{{ $execution->id }}"
+                                title="Supprimer l'execution"
+                                :description="'Execution du ' . $execution->date_notification->format('d/m/Y')"
+                            />
                 <a href="{{ route('executions.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Retour
                 </a>
@@ -266,8 +266,9 @@
                                 </span>
                             </td>
                             <td class="text-muted small">
-                                @if($dp->avocat)
-                                    <i class="bi bi-briefcase me-1"></i>{{ $dp->avocat->nom_avocat }}
+                                @if($dp->partie?->avocat)
+                                    <i class="bi bi-briefcase me-1"></i>
+                                    {{ $dp->partie->avocat->nom_avocat }}
                                 @else
                                     —
                                 @endif

@@ -187,7 +187,7 @@
 <div class="row g-4 mt-2">
  
     {{-- ── Donut : Dossiers par statut ── --}}
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
@@ -213,7 +213,7 @@
     </div>
  
     {{-- ── Barres horizontales : Réclamations par statut ── --}}
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
@@ -222,20 +222,6 @@
             </div>
             <div class="card-body py-3" style="position:relative; height:260px;">
                 <canvas id="chartReclamations"></canvas>
-            </div>
-        </div>
-    </div>
- 
-    {{-- ── Jauge / Indicateurs d'alertes ── --}}
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-activity text-danger me-2"></i>Indicateurs clés
-                </h6>
-            </div>
-            <div class="card-body py-3" style="position:relative; height:260px;">
-                <canvas id="chartIndicateurs"></canvas>
             </div>
         </div>
     </div>
@@ -401,11 +387,6 @@
         enAttente : {{ $reclamations['en_attente'] }},
     };
  
-    const alertesData = {
-        audiencesProches       : {{ $alertes['audiences_proches'] }},
-        jugementsNonDefinitifs : {{ $alertes['jugements_non_definitifs'] }},
-        reclamationsEnAttente  : {{ $alertes['reclamations_en_attente'] }},
-    };
  
     /* ─── Données mensuelles (dossiers ouverts par mois) ──────────── */
     /* Ces données doivent être passées depuis le contrôleur.           */
@@ -524,47 +505,7 @@
         },
     });
  
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* 3. BARRES GROUPÉES — Indicateurs / Alertes                     */
-    /* ═══════════════════════════════════════════════════════════════ */
-    new Chart(document.getElementById('chartIndicateurs'), {
-        type: 'bar',
-        data: {
-            labels: ['Audiences\n(7 jours)', 'Jugements\nnon définitifs', 'Réclamations\nen attente'],
-            datasets: [{
-                label: 'Nombre',
-                data: [
-                    alertesData.audiencesProches,
-                    alertesData.jugementsNonDefinitifs,
-                    alertesData.reclamationsEnAttente,
-                ],
-                backgroundColor: [COLORS.blue, COLORS.amber, COLORS.red],
-                borderRadius: 6,
-                borderSkipped: false,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: { label: ctx => ` ${ctx.raw}` },
-                },
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { precision: 0, font: { size: 11 } },
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                },
-                x: {
-                    ticks: { font: { size: 11 } },
-                    grid: { display: false },
-                },
-            },
-        },
-    });
+
  
     /* ═══════════════════════════════════════════════════════════════ */
     /* 4. LIGNE — Évolution mensuelle des dossiers ouverts            */

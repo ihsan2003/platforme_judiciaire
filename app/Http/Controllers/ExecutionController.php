@@ -108,7 +108,7 @@ class ExecutionController extends Controller
             'responsable',
         ]);
 
-        $dossierParties = \App\Models\DossierPartie::with(['partie', 'typePartie', 'avocat'])
+        $dossierParties = \App\Models\DossierPartie::with(['partie.avocat', 'typePartie'])
             ->where('id_dossier', $execution->jugement->dossierTribunal->id_dossier)
             ->get();
 

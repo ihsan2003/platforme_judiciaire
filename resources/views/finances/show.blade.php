@@ -59,13 +59,12 @@
                 <a href="{{ route('finances.edit', $finance) }}" class="btn btn-warning btn-sm">
                     <i class="bi bi-pencil me-1"></i>Modifier
                 </a>
-                <form action="{{ route('finances.destroy', $finance) }}" method="POST"
-                      onsubmit="return confirm('Supprimer cette entrée financière ?')">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i>Supprimer
-                    </button>
-                </form>
+                <x-modal-delete
+                                :action="route('finances.destroy', $finance)"
+                                modal-id="deleteFinance{{ $finance->id }}"
+                                title="Supprimer l'entrée financière"
+                                :description="'Finance du ' . $finance->created_at->format('d/m/Y')"
+                            />
                 <a href="{{ route('finances.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Retour
                 </a>

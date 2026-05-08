@@ -108,9 +108,6 @@
             <i class="bi bi-gavel me-2 text-primary"></i>Audiences
             <span class="badge bg-primary ms-2">{{ $audiences->total() }}</span>
         </h5>
-        <a href="{{ route('audiences.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Nouvelle audience
-        </a>
     </div>
 
     <div class="table-responsive">
@@ -182,13 +179,13 @@
                                class="btn btn-sm btn-outline-warning" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('audiences.destroy', $audience) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer cette audience ?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <x-modal-delete
+                                :action="route('audiences.destroy', $audience)"
+                                modal-id="deleteAudience{{ $audience->id }}"
+                                title="Supprimer l'audience"
+                                trigger-label=""
+                                :description="'Audience du ' . $audience->date_audience->format('d/m/Y')"
+                            />
                         </div>
                     </td>
                 </tr>

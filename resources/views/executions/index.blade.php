@@ -111,9 +111,6 @@
             <i class="bi bi-shield me-2 text-primary"></i>Exécutions de jugements
             <span class="badge bg-primary ms-2">{{ $executions->total() }}</span>
         </h5>
-        <a href="{{ route('executions.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Nouvelle exécution
-        </a>
     </div>
 
     <div class="table-responsive">
@@ -197,13 +194,13 @@
                                class="btn btn-sm btn-outline-warning" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('executions.destroy', $execution) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer cette exécution ?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <x-modal-delete
+                                :action="route('executions.destroy', $execution)"
+                                modal-id="deleteExecution{{ $execution->id }}"
+                                title="Supprimer l'execution"
+                                trigger-label=""
+                                :description="'Execution du ' . $execution->date_notification->format('d/m/Y')"
+                            />
                         </div>
                     </td>
                 </tr>

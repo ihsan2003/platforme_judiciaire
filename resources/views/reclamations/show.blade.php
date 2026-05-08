@@ -65,10 +65,6 @@
                     <div class="fw-semibold text-dark fs-6">{{ $reclamation->documents->count() }}</div>
                     <div>Documents</div>
                 </div>
-                <div class="text-center">
-                    <div class="fw-semibold text-dark fs-6">{{ $reclamation->duree_traitement }} j</div>
-                    <div>Durée traitement</div>
-                </div>
             </div>
 
             {{-- Boutons --}}
@@ -76,13 +72,12 @@
                 <a href="{{ route('reclamations.edit', $reclamation) }}" class="btn btn-warning btn-sm">
                     <i class="bi bi-pencil me-1"></i>Modifier
                 </a>
-                <form action="{{ route('reclamations.destroy', $reclamation) }}" method="POST"
-                      onsubmit="return confirm('Supprimer cette réclamation ?')">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i>Supprimer
-                    </button>
-                </form>
+                <x-modal-delete
+                                :action="route('reclamations.destroy', $reclamation)"
+                                modal-id="deleteReclamation{{ $reclamation->id }}"
+                                title="Supprimer la réclamation"
+                                :description="'Réclamation du ' . $reclamation->date_reception->format('d/m/Y')"
+                            />
             </div>
         </div>
 

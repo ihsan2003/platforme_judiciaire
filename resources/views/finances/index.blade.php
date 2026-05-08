@@ -80,9 +80,6 @@
             <i class="bi bi-cash-stack me-2 text-primary"></i>Finances
             <span class="badge bg-primary ms-2">{{ $finances->count() }}</span>
         </h5>
-        <a href="{{ route('finances.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Ajouter une finance
-        </a>
     </div>
 
     <div class="table-responsive">
@@ -155,13 +152,13 @@
                                class="btn btn-sm btn-outline-warning" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('finances.destroy', $finance) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer cette entrée financière ?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <x-modal-delete
+                                :action="route('finances.destroy', $finance)"
+                                modal-id="deleteFinance{{ $finance->id }}"
+                                title="Supprimer l'entrée financière"
+                                trigger-label=""
+                                :description="'Finance du ' . $finance->created_at->format('d/m/Y')"
+                            />
                         </div>
                     </td>
                 </tr>

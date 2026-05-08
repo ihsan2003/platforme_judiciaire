@@ -472,11 +472,16 @@
                                         data-bs-toggle="modal" data-bs-target="#modalEditPartie{{ $dp->id }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="{{ route('dossiers.parties.destroy', [$dossier, $dp]) }}" method="POST"
-                                      onsubmit="return confirm('Retirer cette partie ?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-person-dash"></i></button>
-                                </form>
+                                <x-modal-delete
+                                    :action="route('dossiers.parties.destroy', [$dossier, $dp])"
+                                    modal-id="deletePartie{{ $dp->id }}"
+                                    title="Retirer la partie"
+                                    :description="$dp->partie->nom_partie"
+                                    warning="La liaison sera supprimée. La fiche de la partie reste intacte."
+                                    confirm-label="Oui, retirer"
+                                    trigger-label=""
+                                    trigger-icon="bi-person-dash"
+                                />
                             </div>
                             @endcan
                         </td>
@@ -520,6 +525,7 @@
         @endif
 
         {{-- Bouton assigner tribunal ─────────── --}}
+        @if($instances->isEmpty())
         <div class="d-flex justify-content-end mb-3">
             @can('update', $dossier)
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterTribunal">
@@ -527,7 +533,7 @@
                 </button>
             @endcan
         </div>
-
+        @endif
         @if($instances->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-bank fs-1 d-block mb-2 opacity-25"></i>

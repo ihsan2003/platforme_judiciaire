@@ -67,13 +67,12 @@
                     <i class="bi bi-pencil me-1"></i>Modifier
                 </a>
                 @if(!$isHoukm || !$dt->aUnJugement())
-                    <form action="{{ route('audiences.destroy', $audience) }}" method="POST"
-                          onsubmit="return confirm('Supprimer cette audience ?')">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash me-1"></i>Supprimer
-                        </button>
-                    </form>
+                    <x-modal-delete
+                        :action="route('audiences.destroy', $audience)"
+                        modal-id="deleteAudience{{ $audience->id }}"
+                        title="Supprimer l'audience"
+                        :description="'Audience du ' . $audience->date_audience->format('d/m/Y')"
+                    />
                 @endif
                 <a href="{{ route('audiences.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Retour

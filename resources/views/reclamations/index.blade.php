@@ -181,13 +181,14 @@
                                class="btn btn-sm btn-outline-warning" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('reclamations.destroy', $reclamation) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer cette réclamation ?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            
+                            <x-modal-delete
+                                :action="route('reclamations.destroy', $reclamation)"
+                                modal-id="deleteReclamation{{ $reclamation->id }}"
+                                title="Supprimer la réclamation"
+                                trigger-label=""
+                                :description="'Réclamation du ' . $reclamation->date_reception->format('d/m/Y')"
+                            />
                         </div>
                     </td>
                 </tr>

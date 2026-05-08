@@ -334,7 +334,7 @@
                 @foreach($jugement->executions as $exec)
                 <div class="list-group-item small d-flex justify-content-between align-items-center">
                     <span class="font-monospace">{{ $exec->numero_dossier_execution }}</span>
-                    <span class="badge bg-info bg-opacity-15 text-info">
+                    <span class="badge bg-info bg-opacity-15 text-white">
                         {{ $exec->statut->statut_execution ?? '—' }}
                     </span>
                 </div>

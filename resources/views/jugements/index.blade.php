@@ -108,9 +108,6 @@
             <i class="bi bi-journal-text me-2 text-primary"></i>Jugements
             <span class="badge bg-primary ms-2">{{ $jugements->total() }}</span>
         </h5>
-        <a href="{{ route('jugements.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Nouveau jugement
-        </a>
     </div>
 
     <div class="table-responsive">
@@ -194,13 +191,13 @@
                                class="btn btn-sm btn-outline-warning" title="Modifier">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('jugements.destroy', $jugement) }}" method="POST"
-                                  onsubmit="return confirm('Supprimer ce jugement ?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <x-modal-delete
+                                :action="route('jugements.destroy', $jugement)"
+                                modal-id="deleteJugement{{ $jugement->id }}"
+                                title="Supprimer le Jugement"
+                                trigger-label=""
+                                :description="'Jugement du ' . $jugement->date_jugement->format('d/m/Y')"
+                            />
                         </div>
                     </td>
                 </tr>
