@@ -243,6 +243,94 @@
             flex-shrink: 0;
             margin-top: 6px;
         }
+        /* ── User dropdown ─────────────────────────────── */
+.user-trigger {
+    background: #fff;
+    border: 1px solid #e0e6ef;
+    border-radius: 7px;
+    transition: border-color .15s, box-shadow .15s;
+    cursor: pointer;
+}
+.user-trigger:hover {
+    border-color: #c8a84b;
+    box-shadow: 0 2px 8px rgba(200,168,75,.15);
+}
+.user-avatar-btn { border: none; background: transparent; }
+.user-avatar-circle {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary); color: #c8a84b;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em; flex-shrink: 0;
+}
+.user-avatar-lg { width: 40px; height: 40px; font-size: 13px; }
+.user-trigger-name { font-size: 13px; font-weight: 500; color: #1e293b; }
+.user-trigger-chevron { font-size: 11px; color: #64748b; transition: transform .2s; }
+.dropdown.show .user-trigger-chevron { transform: rotate(180deg); }
+
+.user-dropdown-panel {
+    width: 260px;
+    border-radius: 14px !important;
+    border: 1px solid #e8ecf4 !important;
+    padding: 0;
+    overflow: hidden;
+    margin-top: 8px !important;
+}
+
+.user-dropdown-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #f0f4f8;
+}
+.user-dropdown-identity { min-width: 0; flex: 1; }
+.user-dropdown-name {
+    font-size: 14px; font-weight: 600; color: #1a3a5c;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.user-dropdown-email {
+    font-size: 12px; color: #64748b;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 1px;
+}
+.user-role-badge {
+    display: inline-block; margin-top: 5px;
+    padding: 2px 8px; background: #e8eef5;
+    border-radius: 20px; font-size: 11px;
+    color: var(--primary); font-weight: 600;
+}
+
+.user-dropdown-body { padding: 6px 8px; }
+.user-dropdown-footer {
+    padding: 6px 8px;
+    border-top: 1px solid #f0f4f8;
+}
+
+.user-dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 9px 10px; border-radius: 8px;
+    font-size: 13px; color: #1e293b; text-decoration: none;
+    background: transparent; border: none; cursor: pointer;
+    transition: background .15s;
+}
+.user-dropdown-item:hover { background: #f4f6fa; color: #1a3a5c; }
+
+.user-item-icon {
+    width: 28px; height: 28px; background: #f4f6fa; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #64748b; flex-shrink: 0;
+    transition: background .15s;
+}
+.user-dropdown-item:hover .user-item-icon { background: #e8eef5; }
+
+.user-item-icon-danger { background: #fee2e2; color: #dc2626; }
+.user-dropdown-logout { color: #dc2626; }
+.user-dropdown-logout:hover { background: #fff5f5; }
+.user-dropdown-logout:hover .user-item-icon-danger { background: #fecaca; }
+
+.user-notif-badge {
+    background: #c8a84b; color: #1a3a5c;
+    font-size: 11px; font-weight: 700;
+    padding: 1px 7px; border-radius: 20px;
+}
     </style>
     @stack('styles')
 </head>
@@ -396,47 +484,68 @@
             <x-notification-bell />
 
             {{-- 👤 User --}}
-            <div class="dropdown">
-                <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2"
-                        data-bs-toggle="dropdown">
-                    <i class="bi bi-person-circle fs-5"></i>
-                    <span class="d-none d-md-inline small">{{ auth()->user()->name }}</span>
+            @php
+                $initials = collect(explode(' ', auth()->user()->name))
+                    ->map(fn($w) => strtoupper(substr($w, 0, 1)))
+                    ->take(2)->implode('');
+                $role = auth()->user()->roles->first()?->name ?? '';
+                $nCount = \App\Models\Notification::pourUtilisateur(auth()->id())->nonLues()->count();
+            @endphp
+
+            <div class="dropdown" id="user-dropdown">
+                <button class="btn p-0 user-avatar-btn"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside"
+                        aria-expanded="false">
+                    <div class="d-flex align-items-center gap-2 px-3 py-1 user-trigger">
+                        <div class="user-avatar-circle">{{ $initials }}</div>
+                        <span class="d-none d-md-inline user-trigger-name">{{ auth()->user()->name }}</span>
+                        <i class="bi bi-chevron-down user-trigger-chevron"></i>
+                    </div>
                 </button>
 
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <span class="dropdown-item-text small text-muted">
-                            {{ auth()->user()->email }}
-                        </span>
-                    </li>
+                <div class="dropdown-menu dropdown-menu-end user-dropdown-panel shadow-sm">
 
-                    <li><hr class="dropdown-divider"></li>
+                    {{-- En-tête profil --}}
+                    <div class="user-dropdown-header">
+                        <div class="user-avatar-circle user-avatar-lg">{{ $initials }}</div>
+                        <div class="user-dropdown-identity">
+                            <div class="user-dropdown-name">{{ auth()->user()->name }}</div>
+                            <div class="user-dropdown-email">{{ auth()->user()->email }}</div>
+                            @if($role)
+                                <span class="user-role-badge">{{ ucfirst($role) }}</span>
+                            @endif
+                        </div>
+                    </div>
 
-                    <li>
-                        <a class="dropdown-item" href="{{ route('notifications.index') }}">
-                            <i class="bi bi-bell me-2"></i>Notifications
+                    {{-- Liens --}}
+                    <div class="user-dropdown-body">
+                        <a href="{{ route('profile.edit') }}" class="user-dropdown-item">
+                            <span class="user-item-icon"><i class="bi bi-person"></i></span>
+                            <span>Mon profil</span>
+                        </a>
 
-                            @php
-                                $nCount = \App\Models\Notification::pourUtilisateur(auth()->id())->nonLues()->count();
-                            @endphp
-
+                        <a href="{{ route('notifications.index') }}" class="user-dropdown-item">
+                            <span class="user-item-icon"><i class="bi bi-bell"></i></span>
+                            <span class="flex-grow-1">Notifications</span>
                             @if($nCount > 0)
-                                <span class="badge bg-warning text-dark ms-1">{{ $nCount }}</span>
+                                <span class="user-notif-badge">{{ $nCount }}</span>
                             @endif
                         </a>
-                    </li>
+                    </div>
 
-                    <li><hr class="dropdown-divider"></li>
-
-                    <li>
+                    {{-- Déconnexion --}}
+                    <div class="user-dropdown-footer">
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="dropdown-item text-danger">
-                                <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+                            <button type="submit" class="user-dropdown-item user-dropdown-logout w-100">
+                                <span class="user-item-icon user-item-icon-danger"><i class="bi bi-box-arrow-right"></i></span>
+                                <span>Déconnexion</span>
                             </button>
                         </form>
-                    </li>
-                </ul>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
