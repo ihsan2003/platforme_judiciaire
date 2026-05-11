@@ -89,17 +89,10 @@
             box-shadow: 0 4px 10px rgba(0,0,0,.15);
         }
 
-        #sidebar .sidebar-brand {
-            padding: 1.2rem 1rem;
-            border-bottom: 1px solid rgba(255,255,255,.1);
-        }
-        #sidebar .sidebar-brand img { height: 40px; }
-        #sidebar .sidebar-brand span {
-            color: var(--accent);
-            font-weight: 700;
-            font-size: .95rem;
-            white-space: nowrap;
-        }
+        .sidebar-brand{padding:20px 16px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+        .sidebar-brand-icon{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#1a3a5c;font-size:17px}
+        .sidebar-brand-text{color:#fff;font-weight:700;font-size:.9rem;line-height:1.2}
+        .sidebar-brand-sub{color:rgba(255,255,255,.45);font-size:.7rem}
         #sidebar .nav-link {
             color: rgba(255,255,255,.75);
             padding: .6rem 1.2rem;
@@ -257,9 +250,9 @@
 
 {{-- Sidebar --}}
 <nav id="sidebar">
-    <div class="sidebar-brand d-flex align-items-center gap-2">
-        <i class="bi bi-bank2 fs-4 text-warning"></i>
-        <span>Plateforme Juridique</span>
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-icon"><i class="bi bi-bank2"></i></div>
+        <div><div class="sidebar-brand-text">Plateforme Juridique</div><div class="sidebar-brand-sub">Entraide Nationale</div></div>
     </div>
     
     <div class="sidebar-content">

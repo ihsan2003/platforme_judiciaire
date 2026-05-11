@@ -3,178 +3,441 @@
 
 @section('title', 'Tableau de bord')
 
+@push('styles')
+<style>
+:root {
+    --accent: #c8a84b;
+    --primary: #1a3a5c;
+    --bg: #f4f6fa;
+    --border: #e8ecf4;
+}
+
+/* ── Hero banner ───────────────────────────────── */
+.hero-banner {
+    background-image: url('{{ asset('images/dashboard-bg.jpg') }}');
+    background-size: cover;
+    background-position: center;
+    height: 220px;
+    border-radius: 16px;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    right: 60px; bottom: -80px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+/* ── Stat cards ──────────────────────────────── */
+.stat-card-new {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+}
+.stat-icon-box {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+}
+.stat-val-big { font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; letter-spacing: -.5px; }
+.stat-lbl { font-size: .73rem; color: #64748b; font-weight: 500; }
+.stat-trend { font-size: .69rem; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+.trend-up { color: #16a34a; }
+.trend-dn { color: #dc2626; }
+.trend-n  { color: #64748b; }
+
+/* ── Card boxes ──────────────────────────────── */
+.card-modern {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+.card-modern-hd {
+    padding: 14px 18px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+}
+.card-modern-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: .85rem;
+    color: #1e293b;
+}
+.card-icon-sm {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+}
+.card-modern-body { padding: 14px 18px; }
+
+/* ── Agenda ──────────────────────────────────── */
+.agenda-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.agenda-item:last-child { border-bottom: none; }
+.agenda-date { width: 44px; text-align: center; flex-shrink: 0; }
+.agenda-day { font-size: 1.3rem; font-weight: 800; color: var(--primary); line-height: 1; }
+.agenda-mon { font-size: .62rem; text-transform: uppercase; font-weight: 700; color: var(--accent); letter-spacing: .05em; }
+.agenda-body { flex: 1; min-width: 0; }
+.agenda-title { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agenda-sub { font-size: .72rem; color: #64748b; margin-top: 2px; }
+
+/* ── Alert rows ──────────────────────────────── */
+.alert-row-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.alert-row-item:last-child { border-bottom: none; }
+.alert-dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Finance summary ─────────────────────────── */
+.fin-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.fin-label-sm { font-size: .78rem; color: #64748b; display: flex; align-items: center; gap: 6px; }
+.fin-val-sm { font-size: .88rem; font-weight: 700; }
+.fin-bar { height: 6px; border-radius: 3px; background: #e8ecf4; overflow: hidden; margin-bottom: 14px; }
+.fin-bar-inner { height: 100%; border-radius: 3px; }
+
+/* ── Mini table ──────────────────────────────── */
+.mini-tbl th { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: #64748b; font-weight: 700; padding: 8px 14px; background: #f8fafd; }
+.mini-tbl td { padding: 9px 14px; font-size: .81rem; }
+
+/* ── Donut center overlay ─────────────────────  */
+.donut-wrap { position: relative; }
+.donut-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+.donut-center .dc-val { font-size: 1.2rem; font-weight: 800; color: #1e293b; line-height: 1; }
+.donut-center .dc-lab { font-size: .62rem; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
+.legend-dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Progress bar paiement ───────────────────── */
+.pct-bar { height: 6px; border-radius: 3px; background: #e8ecf4; overflow: hidden; margin-top: 4px; }
+.pct-fill { height: 100%; border-radius: 3px; }
+</style>
+@endpush
+
 @section('content')
 
-{{-- ══ TITRE ══ --}}
-<div class="card border-0 shadow-sm mb-4 overflow-hidden">
-
-    <div
-        class="position-relative"
-        style="
-            background-image: url('{{ asset('images/dashboard-bg.jpg') }}');
-            background-size: cover;
-            background-position: center;
-            height: 220px;
-        "
-    >
-
-        {{-- Contenu --}}
-        <div
-            class="position-relative h-100 d-flex align-items-center px-3 text-white"
-            style="z-index:2;"
-        >
-            <div>
-                <h1 class="fw-bold mb-2">Tableau de bord</h1>
-
-                <p class="mb-0 fs-5 opacity-75">
-                    {{ now()->translatedFormat('l d F Y') }}
-                </p>
-            </div>
+{{-- ══ HERO BANNER ══ --}}
+<div class="hero-banner mb-4">
+    <div style="position:relative;z-index:1">
+        <h2 class="fw-bold mb-1 text-white" style="font-size:1.25rem">
+            Bonjour, {{ auth()->user()->name }} 👋
+        </h2>
+        <p class="mb-3" style="color:rgba(255,255,255,.55);font-size:.82rem">
+            {{ now()->translatedFormat('l d F Y') }}
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            @if($alertes['audiences_proches'] > 0)
+            <span style="background:rgba(200,168,75,.15);color:var(--accent);border:1px solid rgba(200,168,75,.25);padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:600">
+                <i class="bi bi-calendar-check me-1"></i>{{ $alertes['audiences_proches'] }} audience(s) dans 7 jours
+            </span>
+            @endif
+            @if($alertes['reclamations_en_attente'] > 0)
+            <span style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.2);padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:600">
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ $alertes['reclamations_en_attente'] }} réclamation(s) en attente
+            </span>
+            @endif
+            @if($alertes['jugements_non_definitifs'] > 0)
+            <span style="background:rgba(255,255,255,.12);color:#e5e7eb;border:1px solid rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:600">
+                <i class="bi bi-clock me-1"></i>{{ $alertes['jugements_non_definitifs'] }} jugement(s) non définitifs
+            </span>
+            @endif
         </div>
-
     </div>
-
+    
 </div>
 
-
-{{-- ══ DOSSIERS ══ --}}
-<h6 class="text-uppercase text-muted small fw-semibold mb-3 letter-spacing-1">
-    <i class="bi bi-folder2 me-2"></i>Dossiers judiciaires
-</h6>
+{{-- ══ STAT CARDS ══ --}}
 <div class="row g-3 mb-4">
     @foreach([
-        ['label' => 'Total',      'value' => $dossiers['total'],    'icon' => 'folder2-open',  'color' => 'primary'],
-        ['label' => 'Actifs',     'value' => $dossiers['actifs'],   'icon' => 'activity',      'color' => 'success'],
-        ['label' => 'En cours',   'value' => $dossiers['en_cours'], 'icon' => 'hourglass-split','color' => 'warning'],
-        ['label' => 'Jugés',      'value' => $dossiers['juges'],    'icon' => 'journal-text',  'color' => 'info'],
-        ['label' => 'Exécutés',   'value' => $dossiers['executes'], 'icon' => 'shield-check',  'color' => 'secondary'],
-        ['label' => 'Ce mois',    'value' => $dossiers['ce_mois'],  'icon' => 'calendar-plus', 'color' => 'primary'],
-    ] as $stat)
+        ['label'=>'Total dossiers',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>'+12% ce mois',       'up'=>true],
+        ['label'=>'Dossiers actifs',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>'En cours',           'up'=>null],
+        ['label'=>'En cours',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>'Stable',             'up'=>null],
+        ['label'=>'Jugés',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>'+5 cette semaine',   'up'=>true],
+        ['label'=>'Réclamations',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_attente'].' en attente', 'up'=>false],
+        ['label'=>'Exécutions',        'value'=>$dossiers['executes'],      'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>'Ce mois : '.$dossiers['ce_mois'], 'up'=>null],
+    ] as $s)
     <div class="col-6 col-md-4 col-xl-2">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="rounded-circle bg-{{ $stat['color'] }} bg-opacity-10 p-2 d-inline-flex mb-2">
-                    <i class="bi bi-{{ $stat['icon'] }} fs-5 text-{{ $stat['color'] }}"></i>
-                </div>
-                <div class="fs-3 fw-bold lh-1 mb-1">{{ $stat['value'] }}</div>
-                <div class="text-muted small">{{ $stat['label'] }}</div>
+        <div class="stat-card-new">
+            <div class="stat-icon-box" style="background:{{ $s['bg'] }};color:{{ $s['ic'] }}">
+                <i class="bi {{ $s['icon'] }}"></i>
+            </div>
+            <div class="stat-val-big">{{ $s['value'] }}</div>
+            <div class="stat-lbl">{{ $s['label'] }}</div>
+            <div class="stat-trend {{ $s['up'] === true ? 'trend-up' : ($s['up'] === false ? 'trend-dn' : 'trend-n') }}">
+                @if($s['up'] === true)<i class="bi bi-arrow-up-short" style="font-size:14px"></i>
+                @elseif($s['up'] === false)<i class="bi bi-arrow-down-short" style="font-size:14px"></i>
+                @else<i class="bi bi-dash" style="font-size:14px"></i>@endif
+                {{ $s['trend'] }}
             </div>
         </div>
     </div>
     @endforeach
 </div>
 
-{{-- ══ RÉCLAMATIONS ══ --}}
-<h6 class="text-uppercase text-muted small fw-semibold mb-3 letter-spacing-1">
-    <i class="bi bi-chat-left-text me-2"></i>Réclamations
-</h6>
+{{-- ══ CHARTS ROW ══ --}}
 <div class="row g-3 mb-4">
-    @foreach([
-        ['label' => 'Total',      'value' => $reclamations['total'],     'icon' => 'chat-left-text', 'color' => 'primary'],
-        ['label' => 'Reçues',     'value' => $reclamations['recues'],    'icon' => 'inbox',          'color' => 'info'],
-        ['label' => 'En cours',   'value' => $reclamations['en_cours'],  'icon' => 'arrow-repeat',   'color' => 'warning'],
-        ['label' => 'Clôturées',  'value' => $reclamations['cloturees'], 'icon' => 'check-circle',   'color' => 'success'],
-    ] as $stat)
-    <div class="col-6 col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="rounded-circle bg-{{ $stat['color'] }} bg-opacity-10 p-2 d-inline-flex mb-2">
-                    <i class="bi bi-{{ $stat['icon'] }} fs-5 text-{{ $stat['color'] }}"></i>
+
+    {{-- Évolution mensuelle --}}
+    <div class="col-lg-6">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#e0f2fe;color:#0369a1"><i class="bi bi-graph-up"></i></div>
+                    Évolution mensuelle — dossiers ouverts
                 </div>
-                <div class="fs-3 fw-bold lh-1 mb-1">{{ $stat['value'] }}</div>
-                <div class="text-muted small">{{ $stat['label'] }}</div>
+            </div>
+            <div class="card-modern-body">
+                <div style="position:relative;height:220px"><canvas id="chartEvo"></canvas></div>
             </div>
         </div>
     </div>
-    @endforeach
+
+    {{-- Dossiers par type d'affaire --}}
+    <div class="col-lg-6">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#ede9fe;color:#7e22ce"><i class="bi bi-diagram-3"></i></div>
+                    Dossiers par type d'affaire
+                </div>
+            </div>
+            <div class="card-modern-body">
+                <div style="position:relative;height:220px"><canvas id="chartAffaires"></canvas></div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-{{-- ══ DEUX COLONNES : ALERTES + AGENDA ══ --}}
-<div class="row g-4">
+{{-- ══ DONUTS ROW ══ --}}
+<div class="row g-3 mb-4">
+
+    {{-- Statuts --}}
+    <div class="col-md-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#ede9fe;color:#7e22ce"><i class="bi bi-pie-chart"></i></div>
+                    Répartition par statut
+                </div>
+            </div>
+            <div class="card-modern-body">
+                <div class="donut-wrap" style="height:170px">
+                    <canvas id="chartStatut"></canvas>
+                    <div class="donut-center">
+                        <div class="dc-val">{{ $dossiers['total'] }}</div>
+                        <div class="dc-lab">total</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2 mt-3">
+                    @foreach([
+                        ['En cours',$dossiers['en_cours'],'#378ADD'],
+                        ['Jugés',$dossiers['juges'],'#639922'],
+                        ['Exécutés',$dossiers['executes'],'#BA7517'],
+                        ['Autres',$dossiers['total']-$dossiers['en_cours']-$dossiers['juges']-$dossiers['executes'],'#888780'],
+                    ] as [$lbl,$val,$col])
+                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
+                        <div class="legend-dot-sm" style="background:{{ $col }}"></div>
+                        <span class="flex-1 text-muted" style="flex:1">{{ $lbl }}</span>
+                        <span class="fw-bold">{{ $val }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Résultats jugements --}}
+    <div class="col-md-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#dcfce7;color:#15803d"><i class="bi bi-balance-scale"></i></div>
+                    Résultats jugements
+                </div>
+            </div>
+            <div class="card-modern-body">
+                <div class="donut-wrap" style="height:170px">
+                    <canvas id="chartPourContre"></canvas>
+                    @php $pctPour = $resultatsJugements['total'] > 0 ? round($resultatsJugements['pour']/$resultatsJugements['total']*100) : 0; @endphp
+                    <div class="donut-center">
+                        <div class="dc-val" style="color:#15803d">{{ $pctPour }}%</div>
+                        <div class="dc-lab">victoires</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2 mt-3">
+                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
+                        <div class="legend-dot-sm" style="background:#639922"></div>
+                        <span class="flex-1 text-muted" style="flex:1">Pour l'établissement</span>
+                        <span class="fw-bold text-success">{{ $resultatsJugements['pour'] }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
+                        <div class="legend-dot-sm" style="background:#E24B4A"></div>
+                        <span class="flex-1 text-muted" style="flex:1">Contre l'établissement</span>
+                        <span class="fw-bold text-danger">{{ $resultatsJugements['contre'] }}</span>
+                    </div>
+                </div>
+                <div class="pct-bar mt-3">
+                    <div class="pct-fill" style="width:{{ $pctPour }}%;background:#639922"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Finances synthèse --}}
+    <div class="col-md-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#fef3c7;color:#b45309"><i class="bi bi-cash-stack"></i></div>
+                    Synthèse financière
+                </div>
+            </div>
+            <div class="card-modern-body">
+                @php
+                    $mTotal   = $statsFinancesGraphe['montant_total'];
+                    $mPaye    = $statsFinancesGraphe['montant_paye'];
+                    $mRestant = $statsFinancesGraphe['montant_restant'];
+                    $mPour    = $statsFinancesGraphe['montant_pour'];
+                    $mContre  = $statsFinancesGraphe['montant_contre'];
+                    $pctPaye  = $mTotal > 0 ? min(100, round($mPaye/$mTotal*100)) : 0;
+                    $fmt = fn($v) => $v >= 1000000
+                        ? number_format($v/1000000,2,',',' ').' M MAD'
+                        : number_format($v,0,',',' ').' MAD';
+                @endphp
+
+                <div class="fin-row"><span class="fin-label-sm"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1a3a5c;margin-right:4px"></span>Total condamné</span><span class="fin-val-sm">{{ $fmt($mTotal) }}</span></div>
+                <div class="fin-bar"><div class="fin-bar-inner" style="width:100%;background:#1a3a5c"></div></div>
+
+                <div class="fin-row"><span class="fin-label-sm"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#639922;margin-right:4px"></span>Payé</span><span class="fin-val-sm" style="color:#15803d">{{ $fmt($mPaye) }}</span></div>
+                <div class="fin-bar"><div class="fin-bar-inner" style="width:{{ $pctPaye }}%;background:#639922"></div></div>
+                <div class="mb-2" style="font-size:.68rem;color:#64748b">{{ $pctPaye }}% recouvré</div>
+
+                <div class="fin-row"><span class="fin-label-sm"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:4px"></span>Restant dû</span><span class="fin-val-sm" style="color:#dc2626">{{ $fmt($mRestant) }}</span></div>
+                <div class="fin-bar"><div class="fin-bar-inner" style="width:{{ 100-$pctPaye }}%;background:#ef4444"></div></div>
+
+                <div class="mt-3 pt-3" style="border-top:1px solid var(--border)">
+                    <div class="fin-row mb-1"><span class="fin-label-sm"><i class="bi bi-arrow-up-circle text-success me-1"></i>Pour établissement</span><span class="fin-val-sm" style="color:#15803d">{{ $fmt($mPour) }}</span></div>
+                    <div class="fin-row"><span class="fin-label-sm"><i class="bi bi-arrow-down-circle text-danger me-1"></i>Contre établissement</span><span class="fin-val-sm" style="color:#dc2626">{{ $fmt($mContre) }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{-- ══ BOTTOM ROW : AGENDA + ALERTES + DOSSIERS ══ --}}
+<div class="row g-3 mb-4">
 
     {{-- Alertes --}}
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Alertes
-                </h6>
+    <div class="col-lg-3">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#fef3c7;color:#b45309"><i class="bi bi-exclamation-triangle"></i></div>
+                    Alertes
+                </div>
             </div>
-            <div class="list-group list-group-flush">
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="small">
-                        <i class="bi bi-calendar-event text-primary me-2"></i>Audiences (7j)
-                    </span>
-                    <span class="badge bg-primary rounded-pill">{{ $alertes['audiences_proches'] }}</span>
+            <div class="card-modern-body">
+                <div class="alert-row-item">
+                    <div class="alert-dot-sm" style="background:#3b82f6"></div>
+                    <div style="flex:1;font-size:.82rem"><i class="bi bi-calendar-event text-primary me-1"></i>Audiences (7j)</div>
+                    <span class="badge rounded-pill" style="background:#e0f2fe;color:#0369a1;font-size:.7rem">{{ $alertes['audiences_proches'] }}</span>
                 </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="small">
-                        <i class="bi bi-clock text-warning me-2"></i>Jugements non définitifs
-                    </span>
-                    <span class="badge bg-warning text-dark rounded-pill">{{ $alertes['jugements_non_definitifs'] }}</span>
+                <div class="alert-row-item">
+                    <div class="alert-dot-sm" style="background:#f59e0b"></div>
+                    <div style="flex:1;font-size:.82rem"><i class="bi bi-clock text-warning me-1"></i>Jugements non définitifs</div>
+                    <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;font-size:.7rem">{{ $alertes['jugements_non_definitifs'] }}</span>
                 </div>
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="small">
-                        <i class="bi bi-chat-dots text-danger me-2"></i>Réclamations en attente
-                    </span>
-                    <span class="badge bg-danger rounded-pill">{{ $alertes['reclamations_en_attente'] }}</span>
+                <div class="alert-row-item" style="border:none">
+                    <div class="alert-dot-sm" style="background:#ef4444"></div>
+                    <div style="flex:1;font-size:.82rem"><i class="bi bi-chat-dots text-danger me-1"></i>Réclamations en attente</div>
+                    <span class="badge rounded-pill" style="background:#fce7f3;color:#9d174d;font-size:.7rem">{{ $alertes['reclamations_en_attente'] }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Agenda audiences ══ --}}
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-calendar-week text-primary me-2"></i>Prochaines audiences (7 jours)
-                </h6>
-                <a href="{{ route('audiences.index') }}?periode=semaine" class="btn btn-sm btn-outline-primary">
-                    Voir tout
-                </a>
+    {{-- Agenda audiences --}}
+    <div class="col-lg-5">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#e0f2fe;color:#0369a1"><i class="bi bi-calendar-week"></i></div>
+                    Prochaines audiences — 7 jours
+                </div>
+                <a href="{{ route('audiences.index') }}?periode=semaine" style="font-size:.75rem;color:var(--accent);text-decoration:none;font-weight:600">Voir tout →</a>
             </div>
-            <div class="card-body p-0">
-                @forelse($audiencesAVenir as $audience)
-                <div class="d-flex align-items-start gap-3 px-3 py-2 border-bottom">
-                    {{-- Badge date --}}
-                    <div class="text-center flex-shrink-0" style="min-width:48px">
-                        <div class="bg-primary text-white rounded-top small fw-bold px-1">
-                            {{ $audience->date_audience->format('M') }}
-                        </div>
-                        <div class="border border-top-0 rounded-bottom fw-bold fs-5 lh-1 px-1">
-                            {{ $audience->date_audience->format('d') }}
-                        </div>
+            <div class="card-modern-body" style="padding:0">
+                @forelse($audiencesAVenir as $aud)
+                <div class="agenda-item" style="padding-left:18px;padding-right:18px">
+                    <div class="agenda-date">
+                        <div class="agenda-day">{{ $aud->date_audience->format('d') }}</div>
+                        <div class="agenda-mon">{{ $aud->date_audience->translatedFormat('M') }}</div>
                     </div>
-                    <div class="flex-grow-1 min-w-0">
-                        <div class="fw-semibold text-truncate">
-                            @if($audience->dossierTribunal?->dossier)
-                                <a href="{{ route('dossiers.show', $audience->dossierTribunal->dossier) }}"
-                                   class="text-decoration-none text-primary">
-                                    {{ $audience->dossierTribunal->dossier->numero_dossier_interne }}
+                    <div class="agenda-body">
+                        <div class="agenda-title">
+                            @if($aud->dossierTribunal?->dossier)
+                                <a href="{{ route('dossiers.show', $aud->dossierTribunal->dossier) }}" style="color:#1a3a5c;text-decoration:none">
+                                    {{ $aud->dossierTribunal->dossier->numero_dossier_interne }}
                                 </a>
-                            @else
-                                <span class="text-muted">Dossier inconnu</span>
-                            @endif
+                            @else <span class="text-muted">—</span> @endif
                         </div>
-                        <div class="text-muted small text-truncate">
-                            <i class="bi bi-bank me-1"></i>{{ $audience->dossierTribunal?->tribunal?->nom_tribunal ?? '?' }}
-                            &nbsp;·&nbsp;
-                            <i class="bi bi-person me-1"></i>{{ $audience->juge?->nom_complet ?? '—' }}
+                        <div class="agenda-sub">
+                            <i class="bi bi-bank me-1"></i>{{ $aud->dossierTribunal?->tribunal?->nom_tribunal ?? '?' }}
+                            @if($aud->juge) · <i class="bi bi-person me-1"></i>{{ $aud->juge->nom_complet }}@endif
                         </div>
                     </div>
-                    <div class="flex-shrink-0">
-                        @if($audience->est_today)
-                            <span class="badge bg-warning text-dark">Aujourd'hui</span>
-                        @else
-                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
-                                {{ now()->startOfDay()->diffInDays($audience->date_audience->startOfDay()) }} J                         </span>
-                        @endif
-                    </div>
+                    @if($aud->est_today)
+                        <span class="badge rounded-pill" style="background:#fef3c7;color:#92400e;font-size:.64rem;white-space:nowrap">Aujourd'hui</span>
+                    @else
+                        <span class="badge rounded-pill" style="background:#dcfce7;color:#166534;font-size:.64rem;white-space:nowrap">
+                            J-{{ now()->startOfDay()->diffInDays($aud->date_audience->startOfDay()) }}
+                        </span>
+                    @endif
                 </div>
                 @empty
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-calendar-check fs-1 d-block mb-2 opacity-25"></i>
+                <div class="text-center py-4 text-muted" style="font-size:.82rem">
+                    <i class="bi bi-calendar-check d-block mb-1" style="font-size:1.8rem;opacity:.3"></i>
                     Aucune audience dans les 7 prochains jours
                 </div>
                 @endforelse
@@ -182,456 +445,225 @@
         </div>
     </div>
 
-</div>
-
-<div class="row g-4 mt-2">
- 
-    {{-- ── Donut : Dossiers par statut ── --}}
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-pie-chart text-primary me-2"></i>Dossiers par statut
-                </h6>
-            </div>
-            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
-                <div style="position:relative; width:200px; height:200px;">
-                    <canvas id="chartDossiersStatut"></canvas>
-                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
-                        <div class="fs-4 fw-bold lh-1">{{ $dossiers['total'] }}</div>
-                        <div class="text-muted" style="font-size:.7rem;">Total</div>
-                    </div>
+    {{-- Derniers dossiers --}}
+    <div class="col-lg-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm" style="background:#f1f5f9;color:#475569"><i class="bi bi-clock-history"></i></div>
+                    Derniers dossiers créés
                 </div>
-                <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-                    <span class="badge" style="background:#e8f4fd;color:#1a6dab;font-size:.72rem;">En cours : {{ $dossiers['en_cours'] }}</span>
-                    <span class="badge" style="background:#e8f7ee;color:#1a6b3a;font-size:.72rem;">Jugés : {{ $dossiers['juges'] }}</span>
-                    <span class="badge" style="background:#fff3cd;color:#856404;font-size:.72rem;">Exécutés : {{ $dossiers['executes'] }}</span>
-                    <span class="badge" style="background:#f0f0f0;color:#555;font-size:.72rem;">Autres : {{ $dossiers['total'] - $dossiers['en_cours'] - $dossiers['juges'] - $dossiers['executes'] }}</span>
-                </div>
+                <a href="{{ route('dossiers.index') }}" style="font-size:.75rem;color:var(--accent);text-decoration:none;font-weight:600">Voir tout →</a>
             </div>
-        </div>
-    </div>
- 
-    {{-- ── Barres horizontales : Réclamations par statut ── --}}
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-bar-chart-horizontal text-warning me-2"></i>Réclamations par statut
-                </h6>
-            </div>
-            <div class="card-body py-3" style="position:relative; height:260px;">
-                <canvas id="chartReclamations"></canvas>
-            </div>
-        </div>
-    </div>
- 
-</div>
- 
-{{-- ── Ligne : Dossiers ouverts par mois (12 derniers mois) ── --}}
-<div class="card border-0 shadow-sm mt-4">
-    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-        <h6 class="mb-0 fw-semibold">
-            <i class="bi bi-graph-up text-success me-2"></i>Évolution des dossiers — 12 derniers mois
-        </h6>
-    </div>
-    <div class="card-body py-3" style="position:relative; height:280px;">
-        <canvas id="chartEvolution"></canvas>
-    </div>
-</div>
-
-<div class="row g-4 mt-2">
-
-    {{-- ── 1. Dossiers par type d'affaire ── --}}
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-diagram-3 text-primary me-2"></i>Dossiers par type d'affaire
-                </h6>
-            </div>
-            <div class="card-body" style="height:300px;">
-                <canvas id="chartAffaires"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- ── 2. Jugements pour / contre ── --}}
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-balance-scale text-success me-2"></i>Résultats jugements
-                </h6>
-            </div>
-            <div class="card-body d-flex justify-content-center align-items-center">
-                <canvas id="chartPourContre"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- ── 3. Finances ── --}}
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-cash-stack text-warning me-2"></i>Montants
-                </h6>
-            </div>
-            <div class="card-body d-flex justify-content-center align-items-center">
-                <canvas id="chartFinances"></canvas>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-{{-- ── 4. Évolution financière mensuelle ── --}}
-<div class="card border-0 shadow-sm mt-4">
-    <div class="card-header bg-white py-3">
-        <h6 class="mb-0 fw-semibold">
-            <i class="bi bi-graph-up-arrow text-success me-2"></i>Évolution financière (12 mois)
-        </h6>
-    </div>
-    <div class="card-body" style="height:300px;">
-        <canvas id="chartFinancesMensuel"></canvas>
-    </div>
-</div>
-
-{{-- ══ DERNIERS DOSSIERS ══ --}}
-<div class="card border-0 shadow-sm mt-4">
-    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
-        <h6 class="mb-0 fw-semibold">
-            <i class="bi bi-clock-history text-primary me-2"></i>Derniers dossiers créés
-        </h6>
-        <a href="{{ route('dossiers.index') }}" class="btn btn-sm btn-outline-primary">Voir tous</a>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-3 text-muted small fw-semibold">N° Interne</th>
-                    <th class="text-muted small fw-semibold">Type d'affaire</th>
-                    <th class="text-muted small fw-semibold">Tribunal</th>
-                    <th class="text-muted small fw-semibold">Statut</th>
-                    <th class="text-muted small fw-semibold">Ouverture</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($derniersDossiers as $dossier)
-                <tr>
-                    <td class="ps-3">
-                        <a href="{{ route('dossiers.show', $dossier) }}"
-                           class="fw-semibold text-decoration-none text-primary">
-                            {{ $dossier->numero_dossier_interne }}
-                        </a>
-                    </td>
-                    <td class="text-muted small">{{ $dossier->typeAffaire?->affaire ?? '—' }}</td>
-                    <td class="text-muted small">
-                        @foreach($dossier->dossierTribunaux as $dt)
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary me-1">
-                                {{ $dt->tribunal?->nom_tribunal ?? '?' }}
-                            </span>
+            <div style="overflow:hidden">
+                <table class="table table-hover mb-0 mini-tbl">
+                    <thead>
+                        <tr>
+                            <th>N° Interne</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($derniersDossiers as $d)
+                        <tr>
+                            <td>
+                                <a href="{{ route('dossiers.show', $d) }}" class="fw-semibold text-decoration-none" style="color:#1a3a5c;font-size:.8rem">
+                                    {{ $d->numero_dossier_interne }}
+                                </a>
+                            </td>
+                            <td class="text-muted" style="font-size:.75rem">{{ Str::limit($d->typeAffaire?->affaire ?? '—', 12) }}</td>
+                            <td>
+                                @php
+                                    $s = $d->statut?->statut_dossier ?? '—';
+                                    [$bg,$col] = match(true) {
+                                        str_contains($s,'cours')   => ['#fef3c7','#92400e'],
+                                        str_contains($s,'Clôturé') => ['#f1f5f9','#64748b'],
+                                        str_contains($s,'Jugé')    => ['#e0f2fe','#075985'],
+                                        str_contains($s,'xécut')   => ['#dcfce7','#166534'],
+                                        default                    => ['#ede9fe','#6b21a8'],
+                                    };
+                                @endphp
+                                <span style="background:{{ $bg }};color:{{ $col }};padding:3px 8px;border-radius:20px;font-size:.64rem;font-weight:700;white-space:nowrap">{{ $s }}</span>
+                            </td>
+                        </tr>
                         @endforeach
-                    </td>
-                    <td>
-                        @php
-                            $s = $dossier->statut?->statut_dossier ?? '—';
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-                            $c = match(true) {
-                                str_contains($s, 'cours')   => 'warning',
-                                str_contains($s, 'Clôturé') => 'secondary',
-                                str_contains($s, 'Jugé')    => 'success',
-                                default                     => 'primary',
-                            };
+</div>
 
-                            // Noir seulement pour warning, sinon blanc
-                            $textClass = $c === 'warning' ? 'text-dark' : 'text-white';
-                        @endphp
-
-                        <span class="badge bg-{{ $c }} {{ $textClass }}">
-                            {{ $s }}
-                        </span>
-                    </td>
-                    <td class="text-muted small">{{ $dossier->date_ouverture?->format('d/m/Y') ?? '—' }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+{{-- ══ ÉVOLUTION FINANCIÈRE ══ --}}
+<div class="card-modern mb-4">
+    <div class="card-modern-hd">
+        <div class="card-modern-title">
+            <div class="card-icon-sm" style="background:#dcfce7;color:#15803d"><i class="bi bi-graph-up-arrow"></i></div>
+            Évolution financière — 12 derniers mois
+        </div>
+    </div>
+    <div class="card-modern-body">
+        <div style="position:relative;height:260px"><canvas id="chartFinancesMensuel"></canvas></div>
     </div>
 </div>
 
 @endsection
 
-{{-- ══ SCRIPTS GRAPHIQUES ══ --}}
-{{-- À insérer dans resources/views/dashboard/index.blade.php, à la FIN du fichier --}}
- 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 (function () {
- 
-    /* ─── Données depuis Blade ─────────────────────────────────────── */
-    const dossiersData = {
-        enCours  : {{ $dossiers['en_cours'] }},
-        juges    : {{ $dossiers['juges'] }},
-        executes : {{ $dossiers['executes'] }},
-        autres   : Math.max(0, {{ $dossiers['total'] }} - {{ $dossiers['en_cours'] }} - {{ $dossiers['juges'] }} - {{ $dossiers['executes'] }}),
-        total    : {{ $dossiers['total'] }},
-    };
- 
-    const reclData = {
-        recues    : {{ $reclamations['recues'] }},
-        enCours   : {{ $reclamations['en_cours'] }},
-        cloturees : {{ $reclamations['cloturees'] }},
-        enAttente : {{ $reclamations['en_attente'] }},
-    };
- 
- 
-    /* ─── Données mensuelles (dossiers ouverts par mois) ──────────── */
-    /* Ces données doivent être passées depuis le contrôleur.           */
-    /* Voir DashboardController.php — section "Évolution mensuelle"     */
-    const evolutionLabels = {!! json_encode($evolutionMois['labels'] ?? []) !!};
-    const evolutionValues = {!! json_encode($evolutionMois['values'] ?? []) !!};
- 
-    const affairesData = {
-        labels: {!! json_encode($dossiersParAffaire['labels']) !!},
-        values: {!! json_encode($dossiersParAffaire['values']) !!},
+    const BLUE   = '#378ADD';
+    const GREEN  = '#639922';
+    const AMBER  = '#BA7517';
+    const GRAY   = '#888780';
+    const RED    = '#E24B4A';
+
+    const evoLabels = {!! json_encode($evolutionMois['labels'] ?? []) !!};
+    const evoVals   = {!! json_encode($evolutionMois['values'] ?? []) !!};
+
+    const affLabels = {!! json_encode($dossiersParAffaire['labels']) !!};
+    const affVals   = {!! json_encode($dossiersParAffaire['values']) !!};
+
+    const finLabels = {!! json_encode($statsFinancesGraphe['mensuel_labels']) !!};
+    const finVals   = {!! json_encode($statsFinancesGraphe['mensuel_values']) !!};
+
+    const dossEnCours  = {{ $dossiers['en_cours'] }};
+    const dossJuges    = {{ $dossiers['juges'] }};
+    const dossExecutes = {{ $dossiers['executes'] }};
+    const dossTotal    = {{ $dossiers['total'] }};
+    const dossAutres   = Math.max(0, dossTotal - dossEnCours - dossJuges - dossExecutes);
+
+    const pourVal    = {{ $resultatsJugements['pour'] }};
+    const contreVal  = {{ $resultatsJugements['contre'] }};
+
+    const defaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
     };
 
-    const pourContreData = {
-        pour: {{ $resultatsJugements['pour'] }},
-        contre: {{ $resultatsJugements['contre'] }},
-    };
-
-    const financesData = {
-        pour: {{ $statsFinancesGraphe['montant_pour'] }},
-        contre: {{ $statsFinancesGraphe['montant_contre'] }},
-        total: {{ $statsFinancesGraphe['montant_total'] }},
-    };
-
-    const financesMensuel = {
-        labels: {!! json_encode($statsFinancesGraphe['mensuel_labels']) !!},
-        values: {!! json_encode($statsFinancesGraphe['mensuel_values']) !!}
-    };
-    /* ─── Couleurs ─────────────────────────────────────────────────── */
-    const COLORS = {
-        blue    : '#378ADD',
-        green   : '#639922',
-        amber   : '#BA7517',
-        gray    : '#888780',
-        pink    : '#D4537E',
-        teal    : '#1D9E75',
-        red     : '#E24B4A',
-        purple  : '#7F77DD',
-        blueFill: 'rgba(55,138,221,0.15)',
-    };
- 
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* 1. DONUT — Dossiers par statut                                  */
-    /* ═══════════════════════════════════════════════════════════════ */
-    new Chart(document.getElementById('chartDossiersStatut'), {
-        type: 'doughnut',
+    /* Évolution mensuelle dossiers */
+    new Chart(document.getElementById('chartEvo'), {
+        type: 'line',
         data: {
-            labels: ['En cours', 'Jugés', 'Exécutés', 'Autres'],
+            labels: evoLabels,
             datasets: [{
-                data: [
-                    dossiersData.enCours,
-                    dossiersData.juges,
-                    dossiersData.executes,
-                    dossiersData.autres,
-                ],
-                backgroundColor: [COLORS.blue, COLORS.green, COLORS.amber, COLORS.gray],
-                borderWidth: 0,
-                hoverOffset: 6,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            cutout: '72%',
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` ${ctx.label} : ${ctx.raw} (${Math.round(ctx.raw / dossiersData.total * 100)}%)`,
-                    },
-                },
-            },
-        },
-    });
- 
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* 2. BARRES HORIZONTALES — Réclamations par statut               */
-    /* ═══════════════════════════════════════════════════════════════ */
-    new Chart(document.getElementById('chartReclamations'), {
-        type: 'bar',
-        data: {
-            labels: ['Reçues', 'En cours', 'Clôturées', 'En attente'],
-            datasets: [{
-                label: 'Réclamations',
-                data: [
-                    reclData.recues,
-                    reclData.enCours,
-                    reclData.cloturees,
-                    reclData.enAttente,
-                ],
-                backgroundColor: [COLORS.blue, COLORS.amber, COLORS.green, COLORS.red],
-                borderRadius: 6,
-                borderSkipped: false,
-            }],
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: { label: ctx => ` ${ctx.raw} réclamation(s)` },
-                },
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: { precision: 0, font: { size: 11 } },
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                },
-                y: {
-                    ticks: { font: { size: 12 } },
-                    grid: { display: false },
-                },
-            },
-        },
-    });
- 
-
- 
-    /* ═══════════════════════════════════════════════════════════════ */
-    /* 4. LIGNE — Évolution mensuelle des dossiers ouverts            */
-    /* ═══════════════════════════════════════════════════════════════ */
-    if (evolutionLabels.length > 0) {
-        new Chart(document.getElementById('chartEvolution'), {
-            type: 'line',
-            data: {
-                labels: evolutionLabels,
-                datasets: [{
-                    label: 'Dossiers ouverts',
-                    data: evolutionValues,
-                    borderColor: COLORS.blue,
-                    backgroundColor: COLORS.blueFill,
-                    borderWidth: 2,
-                    pointBackgroundColor: COLORS.blue,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.35,
-                }],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: { label: ctx => ` ${ctx.raw} dossier(s) ouverts` },
-                    },
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { precision: 0, font: { size: 11 } },
-                        grid: { color: 'rgba(0,0,0,0.05)' },
-                    },
-                    x: {
-                        ticks: {
-                            font: { size: 11 },
-                            autoSkip: false,
-                            maxRotation: 30,
-                        },
-                        grid: { display: false },
-                    },
-                },
-            },
-        });
-    }
-
-    new Chart(document.getElementById('chartAffaires'), {
-        type: 'bar',
-        data: {
-            labels: affairesData.labels,
-            datasets: [{
-                data: affairesData.values,
-                backgroundColor: COLORS.blue,
-                borderRadius: 6,
+                data: evoVals,
+                borderColor: BLUE,
+                backgroundColor: 'rgba(55,138,221,0.08)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: BLUE,
+                fill: true,
+                tension: .35,
             }]
         },
         options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
+            ...defaults,
             scales: {
-                y: { beginAtZero: true }
+                x: { ticks: { font: { size: 10 }, maxRotation: 30 }, grid: { display: false } },
+                y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } }
             }
         }
     });
 
+    /* Dossiers par type d'affaire */
+    new Chart(document.getElementById('chartAffaires'), {
+        type: 'bar',
+        data: {
+            labels: affLabels,
+            datasets: [{
+                data: affVals,
+                backgroundColor: BLUE,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            ...defaults,
+            scales: {
+                x: { ticks: { font: { size: 10 } }, grid: { display: false } },
+                y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } }
+            }
+        }
+    });
+
+    /* Donut statuts */
+    new Chart(document.getElementById('chartStatut'), {
+        type: 'doughnut',
+        data: {
+            labels: ['En cours', 'Jugés', 'Exécutés', 'Autres'],
+            datasets: [{
+                data: [dossEnCours, dossJuges, dossExecutes, dossAutres],
+                backgroundColor: [BLUE, GREEN, AMBER, GRAY],
+                borderWidth: 0,
+                hoverOffset: 5,
+            }]
+        },
+        options: {
+            cutout: '72%',
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+        }
+    });
+
+    /* Donut pour/contre */
     new Chart(document.getElementById('chartPourContre'), {
         type: 'doughnut',
         data: {
             labels: ['Pour', 'Contre'],
             datasets: [{
-                data: [pourContreData.pour, pourContreData.contre],
-                backgroundColor: [COLORS.green, COLORS.red],
-                borderWidth: 0
+                data: [pourVal, contreVal],
+                backgroundColor: [GREEN, RED],
+                borderWidth: 0,
+                hoverOffset: 5,
             }]
         },
         options: {
-            cutout: '70%',
-            plugins: { legend: { position: 'bottom' } }
+            cutout: '72%',
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
         }
     });
 
-    new Chart(document.getElementById('chartFinances'), {
-        type: 'pie',
-        data: {
-            labels: ['Pour établissement', 'Contre établissement'],
-            datasets: [{
-                data: [financesData.pour, financesData.contre],
-                backgroundColor: [COLORS.teal, COLORS.red],
-            }]
-        },
-        options: {
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` ${ctx.raw.toLocaleString()} DH`
-                    }
-                }
-            }
-        }
-    });
-
+    /* Évolution financière mensuelle */
     new Chart(document.getElementById('chartFinancesMensuel'), {
         type: 'line',
         data: {
-            labels: financesMensuel.labels,
+            labels: finLabels,
             datasets: [{
-                data: financesMensuel.values,
-                borderColor: COLORS.teal,
-                backgroundColor: 'rgba(29,158,117,0.15)',
+                data: finVals,
+                borderColor: GREEN,
+                backgroundColor: 'rgba(99,153,34,0.08)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: GREEN,
                 fill: true,
-                tension: 0.3
+                tension: .35,
             }]
         },
         options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
+            ...defaults,
             scales: {
-                y: { beginAtZero: true }
+                x: { ticks: { font: { size: 10 }, maxRotation: 30 }, grid: { display: false } },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { size: 10 },
+                        callback: v => v >= 1000000 ? (v/1000000).toFixed(1)+'M' : (v >= 1000 ? (v/1000).toFixed(0)+'K' : v)
+                    },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: c => ` ${Number(c.raw).toLocaleString('fr-MA')} MAD` } }
             }
         }
     });
- 
 })();
 </script>
 @endpush
