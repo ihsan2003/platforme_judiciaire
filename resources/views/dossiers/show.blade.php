@@ -243,34 +243,36 @@
 {{-- ══════════════════════════════════════════════
      EN-TÊTE DOSSIER
 ══════════════════════════════════════════════ --}}
+
 <div class="dossier-header mb-4">
     <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+
         <div class="d-flex align-items-center gap-3">
             <div class="rounded-3 d-flex align-items-center justify-content-center"
                  style="width:52px;height:52px;background:rgba(255,255,255,.12);flex-shrink:0">
                 <i class="bi bi-folder2-open fs-3 text-warning"></i>
             </div>
+
             <div>
                 <h4 class="fw-bold mb-0 text-white">{{ $dossier->numero_dossier_interne }}</h4>
+
                 @if($dossier->numero_dossier_tribunal)
                     <div class="small" style="opacity:.7">
-                        <i class="bi bi-bank me-1"></i>N° tribunal : {{ $dossier->numero_dossier_tribunal }}
+                        <i class="bi bi-bank me-1"></i>رقم المحكمة : {{ $dossier->numero_dossier_tribunal }}
                     </div>
                 @endif
+
                 <div class="mt-1 d-flex flex-wrap gap-2">
+
                     @php
                         $statut = $dossier->statutDossier->statut_dossier ?? '—';
-                        $sc = match(true) {
-                            str_contains($statut, 'Actif')    => 'success',
-                            str_contains($statut, 'Clôturé')  => 'secondary',
-                            str_contains($statut, 'Suspendu') => 'warning',
-                            default => 'primary',
-                        };
                     @endphp
+
                     <span class="pill pill-white">
                         <i class="bi bi-circle-fill" style="font-size:.4rem"></i>
                         {{ $statut }}
                     </span>
+
                     <span class="pill pill-white">
                         <i class="bi bi-tag"></i>
                         {{ $dossier->typeAffaire->affaire ?? '—' }}
@@ -279,43 +281,54 @@
             </div>
         </div>
 
-        {{-- KPIs ─────────────────────────────────── --}}
+        {{-- KPIs --}}
         <div class="dossier-header-kpi">
+
             <div class="kpi-item">
                 <div class="kpi-val">{{ $dossierParties->count() }}</div>
-                <div class="kpi-lab">Parties</div>
+                <div class="kpi-lab">الأطراف</div>
             </div>
+
             <div class="kpi-item">
                 <div class="kpi-val">{{ $instances->count() }}</div>
-                <div class="kpi-lab">Instance(s)</div>
+                <div class="kpi-lab">الدرجات</div>
             </div>
+
             <div class="kpi-item">
                 <div class="kpi-val">{{ $totalAudiences }}</div>
-                <div class="kpi-lab">Audiences</div>
+                <div class="kpi-lab">الجلسات</div>
             </div>
+
             <div class="kpi-item">
                 <div class="kpi-val">{{ $totalJugements }}</div>
-                <div class="kpi-lab">Jugements</div>
+                <div class="kpi-lab">الأحكام</div>
             </div>
+
             <div class="kpi-item">
-                <div class="kpi-val">{{ number_format($totalFinances, 0, ',', ' ') }}<small style="font-size:.5em;font-weight:600;opacity:.8"> DH</small></div>
-                <div class="kpi-lab">Montant condamné</div>
+                <div class="kpi-val">
+                    <span dir="ltr">{{ number_format($totalFinances, 0, ',', ' ') }}</span>
+                    <small style="font-size:.5em;font-weight:600;opacity:.8"> درهم</small>
+                </div>
+                <div class="kpi-lab">المبلغ المحكوم به</div>
             </div>
+
         </div>
 
-        {{-- Actions ─────────────────────────────── --}}
+        {{-- Actions --}}
         <div class="d-flex flex-wrap gap-2 align-items-start">
+
             @can('update', $dossier)
                 <a href="{{ route('dossiers.edit', $dossier) }}" class="btn btn-warning btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier
+                    <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
             @endcan
+
             @can('delete', $dossier)
                 <form action="{{ route('dossiers.destroy', $dossier) }}" method="POST"
-                      onsubmit="return confirm('Archiver ce dossier ?')">
+                      onsubmit="return confirm('هل تريد أرشفة هذا الملف ؟')">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-archive me-1"></i>Archiver
+                        <i class="bi bi-archive me-1"></i>أرشفة
                     </button>
                 </form>
             @endcan
@@ -323,23 +336,29 @@
     </div>
 
     <hr class="mt-3 mb-2" style="border-color:rgba(255,255,255,.15)">
+
     <div class="row g-2 small" style="opacity:.75">
+
         <div class="col-sm-3 text-white">
             <i class="bi bi-calendar-event me-1"></i>
-            <strong>Ouverture :</strong> {{ $dossier->date_ouverture?->format('d/m/Y') ?? '—' }}
+            <strong>تاريخ الفتح :</strong> {{ $dossier->date_ouverture?->format('d/m/Y') ?? '—' }}
         </div>
+
         <div class="col-sm-3 text-white">
             <i class="bi bi-calendar-check me-1"></i>
-            <strong>Clôture :</strong> {{ $dossier->date_cloture?->format('d/m/Y') ?? 'En cours' }}
+            <strong>تاريخ الإغلاق :</strong> {{ $dossier->date_cloture?->format('d/m/Y') ?? 'قيد المعالجة' }}
         </div>
+
         <div class="col-sm-3 text-white">
             <i class="bi bi-person me-1"></i>
-            <strong>Créé par :</strong> {{ $dossier->createdBy->name ?? '—' }}
+            <strong>أنشئ بواسطة :</strong> {{ $dossier->createdBy->name ?? '—' }}
         </div>
+
         <div class="col-sm-3 text-white">
             <i class="bi bi-clock me-1"></i>
-            <strong>Mis à jour :</strong> {{ $dossier->updated_at->diffForHumans() }}
+            <strong>آخر تحديث :</strong> {{ $dossier->updated_at->diffForHumans() }}
         </div>
+
     </div>
 </div>
 
@@ -347,42 +366,61 @@
      ONGLETS
 ══════════════════════════════════════════════ --}}
 <ul class="nav dossier-tabs border-bottom mb-0" id="dossierTabs">
+
     <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-parties">
-            <i class="bi bi-people me-1"></i>Parties
-            <span class="badge bg-primary ms-1 rounded-pill" style="font-size:.65rem">{{ $dossierParties->count() }}</span>
+            <i class="bi bi-people me-1"></i>الأطراف
+            <span class="badge bg-primary ms-1 rounded-pill" style="font-size:.65rem">
+                {{ $dossierParties->count() }}
+            </span>
         </button>
     </li>
+
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-instances">
-            <i class="bi bi-diagram-3 me-1"></i>Instances & Audiences
-            <span class="badge bg-success ms-1 rounded-pill" style="font-size:.65rem">{{ $instances->count() }}</span>
+            <i class="bi bi-diagram-3 me-1"></i>الدرجات والجلسات
+            <span class="badge bg-success ms-1 rounded-pill" style="font-size:.65rem">
+                {{ $instances->count() }}
+            </span>
         </button>
     </li>
+
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-jugements">
-            <i class="bi bi-hammer me-1"></i>Jugements
-            <span class="badge bg-dark ms-1 rounded-pill" style="font-size:.65rem">{{ $totalJugements }}</span>
+            <i class="bi bi-hammer me-1"></i>الأحكام
+            <span class="badge bg-dark ms-1 rounded-pill" style="font-size:.65rem">
+                {{ $totalJugements }}
+            </span>
         </button>
     </li>
+
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-finances">
-            <i class="bi bi-cash-stack me-1"></i>Finances
-            <span class="badge bg-success ms-1 rounded-pill" style="font-size:.65rem">{{ $instances->flatMap->jugements->pluck('finance')->filter()->count() }}</span>
+            <i class="bi bi-cash-stack me-1"></i>الحالة المالية 
+            <span class="badge bg-success ms-1 rounded-pill" style="font-size:.65rem">
+                {{ $instances->flatMap->jugements->pluck('finance')->filter()->count() }}
+            </span>
         </button>
     </li>
+
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-executions">
-            <i class="bi bi-shield-check me-1"></i>Exécutions
-            <span class="badge bg-danger ms-1 rounded-pill" style="font-size:.65rem">{{ $totalExecutions }}</span>
+            <i class="bi bi-shield-check me-1"></i>التنفيذ
+            <span class="badge bg-danger ms-1 rounded-pill" style="font-size:.65rem">
+                {{ $totalExecutions }}
+            </span>
         </button>
     </li>
+
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-documents">
-            <i class="bi bi-paperclip me-1"></i>Documents
-            <span class="badge bg-warning text-dark ms-1 rounded-pill" style="font-size:.65rem">{{ $dossier->documents->count() }}</span>
+            <i class="bi bi-paperclip me-1"></i>الوثائق
+            <span class="badge bg-warning text-dark ms-1 rounded-pill" style="font-size:.65rem">
+                {{ $dossier->documents->count() }}
+            </span>
         </button>
     </li>
+
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom bg-white shadow-sm p-4" id="dossierTabContent">
@@ -393,10 +431,13 @@
     <div class="tab-pane fade show active" id="tab-parties">
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-people me-2 text-primary"></i>Parties impliquées</h6>
+            <h6 class="fw-semibold mb-0">
+                <i class="bi bi-people me-2 text-primary"></i>الأطراف المعنية
+            </h6>
+
             @can('update', $dossier)
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterPartie">
-                    <i class="bi bi-person-plus me-1"></i>Ajouter une partie
+                    <i class="bi bi-person-plus me-1"></i>إضافة طرف
                 </button>
             @endcan
         </div>
@@ -404,41 +445,56 @@
         @if(!$peutAudience && count($manquants) > 0)
         <div class="alert alert-warning border-0 small mb-3">
             <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>Rôle(s) manquant(s) :</strong>
+            <strong>الأدوار الناقصة :</strong>
+
             @foreach($manquants as $m)
-                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25 mx-1" dir="rtl">{{ $m }}</span>
+                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25 mx-1" dir="rtl">
+                    {{ $m }}
+                </span>
             @endforeach
-            — Il faut ajouter au moins 2 parties.
+
+            — يجب إضافة طرفين على الأقل.
         </div>
         @endif
 
         @if($dossierParties->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-people fs-1 d-block mb-2 opacity-25"></i>
-                Aucune partie enregistrée.
+                لا توجد أطراف مسجلة.
             </div>
         @else
+
         <div class="table-responsive">
             <table class="table table-hover align-middle">
+
                 <thead class="table-light">
                     <tr>
-                        <th class="small text-muted fw-semibold">Identifiant</th>
-                        <th class="small text-muted fw-semibold">Nom / Dénomination</th>
-                        <th class="small text-muted fw-semibold">Type</th>
-                        <th class="small text-muted fw-semibold">Rôle</th>
-                        <th class="small text-muted fw-semibold">Avocat</th>
-                        <th class="small text-muted fw-semibold">Date d'entrée</th>
-                        <th class="small text-muted fw-semibold text-end">Actions</th>
+                        <th class="small text-muted fw-semibold">المعرف</th>
+                        <th class="small text-muted fw-semibold">الاسم / التسمية</th>
+                        <th class="small text-muted fw-semibold">النوع</th>
+                        <th class="small text-muted fw-semibold">الدور</th>
+                        <th class="small text-muted fw-semibold">المحامي</th>
+                        <th class="small text-muted fw-semibold">تاريخ الانضمام</th>
+                        <th class="small text-muted fw-semibold text-end">الإجراءات</th>
                     </tr>
                 </thead>
+
                 <tbody>
+
                     @foreach($dossierParties as $dp)
                     <tr>
-                        <td class="text-muted small font-monospace">{{ $dp->partie->identifiant_unique ?? '—' }}</td>
+
+                        <td class="text-muted small font-monospace">
+                            {{ $dp->partie->identifiant_unique ?? '—' }}
+                        </td>
+
                         <td>
                             <div class="fw-semibold">{{ $dp->partie->nom_partie ?? '—' }}</div>
-                            @if($dp->partie?->email)<div class="text-muted small">{{ $dp->partie->email }}</div>@endif
+                            @if($dp->partie?->email)
+                                <div class="text-muted small">{{ $dp->partie->email }}</div>
+                            @endif
                         </td>
+
                         <td>
                             @php
                                 $isMorale = $dp->partie->type_personne === 'Morale';
@@ -453,52 +509,70 @@
                                 {{ $dp->partie->type_personne ?? '—' }}
                             </span>
                         </td>
+
                         <td>
-                            <span class="badge bg-primary bg-opacity-10 text-primary">{{ $dp->typePartie->type_partie ?? '—' }}</span>
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ $dp->typePartie->type_partie ?? '—' }}
+                            </span>
                         </td>
+
                         <td class="text-muted small">
                             @if($dp->partie?->avocat)
                                 <i class="bi bi-briefcase me-1"></i>
                                 {{ $dp->partie->avocat->nom_avocat }}
                             @else
                                 —
-                            @endif 
+                            @endif
                         </td>
-                        <td class="text-muted small">{{ $dp->date_entree?->format('d/m/Y') ?? '—' }}</td>
+
+                        <td class="text-muted small">
+                            {{ $dp->date_entree?->format('d/m/Y') ?? '—' }}
+                        </td>
+
                         <td class="text-end">
+
                             @can('update', $dossier)
                             <div class="d-flex gap-1 justify-content-end">
+
                                 <button class="btn btn-sm btn-outline-warning"
-                                        data-bs-toggle="modal" data-bs-target="#modalEditPartie{{ $dp->id }}">
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEditPartie{{ $dp->id }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
+
                                 <x-modal-delete
                                     :action="route('dossiers.parties.destroy', [$dossier, $dp])"
                                     modal-id="deletePartie{{ $dp->id }}"
-                                    title="Retirer la partie"
+                                    title="حذف الطرف"
                                     :description="$dp->partie->nom_partie"
-                                    warning="La liaison sera supprimée. La fiche de la partie reste intacte."
-                                    confirm-label="Oui, retirer"
+                                    warning="سيتم حذف العلاقة فقط، وستبقى بطاقة الطرف محفوظة."
+                                    confirm-label="نعم، حذف"
                                     trigger-label=""
                                     trigger-icon="bi-person-dash"
                                 />
+
                             </div>
                             @endcan
+
                         </td>
+
                     </tr>
                     @endforeach
+
                 </tbody>
+
             </table>
         </div>
+
         @endif
+
     </div>{{-- /tab-parties --}}
 
 
     {{-- ══════════════════════════════════════════
          ONGLET 2 : INSTANCES & AUDIENCES
-         (organisation hiérarchique par degré)
     ══════════════════════════════════════════ --}}
-    <div class="tab-pane fade" id="tab-instances">
+    <div class="tab-pane fade" id="tab-instances" dir="rtl">
 
         {{-- Barre de progression ──────────────── --}}
         @if($instances->isNotEmpty())
@@ -510,15 +584,15 @@
             @endphp
             <div class="progress-step {{ $cls }}">
                 <div class="progress-step-num">{{ $idx + 1 }}</div>
-                <div>
+                <div class="text-end">
                     <div style="font-size:.75rem;font-weight:700;line-height:1.2">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
                     <div style="font-size:.65rem;opacity:.8">
-                        {{ is_null($dt->date_fin) ? 'En cours' : 'Clôturée' }}
+                        {{ is_null($dt->date_fin) ? 'قيد النظر' : 'مغلقة' }}
                     </div>
                 </div>
             </div>
             @if(!$loop->last)
-                <div style="font-size:.85rem;color:#94a3b8;align-self:center;padding:0 2px">›</div>
+                <div style="font-size:.85rem;color:#94a3b8;align-self:center;padding:0 2px">‹</div>
             @endif
             @endforeach
         </div>
@@ -526,19 +600,20 @@
 
         {{-- Bouton assigner tribunal ─────────── --}}
         @if($instances->isEmpty())
-        <div class="d-flex justify-content-end mb-3">
+        <div class="d-flex justify-content-start mb-3">
             @can('update', $dossier)
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterTribunal">
-                    <i class="bi bi-plus-lg me-1"></i>Assigner un tribunal
+                    <i class="bi bi-plus-lg ml-1"></i>تعيين محكمة
                 </button>
             @endcan
         </div>
         @endif
+
         @if($instances->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-bank fs-1 d-block mb-2 opacity-25"></i>
-                Aucun tribunal assigné à ce dossier.
-                <div class="mt-2 small">Assignez un tribunal pour commencer à enregistrer des audiences.</div>
+                لا توجد محكمة معينة لهذا الملف حالياً.
+                <div class="mt-2 small">يرجى تعيين محكمة للبدء في تسجيل الجلسات.</div>
             </div>
         @else
 
@@ -560,11 +635,11 @@
             <div class="deg-connector-line"></div>
             <div class="deg-connector-tag">
                 @if($prevRecours = $prevDt->jugements->first()?->recours?->first())
-                    <i class="bi bi-arrow-repeat me-1"></i>
-                    {{ $prevRecours->typeRecours->type_recours ?? 'Transition' }}
+                    <i class="bi bi-arrow-repeat ml-1"></i>
+                    {{ $prevRecours->typeRecours->type_recours ?? 'انتقال' }}
                     — {{ $prevRecours->date_recours->format('d/m/Y') }}
                 @else
-                    <i class="bi bi-arrow-down me-1"></i> Transition de degré
+                    <i class="bi bi-arrow-down ml-1"></i> انتقال درجة التقاضي
                 @endif
             </div>
             <div class="deg-connector-line"></div>
@@ -578,30 +653,30 @@
             <div class="deg-header {{ $colorCls }}">
                 <div class="d-flex align-items-center gap-3">
                     <div class="deg-num">{{ $loopIdx + 1 }}</div>
-                    <div>
+                    <div class="text-end">
                         <div class="deg-title">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
                         <div class="deg-sub">
-                            <i class="bi bi-bank me-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
+                            <i class="bi bi-bank ml-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
                         </div>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     {{-- Statut instance --}}
                     @if($isClosed)
-                        <span class="pill pill-white"><i class="bi bi-lock-fill"></i> Clôturée</span>
+                        <span class="pill pill-white"><i class="bi bi-lock-fill"></i> مغلقة</span>
                     @elseif($jugement)
-                        <span class="pill pill-white"><i class="bi bi-hammer"></i> Jugement rendu</span>
+                        <span class="pill pill-white"><i class="bi bi-hammer"></i> صدر الحكم</span>
                     @elseif($audienceHoukm)
-                        <span class="pill pill-white"><i class="bi bi-hourglass-split"></i> En délibéré</span>
+                        <span class="pill pill-white"><i class="bi bi-hourglass-split"></i> في المداولة</span>
                     @else
-                        <span class="pill pill-white"><i class="bi bi-activity"></i> En cours</span>
+                        <span class="pill pill-white"><i class="bi bi-activity"></i> قيد النظر</span>
                     @endif
 
                     <span class="pill pill-white" style="font-size:.68rem">
-                        <i class="bi bi-calendar3"></i> {{ $dt->date_debut?->format('d/m/Y') }} → {{ $dt->date_fin?->format('d/m/Y') ?? 'Présent' }}
+                        <i class="bi bi-calendar3"></i> {{ $dt->date_debut?->format('d/m/Y') }} ← {{ $dt->date_fin?->format('d/m/Y') ?? 'الآن' }}
                     </span>
                     <span class="pill pill-white" style="font-size:.68rem">
-                        <i class="bi bi-calendar-event"></i> {{ $audiences->count() }} audience(s)
+                        <i class="bi bi-calendar-event"></i> {{ $audiences->count() }} جلسة
                     </span>
 
                     {{-- Actions instance --}}
@@ -613,8 +688,8 @@
                         </button>
                         @if(!$isClosed && $peutAudience)
                         <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
-                           class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:.75rem">
-                            <i class="bi bi-calendar-plus me-1"></i>Audience
+                        class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:.75rem">
+                            <i class="bi bi-calendar-plus ml-1"></i>جلسة جديدة
                         </a>
                         @endif
                     </div>
@@ -626,17 +701,17 @@
             @if($audiences->isEmpty())
                 <div class="rg-alert info">
                     <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
-                    <span>Aucune audience dans cette instance pour le moment.</span>
+                    <span>لا توجد جلسات مسجلة في هذه المرحلة حتى الآن.</span>
                 </div>
             @elseif(!$audienceHoukm && $audiences->isNotEmpty())
                 <div class="rg-alert warn">
                     <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                    <span>L'audience <strong>الحكم</strong> n'a pas encore été enregistrée — le jugement ne peut pas être saisi.</span>
+                    <span>جلسة <strong>النطق بالحكم</strong> لم تسجل بعد — لا يمكن إدخال تفاصيل الحكم.</span>
                 </div>
             @elseif($audienceHoukm && !$jugement)
                 <div class="rg-alert warn">
                     <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                    <span>Audience <strong>الحكم</strong> du <strong>{{ $audienceHoukm->date_audience->format('d/m/Y') }}</strong> enregistrée — vous pouvez saisir le jugement.</span>
+                    <span>تم تسجيل جلسة <strong>النطق بالحكم</strong> بتاريخ <strong>{{ $audienceHoukm->date_audience->format('d/m/Y') }}</strong> — يمكنك الآن إدخال نص الحكم.</span>
                 </div>
             @endif
 
@@ -644,12 +719,12 @@
             @if($audiences->isEmpty())
             <div class="empty-state">
                 <i class="bi bi-calendar-x d-block mb-1 fs-4 opacity-30"></i>
-                Aucune audience dans cette instance.
+                لا توجد جلسات في هذه المرحلة.
                 @if(!$isClosed && $peutAudience)
                 <div class="mt-2">
                     <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
-                       class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-calendar-plus me-1"></i>Planifier
+                    class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-calendar-plus ml-1"></i>برمجة جلسة
                     </a>
                 </div>
                 @endif
@@ -658,7 +733,7 @@
             <div class="aud-timeline">
                 @foreach($audiences as $aud)
                 @php
-                    $isHoukm = $aud->typeAudience?->type_audience === 'الحكم';
+                    $isHoukm = $aud->typeAudience?->type_audience === 'الحكم' || $aud->typeAudience?->type_audience === 'النطق بالحكم';
                     $isFuture = $aud->date_audience?->isFuture();
                     $typeLabel = $aud->typeAudience?->type_audience ?? '—';
                     $dotCls  = $isHoukm ? 'houkm' : ($isFuture ? 'future' : '');
@@ -674,13 +749,13 @@
                             <div class="d-flex align-items-center gap-2">
                                 <span class="aud-date">{{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</span>
                                 @if($aud->date_audience?->isToday())
-                                    <span class="pill pill-danger" style="font-size:.65rem;padding:1px 6px">Aujourd'hui</span>
+                                    <span class="pill pill-danger" style="font-size:.65rem;padding:1px 6px">اليوم</span>
                                 @endif
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="aud-type-badge {{ $badgeCls }}" dir="rtl">
+                                <span class="aud-type-badge {{ $badgeCls }}">
                                     {{ $typeLabel }}
-                                    @if($isHoukm) <strong class="ms-1">← Finale</strong>@endif
+                                    @if($isHoukm) <strong class="mr-1">← نهائية</strong>@endif
                                 </span>
                                 <div class="d-flex gap-1">
                                     <a href="{{ route('audiences.show', $aud) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.7rem"><i class="bi bi-eye"></i></a>
@@ -691,20 +766,20 @@
                             </div>
                         </div>
                         <div class="aud-meta">
-                            @if($aud->juge)<span><i class="bi bi-person me-1"></i>{{ $aud->juge->nom_complet }}</span>@endif
+                            @if($aud->juge)<span><i class="bi bi-person ml-1"></i>{{ $aud->juge->nom_complet }}</span>@endif
                             <span>
-                                <i class="bi bi-people me-1"></i>
-                                Dem. : {{ $aud->presence_demandeur ? '✓' : '✗' }}
-                                · Déf. : {{ $aud->presence_defendeur ? '✓' : '✗' }}
+                                <i class="bi bi-people ml-1"></i>
+                                طالب: {{ $aud->presence_demandeur ? '✓' : '✗' }}
+                                · مطلوب: {{ $aud->presence_defendeur ? '✓' : '✗' }}
                             </span>
                             @if($aud->resultat_audience)
-                                <span><i class="bi bi-chat-left-text me-1"></i>{{ Str::limit($aud->resultat_audience, 55) }}</span>
+                                <span><i class="bi bi-chat-left-text ml-1"></i>{{ Str::limit($aud->resultat_audience, 55) }}</span>
                             @endif
                         </div>
                         @if($aud->date_prochaine_audience && !$isHoukm)
                         <div class="aud-renvoi">
                             <i class="bi bi-calendar-arrow-down text-muted"></i>
-                            Renvoi au <strong>{{ $aud->date_prochaine_audience->format('d/m/Y') }}</strong>
+                            تأجيل إلى <strong>{{ $aud->date_prochaine_audience->format('d/m/Y') }}</strong>
                         </div>
                         @endif
                     </div>
@@ -719,8 +794,8 @@
                     </div>
                     <div style="padding:6px 0">
                         <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
-                           class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-calendar-plus me-1"></i>Planifier une audience
+                        class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-calendar-plus ml-1"></i>برمجة جلسة جديدة
                         </a>
                     </div>
                 </div>
@@ -732,7 +807,7 @@
             @if($audienceHoukm)
             <div class="mx-4 my-1 d-flex align-items-center gap-2" style="font-size:.75rem;color:#6b21a8;font-weight:600">
                 <div style="flex:1;height:1px;background:rgba(124,58,237,.2)"></div>
-                <span><i class="bi bi-arrow-down me-1"></i>Audience الحكم du {{ $audienceHoukm->date_audience->format('d/m/Y') }} → Jugement</span>
+                <span><i class="bi bi-arrow-down ml-1"></i>جلسة النطق بالحكم {{ $audienceHoukm->date_audience->format('d/m/Y') }} ← نص الحكم</span>
                 <div style="flex:1;height:1px;background:rgba(124,58,237,.2)"></div>
             </div>
             @endif
@@ -742,35 +817,35 @@
             <div class="jug-block">
                 <div class="jug-block-header">
                     <div class="jug-title">
-                        <i class="bi bi-hammer"></i>
-                        Jugement du {{ $jugement->date_jugement->format('d/m/Y') }}
+                        <i class="bi bi-hammer ml-1"></i>
+                        حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         @if($jugement->est_definitif)
-                            <span class="pill pill-success"><i class="bi bi-check-circle-fill"></i> Définitif</span>
+                            <span class="pill pill-success"><i class="bi bi-check-circle-fill"></i> حكم نهائي</span>
                         @else
                             @php $dr = $jugement->delai_recours_restant; @endphp
                             @if($dr !== null)
                                 @if($dr > 10)
-                                    <span class="pill pill-success" style="font-size:.68rem"><i class="bi bi-clock"></i> {{ $dr }}j restants</span>
+                                    <span class="pill pill-success" style="font-size:.68rem"><i class="bi bi-clock"></i> متبقي {{ $dr }} يوم</span>
                                 @elseif($dr > 0)
-                                    <span class="pill pill-warning" style="font-size:.68rem"><i class="bi bi-exclamation-triangle-fill"></i> {{ $dr }}j !</span>
+                                    <span class="pill pill-warning" style="font-size:.68rem"><i class="bi bi-exclamation-triangle-fill"></i> {{ $dr }} أيام فقط!</span>
                                 @else
-                                    <span class="pill pill-muted" style="font-size:.68rem">Délai expiré</span>
+                                    <span class="pill pill-muted" style="font-size:.68rem">انتهى الأجل</span>
                                 @endif
                             @endif
                         @endif
                         <a href="{{ route('jugements.show', $jugement) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.75rem">
-                            <i class="bi bi-eye me-1"></i>Voir
+                            <i class="bi bi-eye ml-1"></i>عرض
                         </a>
                     </div>
                 </div>
                 <div class="jug-meta">
-                    @if($jugement->juge)<span><i class="bi bi-person-workspace me-1"></i>{{ $jugement->juge->nom_complet }}</span>@endif
+                    @if($jugement->juge)<span><i class="bi bi-person-workspace ml-1"></i>القاضي: {{ $jugement->juge->nom_complet }}</span>@endif
                     @if($jugement->finance)
-                    @php $f = $jugement->finance; $pct = $f->montant_condamne > 0 ? min(100, round(($f->montant_paye / $f->montant_condamne) * 100)) : 0; @endphp
-                    <span><i class="bi bi-cash me-1"></i>{{ number_format($f->montant_condamne, 2) }} DH</span>
-                    <span><i class="bi bi-check2-circle me-1 text-success"></i>{{ number_format($f->montant_paye, 2) }} DH payés</span>
+                    @php $f = $jugement->finance; @endphp
+                    <span><i class="bi bi-cash ml-1"></i>المبلغ المحكوم: {{ number_format($f->montant_condamne, 2) }} د.م</span>
+                    <span><i class="bi bi-check2-circle ml-1 text-success"></i>المؤدى: {{ number_format($f->montant_paye, 2) }} د.م</span>
                     @endif
                 </div>
                 @if($jugement->contenu_dispositif)
@@ -780,7 +855,7 @@
                 </div>
                 <button class="btn btn-link btn-sm p-0 mt-1" style="font-size:.73rem;color:var(--jug)"
                         onclick="document.getElementById('disp-{{ $jugement->id }}').classList.toggle('open');document.getElementById('disp-fade-{{ $jugement->id }}').style.display=document.getElementById('disp-{{ $jugement->id }}').classList.contains('open')?'none':''">
-                    <i class="bi bi-chevron-down me-1"></i>Voir le dispositif complet
+                    <i class="bi bi-chevron-down ml-1"></i>عرض منطوق الحكم كاملاً
                 </button>
                 @endif
                 @if($jugement->finance)
@@ -794,12 +869,12 @@
                 <div class="rec-block">
                     <div style="font-weight:700;font-size:.88rem;color:var(--rec);display:flex;align-items:center;gap:6px;margin-bottom:6px">
                         <i class="bi bi-arrow-repeat"></i>
-                        {{ $recours->typeRecours->type_recours ?? 'Recours' }}
+                        {{ $recours->typeRecours->type_recours ?? 'طعن' }}
                         — {{ $recours->date_recours->format('d/m/Y') }}
                         @if(($recours->est_dans_delais ?? false))
-                            <span class="pill pill-success" style="font-size:.65rem">✓ Dans les délais</span>
+                            <span class="pill pill-success" style="font-size:.65rem">✓ داخل الآجال</span>
                         @else
-                            <span class="pill pill-danger" style="font-size:.65rem">⚠ Hors délai</span>
+                            <span class="pill pill-danger" style="font-size:.65rem">⚠ خارج الآجال</span>
                         @endif
                     </div>
                     @if($recours->motifs)
@@ -810,26 +885,26 @@
                 {{-- Exécutions ───────────────── --}}
                 @elseif($jugement->est_definitif)
                     @foreach($jugement->executions as $exec)
-                    @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') ? '#16a34a' : (str_contains($sl,'cours') ? '#d97706' : '#64748b'); @endphp
+                    @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') || str_contains($sl,'منتهي') ? '#16a34a' : (str_contains($sl,'cours') || str_contains($sl,'قيد') ? '#d97706' : '#64748b'); @endphp
                     <div class="exec-block">
                         <div style="font-weight:700;font-size:.88rem;color:var(--exec);display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                            <i class="bi bi-shield-check"></i> {{ $exec->numero_dossier_execution }}
-                            <a href="{{ route('executions.show', $exec) }}" class="btn btn-sm btn-outline-primary py-0 px-2 ms-auto" style="font-size:.7rem"><i class="bi bi-eye"></i></a>
+                            <i class="bi bi-shield-check"></i> ملف تنفيذ رقم: {{ $exec->numero_dossier_execution }}
+                            <a href="{{ route('executions.show', $exec) }}" class="btn btn-sm btn-outline-primary py-0 px-2 mr-auto" style="font-size:.7rem"><i class="bi bi-eye"></i></a>
                         </div>
                         <div style="font-size:.8rem;color:#0c4a6e;display:flex;flex-wrap:wrap;gap:12px">
-                            <span><i class="bi bi-bell me-1"></i>Notifié le {{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</span>
+                            <span><i class="bi bi-bell ml-1"></i>تاريخ التبليغ: {{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</span>
                             <span class="pill" style="font-size:.65rem;background:#e0f2fe;color:{{ $sc }}">{{ $sl }}</span>
-                            @if($exec->date_execution)<span class="pill pill-success" style="font-size:.65rem">Exécuté le {{ $exec->date_execution->format('d/m/Y') }}</span>@endif
+                            @if($exec->date_execution)<span class="pill pill-success" style="font-size:.65rem">تم التنفيذ بتاريخ {{ $exec->date_execution->format('d/m/Y') }}</span>@endif
                         </div>
                     </div>
                     @endforeach
                     @if($jugement->executions->isEmpty())
                     <div class="empty-state">
                         <i class="bi bi-hourglass-split d-block mb-1 fs-4 opacity-30"></i>
-                        Jugement définitif — en attente d'exécution.
+                        حكم نهائي — في انتظار إجراءات التنفيذ.
                         <div class="mt-2">
                             <a href="{{ route('executions.create', ['jugement_id' => $jugement->id]) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-plus-lg me-1"></i>Lancer l'exécution
+                                <i class="bi bi-plus-lg ml-1"></i>مباشرة التنفيذ
                             </a>
                         </div>
                     </div>
@@ -840,10 +915,10 @@
                 <div class="recours-form-wrap">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-arrow-repeat text-warning"></i>
-                        <strong class="small">Déposer un recours</strong>
+                        <strong class="small">تسجيل طعن جديد</strong>
                         @php $drr = $jugement->delai_recours_restant; @endphp
                         @if($drr !== null && $drr <= 5)
-                            <span class="pill pill-danger" style="font-size:.65rem">Urgent — {{ $drr }}j</span>
+                            <span class="pill pill-danger" style="font-size:.65rem">مستعجل — متبقي {{ $drr }} يوم</span>
                         @endif
                     </div>
                     <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
@@ -851,9 +926,9 @@
                         <div class="row g-2 align-items-end">
                             <div class="col-md-4">
                                 <select name="id_type_recours" class="form-select form-select-sm" required>
-                                    <option value="">— Type de recours —</option>
+                                    <option value="">— نوع الطعن —</option>
                                     @foreach(\App\Models\TypeRecours::orderBy('type_recours')->get() as $tr)
-                                        <option value="{{ $tr->id }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }}j)</option>
+                                        <option value="{{ $tr->id }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -861,25 +936,25 @@
                                 <input type="date" name="date_recours" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-3">
-                                <input type="text" name="motifs" class="form-control form-control-sm" placeholder="Motifs (optionnel)">
+                                <input type="text" name="motifs" class="form-control form-control-sm" placeholder="الأسباب (اختياري)">
                             </div>
                             <div class="col-md-2">
-                                <button type="submit" class="btn btn-warning btn-sm w-100" onclick="return confirm('Déposer le recours ?')">
-                                    <i class="bi bi-send me-1"></i>Déposer
+                                <button type="submit" class="btn btn-warning btn-sm w-100" onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
+                                    <i class="bi bi-send ml-1"></i>تسجيل
                                 </button>
                             </div>
                         </div>
                     </form>
-                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" class="mt-2" onsubmit="return confirm('Clôturer sans recours ?')">
+                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" class="mt-2" onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
                         @csrf
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>Clôturer sans recours</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle ml-1"></i>إغلاق بدون طعن</button>
                     </form>
                 </div>
                 @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
                 <div class="mx-4 mb-4">
-                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('Clôturer sans recours ?')">
+                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('إغلاق المرحلة؟')">
                         @csrf
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock me-1"></i>Délai expiré — Clôturer sans recours</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock ml-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
                     </form>
                 </div>
                 @endif
@@ -888,17 +963,17 @@
             @elseif($audienceHoukm && !$isClosed)
             <div class="empty-state">
                 <i class="bi bi-hammer d-block mb-1 fs-4 opacity-30"></i>
-                L'audience الحكم a eu lieu — veuillez saisir le jugement.
+                انعقدت جلسة النطق بالحكم — يرجى تسجيل تفاصيل الحكم.
                 <div class="mt-2">
                     <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg me-1"></i>Saisir le jugement
+                        <i class="bi bi-plus-lg ml-1"></i>سجل الحكم
                     </a>
                 </div>
             </div>
             @elseif(!$isClosed && $audiences->isNotEmpty())
             <div class="empty-state" style="margin:0 20px 20px">
                 <i class="bi bi-hourglass d-block mb-1 fs-4 opacity-30"></i>
-                En attente de l'audience finale <strong dir="rtl">الحكم</strong>.
+                في انتظار جلسة <strong>النطق بالحكم</strong>.
             </div>
             @endif
 
@@ -908,19 +983,18 @@
         @endif{{-- /instances non vides --}}
     </div>{{-- /tab-instances --}}
 
-
     {{-- ══════════════════════════════════════════
-         ONGLET 3 : JUGEMENTS (vue synthétique)
+         ONGLET 3 : JUGEMENTS 
     ══════════════════════════════════════════ --}}
-    <div class="tab-pane fade" id="tab-jugements">
+    <div class="tab-pane fade" id="tab-jugements" dir="rtl">
         @php $jugements = $instances->flatMap->jugements->sortByDesc('date_jugement'); @endphp
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-hammer me-2 text-primary"></i>Jugements</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-hammer ml-2 text-primary"></i>الأحكام القضائية</h6>
             @php $peutJugement = $instances->contains(fn($dt) => $dt->peutAvoirJugement()); @endphp
             @if($peutJugement && $peutAudience)
                 <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>Enregistrer un jugement
+                    <i class="bi bi-plus-lg ml-1"></i>تسجيل حكم جديد
                 </a>
             @endif
         </div>
@@ -928,7 +1002,7 @@
         @if($jugements->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-hammer fs-1 d-block mb-2 opacity-25"></i>
-                Aucun jugement enregistré.
+                لم يتم تسجيل أي حكم بعد.
             </div>
         @else
         @foreach($jugements as $jug)
@@ -941,24 +1015,24 @@
         <div class="card border mb-3" style="border-width:2px!important;border-color:{{ $bordCol }}!important;">
             <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <i class="bi bi-hammer me-1 text-primary"></i>
-                    <strong>Jugement du {{ $jug->date_jugement->format('d/m/Y') }}</strong>
-                    <span class="text-muted small ms-2">
+                    <i class="bi bi-hammer ml-1 text-primary"></i>
+                    <strong>حكم بتاريخ {{ $jug->date_jugement->format('d/m/Y') }}</strong>
+                    <span class="text-muted small mr-2">
                         — {{ $dtJ->tribunal->nom_tribunal ?? '—' }}
-                        <span class="badge bg-{{ match($dtJ->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }} ms-1" style="font-size:.65rem">
+                        <span class="badge bg-{{ match($dtJ->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }} mr-1" style="font-size:.65rem">
                             {{ $dtJ->degre?->degre_juridiction ?? '—' }}
                         </span>
                     </span>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
                     @if($jug->est_definitif)
-                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Définitif</span>
+                        <span class="badge bg-success"><i class="bi bi-check-circle ml-1"></i>حكم نهائي</span>
                     @elseif($peutR)
-                        <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>{{ $dr }}j restants</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-clock ml-1"></i>متبقي {{ $dr }} يوم</span>
                     @elseif($jug->recours->isNotEmpty())
-                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>Recours</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat ml-1"></i>في الطعن</span>
                     @else
-                        <span class="badge bg-secondary">Délai expiré</span>
+                        <span class="badge bg-secondary">انقضى الأجل</span>
                     @endif
                     <a href="{{ route('jugements.show', $jug) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                     <a href="{{ route('jugements.edit', $jug) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
@@ -966,19 +1040,19 @@
             </div>
             <div class="card-body py-2 small">
                 <div class="row g-2 mb-1">
-                    <div class="col-auto text-muted"><i class="bi bi-person me-1"></i>{{ $jug->juge->nom_complet ?? '—' }}</div>
+                    <div class="col-auto text-muted"><i class="bi bi-person ml-1"></i>القاضي: {{ $jug->juge->nom_complet ?? '—' }}</div>
                     @if($jug->finance)
                     <div class="col-auto text-muted">
-                        <i class="bi bi-cash me-1"></i>
-                        Condamné : <strong>{{ number_format($jug->finance->montant_condamne, 2) }} DH</strong>
-                        — Payé : <strong class="text-success">{{ number_format($jug->finance->montant_paye, 2) }} DH</strong>
+                        <i class="bi bi-cash ml-1"></i>
+                        المبلغ المحكوم: <strong>{{ number_format($jug->finance->montant_condamne, 2) }} د.م</strong>
+                        — المؤدى: <strong class="text-success">{{ number_format($jug->finance->montant_paye, 2) }} د.م</strong>
                     </div>
                     @endif
                 </div>
                 @if($jug->recours->isNotEmpty())
                     @foreach($jug->recours as $r)
-                    <div class="p-2 rounded mb-1" style="background:#fff3cd;border-left:3px solid #ffc107">
-                        <i class="bi bi-arrow-repeat text-warning me-1"></i>
+                    <div class="p-2 rounded mb-1" style="background:#fff3cd;border-right:3px solid #ffc107">
+                        <i class="bi bi-arrow-repeat text-warning ml-1"></i>
                         <strong>{{ $r->typeRecours->type_recours ?? '—' }}</strong> — {{ $r->date_recours->format('d/m/Y') }}
                         @if($r->motifs)<em class="text-muted"> — {{ Str::limit($r->motifs, 70) }}</em>@endif
                     </div>
@@ -994,17 +1068,17 @@
     {{-- ══════════════════════════════════════════
          ONGLET 4 : FINANCES
     ══════════════════════════════════════════ --}}
-    <div class="tab-pane fade" id="tab-finances">
+    <div class="tab-pane fade" id="tab-finances" dir="rtl">
         @php
             $finances = $instances->flatMap->jugements->pluck('finance')->filter();
             $jugSansFinance = $instances->flatMap->jugements->filter(fn($j) => !$j->finance);
         @endphp
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-cash-stack me-2 text-success"></i>Finances</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-cash-stack ml-2 text-success"></i>البيانات المالية</h6>
             @if($jugSansFinance->isNotEmpty())
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterFinance">
-                    <i class="bi bi-plus-lg me-1"></i>Ajouter un financement
+                    <i class="bi bi-plus-lg ml-1"></i>إضافة تفاصيل مالية
                 </button>
             @endif
         </div>
@@ -1012,21 +1086,21 @@
         @if($finances->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-cash-coin fs-1 d-block mb-2 opacity-25"></i>
-                Aucune donnée financière enregistrée.
+                لا توجد بيانات مالية مسجلة.
             </div>
         @else
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th class="small text-muted fw-semibold">Jugement</th>
-                        <th class="small text-muted fw-semibold">Degré</th>
-                        <th class="small text-muted fw-semibold">Condamné</th>
-                        <th class="small text-muted fw-semibold">Payé</th>
-                        <th class="small text-muted fw-semibold">Restant</th>
-                        <th class="small text-muted fw-semibold">Progression</th>
-                        <th class="small text-muted fw-semibold">Statut</th>
-                        <th class="small text-muted fw-semibold text-end">Actions</th>
+                        <th class="small text-muted fw-semibold">الحكم</th>
+                        <th class="small text-muted fw-semibold">درجة التقاضي</th>
+                        <th class="small text-muted fw-semibold">المحكوم به</th>
+                        <th class="small text-muted fw-semibold">المؤدى</th>
+                        <th class="small text-muted fw-semibold">المتبقي</th>
+                        <th class="small text-muted fw-semibold">نسبة التحصيل</th>
+                        <th class="small text-muted fw-semibold">الحالة</th>
+                        <th class="small text-muted fw-semibold text-start">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1044,18 +1118,25 @@
                                 {{ $dtFin?->degre?->degre_juridiction ?? '—' }}
                             </span>
                         </td>
-                        <td class="fw-semibold">{{ number_format($fin->montant_condamne, 2) }} DH</td>
-                        <td class="text-success fw-semibold">{{ number_format($fin->montant_paye, 2) }} DH</td>
-                        <td class="{{ $fin->montant_restant > 0 ? 'text-danger' : 'text-success' }} fw-semibold">{{ number_format($fin->montant_restant, 2) }} DH</td>
+                        <td class="fw-semibold">{{ number_format($fin->montant_condamne, 2) }} د.م</td>
+                        <td class="text-success fw-semibold">{{ number_format($fin->montant_paye, 2) }} د.م</td>
+                        <td class="{{ $fin->montant_restant > 0 ? 'text-danger' : 'text-success' }} fw-semibold">{{ number_format($fin->montant_restant, 2) }} د.م</td>
                         <td style="min-width:100px">
                             <div class="fin-bar"><div class="fin-bar-fill bg-{{ $pctCol }}" style="width:{{ $pct }}%"></div></div>
                             <div style="font-size:.68rem;color:#64748b;margin-top:2px">{{ $pct }}%</div>
                         </td>
                         <td>
-                            @php $sp = $fin->statut_paiement ?? '—'; @endphp
-                            <span class="badge bg-{{ match($sp){ 'Complet' => 'success', 'Partiel' => 'warning', default => 'secondary' } }}">{{ $sp }}</span>
+                            @php 
+                                $sp = $fin->statut_paiement ?? '—';
+                                $spAr = match($sp) {
+                                    'Complet' => 'مكتمل',
+                                    'Partiel' => 'جزئي',
+                                    default   => $sp
+                                };
+                            @endphp
+                            <span class="badge bg-{{ match($sp){ 'Complet' => 'success', 'Partiel' => 'warning', default => 'secondary' } }}">{{ $spAr }}</span>
                         </td>
-                        <td class="text-end">
+                        <td class="text-start">
                             <a href="{{ route('finances.show', $fin) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                             <a href="{{ route('finances.edit', $fin) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
                         </td>
@@ -1064,11 +1145,11 @@
                 </tbody>
                 <tfoot class="table-light fw-semibold small">
                     <tr>
-                        <td colspan="2">Total</td>
-                        <td>{{ number_format($finances->sum('montant_condamne'), 2) }} DH</td>
-                        <td class="text-success">{{ number_format($finances->sum('montant_paye'), 2) }} DH</td>
+                        <td colspan="2">المجموع الإجمالي</td>
+                        <td>{{ number_format($finances->sum('montant_condamne'), 2) }} د.م</td>
+                        <td class="text-success">{{ number_format($finances->sum('montant_paye'), 2) }} د.م</td>
                         <td class="{{ $finances->sum('montant_condamne') - $finances->sum('montant_paye') > 0 ? 'text-danger' : 'text-success' }}">
-                            {{ number_format($finances->sum('montant_condamne') - $finances->sum('montant_paye'), 2) }} DH
+                            {{ number_format($finances->sum('montant_condamne') - $finances->sum('montant_paye'), 2) }} د.م
                         </td>
                         <td colspan="3"></td>
                     </tr>
@@ -1080,9 +1161,9 @@
 
 
     {{-- ══════════════════════════════════════════
-         ONGLET 5 : EXÉCUTIONS
+        ONGLET 5 : EXÉCUTIONS (التنفيذ)
     ══════════════════════════════════════════ --}}
-    <div class="tab-pane fade" id="tab-executions">
+    <div class="tab-pane fade" id="tab-executions" dir="rtl">
         @php
             $tousJug = $instances->flatMap->jugements->sortByDesc('date_jugement');
             $toutesExec = $tousJug->flatMap->executions;
@@ -1090,10 +1171,10 @@
         @endphp
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-shield-check me-2 text-danger"></i>Exécutions</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-shield-check ml-2 text-danger"></i>إجراءات التنفيذ</h6>
             @if($jugDefSansExec)
                 <a href="{{ route('executions.create', ['jugement_id' => $jugDefSansExec->id]) }}" class="btn btn-danger btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>Lancer une exécution
+                    <i class="bi bi-plus-lg ml-1"></i>بدء إجراء تنفيذ
                 </a>
             @endif
         </div>
@@ -1101,42 +1182,51 @@
         @if($toutesExec->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-shield-x fs-1 d-block mb-2 opacity-25"></i>
-                Aucune exécution enregistrée.
-                @if($jugDefSansExec)<div class="mt-2 small">Un jugement définitif est disponible — vous pouvez lancer l'exécution.</div>@endif
+                لا توجد إجراءات تنفيذ مسجلة.
+                @if($jugDefSansExec)<div class="mt-2 small">يوجد حكم نهائي متاح — يمكنك البدء في إجراءات التنفيذ.</div>@endif
             </div>
         @else
         @foreach($tousJug as $jug)
             @if($jug->executions->isEmpty()) @continue @endif
-            <div class="card border mb-3" style="border-left:3px solid var(--exec)!important">
+            <div class="card border mb-3" style="border-right:3px solid var(--exec)!important">
                 <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="small">
-                        <i class="bi bi-hammer text-primary me-1"></i>
-                        <strong>Jugement du {{ $jug->date_jugement->format('d/m/Y') }}</strong>
-                        <span class="text-muted ms-2">— {{ $jug->dossierTribunal->tribunal->nom_tribunal ?? '—' }}</span>
-                        <span class="badge bg-{{ match($jug->dossierTribunal?->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }} ms-1" style="font-size:.63rem">
+                        <i class="bi bi-hammer text-primary ml-1"></i>
+                        <strong>حكم بتاريخ {{ $jug->date_jugement->format('d/m/Y') }}</strong>
+                        <span class="text-muted mr-2">— {{ $jug->dossierTribunal->tribunal->nom_tribunal ?? '—' }}</span>
+                        <span class="badge bg-{{ match($jug->dossierTribunal?->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }} mr-1" style="font-size:.63rem">
                             {{ $jug->dossierTribunal?->degre?->degre_juridiction ?? '—' }}
                         </span>
                     </div>
-                    <a href="{{ route('jugements.show', $jug) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>Jugement</a>
+                    <a href="{{ route('jugements.show', $jug) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye ml-1"></i>تفاصيل الحكم</a>
                 </div>
                 <div class="card-body p-0">
                     @foreach($jug->executions as $exec)
-                    @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') ? 'success' : (str_contains($sl,'cours') ? 'warning' : 'secondary'); $textClass = in_array($sc, ['warning', 'secondary']) ? 'text-dark': 'text-white'; @endphp
+                    @php 
+                        $sl = $exec->statut?->statut_execution ?? '—'; 
+                        // Traduction simple des statuts pour l'affichage
+                        $slAr = match(true) {
+                            str_contains($sl, 'Terminé') => 'منتهي',
+                            str_contains($sl, 'cours')   => 'قيد التنفيذ',
+                            default => $sl
+                        };
+                        $sc = str_contains($sl,'Terminé') ? 'success' : (str_contains($sl,'cours') ? 'warning' : 'secondary'); 
+                    @endphp
                     <div class="p-3 {{ !$loop->last ? 'border-bottom' : '' }}">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                             <div>
-                                <div class="fw-semibold font-monospace">{{ $exec->numero_dossier_execution }}</div>
+                                <div class="fw-semibold font-monospace">ملف تنفيذ رقم: {{ $exec->numero_dossier_execution }}</div>
                                 <div class="small text-muted mt-1 d-flex flex-wrap gap-3">
-                                    <span><i class="bi bi-bell me-1"></i>Notifié le <strong>{{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</strong></span>
-                                    <span><i class="bi bi-person me-1"></i>{{ $exec->responsable?->name ?? '—' }}</span>
+                                    <span><i class="bi bi-bell ml-1"></i>تاريخ التبليغ: <strong>{{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</strong></span>
+                                    <span><i class="bi bi-person ml-1"></i>المسؤول: {{ $exec->responsable?->name ?? '—' }}</span>
                                     @if($exec->date_execution)
-                                        <span class="text-success"><i class="bi bi-calendar-check me-1"></i>Exécuté le {{ $exec->date_execution->format('d/m/Y') }}</span>
+                                        <span class="text-success"><i class="bi bi-calendar-check ml-1"></i>تم التنفيذ في {{ $exec->date_execution->format('d/m/Y') }}</span>
                                     @endif
                                 </div>
                             </div>
                             <div class="d-flex gap-2 align-items-center">
-                                <span class="badge bg-{{ $sc }} {{ in_array($sc, ['warning','secondary']) ? 'text-dark' : 'text-white' }}">
-                                    {{ $sl }}
+                                <span class="badge bg-{{ $sc }} {{ in_array($sc, ['warning']) ? 'text-dark' : 'text-white' }}">
+                                    {{ $slAr }}
                                 </span>                                
                                 <a href="{{ route('executions.show', $exec) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                                 <a href="{{ route('executions.edit', $exec) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
@@ -1148,18 +1238,18 @@
             </div>
         @endforeach
         @endif
-    </div>{{-- /tab-executions --}}
+    </div>
 
 
     {{-- ══════════════════════════════════════════
-         ONGLET 6 : DOCUMENTS
+        ONGLET 6 : DOCUMENTS (الوثائق)
     ══════════════════════════════════════════ --}}
-    <div class="tab-pane fade" id="tab-documents">
+    <div class="tab-pane fade" id="tab-documents" dir="rtl">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-paperclip me-2 text-primary"></i>Documents</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-paperclip ml-2 text-primary"></i>الوثائق والمرفقات</h6>
             @can('update', $dossier)
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterDocument">
-                <i class="bi bi-upload me-1"></i>Joindre un document
+                <i class="bi bi-upload ml-1"></i>إرفاق وثيقة
             </button>
             @endcan
         </div>
@@ -1167,7 +1257,7 @@
         @if($dossier->documents->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-file-earmark fs-1 d-block mb-2 opacity-25"></i>
-                Aucun document joint à ce dossier.
+                لا توجد وثائق مرفقة بهذا الملف.
             </div>
         @else
         <div class="row g-3">
@@ -1187,19 +1277,19 @@
                     <div class="card-body d-flex flex-column align-items-center text-center py-4">
                         <i class="bi {{ $icon }} fs-1 mb-2"></i>
                         <div class="small fw-semibold text-truncate w-100" title="{{ $doc->titre_document }}">
-                            {{ $doc->titre_document ?? 'Document' }}
+                            {{ $doc->titre_document ?? 'وثيقة' }}
                         </div>
                         @if($doc->typeDocument)
                             <span class="badge bg-light text-secondary border small mt-1">{{ $doc->typeDocument->type_document }}</span>
                         @endif
-                        <div class="text-muted" style="font-size:.7rem">{{ $doc->date_depot?->format('d/m/Y') ?? '—' }}</div>
+                        <div class="text-muted" style="font-size:.7rem">تاريخ الرفع: {{ $doc->date_depot?->format('d/m/Y') ?? '—' }}</div>
                     </div>
                     <div class="card-footer bg-white border-top d-flex gap-1 justify-content-center py-2">
                         <a href="{{ route('documents.download', [$dossier, $doc]) }}" class="btn btn-sm btn-outline-primary flex-fill">
                             <i class="bi bi-download"></i>
                         </a>
                         @can('update', $dossier)
-                        <form action="{{ route('documents.destroy', [$dossier, $doc]) }}" method="POST" onsubmit="return confirm('Supprimer ce document ?')">
+                        <form action="{{ route('documents.destroy', [$dossier, $doc]) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </form>
@@ -1210,7 +1300,7 @@
             @endforeach
         </div>
         @endif
-    </div>{{-- /tab-documents --}}
+    </div>
 
 </div>{{-- /tab-content --}}
 
@@ -1218,32 +1308,31 @@
 {{-- ══════════════════════════════════════════════
      MODALS
 ══════════════════════════════════════════════ --}}
-
-{{-- Modal : Ajouter une partie ──────────────────────── --}}
-<div class="modal fade" id="modalAjouterPartie" tabindex="-1">
+{{-- Modal : Ajouter une partie (إضافة طرف) ──────────────────────── --}}
+<div class="modal fade" id="modalAjouterPartie" tabindex="-1" dir="rtl">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-person-plus me-2 text-primary"></i>Ajouter une partie</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-person-plus ml-2 text-primary"></i>إضافة طرف جديد</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 {{-- Recherche AJAX --}}
                 <div class="mb-3 p-3 rounded-3 border bg-light">
                     <label class="form-label fw-semibold small text-muted text-uppercase mb-2" style="letter-spacing:.05em">
-                        <i class="bi bi-search me-1"></i>Rechercher une partie existante
+                        <i class="bi bi-search ml-1"></i>البحث عن طرف موجود مسبقاً
                     </label>
                     <div class="input-group">
                         <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="recherchePartie" class="form-control" placeholder="Identifiant (CIN / RC) ou nom…" autocomplete="off">
+                        <input type="text" id="recherchePartie" class="form-control" placeholder="المعرف (بطاقة التعريف / السجل التجاري) أو الاسم…" autocomplete="off">
                         <button class="btn btn-outline-secondary" type="button" id="btnNouvellePartie">
-                            <i class="bi bi-plus-lg me-1"></i>Nouvelle
+                            <i class="bi bi-plus-lg ml-1"></i>طرف جديد
                         </button>
                     </div>
                     <div id="resultatRecherche" class="list-group mt-1 shadow-sm" style="display:none;max-height:220px;overflow-y:auto;position:relative;z-index:1060"></div>
                     <div id="partieSelectionnee" class="alert alert-success py-2 px-3 mt-2 d-none small mb-0">
-                        <i class="bi bi-check-circle me-1"></i>Partie sélectionnée : <strong id="partieSelectionneeNom"></strong>
-                        <a href="#" id="btnDeselectionner" class="ms-2 text-danger small">(changer)</a>
+                        <i class="bi bi-check-circle ml-1"></i>الطرف المختار: <strong id="partieSelectionneeNom"></strong>
+                        <a href="#" id="btnDeselectionner" class="mr-2 text-danger small">(تغيير)</a>
                     </div>
                 </div>
 
@@ -1252,37 +1341,37 @@
                 <input type="hidden" name="partie_id" id="hidden_partie_id">
                 <div class="row g-3">
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Identifiant unique <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">المعرف الوحيد (CIN / RC) <span class="text-danger">*</span></label>
                         <input type="text" name="identifiant_unique" id="field_identifiant" class="form-control" required>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Nom / Dénomination <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">الاسم / التسمية الاجتماعية <span class="text-danger">*</span></label>
                         <input type="text" name="nom_partie" id="field_nom" class="form-control" required>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label fw-semibold small">Type de personne</label>
+                        <label class="form-label fw-semibold small">نوع الشخص</label>
                         <select name="type_personne" id="field_type_personne" class="form-select">
-                            <option value="Physique">Physique</option>
-                            <option value="Morale">Morale</option>
+                            <option value="Physique">ذاتي</option>
+                            <option value="Morale">معنوي</option>
                         </select>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label fw-semibold small">Téléphone</label>
-                        <input type="tel" name="telephone" id="field_telephone" class="form-control" pattern="^(\+212|00212|0)(5|6|7)[0-9]{8}$">
+                        <label class="form-label fw-semibold small">الهاتف</label>
+                        <input type="tel" name="telephone" id="field_telephone" class="form-control" dir="ltr" placeholder="06XXXXXXXX">
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label fw-semibold small">Email</label>
-                        <input type="email" name="email" id="field_email" class="form-control">
+                        <label class="form-label fw-semibold small">البريد الإلكتروني</label>
+                        <input type="email" name="email" id="field_email" class="form-control" dir="ltr">
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Adresse</label>
+                        <label class="form-label fw-semibold small">العنوان</label>
                         <textarea name="adresse" id="field_adresse" class="form-control" rows="2"></textarea>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Avocat</label>
+                        <label class="form-label fw-semibold small">المحامي</label>
                         <div id="bloc_avocat_nouveau">
                             <select name="id_avocat" id="field_avocat_nouveau_select" class="form-select">
-                                <option value="">— Aucun avocat —</option>
+                                <option value="">— بدون محامي —</option>
                                 @foreach($avocats as $av)
                                     <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
                                 @endforeach
@@ -1291,11 +1380,11 @@
                         <div id="bloc_avocat_existant" class="d-none">
                             <div class="input-group">
                                 <input type="text" id="field_avocat_display" class="form-control bg-light text-muted" readonly>
-                                <button type="button" class="btn btn-outline-secondary" id="btnModifierAvocat"><i class="bi bi-pencil me-1"></i>Modifier</button>
+                                <button type="button" class="btn btn-outline-secondary" id="btnModifierAvocat"><i class="bi bi-pencil ml-1"></i>تعديل</button>
                             </div>
                             <div id="bloc_avocat_modif" class="d-none mt-2">
                                 <select name="id_avocat" id="field_avocat_modif_select" class="form-select" disabled>
-                                    <option value="">— Aucun avocat —</option>
+                                    <option value="">— بدون محامي —</option>
                                     @foreach($avocats as $av)
                                         <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
                                     @endforeach
@@ -1304,46 +1393,46 @@
                         </div>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Rôle dans le dossier <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">الصفة في الملف <span class="text-danger">*</span></label>
                         <select name="id_type_partie" class="form-select" required>
-                            <option value="">— Sélectionner —</option>
+                            <option value="">— اختر الصفة —</option>
                             @foreach($typesPartie as $tp)
                                 <option value="{{ $tp->id }}">{{ $tp->type_partie }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Date d'entrée <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">تاريخ الدخول <span class="text-danger">*</span></label>
                         <input type="date" name="date_entree" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                 </div>
                 </form>
             </div>
             <div class="modal-footer border-top">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formAjouterPartie" class="btn btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Ajouter au dossier
+                    <i class="bi bi-check-lg ml-1"></i>إضافة إلى الملف
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Modals modifier chaque partie ─────────────────── --}}
+{{-- Modals modifier chaque partie (تعديل الأطراف) ─────────────────── --}}
 @foreach($dossierParties as $dp)
-<div class="modal fade" id="modalEditPartie{{ $dp->id }}" tabindex="-1">
+<div class="modal fade" id="modalEditPartie{{ $dp->id }}" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil me-2 text-warning"></i>Modifier : {{ $dp->partie->nom_partie ?? '—' }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil ml-2 text-warning"></i>تعديل: {{ $dp->partie->nom_partie ?? '—' }}</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formEditPartie{{ $dp->id }}" action="{{ route('dossiers.parties.update', [$dossier, $dp]) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Rôle dans le dossier <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">الصفة في الملف <span class="text-danger">*</span></label>
                         <select name="id_type_partie" class="form-select" required>
                             @foreach($typesPartie as $tp)
                                 <option value="{{ $tp->id }}" @selected($dp->id_type_partie == $tp->id)>{{ $tp->type_partie }}</option>
@@ -1351,16 +1440,16 @@
                         </select>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Date d'entrée</label>
+                        <label class="form-label fw-semibold small">تاريخ الدخول</label>
                         <input type="date" name="date_entree" class="form-control" value="{{ $dp->date_entree?->format('Y-m-d') }}">
                     </div>
                 </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formEditPartie{{ $dp->id }}" class="btn btn-warning">
-                    <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    <i class="bi bi-check-lg ml-1"></i>حفظ التغييرات
                 </button>
             </div>
         </div>
@@ -1368,81 +1457,81 @@
 </div>
 @endforeach
 
-{{-- Modal : Assigner un tribunal (cascade région > province > degré > tribunal) --}}
-<div class="modal fade" id="modalAjouterTribunal" tabindex="-1">
+{{-- Modal : Assigner un tribunal (تعيين محكمة) --}}
+<div class="modal fade" id="modalAjouterTribunal" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-bank me-2 text-primary"></i>Assigner un tribunal</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-bank ml-2 text-primary"></i>تعيين محكمة للملف</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formAjouterTribunal" action="{{ route('dossiers.tribunaux.store', $dossier) }}" method="POST">
                 @csrf
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Région <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">الجهة <span class="text-danger">*</span></label>
                         <select id="modal_region" class="form-select">
-                            <option value="">— Sélectionner —</option>
+                            <option value="">— اختر الجهة —</option>
                             @foreach($regions as $region)
                                 <option value="{{ $region->id }}">{{ $region->region }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Province <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">الإقليم / العمالة <span class="text-danger">*</span></label>
                         <select id="modal_province" class="form-select" disabled>
-                            <option value="">— Sélectionner d'abord une région —</option>
+                            <option value="">— اختر الجهة أولاً —</option>
                         </select>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Degré <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">درجة التقاضي <span class="text-danger">*</span></label>
                         <select id="modal_degre" name="id_degre" class="form-select" disabled required>
-                            <option value="">— Sélectionner d'abord une province —</option>
+                            <option value="">— اختر الإقليم أولاً —</option>
                         </select>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Tribunal <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">المحكمة <span class="text-danger">*</span></label>
                         <select id="modal_tribunal" name="id_tribunal" class="form-select" disabled required>
-                            <option value="">— Sélectionner d'abord un degré —</option>
+                            <option value="">— اختر الدرجة أولاً —</option>
                         </select>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Date de saisine <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">تاريخ الإحالة <span class="text-danger">*</span></label>
                         <input type="date" name="date_debut" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Date de fin</label>
+                        <label class="form-label fw-semibold small">تاريخ الانتهاء</label>
                         <input type="date" name="date_fin" class="form-control">
                     </div>
                 </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formAjouterTribunal" class="btn btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Assigner
+                    <i class="bi bi-check-lg ml-1"></i>تعيين المحكمة
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Modals modifier chaque tribunal ──────────────── --}}
+{{-- Modals modifier chaque tribunal (تعديل بيانات المحكمة) ──────────────── --}}
 @foreach($dossier->dossierTribunaux as $dt)
-<div class="modal fade" id="modalEditTribunal{{ $dt->id }}" tabindex="-1">
+<div class="modal fade" id="modalEditTribunal{{ $dt->id }}" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil me-2 text-warning"></i>{{ $dt->tribunal->nom_tribunal ?? '—' }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil ml-2 text-warning"></i>{{ $dt->tribunal->nom_tribunal ?? '—' }}</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formEditTribunal{{ $dt->id }}" action="{{ route('dossiers.tribunaux.update', [$dossier, $dt]) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label fw-semibold small">Degré</label>
+                        <label class="form-label fw-semibold small">درجة التقاضي</label>
                         <select name="id_degre" class="form-select" required>
                             @foreach($degresJuridiction as $d)
                                 <option value="{{ $d->id }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
@@ -1450,20 +1539,20 @@
                         </select>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Date de saisine</label>
+                        <label class="form-label fw-semibold small">تاريخ الإحالة</label>
                         <input type="date" name="date_debut" class="form-control" value="{{ $dt->date_debut?->format('Y-m-d') }}" required>
                     </div>
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">Date de fin</label>
+                        <label class="form-label fw-semibold small">تاريخ الانتهاء</label>
                         <input type="date" name="date_fin" class="form-control" value="{{ $dt->date_fin?->format('Y-m-d') }}">
                     </div>
                 </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formEditTribunal{{ $dt->id }}" class="btn btn-warning">
-                    <i class="bi bi-check-lg me-1"></i>Enregistrer
+                    <i class="bi bi-check-lg ml-1"></i>حفظ التغييرات
                 </button>
             </div>
         </div>
@@ -1471,88 +1560,96 @@
 </div>
 @endforeach
 
-{{-- Modal : Ajouter une finance ─────────────────── --}}
-<div class="modal fade" id="modalAjouterFinance" tabindex="-1">
+{{-- Modal : Ajouter une finance (إضافة بيانات مالية) ─────────────────── --}}
+<div class="modal fade" id="modalAjouterFinance" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-cash-stack me-2 text-success"></i>Ajouter une finance</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-cash-stack ml-2 text-success"></i>إضافة بيانات مالية</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formAjouterFinance" action="{{ route('finances.store') }}" method="POST">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Jugement <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold small">الحكم المتعلق به <span class="text-danger">*</span></label>
                     <select name="id_jugement" class="form-select" required>
-                        <option value="">— Sélectionner —</option>
+                        <option value="">— اختر الحكم —</option>
                         @foreach($instances->flatMap->jugements->filter(fn($j) => !$j->finance) as $jSF)
                             <option value="{{ $jSF->id }}">
-                                Jugement du {{ $jSF->date_jugement?->format('d/m/Y') }}
+                                حكم بتاريخ {{ $jSF->date_jugement?->format('d/m/Y') }}
                                 — {{ $jSF->dossierTribunal?->degre?->degre_juridiction ?? '—' }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Montant condamné <span class="text-danger">*</span></label>
-                    <input type="number" step="0.01" min="0" name="montant_condamne" class="form-control" required>
+                    <label class="form-label fw-semibold small">المبلغ المحكوم به <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0" name="montant_condamne" class="form-control" required>
+                        <span class="input-group-text">درهم</span>
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Montant payé</label>
-                    <input type="number" step="0.01" min="0" name="montant_paye" class="form-control">
+                    <label class="form-label fw-semibold small">المبلغ المؤدى</label>
+                    <div class="input-group">
+                        <input type="number" step="0.01" min="0" name="montant_paye" class="form-control">
+                        <span class="input-group-text">درهم</span>
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Date de paiement</label>
+                    <label class="form-label fw-semibold small">تاريخ الأداء</label>
                     <input type="date" name="date_paiement" class="form-control">
                 </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="submit" form="formAjouterFinance" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" form="formAjouterFinance" class="btn btn-success">
+                    <i class="bi bi-check-lg ml-1"></i>حفظ البيانات
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Modal : Joindre un document ─────────────────── --}}
-<div class="modal fade" id="modalAjouterDocument" tabindex="-1">
+{{-- Modal : Joindre un document (إرفاق وثيقة) ─────────────────── --}}
+<div class="modal fade" id="modalAjouterDocument" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-upload me-2 text-primary"></i>Joindre un document</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-semibold"><i class="bi bi-upload ml-2 text-primary"></i>إرفاق وثيقة جديدة</h5>
+                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formAjouterDocument" action="{{ route('documents.store', $dossier) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Fichier <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold small">الملف <span class="text-danger">*</span></label>
                     <input type="file" name="fichier" class="form-control" required>
-                    <div class="form-text">PDF, Word, Excel, images — max 10 Mo</div>
+                    <div class="form-text small text-muted">الصيغ المقبولة: PDF, Word, Excel, صور — الحد الأقصى 10 ميجا</div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Titre <span class="text-danger">*</span></label>
-                    <input type="text" name="titre_document" class="form-control" required>
+                    <label class="form-label fw-semibold small">عنوان الوثيقة <span class="text-danger">*</span></label>
+                    <input type="text" name="titre_document" class="form-control" placeholder="مثال: نسخة من الحكم، عريضة..." required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Type de document <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold small">نوع الوثيقة <span class="text-danger">*</span></label>
                     <select name="id_type_document" class="form-select" required>
-                        <option value="">— Sélectionner —</option>
+                        <option value="">— اختر النوع —</option>
                         @foreach($typesDocuments as $type)
                             <option value="{{ $type->id }}">{{ $type->type_document }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Date de dépôt <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold small">تاريخ الإيداع <span class="text-danger">*</span></label>
                     <input type="date" name="date_depot" class="form-control" value="{{ date('Y-m-d') }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Partie (optionnel)</label>
+                    <label class="form-label fw-semibold small">الطرف المعني (اختياري)</label>
                     <select name="id_partie" class="form-select">
-                        <option value="">— Aucune —</option>
+                        <option value="">— غير محدد —</option>
                         @foreach($parties as $partie)
                             <option value="{{ $partie->id }}">{{ $partie->nom_partie }}</option>
                         @endforeach
@@ -1561,8 +1658,10 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="submit" form="formAjouterDocument" class="btn btn-primary"><i class="bi bi-upload me-1"></i>Joindre</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" form="formAjouterDocument" class="btn btn-primary">
+                    <i class="bi bi-upload ml-1"></i>رفع الوثيقة
+                </button>
             </div>
         </div>
     </div>
@@ -1581,7 +1680,7 @@
     }
 })();
 
-/* ── Recherche AJAX parties ───────────────────── */
+/* ── Recherche AJAX parties (البحث عن الأطراف) ───────────────────── */
 (function () {
     const input       = document.getElementById('recherchePartie');
     const dropdown    = document.getElementById('resultatRecherche');
@@ -1622,7 +1721,7 @@
     function showAvocatExistant(nom, id) {
         blocExistant?.classList.remove('d-none');
         blocNouveau?.classList.add('d-none');
-        if (avocatDisplay) avocatDisplay.value = nom || 'Aucun avocat';
+        if (avocatDisplay) avocatDisplay.value = nom || 'بدون محامي';
         if (avocatNvx) { avocatNvx.disabled = true; avocatNvx.name = ''; }
         if (avocatModif) { avocatModif.disabled = true; avocatModif.name = ''; }
         if (id && avocatModif) Array.from(avocatModif.options).forEach(o => o.selected = (o.value == id));
@@ -1668,7 +1767,7 @@
         parties.forEach(p => {
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'list-group-item list-group-item-action py-2 px-3';
+            btn.className = 'list-group-item list-group-item-action py-2 px-3 text-end'; // text-end pour RTL
             btn.innerHTML = `<div class="fw-semibold small">${p.nom_partie ?? ''}</div>
                 <div class="text-muted" style="font-size:.75rem"><span class="font-monospace">${p.identifiant_unique ?? ''}</span>${p.avocat_nom ? ' · ' + p.avocat_nom : ''}</div>`;
             btn.addEventListener('click', () => selectPartie(p));
@@ -1676,13 +1775,14 @@
         });
         const creer = document.createElement('button');
         creer.type = 'button';
-        creer.className = 'list-group-item list-group-item-action py-2 px-3 text-primary';
-        creer.innerHTML = `<i class="bi bi-plus-circle me-1"></i>Créer « ${query} »`;
+        creer.className = 'list-group-item list-group-item-action py-2 px-3 text-primary text-end';
+        creer.innerHTML = `<i class="bi bi-plus-circle ml-1"></i>إنشاء « ${query} »`;
         creer.addEventListener('click', () => { deselect(); if(F.nom) F.nom.value = query; closeDropdown(); if(input) input.value = ''; });
+        
         if (!parties.length) {
             const info = document.createElement('div');
-            info.className = 'list-group-item py-2 px-3 text-muted small';
-            info.textContent = 'Aucune partie trouvée.';
+            info.className = 'list-group-item py-2 px-3 text-muted small text-end';
+            info.textContent = 'لم يتم العثور على أي طرف.';
             dropdown.appendChild(info);
         }
         dropdown.appendChild(creer);
@@ -1715,7 +1815,7 @@
         blocModif?.classList.toggle('d-none');
         const visible = !blocModif?.classList.contains('d-none');
         if (avocatModif) { avocatModif.disabled = !visible; avocatModif.name = visible ? 'id_avocat' : ''; }
-        if (btnModifier) btnModifier.innerHTML = visible ? '<i class="bi bi-x me-1"></i>Annuler' : '<i class="bi bi-pencil me-1"></i>Modifier';
+        if (btnModifier) btnModifier.innerHTML = visible ? '<i class="bi bi-x ml-1"></i>إلغاء' : '<i class="bi bi-pencil ml-1"></i>تعديل';
     });
 
     document.getElementById('modalAjouterPartie')?.addEventListener('show.bs.modal', () => {
@@ -1725,7 +1825,7 @@
     showAvocatNouveau();
 })();
 
-/* ── Cascade Région > Province > Degré > Tribunal ─ */
+/* ── Cascade Région > Province > Degré > Tribunal (التسلسل الإداري) ─ */
 (function () {
     const selRegion   = document.getElementById('modal_region');
     const selProvince = document.getElementById('modal_province');
@@ -1735,47 +1835,47 @@
     function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; }
 
     selRegion?.addEventListener('change', async function () {
-        reset(selProvince, '— Chargement… —');
-        reset(selDegre, '— Sélectionner d\'abord une province —');
-        reset(selTribunal, '— Sélectionner d\'abord un degré —');
-        if (!this.value) { reset(selProvince, '— Sélectionner d\'abord une région —'); return; }
+        reset(selProvince, '— جاري التحميل... —');
+        reset(selDegre, '— اختر الإقليم أولاً —');
+        reset(selTribunal, '— اختر الدرجة أولاً —');
+        if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
         try {
             const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
-            selProvince.innerHTML = '<option value="">— Sélectionner une province —</option>';
+            selProvince.innerHTML = '<option value="">— اختر الإقليم —</option>';
             data.forEach(p => selProvince.innerHTML += `<option value="${p.id}">${p.province}</option>`);
             selProvince.disabled = false;
-        } catch { reset(selProvince, '— Erreur —'); }
+        } catch { reset(selProvince, '— خطأ —'); }
     });
 
     selProvince?.addEventListener('change', async function () {
-        reset(selDegre, '— Chargement… —');
-        reset(selTribunal, '— Sélectionner d\'abord un degré —');
-        if (!this.value) { reset(selDegre, '— Sélectionner d\'abord une province —'); return; }
+        reset(selDegre, '— جاري التحميل... —');
+        reset(selTribunal, '— اختر الدرجة أولاً —');
+        if (!this.value) { reset(selDegre, '— اختر الإقليم أولاً —'); return; }
         try {
             const data = await (await fetch(`/api/provinces/${this.value}/degres`)).json();
-            selDegre.innerHTML = '<option value="">— Sélectionner un degré —</option>';
+            selDegre.innerHTML = '<option value="">— اختر درجة التقاضي —</option>';
             data.forEach(d => selDegre.innerHTML += `<option value="${d.id}">${d.degre_juridiction}</option>`);
             selDegre.disabled = false;
-        } catch { reset(selDegre, '— Erreur —'); }
+        } catch { reset(selDegre, '— خطأ —'); }
     });
 
     selDegre?.addEventListener('change', async function () {
-        reset(selTribunal, '— Chargement… —');
-        if (!this.value) { reset(selTribunal, '— Sélectionner d\'abord un degré —'); return; }
+        reset(selTribunal, '— جاري التحميل... —');
+        if (!this.value) { reset(selTribunal, '— اختر درجة التقاضي أولاً —'); return; }
         try {
             const data = await (await fetch(`/api/provinces/${selProvince.value}/degres/${this.value}/tribunaux`)).json();
-            selTribunal.innerHTML = '<option value="">— Sélectionner un tribunal —</option>';
-            if (!data.length) { selTribunal.innerHTML = '<option value="">— Aucun tribunal disponible —</option>'; return; }
+            selTribunal.innerHTML = '<option value="">— اختر المحكمة —</option>';
+            if (!data.length) { selTribunal.innerHTML = '<option value="">— لا توجد محاكم متاحة —</option>'; return; }
             data.forEach(t => selTribunal.innerHTML += `<option value="${t.id}">${t.nom_tribunal}</option>`);
             selTribunal.disabled = false;
-        } catch { reset(selTribunal, '— Erreur —'); }
+        } catch { reset(selTribunal, '— خطأ —'); }
     });
 
     document.getElementById('modalAjouterTribunal')?.addEventListener('show.bs.modal', () => {
         if(selRegion) selRegion.value = '';
-        reset(selProvince, '— Sélectionner d\'abord une région —');
-        reset(selDegre, '— Sélectionner d\'abord une province —');
-        reset(selTribunal, '— Sélectionner d\'abord un degré —');
+        reset(selProvince, '— اختر الجهة أولاً —');
+        reset(selDegre, '— اختر الإقليم أولاً —');
+        reset(selTribunal, '— اختر درجة التقاضي أولاً —');
     });
 })();
 </script>

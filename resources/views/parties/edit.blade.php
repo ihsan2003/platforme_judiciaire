@@ -139,6 +139,19 @@
                         @enderror
                     </div>
 
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">Avocat</label>
+                        <select name="id_avocat" class="form-select">
+                            <option value="">— Aucun avocat —</option>
+                            @foreach($avocats as $av)
+                                <option value="{{ $av->id }}"
+                                    @selected(old('id_avocat', $partie->id_avocat) == $av->id)>
+                                    {{ $av->nom_avocat }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                 </div>
             </div>
         </div>

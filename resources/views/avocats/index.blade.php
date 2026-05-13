@@ -32,7 +32,7 @@
                 </div>
                 <div>
                     <div class="fs-2 fw-bold lh-1">
-                        {{ \App\Models\Avocat::has('dossierParties')->count() }}
+                        {{ \App\Models\Avocat::has('Parties')->count() }}
                     </div>
                     <div class="text-muted small">Avec dossiers actifs</div>
                 </div>
@@ -153,7 +153,7 @@
                         @endif
                     </td>
                     <td>
-                        @php $nb = $avocat->dossierParties()->count(); @endphp
+                        @php $nb = $avocat->dossiers()->count(); @endphp
                         @if($nb > 0)
                             <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-folder2 me-1"></i>{{ $nb }} dossier{{ $nb > 1 ? 's' : '' }}

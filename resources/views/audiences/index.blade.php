@@ -1,16 +1,16 @@
 {{-- resources/views/audiences/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Audiences')
+@section('title', 'الجلسات')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item active">Audiences</li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item active">الجلسات</li>
 @endsection
 
 @section('content')
 
-{{-- ══ STATS RAPIDES ══ --}}
+{{-- ══ إحصائيات سريعة ══ --}}
 <div class="row g-3 mb-4">
     <div class="col-sm-4">
         <div class="card border-0 shadow-sm h-100">
@@ -20,7 +20,7 @@
                 </div>
                 <div>
                     <div class="fs-2 fw-bold lh-1">{{ $stats['aujourd_hui'] }}</div>
-                    <div class="text-muted small">Aujourd'hui</div>
+                    <div class="text-muted small">جلسات اليوم</div>
                 </div>
             </div>
         </div>
@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <div class="fs-2 fw-bold lh-1">{{ $stats['cette_semaine'] }}</div>
-                    <div class="text-muted small">Cette semaine</div>
+                    <div class="text-muted small">هذا الأسبوع</div>
                 </div>
             </div>
         </div>
@@ -46,21 +46,21 @@
                 </div>
                 <div>
                     <div class="fs-2 fw-bold lh-1">{{ $stats['passees_sans_suite'] }}</div>
-                    <div class="text-muted small">Sans résultat</div>
+                    <div class="text-muted small">بدون إجراءات</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{{-- ══ FILTRES ══ --}}
+{{-- ══ الفلاتر ══ --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
             <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Juge</label>
+                <label class="form-label small text-muted fw-semibold">القاضي</label>
                 <select name="juge" class="form-select form-select-sm">
-                    <option value="">Tous les juges</option>
+                    <option value="">جميع القضاة</option>
                     @foreach($juges as $juge)
                         <option value="{{ $juge->id }}" @selected(request('juge') == $juge->id)>
                             {{ $juge->nom_complet }}
@@ -69,9 +69,9 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Type</label>
+                <label class="form-label small text-muted fw-semibold">نوع الجلسة</label>
                 <select name="type" class="form-select form-select-sm">
-                    <option value="">Tous les types</option>
+                    <option value="">جميع الأنواع</option>
                     @foreach($typesAudience as $type)
                         <option value="{{ $type->id }}" @selected(request('type') == $type->id)>
                             {{ $type->type_audience }}
@@ -80,61 +80,61 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">Période</label>
+                <label class="form-label small text-muted fw-semibold">الفترة</label>
                 <select name="periode" class="form-select form-select-sm">
-                    <option value="">Toutes</option>
-                    <option value="today"   @selected(request('periode') == 'today')>Aujourd'hui</option>
-                    <option value="semaine" @selected(request('periode') == 'semaine')>7 prochains jours</option>
-                    <option value="futures" @selected(request('periode') == 'futures')>À venir</option>
-                    <option value="passees" @selected(request('periode') == 'passees')>Passées</option>
+                    <option value="">الكل</option>
+                    <option value="today"   @selected(request('periode') == 'today')>اليوم</option>
+                    <option value="semaine" @selected(request('periode') == 'semaine')>الـ 7 أيام القادمة</option>
+                    <option value="futures" @selected(request('periode') == 'futures')>القادمة</option>
+                    <option value="passees" @selected(request('periode') == 'passees')>السابقة</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">
                 <button class="btn btn-primary btn-sm flex-fill">
-                    <i class="bi bi-funnel-fill me-1"></i>Filtrer
+                    <i class="bi bi-funnel-fill ml-1"></i>تصفية
                 </button>
                 <a href="{{ route('audiences.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-x-lg"></i>
+                    <i class="bi bi-arrow-clockwise"></i>
                 </a>
             </div>
         </form>
     </div>
 </div>
 
-{{-- ══ TABLE ══ --}}
+{{-- ══ الجدول ══ --}}
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
         <h5 class="mb-0 fw-semibold">
-            <i class="bi bi-gavel me-2 text-primary"></i>Audiences
-            <span class="badge bg-primary ms-2">{{ $audiences->total() }}</span>
+            <i class="bi bi-gavel ml-2 text-primary"></i>مدرج الجلسات
+            <span class="badge bg-primary mr-2">{{ $audiences->total() }}</span>
         </h5>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0 text-end">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3 text-muted small fw-semibold">Date</th>
-                    <th class="text-muted small fw-semibold">Dossier</th>
-                    <th class="text-muted small fw-semibold">Tribunal</th>
-                    <th class="text-muted small fw-semibold">Type</th>
-                    <th class="text-muted small fw-semibold">Juge</th>
-                    <th class="text-muted small fw-semibold">Présences</th>
-                    <th class="text-muted small fw-semibold">Prochaine audience</th>
-                    <th class="text-end pe-3 text-muted small fw-semibold">Actions</th>
+                    <th class="pr-3 text-muted small fw-semibold">التاريخ</th>
+                    <th class="text-muted small fw-semibold">رقم الملف</th>
+                    <th class="text-muted small fw-semibold">المحكمة</th>
+                    <th class="text-muted small fw-semibold">النوع</th>
+                    <th class="text-muted small fw-semibold">القاضي</th>
+                    <th class="text-muted small fw-semibold">الحضور</th>
+                    <th class="text-muted small fw-semibold">الجلسة القادمة</th>
+                    <th class="text-start pl-3 text-muted small fw-semibold">إجراءات</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($audiences as $audience)
                 <tr class="{{ $audience->est_today ? 'table-warning' : '' }}">
-                    <td class="ps-3">
-                        <span class="fw-semibold">{{ $audience->date_audience->format('d/m/Y') }}</span>
+                    <td class="pr-3">
+                        <span class="fw-semibold">{{ $audience->date_audience->format('Y/m/d') }}</span>
                         @if($audience->est_today)
-                            <span class="badge bg-warning text-dark ms-1">Aujourd'hui</span>
+                            <span class="badge bg-warning text-dark mr-1">اليوم</span>
                         @elseif($audience->est_passee)
-                            <span class="badge bg-secondary ms-1">Passée</span>
+                            <span class="badge bg-secondary mr-1">سابقة</span>
                         @else
-                            <span class="badge bg-success ms-1">À venir</span>
+                            <span class="badge bg-success mr-1">قادمة</span>
                         @endif
                     </td>
                     <td>
@@ -151,7 +151,7 @@
                         {{ $audience->dossierTribunal?->tribunal?->nom_tribunal ?? '—' }}
                     </td>
                     <td>
-                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-dark border border-info border-opacity-25">
                             {{ $audience->typeAudience?->type_audience ?? '—' }}
                         </span>
                     </td>
@@ -159,32 +159,32 @@
                         {{ $audience->juge?->nom_complet ?? '—' }}
                     </td>
                     <td>
-                        <span class="me-2" title="Demandeur">
+                        <span class="ml-2" title="المدعي">
                             <i class="bi bi-person-fill {{ $audience->presence_demandeur ? 'text-success' : 'text-danger opacity-25' }}"></i>
                         </span>
-                        <span title="Défendeur">
+                        <span title="المدعى عليه">
                             <i class="bi bi-person-fill {{ $audience->presence_defendeur ? 'text-success' : 'text-danger opacity-25' }}"></i>
                         </span>
                     </td>
                     <td class="text-muted small">
-                        {{ $audience->date_prochaine_audience?->format('d/m/Y') ?? '—' }}
+                        {{ $audience->date_prochaine_audience?->format('Y/m/d') ?? '—' }}
                     </td>
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="text-start pl-3">
+                        <div class="d-flex gap-1 justify-content-start">
                             <a href="{{ route('audiences.show', $audience) }}"
-                               class="btn btn-sm btn-outline-primary" title="Voir">
+                               class="btn btn-sm btn-outline-primary" title="عرض">
                                 <i class="bi bi-eye"></i>
                             </a>
                             <a href="{{ route('audiences.edit', $audience) }}"
-                               class="btn btn-sm btn-outline-warning" title="Modifier">
+                               class="btn btn-sm btn-outline-warning" title="تعديل">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <x-modal-delete
                                 :action="route('audiences.destroy', $audience)"
                                 modal-id="deleteAudience{{ $audience->id }}"
-                                title="Supprimer l'audience"
+                                title="حذف الجلسة"
                                 trigger-label=""
-                                :description="'Audience du ' . $audience->date_audience->format('d/m/Y')"
+                                :description="'جلسة بتاريخ ' . $audience->date_audience->format('Y/m/d')"
                             />
                         </div>
                     </td>
@@ -193,9 +193,9 @@
                 <tr>
                     <td colspan="8" class="text-center py-5 text-muted">
                         <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
-                        Aucune audience trouvée
+                        لم يتم العثور على أي جلسات
                         @if(request()->hasAny(['juge','type','periode']))
-                            — <a href="{{ route('audiences.index') }}">Réinitialiser les filtres</a>
+                            — <a href="{{ route('audiences.index') }}">إعادة ضبط الفلاتر</a>
                         @endif
                     </td>
                 </tr>
@@ -207,8 +207,8 @@
     @if($audiences->hasPages())
     <div class="card-footer bg-white d-flex justify-content-between align-items-center">
         <span class="text-muted small">
-            Affichage {{ $audiences->firstItem() }}–{{ $audiences->lastItem() }}
-            sur {{ $audiences->total() }} audiences
+            عرض {{ $audiences->firstItem() }} إلى {{ $audiences->lastItem() }}
+            من أصل {{ $audiences->total() }} جلسة
         </span>
         {{ $audiences->links() }}
     </div>

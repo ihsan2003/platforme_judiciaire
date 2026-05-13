@@ -1,12 +1,12 @@
 {{-- resources/views/audiences/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Nouvelle audience')
+@section('title', 'جلسة جديدة')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('audiences.index') }}">Audiences</a></li>
-    <li class="breadcrumb-item active">Nouvelle audience</li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('audiences.index') }}">الجلسات</a></li>
+    <li class="breadcrumb-item active">جلسة جديدة</li>
 @endsection
 
 @section('content')
@@ -17,7 +17,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-calendar-plus me-2 text-primary"></i>Créer une audience
+                    <i class="bi bi-calendar-plus me-2 text-primary"></i>إنشاء جلسة
                 </h5>
             </div>
 
@@ -26,8 +26,8 @@
                 @if($dateAudienceParDefaut)
                     <div class="alert alert-info small">
                         <i class="bi bi-info-circle me-2"></i>
-                        La date de cette audience a été proposée automatiquement à partir
-                        de la prochaine audience enregistrée précédemment :
+                        تم اقتراح تاريخ هذه الجلسة تلقائيًا بناءً على
+                        أقرب جلسة مسجلة سابقًا:
                         <strong>{{ \Carbon\Carbon::parse($dateAudienceParDefaut)->format('d/m/Y') }}</strong>
                     </div>
                 @endif
@@ -45,78 +45,81 @@
                 <form method="POST" action="{{ route('audiences.store') }}">
                     @csrf
 
-                    {{-- Dossier / Tribunal --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            Dossier &amp; Tribunal <span class="text-danger">*</span>
-                        </label>
-                        <select name="id_dossier_tribunal"
-                                id="id_dossier_tribunal"
-                                class="form-select @error('id_dossier_tribunal') is-invalid @enderror"
-                                required>
-                            <option value="">— Sélectionner un dossier —</option>
-                            @foreach($dossierTribunaux as $dt)
-                                <option value="{{ $dt->id }}"
-                                        data-tribunal-id="{{ $dt->id_tribunal }}"
-                                        @selected(old('id_dossier_tribunal',
-                                            $dossierTribunaux->count() === 1 ? $dt->id : null) == $dt->id)>
-                                    {{ $dt->dossier?->numero_dossier_interne ?? 'Dossier #'.$dt->id_dossier }}
-                                    — {{ $dt->tribunal?->nom_tribunal ?? 'Tribunal #'.$dt->id_tribunal }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Juge — filtré selon le tribunal sélectionné --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            Juge <span class="text-danger">*</span>
-                        </label>
-
-                        {{-- État initial : tous les juges (fallback si JS désactivé) --}}
-                        <select name="id_juge" id="id_juge"
-                                class="form-select @error('id_juge') is-invalid @enderror"
-                                required>
-                            <option value="">— Sélectionner d'abord un tribunal —</option>
-                            @foreach($juges as $juge)
-                                <option value="{{ $juge->id }}" @selected(old('id_juge') == $juge->id)>
-                                    {{ $juge->grade ? $juge->grade.' ' : '' }}{{ $juge->nom_complet }}
-                                </option>
-                            @endforeach
-                        </select>
-
-                        <div id="juge_hint" class="form-text text-info d-none">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Liste filtrée selon le tribunal sélectionné.
+                    <div class="row g-3 mb-3">
+                        {{-- الملف / المحكمة --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                الملف والمحكمة <span class="text-danger">*</span>
+                            </label>
+                            <select name="id_dossier_tribunal"
+                                    id="id_dossier_tribunal"
+                                    class="form-select @error('id_dossier_tribunal') is-invalid @enderror"
+                                    required>
+                                <option value="">— اختر ملفًا —</option>
+                                @foreach($dossierTribunaux as $dt)
+                                    <option value="{{ $dt->id }}"
+                                            data-tribunal-id="{{ $dt->id_tribunal }}"
+                                            @selected(old('id_dossier_tribunal',
+                                                $dossierTribunaux->count() === 1 ? $dt->id : null) == $dt->id)>
+                                        {{ $dt->dossier?->numero_dossier_interne ?? 'ملف #'.$dt->id_dossier }}
+                                        — {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div id="juge_aucun" class="form-text text-warning d-none">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
-                            Aucun juge enregistré pour ce tribunal.
+                        {{-- القاضي --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                القاضي <span class="text-danger">*</span>
+                            </label>
+
+                            <select name="id_juge" id="id_juge"
+                                    class="form-select @error('id_juge') is-invalid @enderror"
+                                    required>
+                                <option value="">— اختر المحكمة أولاً —</option>
+                                @foreach($juges as $juge)
+                                    <option value="{{ $juge->id }}" @selected(old('id_juge') == $juge->id)>
+                                        {{ $juge->grade ? $juge->grade.' ' : '' }}{{ $juge->nom_complet }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <div id="juge_hint" class="form-text text-info d-none">
+                                <i class="bi bi-info-circle me-1"></i>
+                                القائمة يتم تصفيتها حسب المحكمة المختارة.
+                            </div>
+                            <div id="juge_aucun" class="form-text text-warning d-none">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                لا يوجد قضاة مسجلون لهذه المحكمة.
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Type --}}
-                    <div class="mb-3">
-                        <label for="id_type_audience" class="form-label fw-semibold">
-                            Type d'audience <span class="text-danger">*</span>
-                        </label>
-                        <select name="id_type_audience" id="id_type_audience"
-                                class="form-select @error('id_type_audience') is-invalid @enderror"
-                                required>
-                            <option value="">— Sélectionner —</option>
-                            @foreach($typesAudience as $type)
-                                <option value="{{ $type->id }}" @selected(old('id_type_audience') == $type->id)>
-                                    {{ $type->libelle ?? $type->type_audience }}
-                                </option>
-                            @endforeach
-                        </select>
+
+                    <div class="row g-3 mb-3">
+                        {{-- النوع --}}
+                        <div class="col-md-6">
+                            <label for="id_type_audience" class="form-label fw-semibold">
+                                نوع الجلسة <span class="text-danger">*</span>
+                            </label>
+                            <select name="id_type_audience" id="id_type_audience"
+                                    class="form-select @error('id_type_audience') is-invalid @enderror"
+                                    required>
+                                <option value="">— اختر —</option>
+                                @foreach($typesAudience as $type)
+                                    <option value="{{ $type->id }}" @selected(old('id_type_audience') == $type->id)>
+                                        {{ $type->libelle ?? $type->type_audience }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
-                    {{-- Dates --}}
+                    {{-- التواريخ --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label for="date_audience" class="form-label fw-semibold">
-                                Date de l'audience <span class="text-danger">*</span>
+                                تاريخ الجلسة <span class="text-danger">*</span>
                             </label>
                             <input type="date"
                                    name="date_audience"
@@ -128,7 +131,7 @@
 
                         <div class="col-md-6">
                             <label for="date_prochaine_audience" class="form-label fw-semibold">
-                                Prochaine audience
+                                الجلسة القادمة
                             </label>
                             <input type="date"
                                    name="date_prochaine_audience"
@@ -138,7 +141,7 @@
                         </div>
                     </div>
 
-                    {{-- Présence --}}
+                    {{-- الحضور --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <div class="form-check form-switch">
@@ -148,7 +151,7 @@
                                        value="1"
                                        @checked(old('presence_demandeur'))>
                                 <label class="form-check-label">
-                                    Présence du demandeur
+                                    حضور المدعي
                                 </label>
                             </div>
                         </div>
@@ -161,23 +164,23 @@
                                        value="1"
                                        @checked(old('presence_defendeur'))>
                                 <label class="form-check-label">
-                                    Présence du défendeur
+                                    حضور المدعى عليه
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Résultat --}}
+                    {{-- النتيجة --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Résultat</label>
+                        <label class="form-label fw-semibold">النتيجة</label>
                         <textarea name="resultat_audience"
                                   class="form-control"
                                   rows="3">{{ old('resultat_audience') }}</textarea>
                     </div>
 
-                    {{-- Actions --}}
+                    {{-- الإجراءات --}}
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Actions demandées</label>
+                        <label class="form-label fw-semibold">الإجراءات المطلوبة</label>
                         <textarea name="actions_demandees"
                                   class="form-control"
                                   rows="3">{{ old('actions_demandees') }}</textarea>
@@ -185,10 +188,10 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-1"></i>Enregistrer
+                            <i class="bi bi-check-lg me-1"></i>حفظ
                         </button>
                         <a href="{{ route('audiences.index') }}" class="btn btn-outline-secondary">
-                            Annuler
+                            إلغاء
                         </a>
                     </div>
 
@@ -212,20 +215,20 @@ document.getElementById('id_dossier_tribunal')
         const aucun      = document.getElementById('juge_aucun');
 
         if (!tribunalId) {
-            jugeSelect.innerHTML = '<option value="">— Sélectionner d\'abord un tribunal —</option>';
+            jugeSelect.innerHTML = '<option value="">— اختر المحكمة أولاً —</option>';
             hint.classList.add('d-none');
             aucun.classList.add('d-none');
             return;
         }
 
-        jugeSelect.innerHTML = '<option value="">— Chargement… —</option>';
+        jugeSelect.innerHTML = '<option value="">— جار التحميل… —</option>';
         jugeSelect.disabled  = true;
 
         try {
             const res   = await fetch(`/api/tribunaux/${tribunalId}/juges`);
             const juges = await res.json();
 
-            jugeSelect.innerHTML = '<option value="">— Sélectionner un juge —</option>';
+            jugeSelect.innerHTML = '<option value="">— اختر قاضيًا —</option>';
 
             if (juges.length === 0) {
                 aucun.classList.remove('d-none');
@@ -244,12 +247,11 @@ document.getElementById('id_dossier_tribunal')
             jugeSelect.disabled = false;
 
         } catch (e) {
-            jugeSelect.innerHTML = '<option value="">— Erreur de chargement —</option>';
+            jugeSelect.innerHTML = '<option value="">— خطأ في التحميل —</option>';
             jugeSelect.disabled  = false;
         }
     });
 
-// Déclencher si un tribunal est déjà sélectionné (retour formulaire avec old())
 window.addEventListener('DOMContentLoaded', () => {
     const sel = document.getElementById('id_dossier_tribunal');
     if (sel?.value) sel.dispatchEvent(new Event('change'));
