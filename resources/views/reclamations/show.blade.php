@@ -1,24 +1,24 @@
 {{-- resources/views/reclamations/show.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Réclamation — ' . Str::limit($reclamation->objet, 40))
+@section('title', 'شكاية — ' . Str::limit($reclamation->objet, 40))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('reclamations.index') }}">Réclamations</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('reclamations.index') }}">الشكايات</a></li>
     <li class="breadcrumb-item active">{{ Str::limit($reclamation->objet, 40) }}</li>
 @endsection
 
 @section('content')
 
 {{-- ══════════════════════════════════════════════════════════
-     EN-TÊTE
+     الرأس (EN-TÊTE)
 ══════════════════════════════════════════════════════════ --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
 
-            {{-- Identité --}}
+            {{-- الهوية --}}
             <div class="d-flex align-items-center gap-3">
                 <div class="rounded-3 bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
                      style="width:56px;height:56px">
@@ -30,12 +30,10 @@
                         @php
                             $statut = $reclamation->statut?->statut_reclamation ?? '—';
                             $color  = match(true) {
-                                $statut === 'قيد المعالجة' => 'warning',
-                                $statut === 'تمت المعالجة' => 'success',
-                                $statut === 'Reçue'        => 'info',
-                                $statut === 'En cours'     => 'warning',
-                                $statut === 'Clôturée'     => 'success',
-                                default                    => 'secondary',
+                                $statut === 'قيد المعالجة' || $statut === 'En cours' => 'warning',
+                                $statut === 'تمت المعالجة' || $statut === 'Clôturée' => 'success',
+                                $statut === 'Reçue' || $statut === 'تم الاستلام'     => 'info',
+                                default                                             => 'secondary',
                             };
                             $textColor = match($color) {
                                 'warning'   => 'text-dark',
@@ -55,42 +53,42 @@
                 </div>
             </div>
 
-            {{-- Compteurs --}}
+            {{-- العدادات --}}
             <div class="d-flex flex-wrap gap-4 small text-muted">
                 <div class="text-center">
                     <div class="fw-semibold text-dark fs-6">{{ $reclamation->actions->count() }}</div>
-                    <div>Actions</div>
+                    <div>الإجراءات</div>
                 </div>
                 <div class="text-center">
                     <div class="fw-semibold text-dark fs-6">{{ $reclamation->documents->count() }}</div>
-                    <div>Documents</div>
+                    <div>المستندات</div>
                 </div>
             </div>
 
-            {{-- Boutons --}}
+            {{-- الأزرار --}}
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ route('reclamations.edit', $reclamation) }}" class="btn btn-warning btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier
+                    <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
                 <x-modal-delete
-                                :action="route('reclamations.destroy', $reclamation)"
-                                modal-id="deleteReclamation{{ $reclamation->id }}"
-                                title="Supprimer la réclamation"
-                                :description="'Réclamation du ' . $reclamation->date_reception->format('d/m/Y')"
-                            />
+                    :action="route('reclamations.destroy', $reclamation)"
+                    modal-id="deleteReclamation{{ $reclamation->id }}"
+                    title="حذف الشكاية"
+                    :description="'شكاية بتاريخ ' . $reclamation->date_reception->format('Y/m/d')"
+                />
             </div>
         </div>
 
-        {{-- Méta-données --}}
+        {{-- بيانات وصفية --}}
         <hr class="my-3">
         <div class="row g-2 small text-muted">
             <div class="col-sm-3">
                 <i class="bi bi-calendar-event me-1"></i>
-                <strong>Reçue le :</strong> {{ $reclamation->date_reception?->format('d/m/Y') ?? '—' }}
+                <strong>تاريخ الاستلام:</strong> {{ $reclamation->date_reception?->format('Y/m/d') ?? '—' }}
             </div>
             <div class="col-sm-3">
                 <i class="bi bi-clock me-1"></i>
-                <strong>Mise à jour :</strong> {{ $reclamation->updated_at->diffForHumans() }}
+                <strong>آخر تحديث:</strong> {{ $reclamation->updated_at->diffForHumans() }}
             </div>
         </div>
     </div>
@@ -98,56 +96,54 @@
 
 
 {{-- ══════════════════════════════════════════════════════════
-     ONGLETS
+     التبويبات (ONGLETS)
 ══════════════════════════════════════════════════════════ --}}
 <ul class="nav nav-tabs mb-0" id="reclamationTabs" role="tablist">
     <li class="nav-item">
         <button class="nav-link active fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-info">
-            <i class="bi bi-info-circle me-1"></i>Informations
+            <i class="bi bi-info-circle me-1"></i>المعلومات
         </button>
     </li>
     <li class="nav-item">
         <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-suivi">
-            <i class="bi bi-list-check me-1"></i>Suivi
-            <span class="badge bg-primary ms-1">{{ $reclamation->actions->count() }}</span>
+            <i class="bi bi-list-check me-1"></i>المتابعة
+            <span class="badge bg-primary me-1">{{ $reclamation->actions->count() }}</span>
         </button>
     </li>
     <li class="nav-item">
         <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-documents">
-            <i class="bi bi-paperclip me-1"></i>Documents
-            <span class="badge bg-warning text-dark ms-1">{{ $reclamation->documents->count() }}</span>
+            <i class="bi bi-paperclip me-1"></i>المستندات
+            <span class="badge bg-warning text-dark me-1">{{ $reclamation->documents->count() }}</span>
         </button>
     </li>
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom bg-white shadow-sm p-4" id="reclamationTabContent">
 
-    {{-- ══ ONGLET 1 : INFORMATIONS ══ --}}
+    {{-- ══ التبويب 1 : المعلومات ══ --}}
     <div class="tab-pane fade show active" id="tab-info">
-
         <div class="row g-4">
-
-            {{-- Réclamant --}}
+            {{-- المشتكي --}}
             <div class="col-md-6">
                 <div class="card border h-100">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-person me-2 text-primary"></i>Réclamant
+                            <i class="bi bi-person me-1 text-primary"></i>صاحب الشكاية
                         </h6>
                     </div>
                     <div class="card-body">
                         <dl class="row mb-0 small">
-                            <dt class="col-5 text-muted fw-semibold">Nom</dt>
+                            <dt class="col-5 text-muted fw-semibold">الاسم</dt>
                             <dd class="col-7 fw-semibold">{{ $reclamation->reclamant?->nom ?? '—' }}</dd>
 
-                            <dt class="col-5 text-muted fw-semibold">Type</dt>
+                            <dt class="col-5 text-muted fw-semibold">النوع</dt>
                             <dd class="col-7">
                                 <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
                                     {{ $reclamation->reclamant?->typeReclamant?->type_reclamant ?? '—' }}
                                 </span>
                             </dd>
 
-                            <dt class="col-5 text-muted fw-semibold">Téléphone</dt>
+                            <dt class="col-5 text-muted fw-semibold">الهاتف</dt>
                             <dd class="col-7">
                                 @if($reclamation->reclamant?->telephone)
                                     <a href="tel:{{ $reclamation->reclamant->telephone }}" class="text-decoration-none">
@@ -155,11 +151,11 @@
                                         {{ $reclamation->reclamant->telephone }}
                                     </a>
                                 @else
-                                    <span class="text-muted fst-italic">Non renseigné</span>
+                                    <span class="text-muted fst-italic">غير متوفر</span>
                                 @endif
                             </dd>
 
-                            <dt class="col-5 text-muted fw-semibold">Email</dt>
+                            <dt class="col-5 text-muted fw-semibold">البريد الإلكتروني</dt>
                             <dd class="col-7">
                                 @if($reclamation->reclamant?->email)
                                     <a href="mailto:{{ $reclamation->reclamant->email }}" class="text-decoration-none">
@@ -167,11 +163,11 @@
                                         {{ $reclamation->reclamant->email }}
                                     </a>
                                 @else
-                                    <span class="text-muted fst-italic">Non renseigné</span>
+                                    <span class="text-muted fst-italic">غير متوفر</span>
                                 @endif
                             </dd>
 
-                            <dt class="col-5 text-muted fw-semibold">Adresse</dt>
+                            <dt class="col-5 text-muted fw-semibold">العنوان</dt>
                             <dd class="col-7">
                                 {{ $reclamation->reclamant?->adresse ?? '—' }}
                             </dd>
@@ -180,23 +176,23 @@
                 </div>
             </div>
 
-            {{-- Réclamation --}}
+            {{-- تفاصيل الشكاية --}}
             <div class="col-md-6">
                 <div class="card border h-100">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-chat-left-dots me-2 text-primary"></i>Réclamation
+                            <i class="bi bi-chat-left-dots me-1 text-primary"></i>تفاصيل الشكاية
                         </h6>
                     </div>
                     <div class="card-body">
                         <dl class="row mb-0 small">
-                            <dt class="col-5 text-muted fw-semibold">Objet</dt>
+                            <dt class="col-5 text-muted fw-semibold">الموضوع</dt>
                             <dd class="col-7 fw-semibold">{{ $reclamation->objet }}</dd>
 
-                            <dt class="col-5 text-muted fw-semibold">Date réception</dt>
-                            <dd class="col-7">{{ $reclamation->date_reception?->format('d/m/Y') ?? '—' }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">تاريخ الاستلام</dt>
+                            <dd class="col-7">{{ $reclamation->date_reception?->format('Y/m/d') ?? '—' }}</dd>
 
-                            <dt class="col-5 text-muted fw-semibold">Statut</dt>
+                            <dt class="col-5 text-muted fw-semibold">الحالة</dt>
                             <dd class="col-7">
                                 <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }} border border-{{ $color }} border-opacity-25">
                                     {{ $statut }}
@@ -204,14 +200,14 @@
                             </dd>
                         </dl>
 
-                        {{-- Changer statut rapidement --}}
+                        {{-- تغيير الحالة بسرعة --}}
                         <hr class="my-3">
                         <form action="{{ route('reclamations.update', $reclamation) }}" method="POST">
                             @csrf @method('PUT')
                             <input type="hidden" name="objet" value="{{ $reclamation->objet }}">
                             <input type="hidden" name="date_reception" value="{{ $reclamation->date_reception?->format('Y-m-d') }}">
                             <input type="hidden" name="details" value="{{ $reclamation->details }}">
-                            <label class="form-label fw-semibold small text-muted">Changer le statut</label>
+                            <label class="form-label fw-semibold small text-muted">تغيير الحالة</label>
                             <div class="input-group input-group-sm">
                                 <select name="id_statut_reclamation" class="form-select form-select-sm" required>
                                     @foreach($statuts as $s)
@@ -229,13 +225,13 @@
                 </div>
             </div>
 
-            {{-- Détails --}}
+            {{-- الوصف --}}
             @if($reclamation->details)
             <div class="col-12">
                 <div class="card border">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-text-left me-2 text-primary"></i>Description détaillée
+                            <i class="bi bi-text-right me-1 text-primary"></i>وصف مفصل
                         </h6>
                     </div>
                     <div class="card-body">
@@ -244,19 +240,17 @@
                 </div>
             </div>
             @endif
-
         </div>
-    </div>{{-- /tab-info --}}
+    </div>
 
 
-    {{-- ══ ONGLET 2 : SUIVI / ACTIONS ══ --}}
+    {{-- ══ التبويب 2 : المتابعة / الإجراءات ══ --}}
     <div class="tab-pane fade" id="tab-suivi">
-
-        {{-- ── Formulaire ajouter une action ── --}}
+        {{-- إضافة إجراء جديد --}}
         <div class="card border mb-4" style="border-color: #0d6efd !important; border-width: 2px !important;">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-plus-circle me-2 text-primary"></i>Ajouter une action de suivi
+                    <i class="bi bi-plus-circle me-1 text-primary"></i>إضافة إجراء متابعة
                 </h6>
             </div>
             <div class="card-body">
@@ -265,8 +259,6 @@
                       enctype="multipart/form-data"
                       id="form-action-suivi">
                 @csrf
-
-                    {{-- Passer les données TypeAction en JS --}}
                     @php
                         $typeActionIhala = $typesAction->firstWhere('type_action', 'إحالة')?->id;
                         $typeActionRad   = $typesAction->firstWhere('type_action', 'رد')?->id;
@@ -278,45 +270,34 @@
                     </script>
 
                     <div class="row g-3">
-
-                        {{-- Type d'action --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">
-                                Type d'action <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label fw-semibold small">نوع الإجراء <span class="text-danger">*</span></label>
                             <select name="id_type_action" id="select-type-action" class="form-select" required>
-                                <option value="">— Sélectionner —</option>
+                                <option value="">— اختر النوع —</option>
                                 @foreach($typesAction as $type)
                                     <option value="{{ $type->id }}">{{ $type->type_action }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        {{-- Date --}}
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">
-                                Date <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" name="date_action"
-                                   class="form-control"
-                                   value="{{ date('Y-m-d') }}" required>
+                            <label class="form-label fw-semibold small">التاريخ <span class="text-danger">*</span></label>
+                            <input type="date" name="date_action" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
 
-                        {{-- Commentaire --}}
                         <div class="col-12">
-                            <label class="form-label fw-semibold small">Commentaire</label>
-                            <textarea name="commentaire" class="form-control" rows="2"
-                                      placeholder="Notes ou observations…"></textarea>
+                            <label class="form-label fw-semibold small">ملاحظات</label>
+                            <textarea name="commentaire" class="form-control" rows="2" placeholder="اكتب ملاحظاتك هنا..."></textarea>
                         </div>
 
-                        {{-- Bloc Structure — affiché uniquement si type = إحالة --}}
+                        {{-- كتلة الإحالة --}}
                         <div class="col-12" id="bloc-structure" style="display:none;">
                             <div class="p-3 rounded-3 border border-warning bg-warning bg-opacity-10">
                                 <label class="form-label fw-semibold small text-warning-emphasis">
-                                    <i class="bi bi-diagram-3 me-1"></i>Structure concernée par l'إحالة
+                                    <i class="bi bi-diagram-3 me-1"></i>الهيكل المعني بالإحالة
                                 </label>
                                 <select name="id_structure" class="form-select">
-                                    <option value="">— Aucune —</option>
+                                    <option value="">— لا يوجد —</option>
                                     @foreach($structures as $structure)
                                         <option value="{{ $structure->id }}">{{ $structure->nom }}</option>
                                         @foreach($structure->enfants as $enfant)
@@ -327,36 +308,27 @@
                             </div>
                         </div>
 
-                        {{-- Bloc Réponse — affiché uniquement si type = رد --}}
+                        {{-- كتلة الرد --}}
                         <div class="col-12" id="bloc-reponse" style="display:none;">
                             <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
                                 <label class="form-label fw-semibold small text-success-emphasis">
-                                    <i class="bi bi-chat-quote me-1"></i>Contenu de la réponse
-                                    <span class="text-danger">*</span>
+                                    <i class="bi bi-chat-quote me-1"></i>محتوى الرد <span class="text-danger">*</span>
                                 </label>
-                                <textarea name="reponse" id="input-reponse" class="form-control" rows="4"
-                                          placeholder="Rédigez la réponse apportée au réclamant…"></textarea>
-                                <div class="form-text text-success-emphasis mt-1">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Cette réponse sera enregistrée dans l'historique de suivi.
-                                </div>
+                                <textarea name="reponse" id="input-reponse" class="form-control" rows="4" placeholder="اكتب نص الرد المقدم للمشتكي..."></textarea>
                             </div>
                         </div>
 
-                        {{-- Document joint --}}
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
-                                <i class="bi bi-paperclip me-1"></i>Document joint (optionnel)
+                                <i class="bi bi-paperclip me-1"></i>إرفاق مستند (اختياري)
                             </label>
-                            <input type="file" name="document_action" class="form-control"
-                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                            <div class="form-text">PDF, Word, Excel, images — max 10 Mo</div>
+                            <input type="file" name="document_action" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                            <div class="form-text">PDF, Word, Excel, صور — الحد الأقصى 10 Mo</div>
                         </div>
 
-                        {{-- Soumettre --}}
                         <div class="col-12 d-flex justify-content-end">
                             <button type="submit" class="btn btn-primary px-4">
-                                <i class="bi bi-plus-lg me-1"></i>Enregistrer l'action
+                                <i class="bi bi-plus-lg me-1"></i>حفظ الإجراء
                             </button>
                         </div>
                     </div>
@@ -364,129 +336,94 @@
             </div>
         </div>
 
-        {{-- ── Timeline des actions ── --}}
+        {{-- سجل الإجراءات --}}
         @if($reclamation->actions->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-list-check fs-1 d-block mb-2 opacity-25"></i>
-                Aucune action de suivi enregistrée.
+                لا يوجد أي إجراء مسجل حالياً.
             </div>
         @else
-        <h6 class="fw-semibold text-muted mb-3 small text-uppercase" style="letter-spacing:.05em">
-            Historique des actions
-        </h6>
-
+        <h6 class="fw-bold text-muted mb-3 small text-uppercase" style="letter-spacing:.05em">سجل الإجراءات</h6>
         <div class="position-relative">
             @if($reclamation->actions->count() > 1)
-            <div style="position:absolute; left:23px; top:40px; bottom:40px; width:2px;
-                        background: linear-gradient(to bottom, #0d6efd55, #dee2e6); z-index:0;"></div>
+            <div style="position:absolute; right:23px; top:40px; bottom:40px; width:2px; background: linear-gradient(to bottom, #0d6efd55, #dee2e6); z-index:0;"></div>
             @endif
 
             @foreach($reclamation->actions as $action)
             @php
                 $typeActionLib = $action->typeAction?->type_action ?? '';
-
-                // Déterminer icône et couleur selon le type
                 [$iconAction, $colorAction] = match(true) {
-                    $typeActionLib === 'إحالة' => ['bi-arrow-right-circle-fill', '#fd7e14'],
+                    $typeActionLib === 'إحالة' => ['bi-arrow-left-circle-fill', '#fd7e14'],
                     $typeActionLib === 'رد'    => ['bi-chat-quote-fill',         '#198754'],
-                    default                    => ['bi-arrow-right-circle',      '#0d6efd'],
+                    default                    => ['bi-arrow-left-circle',      '#0d6efd'],
                 };
 
-                // Séparer réponse et commentaire si le commentaire contient "**Réponse :**"
                 $commentaire = $action->commentaire ?? '';
                 $reponse     = null;
-                if (str_contains($commentaire, '**Réponse :**')) {
-                    $parts       = explode('**Réponse :**', $commentaire, 2);
+                if (str_contains($commentaire, '**Réponse :**') || str_contains($commentaire, '**الرد :**')) {
+                    $delimiter = str_contains($commentaire, '**الرد :**') ? '**الرد :**' : '**Réponse :**';
+                    $parts       = explode($delimiter, $commentaire, 2);
                     $commentaire = trim($parts[0]);
                     $reponse     = trim($parts[1]);
                 }
             @endphp
             <div class="d-flex gap-3 mb-3 position-relative" style="z-index:1;">
-                {{-- Icône --}}
                 <div class="flex-shrink-0">
                     <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
-                         style="width:48px;height:48px;background:{{ $colorAction }};
-                                box-shadow:0 0 0 4px {{ $colorAction }}33;font-size:.75rem">
+                         style="width:48px;height:48px;background:{{ $colorAction }}; box-shadow:0 0 0 4px {{ $colorAction }}33;">
                         <i class="bi {{ $iconAction }} fs-5"></i>
                     </div>
                 </div>
 
-                {{-- Contenu --}}
                 <div class="card border w-100">
                     <div class="card-body py-3">
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                             <div>
-                                <div class="fw-bold">
-                                    {{ $typeActionLib ?: '—' }}
-                                </div>
+                                <div class="fw-bold">{{ $typeActionLib ?: '—' }}</div>
                                 <div class="text-muted small">
-                                    <i class="bi bi-calendar3 me-1"></i>
-                                    {{ $action->date_action?->format('d/m/Y') ?? '—' }}
-                                    @if($action->structure)
-                                        &nbsp;·&nbsp;
-                                        <i class="bi bi-diagram-3 me-1"></i>
-                                        {{ $action->structure->nom }}
-                                    @endif
-                                    @if($action->createdBy)
-                                        &nbsp;·&nbsp;
-                                        <i class="bi bi-person me-1"></i>
-                                        {{ $action->createdBy->name }}
-                                    @endif
+                                    <i class="bi bi-calendar3 me-1"></i> {{ $action->date_action?->format('Y/m/d') ?? '—' }}
+                                    @if($action->structure) &nbsp;·&nbsp; <i class="bi bi-diagram-3 me-1"></i> {{ $action->structure->nom }} @endif
+                                    @if($action->createdBy) &nbsp;·&nbsp; <i class="bi bi-person me-1"></i> {{ $action->createdBy->name }} @endif
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Commentaire --}}
                         @if($commentaire)
                             <p class="small text-muted mb-2 lh-lg" style="white-space: pre-wrap;">{{ $commentaire }}</p>
                         @endif
 
-                        {{-- Réponse (bloc distinct si type = رد) --}}
                         @if($reponse)
                             <div class="border border-success rounded-2 p-2 mt-2 bg-success bg-opacity-10">
-                                <div class="small fw-semibold text-success-emphasis mb-1">
-                                    <i class="bi bi-chat-quote me-1"></i>Réponse apportée
-                                </div>
+                                <div class="small fw-bold text-success-emphasis mb-1"><i class="bi bi-chat-quote me-1"></i>الرد المقدم:</div>
                                 <p class="small mb-0 lh-lg" style="white-space: pre-wrap;">{{ $reponse }}</p>
                             </div>
                         @endif
 
-                        {{-- Structure concernée (إحالة) --}}
                         @if($typeActionLib === 'إحالة' && $action->structure)
                             <div class="border border-warning rounded-2 p-2 mt-2 bg-warning bg-opacity-10">
-                                <div class="small fw-semibold text-warning-emphasis mb-1">
-                                    <i class="bi bi-diagram-3 me-1"></i>إحالة vers
-                                </div>
+                                <div class="small fw-bold text-warning-emphasis mb-1"><i class="bi bi-diagram-3 me-1"></i>تمت الإحالة إلى:</div>
                                 <span class="small">{{ $action->structure->nom }}</span>
                             </div>
                         @endif
-
-                        {{-- Documents --}}
-                        {{-- Les documents d'action nécessitent la colonne id_action en base --}}
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
         @endif
+    </div>
 
-    </div>{{-- /tab-suivi --}}
 
-
-    {{-- ══ ONGLET 3 : DOCUMENTS ══ --}}
+    {{-- ══ التبويب 3 : المستندات ══ --}}
     <div class="tab-pane fade" id="tab-documents">
-
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0">
-                <i class="bi bi-paperclip me-2 text-primary"></i>Documents joints
-            </h6>
+            <h6 class="fw-bold mb-0"><i class="bi bi-paperclip me-1 text-primary"></i>المستندات المرفقة</h6>
         </div>
 
         @if($reclamation->documents->isEmpty())
             <div class="text-center py-5 text-muted">
                 <i class="bi bi-file-earmark fs-1 d-block mb-2 opacity-25"></i>
-                Aucun document joint à cette réclamation.<br>
-                <span class="small">Vous pouvez joindre des documents via les actions de suivi.</span>
+                لا توجد مستندات مرفقة بهذه الشكاية.
             </div>
         @else
         <div class="row g-3">
@@ -497,31 +434,23 @@
                     'pdf'         => 'bi-file-earmark-pdf text-danger',
                     'doc','docx'  => 'bi-file-earmark-word text-primary',
                     'xls','xlsx'  => 'bi-file-earmark-excel text-success',
-                    'jpg','jpeg','png','gif' => 'bi-file-earmark-image text-warning',
+                    'jpg','jpeg','png' => 'bi-file-earmark-image text-warning',
                     default       => 'bi-file-earmark text-secondary',
                 };
             @endphp
             <div class="col-md-4 col-lg-3">
-                <div class="card border h-100">
-                    <div class="card-body d-flex flex-column align-items-center text-center py-4">
+                <div class="card border h-100 text-center">
+                    <div class="card-body py-4">
                         <i class="bi {{ $icon }} fs-1 mb-2"></i>
-                        <div class="small fw-semibold text-truncate w-100" title="{{ $doc->titre_document }}">
-                            {{ $doc->titre_document }}
-                        </div>
+                        <div class="small fw-bold text-truncate w-100" title="{{ $doc->titre_document }}">{{ $doc->titre_document }}</div>
                         @if($doc->typeDocument)
-                            <span class="badge bg-light text-secondary border small mt-1">
-                                {{ $doc->typeDocument->type_document }}
-                            </span>
+                            <span class="badge bg-light text-secondary border small mt-1">{{ $doc->typeDocument->type_document }}</span>
                         @endif
-                        <div class="text-muted mt-1" style="font-size:.7rem">
-                            {{ $doc->date_depot?->format('d/m/Y') ?? '—' }}
-                        </div>
+                        <div class="text-muted mt-1" style="font-size:.7rem">{{ $doc->date_depot?->format('Y/m/d') ?? '—' }}</div>
                     </div>
-                    <div class="card-footer bg-white border-top d-flex justify-content-center py-2">
-                        <a href="{{ Storage::url($doc->fichier_path) }}"
-                           target="_blank"
-                           class="btn btn-sm btn-outline-primary flex-fill">
-                            <i class="bi bi-download me-1"></i>Télécharger
+                    <div class="card-footer bg-white py-2">
+                        <a href="{{ Storage::url($doc->fichier_path) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-download me-1"></i>تحميل
                         </a>
                     </div>
                 </div>
@@ -529,24 +458,20 @@
             @endforeach
         </div>
         @endif
-
-    </div>{{-- /tab-documents --}}
-
-</div>{{-- /tab-content --}}
+    </div>
+</div>
 
 @endsection
 
 @push('scripts')
 <script>
 (function () {
-    // ── Restore tab from URL hash ───────────────────────
     const hash = window.location.hash;
     if (hash) {
         const tab = document.querySelector(`[data-bs-target="${hash}"]`);
         if (tab) new bootstrap.Tab(tab).show();
     }
 
-    // ── Logique conditionnelle du formulaire de suivi ──
     const selectType   = document.getElementById('select-type-action');
     const blocStruct   = document.getElementById('bloc-structure');
     const blocReponse  = document.getElementById('bloc-reponse');
@@ -556,24 +481,19 @@
 
     function updateBlocs() {
         const val = parseInt(selectType.value, 10);
-
         const isIhala = window._typeActionIhala && val === window._typeActionIhala;
         const isRad   = window._typeActionRad   && val === window._typeActionRad;
 
-        // Structure : visible seulement pour إحالة
         blocStruct.style.display  = isIhala ? '' : 'none';
-
-        // Réponse : visible seulement pour رد
         blocReponse.style.display = isRad   ? '' : 'none';
 
-        // Rendre la réponse requise uniquement quand visible
         if (inputReponse) {
             inputReponse.required = isRad;
         }
     }
 
     selectType.addEventListener('change', updateBlocs);
-    updateBlocs(); // initialisation
+    updateBlocs();
 })();
 </script>
 @endpush

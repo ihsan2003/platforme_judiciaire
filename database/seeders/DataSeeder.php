@@ -46,8 +46,8 @@ class DataSeeder extends Seeder
 
         // أنواع الأطراف
         $typesPartie = [
-            'المدعي',
-            'المدعى عليه',
+            'مدعي',
+           'مدعى عليه',
             'متدخل'
         ];
         foreach ($typesPartie as $type) {
@@ -89,11 +89,11 @@ class DataSeeder extends Seeder
             DB::table('type_audiences')->insert(['type_audience' => $type]);
         }
 
-        // مواقف المؤسسة
+        // مواقف الحكم بالنسبة للمؤسسة
         $positions = [
-            'موافق',
-            'غير موافق',
-            'موافق جزئياً'
+            'مع',
+            'ضد',
+            'جزئي'
         ];
         foreach ($positions as $position) {
             DB::table('position_institutions')->insert(['position' => $position]);
@@ -137,7 +137,6 @@ class DataSeeder extends Seeder
 
         // حالات الشكايات
         $statutsRecl = [
-            'تم الاستلام',
             'قيد المعالجة',
             'تمت المعالجة',
             'مغلقة'
@@ -150,7 +149,7 @@ class DataSeeder extends Seeder
         $typesReclamant = [
             'مباشر',
             'مؤسسة',
-            'أخرى'
+            'آخر'
         ];
         foreach ($typesReclamant as $type) {
             DB::table('type_reclamants')->insert(['type_reclamant' => $type]);
@@ -158,24 +157,11 @@ class DataSeeder extends Seeder
 
         // أنواع الإجراءات
         $typesAction = [
-            'تسجيل',
             'رد',
             'إحالة'
         ];
         foreach ($typesAction as $type) {
             DB::table('type_actions')->insert(['type_action' => $type]);
-        }
-
-        // أنواع الهياكل
-        $typesStructure = [
-            'مصلحة',
-            'قسم',
-            'مديرية إقليمية',
-            'مديرية جهوية',
-            'ادارة مركزية'
-        ];
-        foreach ($typesStructure as $type) {
-            DB::table('type_structures')->insert(['type_structure' => $type]);
         }
 
         // Reset cached roles and permissions
