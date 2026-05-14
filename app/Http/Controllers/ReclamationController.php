@@ -191,11 +191,18 @@ class ReclamationController extends Controller
     // ─────────────────────────────────────────
     public function edit(Reclamation $reclamation)
     {
+        // Charger les relations nécessaires pour la réclamation actuelle
         $reclamation->load(['reclamant.typeReclamant', 'statut']);
+        
+        // 1. Récupérer TOUS les réclamants pour pouvoir en changer si besoin
+        $reclamants = Reclamant::orderBy('nom')->get(); 
+        
+        // 2. Garder vos variables existantes pour les types et statuts
         $typesReclamant = TypeReclamant::orderBy('type_reclamant')->get();
         $statuts        = StatutReclamation::orderBy('statut_reclamation')->get();
 
-        return view('reclamations.edit', compact('reclamation', 'typesReclamant', 'statuts'));
+        // 3. Ajouter 'reclamants' dans le compact
+        return view('reclamations.edit', compact('reclamation', 'reclamants', 'typesReclamant', 'statuts'));
     }
 
     // ─────────────────────────────────────────

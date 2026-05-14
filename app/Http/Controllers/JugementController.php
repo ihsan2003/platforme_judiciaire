@@ -8,6 +8,7 @@ use App\Models\Jugement;
 use App\Models\DossierTribunal;
 use App\Models\Juge;
 use App\Models\Partie;
+use App\Models\DossierPartie;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -246,13 +247,15 @@ class JugementController extends Controller
         $parties = Partie::orderBy('nom_partie')->get();
 
         $partiesLiees = $jugement->parties->pluck('id')->toArray();
+        $partiesDossier = DossierPartie::with(['partie','typePartie'])->where('id_dossier', $jugement->dossierTribunal->id_dossier)->get();
 
         return view('jugements.edit', compact(
             'jugement',
             'dossiers',
             'juges',
             'parties',
-            'partiesLiees'
+            'partiesLiees',
+            'partiesDossier'
         ));
     }
 
