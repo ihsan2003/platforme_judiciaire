@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Mon profil')
+@section('title', 'ملفي الشخصي')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item active">Mon profil</li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item active">ملفي الشخصي</li>
 @endsection
 
 @push('styles')
@@ -77,7 +77,7 @@
     $roles = auth()->user()->getRoleNames();
 @endphp
 
-{{-- ══ EN-TÊTE PROFIL ══ --}}
+{{-- ══ رأس الملف الشخصي ══ --}}
 <div class="profile-header mb-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
@@ -94,52 +94,52 @@
                         </span>
                     @endforeach
                     <span class="badge" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-size:.72rem">
-                        <i class="bi bi-clock me-1"></i>Membre depuis {{ auth()->user()->created_at->format('M Y') }}
+                        <i class="bi bi-clock me-1"></i>عضو منذ {{ auth()->user()->created_at->format('M Y') }}
                     </span>
                 </div>
             </div>
         </div>
         <div class="text-end small" style="opacity:.6">
-            <div><i class="bi bi-calendar-check me-1"></i>Dernière connexion : {{ now()->format('d/m/Y à H:i') }}</div>
+            <div><i class="bi bi-calendar-check me-1"></i>آخر تسجيل دخول : {{ now()->format('d/m/Y à H:i') }}</div>
         </div>
     </div>
 </div>
 
-{{-- ══ ONGLETS ══ --}}
+{{-- ══ التبويبات ══ --}}
 <ul class="nav profile-tab border-bottom mb-0" id="profileTabs">
     <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-infos">
-            <i class="bi bi-person me-1"></i>Informations
+            <i class="bi bi-person me-1"></i>المعلومات
         </button>
     </li>
     <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-password">
-            <i class="bi bi-lock me-1"></i>Mot de passe
+            <i class="bi bi-lock me-1"></i>كلمة المرور
         </button>
     </li>
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom bg-white shadow-sm p-4" id="profileTabContent">
 
-    {{-- ── ONGLET 1 : INFORMATIONS ── --}}
+    {{-- ── التبويب 1: المعلومات ── --}}
     <div class="tab-pane fade show active" id="tab-infos">
 
-        <div class="row g-4">
-            <div class="col-lg-8">
+        <div class="row gx-0 justify-content-between">
+            <div class="col-lg-6">
 
                 <div class="d-flex align-items-center gap-3 mb-4">
                     <div class="section-icon bg-primary bg-opacity-10">
                         <i class="bi bi-person-fill text-primary"></i>
                     </div>
                     <div>
-                        <h6 class="fw-semibold mb-0">Informations personnelles</h6>
-                        <div class="small text-muted">Mettez à jour votre nom et votre adresse e-mail.</div>
+                        <h6 class="fw-semibold mb-0">المعلومات الشخصية</h6>
+                        <div class="small text-muted">قم بتحديث اسمك والبريد الإلكتروني.</div>
                     </div>
                 </div>
 
                 @if(session('status') === 'profile-updated')
                     <div class="alert alert-success alert-dismissible fade show small">
-                        <i class="bi bi-check-circle me-2"></i>Profil mis à jour avec succès.
+                        <i class="bi bi-check-circle me-2"></i>تم تحديث الملف الشخصي بنجاح.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
@@ -150,7 +150,7 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
-                                Nom complet <span class="text-danger">*</span>
+                                الاسم الكامل <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white">
@@ -169,7 +169,7 @@
 
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
-                                Adresse e-mail <span class="text-danger">*</span>
+                                البريد الإلكتروني <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white">
@@ -188,18 +188,18 @@
                             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                                 <div class="alert alert-warning small mt-2 py-2">
                                     <i class="bi bi-exclamation-triangle me-1"></i>
-                                    Votre adresse e-mail n'est pas vérifiée.
+                                    بريدك الإلكتروني غير مُفعّل.
                                     <form id="send-verification" method="POST" action="{{ route('verification.send') }}" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-link btn-sm p-0 ms-1">
-                                            Renvoyer le lien de vérification
+                                            إعادة إرسال رابط التفعيل
                                         </button>
                                     </form>
                                 </div>
                                 @if (session('status') === 'verification-link-sent')
                                     <div class="alert alert-success small mt-2 py-2">
                                         <i class="bi bi-check-circle me-1"></i>
-                                        Un nouveau lien de vérification a été envoyé.
+                                        تم إرسال رابط تحقق جديد.
                                     </div>
                                 @endif
                             @endif
@@ -208,49 +208,49 @@
 
                     <div class="d-flex gap-2 mt-4 pt-3 border-top">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-1"></i>Enregistrer les modifications
+                            <i class="bi bi-check-lg me-1"></i>حفظ التعديلات
                         </button>
                         <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
-                            Annuler
+                            إلغاء
                         </a>
                     </div>
                 </form>
             </div>
 
-            {{-- Colonne droite : résumé compte --}}
+            {{-- ملخص الحساب --}}
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-info-circle me-2 text-muted"></i>Résumé du compte
+                            <i class="bi bi-info-circle me-2 text-muted"></i>ملخص الحساب
                         </h6>
                     </div>
                     <div class="card-body small">
                         <dl class="row mb-0">
-                            <dt class="col-5 text-muted fw-normal">Identifiant</dt>
+                            <dt class="col-5 text-muted fw-normal">المعرف</dt>
                             <dd class="col-7 font-monospace">#{{ auth()->user()->id }}</dd>
 
-                            <dt class="col-5 text-muted fw-normal">Rôle(s)</dt>
+                            <dt class="col-5 text-muted fw-normal">الدور</dt>
                             <dd class="col-7">
                                 @foreach($roles as $role)
                                     <span class="badge bg-primary bg-opacity-10 text-primary d-block mb-1">{{ ucfirst($role) }}</span>
                                 @endforeach
                             </dd>
 
-                            <dt class="col-5 text-muted fw-normal">Membre depuis</dt>
+                            <dt class="col-5 text-muted fw-normal">عضو منذ</dt>
                             <dd class="col-7">{{ auth()->user()->created_at->format('d/m/Y') }}</dd>
 
-                            <dt class="col-5 text-muted fw-normal">Mis à jour le</dt>
+                            <dt class="col-5 text-muted fw-normal">آخر تحديث</dt>
                             <dd class="col-7">{{ auth()->user()->updated_at->format('d/m/Y') }}</dd>
 
-                            <dt class="col-5 text-muted fw-normal">E-mail vérifié</dt>
+                            <dt class="col-5 text-muted fw-normal">البريد مفعل</dt>
                             <dd class="col-7">
                                 @if(auth()->user()->hasVerifiedEmail())
                                     <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
-                                        <i class="bi bi-check-circle me-1"></i>Oui
+                                        <i class="bi bi-check-circle me-1"></i>نعم
                                     </span>
                                 @else
-                                    <span class="badge bg-warning text-dark">Non</span>
+                                    <span class="badge bg-warning text-dark">لا</span>
                                 @endif
                             </dd>
                         </dl>
@@ -260,25 +260,25 @@
         </div>
     </div>
 
-    {{-- ── ONGLET 2 : MOT DE PASSE ── --}}
+    {{-- ── التبويب 2: كلمة المرور ── --}}
     <div class="tab-pane fade" id="tab-password">
 
-        <div class="row g-4">
-            <div class="col-lg-8">
+        <div class="row gx-0 justify-content-between">
+            <div class="col-lg-6">
 
                 <div class="d-flex align-items-center gap-3 mb-4">
                     <div class="section-icon bg-warning bg-opacity-10">
                         <i class="bi bi-lock-fill text-warning"></i>
                     </div>
                     <div>
-                        <h6 class="fw-semibold mb-0">Changer le mot de passe</h6>
-                        <div class="small text-muted">Utilisez un mot de passe long et aléatoire pour sécuriser votre compte.</div>
+                        <h6 class="fw-semibold mb-0">تغيير كلمة المرور</h6>
+                        <div class="small text-muted">استخدم كلمة مرور قوية وآمنة لحماية حسابك.</div>
                     </div>
                 </div>
 
                 @if(session('status') === 'password-updated')
                     <div class="alert alert-success alert-dismissible fade show small">
-                        <i class="bi bi-check-circle me-2"></i>Mot de passe mis à jour avec succès.
+                        <i class="bi bi-check-circle me-2"></i>تم تحديث كلمة المرور بنجاح.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
@@ -290,7 +290,7 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
-                                Mot de passe actuel <span class="text-danger">*</span>
+                                كلمة المرور الحالية <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white">
@@ -313,7 +313,7 @@
 
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
-                                Nouveau mot de passe <span class="text-danger">*</span>
+                                كلمة المرور الجديدة <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white">
@@ -334,21 +334,14 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
 
-                            {{-- Indicateur de force --}}
                             <div class="mt-2" id="strength-wrap" style="display:none">
-                                <div class="d-flex gap-1 mb-1">
-                                    <div class="flex-fill" style="height:4px;border-radius:2px;background:#e2e8f0" id="bar1"></div>
-                                    <div class="flex-fill" style="height:4px;border-radius:2px;background:#e2e8f0" id="bar2"></div>
-                                    <div class="flex-fill" style="height:4px;border-radius:2px;background:#e2e8f0" id="bar3"></div>
-                                    <div class="flex-fill" style="height:4px;border-radius:2px;background:#e2e8f0" id="bar4"></div>
-                                </div>
                                 <div class="small" id="strength-label" style="color:#94a3b8;font-size:.75rem"></div>
                             </div>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label fw-semibold small">
-                                Confirmer le nouveau mot de passe <span class="text-danger">*</span>
+                                تأكيد كلمة المرور الجديدة <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white">
@@ -372,27 +365,27 @@
 
                     <div class="d-flex gap-2 mt-4 pt-3 border-top">
                         <button type="submit" class="btn btn-warning">
-                            <i class="bi bi-shield-lock me-1"></i>Mettre à jour le mot de passe
+                            <i class="bi bi-shield-lock me-1"></i>تحديث كلمة المرور
                         </button>
                     </div>
                 </form>
             </div>
 
-            {{-- Conseils sécurité --}}
+            {{-- نصائح الأمان --}}
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-shield-check me-2 text-success"></i>Conseils de sécurité
+                            <i class="bi bi-shield-check me-2 text-success"></i>نصائح الأمان
                         </h6>
                     </div>
                     <div class="card-body small">
                         <ul class="ps-3 mb-0" style="line-height:2">
-                            <li>Au moins <strong>8 caractères</strong></li>
-                            <li>Mélangez <strong>majuscules</strong> et <strong>minuscules</strong></li>
-                            <li>Ajoutez des <strong>chiffres</strong> et des <strong>symboles</strong></li>
-                            <li>N'utilisez pas votre nom ou date de naissance</li>
-                            <li>Ne réutilisez pas d'anciens mots de passe</li>
+                            <li>استخدم على الأقل <strong>8 أحرف</strong></li>
+                            <li>امزج بين <strong>الأحرف الكبيرة والصغيرة</strong></li>
+                            <li>أضف <strong>أرقامًا ورموزًا</strong></li>
+                            <li>لا تستخدم اسمك أو تاريخ ميلادك</li>
+                            <li>لا تعِد استخدام كلمات مرور قديمة</li>
                         </ul>
                     </div>
                 </div>
@@ -402,63 +395,4 @@
 
 </div>
 
-
 @endsection
-
-@push('scripts')
-<script>
-{{-- Ouvrir le bon onglet selon le statut de session --}}
-(function () {
-    @if(session('status') === 'password-updated')
-        const tab = document.querySelector('[data-bs-target="#tab-password"]');
-        if (tab) new bootstrap.Tab(tab).show();
-    @endif
-    @if($errors->updatePassword->any())
-        const tab = document.querySelector('[data-bs-target="#tab-password"]');
-        if (tab) new bootstrap.Tab(tab).show();
-    @endif
-    
-})();
-
-{{-- Afficher/masquer mot de passe --}}
-function togglePwd(id, btn) {
-    const input = document.getElementById(id);
-    const icon  = btn.querySelector('i');
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.className = 'bi bi-eye-slash';
-    } else {
-        input.type = 'password';
-        icon.className = 'bi bi-eye';
-    }
-}
-
-{{-- Indicateur de force du mot de passe --}}
-function checkStrength(val) {
-    const wrap = document.getElementById('strength-wrap');
-    const label = document.getElementById('strength-label');
-    const bars = [document.getElementById('bar1'), document.getElementById('bar2'),
-                  document.getElementById('bar3'), document.getElementById('bar4')];
-
-    if (!val) { wrap.style.display = 'none'; return; }
-    wrap.style.display = 'block';
-
-    let score = 0;
-    if (val.length >= 8)  score++;
-    if (val.length >= 12) score++;
-    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-    score = Math.min(4, score);
-
-    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
-    const labels = ['Très faible', 'Faible', 'Moyen', 'Fort'];
-
-    bars.forEach((b, i) => {
-        b.style.background = i < score ? colors[score - 1] : '#e2e8f0';
-    });
-    label.textContent = labels[score - 1] || 'Trop court';
-    label.style.color = score > 0 ? colors[score - 1] : '#94a3b8';
-}
-</script>
-@endpush

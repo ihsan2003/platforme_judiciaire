@@ -116,7 +116,8 @@ Route::middleware(['auth'])->group(function () {
     | Entités de référence
     |--------------------------------------------------------------------------
     */
-    Route::resource('parties', PartieController::class)->parameters(['parties' => 'partie']);    Route::resource('avocats',  AvocatController::class);
+    Route::resource('parties', PartieController::class)->parameters(['parties' => 'partie']);    
+    Route::resource('avocats',  AvocatController::class);
     Route::resource('tribunaux', TribunalController::class)->parameters(['tribunaux' => 'tribunal']);    
     Route::resource('juges',    JugeController::class);
     Route::resource('audiences', AudienceController::class);

@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Tribunal;
 use App\Models\TypeTribunal;
-use App\Models\Province;
+use App\Models\Region;
+
 
 class TribunalController extends Controller
 {
@@ -27,9 +28,9 @@ class TribunalController extends Controller
     public function create()
     {
         $types     = TypeTribunal::orderBy('tribunal')->get();
-        $provinces = Province::with('region')->orderBy('province')->get();
+        $regions = Region::orderBy('region')->get();
 
-        return view('tribunaux.create', compact('types', 'provinces'));
+        return view('tribunaux.create', compact('types', 'regions'));
     }
 
     public function store(Request $request)
@@ -64,9 +65,9 @@ class TribunalController extends Controller
     public function edit(Tribunal $tribunal)
     {
         $types     = TypeTribunal::orderBy('tribunal')->get();
-        $provinces = Province::with('region')->orderBy('province')->get();
+        $regions = Region::orderBy('region')->get();
 
-        return view('tribunaux.edit', compact('tribunal', 'types', 'provinces'));
+        return view('tribunaux.edit', compact('tribunal', 'types', 'regions'));
     }
 
     public function update(Request $request, Tribunal $tribunal)

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Nouveau tribunal')
+@section('title', 'محكمة جديدة')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('tribunaux.index') }}">Tribunaux</a></li>
-    <li class="breadcrumb-item active">Nouveau tribunal</li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('tribunaux.index') }}">المحاكم</a></li>
+    <li class="breadcrumb-item active">محكمة جديدة</li>
 @endsection
 
 @section('content')
@@ -13,12 +13,17 @@
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
         <h4 class="fw-bold mb-1">
-            <i class="bi bi-building-add text-primary me-2"></i>Nouveau tribunal
+            <i class="bi bi-building-add text-primary me-2"></i>
+            محكمة جديدة
         </h4>
-        <p class="text-muted small mb-0">Enregistrez les informations d'un nouveau tribunal.</p>
+        <p class="text-muted small mb-0">
+            إدخال معلومات محكمة جديدة
+        </p>
     </div>
+
     <a href="{{ route('tribunaux.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+        <i class="bi bi-arrow-left me-1"></i>
+        العودة إلى القائمة
     </a>
 </div>
 
@@ -27,71 +32,94 @@
 
 <div class="row g-4">
 
-    {{-- ── Colonne principale ── --}}
+    {{-- ── القسم الرئيسي ── --}}
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
+
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-building me-2 text-primary"></i>Informations du tribunal
+                    <i class="bi bi-building me-2 text-primary"></i>
+                    معلومات المحكمة
                 </h6>
             </div>
+
             <div class="card-body">
                 <div class="row g-3">
 
-                    {{-- Nom --}}
-                    <div class="col-12">
+                    {{-- اسم المحكمة --}}
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold small">
-                            Nom du tribunal <span class="text-danger">*</span>
+                            اسم المحكمة <span class="text-danger">*</span>
                         </label>
+
                         <input type="text"
                                name="nom_tribunal"
                                class="form-control @error('nom_tribunal') is-invalid @enderror"
                                value="{{ old('nom_tribunal') }}"
-                               placeholder="Ex : Tribunal de Première Instance de Casablanca"
+                               placeholder="مثال: المحكمة الابتدائية بالدار البيضاء"
                                required>
+
                         @error('nom_tribunal')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- Type de tribunal --}}
+                    {{-- نوع المحكمة --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold small">
-                            Type de tribunal <span class="text-danger">*</span>
+                            نوع المحكمة <span class="text-danger">*</span>
                         </label>
+
                         <select name="id_type_tribunal"
                                 class="form-select @error('id_type_tribunal') is-invalid @enderror"
                                 required>
-                            <option value="">— Sélectionner —</option>
+
+                            <option value="">— اختر —</option>
+
                             @foreach($types as $type)
                                 <option value="{{ $type->id }}" @selected(old('id_type_tribunal') == $type->id)>
                                     {{ $type->tribunal }}
                                 </option>
                             @endforeach
+
                         </select>
+
                         @error('id_type_tribunal')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- Province --}}
+                    {{-- الجهة --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold small">
-                            Province <span class="text-danger">*</span>
+                            الجهة <span class="text-danger">*</span>
                         </label>
-                        <select name="id_province"
-                                class="form-select @error('id_province') is-invalid @enderror"
-                                required>
-                            <option value="">— Sélectionner —</option>
-                            @foreach($provinces as $province)
-                                <option value="{{ $province->id }}" @selected(old('id_province') == $province->id)>
-                                    {{ $province->province }}
-                                    @if($province->region)
-                                        ({{ $province->region->region }})
-                                    @endif
+
+                        <select id="region" class="form-select">
+                            <option value="">— اختر الجهة —</option>
+
+                            @foreach($regions as $region)
+                                <option value="{{ $region->id }}">
+                                    {{ $region->region }}
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    {{-- الإقليم --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small">
+                            الإقليم <span class="text-danger">*</span>
+                        </label>
+
+                        <select name="id_province"
+                                id="province"
+                                class="form-select @error('id_province') is-invalid @enderror"
+                                required>
+
+                            <option value="">— اختر الإقليم —</option>
+                        </select>
+
                         @error('id_province')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -99,38 +127,69 @@
 
                 </div>
             </div>
-        </div>
-    </div>
 
-    {{-- ── Colonne latérale ── --}}
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-info-circle me-2 text-muted"></i>À savoir
-                </h6>
-            </div>
-            <div class="card-body small text-muted">
-                <ul class="mb-0 ps-3">
-                    <li class="mb-2">Le tribunal sera associé à une province et donc à une région.</li>
-                    <li class="mb-2">Des juges pourront ensuite lui être rattachés.</li>
-                    <li>Le tribunal peut être assigné à des dossiers judiciaires.</li>
-                </ul>
-            </div>
         </div>
     </div>
 
 </div>
 
-{{-- ── Actions ── --}}
+{{-- ── الأزرار ── --}}
 <div class="d-flex gap-2 justify-content-end mt-4">
+
     <a href="{{ route('tribunaux.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-x-lg me-1"></i>Annuler
+        <i class="bi bi-x-lg me-1"></i>
+        إلغاء
     </a>
+
     <button type="submit" class="btn btn-primary px-4">
-        <i class="bi bi-check-lg me-1"></i>Enregistrer
+        <i class="bi bi-check-lg me-1"></i>
+        حفظ
     </button>
+
 </div>
 
 </form>
+
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('region').addEventListener('change', function () {
+    let regionId = this.value;
+    let provinceSelect = document.getElementById('province');
+
+    provinceSelect.innerHTML = '<option value="">جاري التحميل...</option>';
+
+    if (!regionId) {
+        provinceSelect.innerHTML = '<option value="">— اختر الإقليم —</option>';
+        return;
+    }
+
+    fetch(`/api/regions/${regionId}/provinces`, {
+        headers: {
+            'Accept': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("خطأ في الاتصال بالخادم");
+        return res.json();
+    })
+    .then(data => {
+        provinceSelect.innerHTML = '<option value="">— اختر الإقليم —</option>';
+
+        data.forEach(province => {
+            provinceSelect.innerHTML += `
+                <option value="${province.id}">
+                    ${province.province}
+                </option>
+            `;
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        provinceSelect.innerHTML = '<option value="">تعذر تحميل الأقاليم</option>';
+    });
+});
+</script>
+@endpush

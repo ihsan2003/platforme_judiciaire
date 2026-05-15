@@ -16,6 +16,7 @@ class Partie extends Model
         'nom_partie',
         'type_personne',
         'identifiant_unique',
+        'date_naissance',
         'telephone',
         'email',
         'adresse',
@@ -25,6 +26,7 @@ class Partie extends Model
 
     protected $casts = [
         'est_entraide' => 'boolean',  
+        'date_naissance' => 'date',
     ];
 
     public function dossiers()

@@ -3,8 +3,8 @@
 @section('title', $juge->nom_complet)
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('juges.index') }}">Juges</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('juges.index') }}">القضاة</a></li>
     <li class="breadcrumb-item active">{{ $juge->nom_complet }}</li>
 @endsection
 
@@ -43,17 +43,17 @@
             {{-- Actions --}}
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ route('juges.edit', $juge) }}" class="btn btn-warning btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier
+                    <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
                 <form action="{{ route('juges.destroy', $juge) }}" method="POST"
-                      onsubmit="return confirm('Supprimer ce juge ?')">
+                      onsubmit="return confirm('هل تريد حذف هذا القاضي؟')">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i>Supprimer
+                        <i class="bi bi-trash me-1"></i>حذف
                     </button>
                 </form>
                 <a href="{{ route('juges.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-left me-1"></i>Retour
+                    <i class="bi bi-arrow-left me-1"></i>رجوع
                 </a>
             </div>
         </div>
@@ -63,17 +63,17 @@
         <div class="row g-2 small text-muted">
             <div class="col-sm-3">
                 <i class="bi bi-award me-1"></i>
-                <strong>Grade :</strong>
+                <strong>الدرجة :</strong>
                 <span class="ms-1">{{ $juge->grade ?? '—' }}</span>
             </div>
             <div class="col-sm-3">
                 <i class="bi bi-bookmark me-1"></i>
-                <strong>Spécialisation :</strong>
+                <strong>التخصص :</strong>
                 <span class="ms-1">{{ $juge->specialisation ?? '—' }}</span>
             </div>
             <div class="col-sm-3">
                 <i class="bi bi-building me-1"></i>
-                <strong>Tribunal :</strong>
+                <strong>المحكمة :</strong>
                 @if($juge->tribunal)
                     <a href="{{ route('tribunaux.show', $juge->tribunal) }}" class="text-decoration-none ms-1">
                         {{ $juge->tribunal->nom_tribunal }}
@@ -84,7 +84,7 @@
             </div>
             <div class="col-sm-3">
                 <i class="bi bi-clock me-1"></i>
-                <strong>Mis à jour :</strong>
+                <strong>آخر تحديث :</strong>
                 <span class="ms-1">{{ $juge->updated_at->diffForHumans() }}</span>
             </div>
         </div>
@@ -100,13 +100,14 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-calendar-event me-2 text-warning"></i>Audiences à venir
+                    <i class="bi bi-calendar-event me-2 text-warning"></i>
+                    الجلسات القادمة
                     <span class="badge bg-warning text-dark ms-1">
                         {{ $juge->audiences->where('date_audience', '>=', today())->count() }}
                     </span>
                 </h6>
                 <a href="{{ route('audiences.index', ['juge' => $juge->id]) }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-list me-1"></i>Toutes les audiences
+                    <i class="bi bi-list me-1"></i>كل الجلسات
                 </a>
             </div>
 
@@ -115,17 +116,17 @@
             @if($audiencesAVenir->isEmpty())
                 <div class="card-body text-center py-4 text-muted">
                     <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
-                    Aucune audience à venir pour ce juge.
+                    لا توجد جلسات قادمة لهذا القاضي.
                 </div>
             @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3 small text-muted fw-semibold">Date</th>
-                            <th class="small text-muted fw-semibold">Dossier</th>
-                            <th class="small text-muted fw-semibold">Type</th>
-                            <th class="text-end pe-3 small text-muted fw-semibold">Voir</th>
+                            <th class="ps-3 small text-muted fw-semibold">التاريخ</th>
+                            <th class="small text-muted fw-semibold">الملف</th>
+                            <th class="small text-muted fw-semibold">النوع</th>
+                            <th class="text-end pe-3 small text-muted fw-semibold">عرض</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,7 +135,7 @@
                             <td class="ps-3">
                                 <span class="fw-semibold">{{ $audience->date_audience->format('d/m/Y') }}</span>
                                 @if($audience->date_audience->isToday())
-                                    <span class="badge bg-danger ms-1">Aujourd'hui</span>
+                                    <span class="badge bg-danger ms-1">اليوم</span>
                                 @endif
                             </td>
                             <td>
@@ -170,7 +171,8 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-hammer me-2 text-primary"></i>Jugements rendus
+                    <i class="bi bi-hammer me-2 text-primary"></i>
+                    الأحكام الصادرة
                     <span class="badge bg-primary ms-1">{{ $juge->jugements->count() }}</span>
                 </h6>
             </div>
@@ -178,17 +180,17 @@
             @if($juge->jugements->isEmpty())
                 <div class="card-body text-center py-4 text-muted">
                     <i class="bi bi-hammer fs-1 d-block mb-2 opacity-25"></i>
-                    Aucun jugement enregistré pour ce juge.
+                    لا توجد أحكام مسجلة لهذا القاضي.
                 </div>
             @else
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3 small text-muted fw-semibold">Date</th>
-                            <th class="small text-muted fw-semibold">Dossier</th>
-                            <th class="small text-muted fw-semibold">Caractère</th>
-                            <th class="text-end pe-3 small text-muted fw-semibold">Voir</th>
+                            <th class="ps-3 small text-muted fw-semibold">التاريخ</th>
+                            <th class="small text-muted fw-semibold">الملف</th>
+                            <th class="small text-muted fw-semibold">الحالة</th>
+                            <th class="text-end pe-3 small text-muted fw-semibold">عرض</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -210,11 +212,11 @@
                             <td>
                                 @if($jugement->est_definitif)
                                     <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
-                                        <i class="bi bi-check-circle me-1"></i>Définitif
+                                        <i class="bi bi-check-circle me-1"></i>نهائي
                                     </span>
                                 @else
                                     <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25">
-                                        <i class="bi bi-clock me-1"></i>En cours
+                                        <i class="bi bi-clock me-1"></i>قيد المعالجة
                                     </span>
                                 @endif
                             </td>
@@ -241,46 +243,47 @@
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-info-circle me-2 text-muted"></i>Informations
+                    <i class="bi bi-info-circle me-2 text-muted"></i>
+                    المعلومات
                 </h6>
             </div>
             <div class="card-body small">
                 <dl class="row mb-0">
-                    <dt class="col-6 text-muted fw-normal">Grade</dt>
+                    <dt class="col-6 text-muted fw-normal">الدرجة</dt>
                     <dd class="col-6">{{ $juge->grade ?? '—' }}</dd>
 
-                    <dt class="col-6 text-muted fw-normal">Spécialisation</dt>
+                    <dt class="col-6 text-muted fw-normal">التخصص</dt>
                     <dd class="col-6">{{ $juge->specialisation ?? '—' }}</dd>
 
-                    <dt class="col-6 text-muted fw-normal">Tribunal</dt>
+                    <dt class="col-6 text-muted fw-normal">المحكمة</dt>
                     <dd class="col-6">
                         @if($juge->tribunal)
                             <a href="{{ route('tribunaux.show', $juge->tribunal) }}" class="text-decoration-none">
                                 {{ $juge->tribunal->nom_tribunal }}
                             </a>
                         @else
-                            <span class="text-muted fst-italic">Non assigné</span>
+                            <span class="text-muted fst-italic">غير معين</span>
                         @endif
                     </dd>
 
-                    <dt class="col-6 text-muted fw-normal">Audiences</dt>
+                    <dt class="col-6 text-muted fw-normal">الجلسات</dt>
                     <dd class="col-6">
                         <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
-                            {{ $juge->audiences->count() }} au total
+                            {{ $juge->audiences->count() }} إجمالاً
                         </span>
                     </dd>
 
-                    <dt class="col-6 text-muted fw-normal">Jugements</dt>
+                    <dt class="col-6 text-muted fw-normal">الأحكام</dt>
                     <dd class="col-6">
                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
                             {{ $juge->jugements->count() }}
                         </span>
                     </dd>
 
-                    <dt class="col-6 text-muted fw-normal">Créé le</dt>
+                    <dt class="col-6 text-muted fw-normal">تاريخ الإنشاء</dt>
                     <dd class="col-6">{{ $juge->created_at->format('d/m/Y') }}</dd>
 
-                    <dt class="col-6 text-muted fw-normal">Modifié le</dt>
+                    <dt class="col-6 text-muted fw-normal">آخر تعديل</dt>
                     <dd class="col-6">{{ $juge->updated_at->format('d/m/Y') }}</dd>
                 </dl>
             </div>
@@ -291,21 +294,21 @@
             <div class="card-body py-3 d-flex flex-column gap-2">
                 <a href="{{ route('juges.edit', $juge) }}"
                    class="btn btn-warning w-100 btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier ce juge
+                    <i class="bi bi-pencil me-1"></i>تعديل القاضي
                 </a>
                 @if($juge->tribunal)
                 <a href="{{ route('tribunaux.show', $juge->tribunal) }}"
                    class="btn btn-outline-info w-100 btn-sm">
-                    <i class="bi bi-building me-1"></i>Voir le tribunal
+                    <i class="bi bi-building me-1"></i>عرض المحكمة
                 </a>
                 @endif
                 <a href="{{ route('audiences.index', ['juge' => $juge->id]) }}"
                    class="btn btn-outline-primary w-100 btn-sm">
-                    <i class="bi bi-calendar-event me-1"></i>Toutes ses audiences
+                    <i class="bi bi-calendar-event me-1"></i>كل الجلسات
                 </a>
                 <a href="{{ route('juges.index') }}"
                    class="btn btn-outline-secondary w-100 btn-sm">
-                    <i class="bi bi-arrow-left me-1"></i>Retour à la liste
+                    <i class="bi bi-arrow-left me-1"></i>العودة إلى القائمة
                 </a>
             </div>
         </div>

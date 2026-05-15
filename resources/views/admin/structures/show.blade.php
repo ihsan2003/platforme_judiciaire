@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Structure — ' . $structure->nom)
+@section('title', 'الهيكل — ' . $structure->nom)
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('admin.structures.index') }}">Structures</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.structures.index') }}">الهياكل</a></li>
     <li class="breadcrumb-item active">{{ $structure->nom }}</li>
 @endsection
 
@@ -29,11 +29,11 @@
                         </span>
                         @if($structure->parent)
                             <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
-                                <i class="bi bi-diagram-2 me-1"></i>Sous-structure de {{ $structure->parent->nom }}
+                                <i class="bi bi-diagram-2 me-1"></i>هيكل فرعي تابع لـ {{ $structure->parent->nom }}
                             </span>
                         @else
                             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                <i class="bi bi-building me-1"></i>Structure principale
+                                <i class="bi bi-building me-1"></i>هيكل رئيسي
                             </span>
                         @endif
                     </div>
@@ -44,28 +44,28 @@
             <div class="d-flex flex-wrap gap-4 small text-muted">
                 <div class="text-center">
                     <div class="fw-semibold text-dark fs-6">{{ $structure->enfants->count() }}</div>
-                    <div>Sous-structures</div>
+                    <div>الهياكل الفرعية</div>
                 </div>
                 <div class="text-center">
                     <div class="fw-semibold text-dark fs-6">{{ $structure->actionReclamations->count() }}</div>
-                    <div>Actions liées</div>
+                    <div>الإجراءات المرتبطة</div>
                 </div>
             </div>
 
             {{-- Boutons --}}
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ route('admin.structures.edit', $structure) }}" class="btn btn-warning btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier
+                    <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
                 <form action="{{ route('admin.structures.destroy', $structure) }}" method="POST"
-                      onsubmit="return confirm('Supprimer « {{ $structure->nom }} » ?')">
+                      onsubmit="return confirm('حذف « {{ $structure->nom }} » ؟')">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i>Supprimer
+                        <i class="bi bi-trash me-1"></i>حذف
                     </button>
                 </form>
                 <a href="{{ route('admin.structures.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-left me-1"></i>Retour
+                    <i class="bi bi-arrow-left me-1"></i>رجوع
                 </a>
             </div>
         </div>
@@ -75,20 +75,20 @@
         <div class="row g-2 small text-muted">
             <div class="col-sm-3">
                 <i class="bi bi-calendar-plus me-1"></i>
-                <strong>Créée le :</strong> {{ $structure->created_at->format('d/m/Y à H:i') }}
+                <strong>تاريخ الإنشاء :</strong> {{ $structure->created_at->format('d/m/Y à H:i') }}
             </div>
             <div class="col-sm-3">
                 <i class="bi bi-pencil me-1"></i>
-                <strong>Modifiée le :</strong> {{ $structure->updated_at->format('d/m/Y') }}
+                <strong>آخر تعديل :</strong> {{ $structure->updated_at->format('d/m/Y') }}
             </div>
             <div class="col-sm-3">
                 <i class="bi bi-fingerprint me-1"></i>
-                <strong>ID :</strong> <span class="font-monospace">{{ $structure->id }}</span>
+                <strong>المعرف :</strong> <span class="font-monospace">{{ $structure->id }}</span>
             </div>
             @if($structure->parent)
             <div class="col-sm-3">
                 <i class="bi bi-diagram-3 me-1"></i>
-                <strong>Hiérarchie :</strong> {{ $structure->hierarchie }}
+                <strong>التسلسل الهرمي :</strong> {{ $structure->hierarchie }}
             </div>
             @endif
         </div>
@@ -105,20 +105,20 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-building-fill me-2 text-primary"></i>Informations de la structure
+                    <i class="bi bi-building-fill me-2 text-primary"></i>معلومات الهيكل
                 </h6>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-sm-6">
                         <div class="p-3 rounded border h-100">
-                            <div class="text-muted small fw-semibold mb-1">Nom de la structure</div>
+                            <div class="text-muted small fw-semibold mb-1">اسم الهيكل</div>
                             <div class="fw-semibold">{{ $structure->nom }}</div>
                         </div>
                     </div>
                     <div class="col-sm-6">
                         <div class="p-3 rounded border h-100">
-                            <div class="text-muted small fw-semibold mb-1">Type de structure</div>
+                            <div class="text-muted small fw-semibold mb-1">نوع الهيكل</div>
                             <span class="badge bg-primary bg-opacity-15 text-white border border-primary border-opacity-25">
                                 {{ $structure->typeStructure?->type_structure ?? '—' }}
                             </span>
@@ -126,7 +126,7 @@
                     </div>
                     <div class="col-sm-6">
                         <div class="p-3 rounded border h-100">
-                            <div class="text-muted small fw-semibold mb-1">Structure parente</div>
+                            <div class="text-muted small fw-semibold mb-1">الهيكل الأب</div>
                             @if($structure->parent)
                                 <a href="{{ route('admin.structures.show', $structure->parent) }}"
                                    class="text-decoration-none fw-semibold">
@@ -134,20 +134,20 @@
                                     {{ $structure->parent->nom }}
                                 </a>
                             @else
-                                <span class="text-muted fst-italic">Aucune (structure principale)</span>
+                                <span class="text-muted fst-italic">لا يوجد (هيكل رئيسي)</span>
                             @endif
                         </div>
                     </div>
                     <div class="col-sm-6">
                         <div class="p-3 rounded border h-100">
-                            <div class="text-muted small fw-semibold mb-1">Niveau hiérarchique</div>
+                            <div class="text-muted small fw-semibold mb-1">المستوى الهرمي</div>
                             @if($structure->parent)
                                 <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
-                                    <i class="bi bi-diagram-2 me-1"></i>Sous-structure
+                                    <i class="bi bi-diagram-2 me-1"></i>هيكل فرعي
                                 </span>
                             @else
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                    <i class="bi bi-building me-1"></i>Niveau principal
+                                    <i class="bi bi-building me-1"></i>مستوى رئيسي
                                 </span>
                             @endif
                         </div>
@@ -161,21 +161,21 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-diagram-2 me-2 text-success"></i>Sous-structures
+                    <i class="bi bi-diagram-2 me-2 text-success"></i>الهياكل الفرعية
                     <span class="badge bg-success bg-opacity-10 text-success ms-1">{{ $structure->enfants->count() }}</span>
                 </h6>
                 <a href="{{ route('admin.structures.create') }}?parent={{ $structure->id }}"
                    class="btn btn-success btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>Ajouter
+                    <i class="bi bi-plus-lg me-1"></i>إضافة
                 </a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3 text-muted small fw-semibold">Nom</th>
-                            <th class="text-muted small fw-semibold">Type</th>
-                            <th class="text-end pe-3 text-muted small fw-semibold">Actions</th>
+                            <th class="ps-3 text-muted small fw-semibold">الاسم</th>
+                            <th class="text-muted small fw-semibold">النوع</th>
+                            <th class="text-end pe-3 text-muted small fw-semibold">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -198,17 +198,17 @@
                             <td class="text-end pe-3">
                                 <div class="d-flex gap-1 justify-content-end">
                                     <a href="{{ route('admin.structures.show', $enfant) }}"
-                                       class="btn btn-sm btn-outline-primary" title="Voir">
+                                       class="btn btn-sm btn-outline-primary" title="عرض">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <a href="{{ route('admin.structures.edit', $enfant) }}"
-                                       class="btn btn-sm btn-outline-warning" title="Modifier">
+                                       class="btn btn-sm btn-outline-warning" title="تعديل">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('admin.structures.destroy', $enfant) }}" method="POST"
-                                          onsubmit="return confirm('Supprimer « {{ $enfant->nom }} » ?')">
+                                          onsubmit="return confirm('حذف « {{ $enfant->nom }} » ؟')">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <button class="btn btn-sm btn-outline-danger" title="حذف">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -222,11 +222,11 @@
         </div>
         @endif
 
-        {{-- Actions de réclamation liées --}}
+        {{-- Actions --}}
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-activity me-2 text-warning"></i>Actions de suivi liées
+                    <i class="bi bi-activity me-2 text-warning"></i>الإجراءات المرتبطة
                     <span class="badge bg-warning text-dark ms-1">{{ $structure->actionReclamations->count() }}</span>
                 </h6>
             </div>
@@ -241,99 +241,69 @@
                             <div class="text-muted" style="font-size:.72rem">
                                 {{ $action->date_action?->format('d/m/Y') ?? '—' }}
                                 @if($action->reclamation)
-                                    · Réclamation #{{ $action->reclamation->id }}
+                                    · شكوى #{{ $action->reclamation->id }}
                                 @endif
                             </div>
                         </div>
                     </div>
                     @if($action->reclamation)
                     <a href="{{ route('reclamations.show', $action->id_reclamation) }}"
-                       class="btn btn-sm btn-outline-primary" title="Voir la réclamation">
+                       class="btn btn-sm btn-outline-primary" title="عرض الشكوى">
                         <i class="bi bi-eye"></i>
                     </a>
                     @endif
                 </div>
                 @endforeach
-                @if($structure->actionReclamations->count() > 5)
-                <div class="list-group-item text-center text-muted small fst-italic py-2">
-                    … et {{ $structure->actionReclamations->count() - 5 }} action(s) de plus
-                </div>
-                @endif
             </div>
             @else
             <div class="card-body text-center py-4 text-muted">
                 <i class="bi bi-list-check fs-2 d-block mb-2 opacity-25"></i>
-                <span class="small">Aucune action de suivi liée à cette structure.</span>
+                <span class="small">لا توجد إجراءات مرتبطة بهذا الهيكل.</span>
             </div>
             @endif
         </div>
 
     </div>
 
-    {{-- ── Colonne latérale ── --}}
+    {{-- ── Sidebar ── --}}
     <div class="col-lg-4">
 
-
-        {{-- Hiérarchie visuelle --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-diagram-3 me-2 text-primary"></i>Hiérarchie
+                    <i class="bi bi-diagram-3 me-2 text-primary"></i>التسلسل الهرمي
                 </h6>
             </div>
             <div class="card-body small">
                 @if($structure->parent)
                 <div class="d-flex align-items-center gap-2 mb-2 text-muted">
-                    <i class="bi bi-building-fill text-primary"></i>
-                    <a href="{{ route('admin.structures.show', $structure->parent) }}"
-                       class="text-decoration-none text-muted fw-semibold">
-                        {{ $structure->parent->nom }}
-                    </a>
+                    {{ $structure->parent->nom }}
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-3 mb-2">
-                    <i class="bi bi-arrow-return-right text-muted"></i>
+                    <i class="bi bi-arrow-return-left text-muted"></i> 
                     <i class="bi bi-building text-primary"></i>
                     <span class="fw-bold text-primary">{{ $structure->nom }}</span>
-                    <span class="badge bg-primary bg-opacity-15 text-white" style="font-size:.65rem">actuel</span>
+                    <span class="badge bg-primary bg-opacity-15 text-white">حالي</span>
                 </div>
                 @else
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <i class="bi bi-building-fill text-primary"></i>
-                    <span class="fw-bold text-primary">{{ $structure->nom }}</span>
-                    <span class="badge bg-primary bg-opacity-15 text-white" style="font-size:.65rem">actuel</span>
-                </div>
-                @if($structure->enfants->count() > 0)
-                    @foreach($structure->enfants as $enfant)
-                    <div class="d-flex align-items-center gap-2 ms-3 mt-1 text-muted">
-                        <i class="bi bi-arrow-return-right text-muted"></i>
-                        <i class="bi bi-building text-secondary"></i>
-                        <a href="{{ route('admin.structures.show', $enfant) }}"
-                           class="text-decoration-none text-muted small">
-                            {{ $enfant->nom }}
-                        </a>
-                    </div>
-                    @endforeach
-                @endif
+                <div class="fw-bold text-primary">{{ $structure->nom }}</div>
                 @endif
             </div>
         </div>
 
-        {{-- Actions rapides --}}
         <div class="card border-0 shadow-sm">
             <div class="card-body py-3 d-flex flex-column gap-2">
-                <a href="{{ route('admin.structures.edit', $structure) }}"
-                   class="btn btn-warning w-100 btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier cette structure
+                <a href="{{ route('admin.structures.edit', $structure) }}" class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil me-1"></i>تعديل الهيكل
                 </a>
-                <a href="{{ route('admin.structures.create') }}"
-                   class="btn btn-outline-primary w-100 btn-sm">
-                    <i class="bi bi-plus-lg me-1"></i>Nouvelle structure
+                <a href="{{ route('admin.structures.create') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>هيكل جديد
                 </a>
                 <form action="{{ route('admin.structures.destroy', $structure) }}" method="POST"
-                      onsubmit="return confirm('Supprimer « {{ $structure->nom }} » ?')">
+                      onsubmit="return confirm('حذف « {{ $structure->nom }} » ؟')">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-danger w-100 btn-sm">
-                        <i class="bi bi-trash me-1"></i>Supprimer
+                        <i class="bi bi-trash me-1"></i>حذف
                     </button>
                 </form>
             </div>

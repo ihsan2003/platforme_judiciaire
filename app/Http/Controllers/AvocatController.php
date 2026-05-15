@@ -47,7 +47,9 @@ class AvocatController extends Controller
      */
     public function show(string $id)
     {
-        $avocat = Avocat::with('dossierParties')->findOrFail($id);
+        $avocat = Avocat::with(['parties' => function ($q) {
+            $q->distinct('parties.id');
+        }])->findOrFail($id);
         return view('avocats.show', compact('avocat'));
     }
 
