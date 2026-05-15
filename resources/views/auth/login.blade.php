@@ -376,11 +376,6 @@
                         تذكرني
                     </label>
 
-                    @if(Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="forgot-link">
-                            نسيت كلمة المرور؟
-                        </a>
-                    @endif
                 </div>
 
                 <button type="submit" class="btn-submit">
