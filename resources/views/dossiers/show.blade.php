@@ -10,211 +10,211 @@
 
 @push('styles')
 <style>
-/* ── Palette dossier ─────────────────────────────── */
-:root {
-    --deg1 : #1a6b3a;  --deg1-light : #e8f5ee;  --deg1-muted : #a7d9b8;
-    --deg2 : #1a3a6b;  --deg2-light : #e8eef5;  --deg2-muted : #a7bfd9;
-    --deg3 : #6b1a1a;  --deg3-light : #f5e8e8;  --deg3-muted : #d9a7a7;
-    --houkm : #7c3aed;
-    --jug   : #0f766e;
-    --rec   : #c2410c;
-    --exec  : #0369a1;
-    --tl-w  : 2px;
-}
+    /* ── Palette dossier ─────────────────────────────── */
+    :root {
+        --deg1 : #1a6b3a;  --deg1-light : #e8f5ee;  --deg1-muted : #a7d9b8;
+        --deg2 : #1a3a6b;  --deg2-light : #e8eef5;  --deg2-muted : #a7bfd9;
+        --deg3 : #6b1a1a;  --deg3-light : #f5e8e8;  --deg3-muted : #d9a7a7;
+        --houkm : #7c3aed;
+        --jug   : #0f766e;
+        --rec   : #c2410c;
+        --exec  : #0369a1;
+        --tl-w  : 2px;
+    }
 
-/* ── En-tête dossier ─────────────────────────────── */
-.dossier-header {
-    background: #1a3a5c;
-    border-radius: 16px;
-    padding: 28px 32px;
-    color: #fff;
-    margin-bottom: 24px;
-}
-.dossier-header-kpi {
-    display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-end;
-}
-.kpi-item { text-align: center; }
-.kpi-val  { font-size: 1.5rem; font-weight: 800; color: #c8a84b; line-height: 1; }
-.kpi-lab  { font-size: .68rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+    /* ── En-tête dossier ─────────────────────────────── */
+    .dossier-header {
+        background: #1a3a5c;
+        border-radius: 16px;
+        padding: 28px 32px;
+        color: #fff;
+        margin-bottom: 24px;
+    }
+    .dossier-header-kpi {
+        display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-end;
+    }
+    .kpi-item { text-align: center; }
+    .kpi-val  { font-size: 1.5rem; font-weight: 800; color: #c8a84b; line-height: 1; }
+    .kpi-lab  { font-size: .68rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
 
-/* ── Onglets ─────────────────────────────────────── */
-.dossier-tabs .nav-link {
-    font-weight: 600; font-size: .85rem;
-    color: #64748b; border: none;
-    padding: .6rem 1.1rem;
-    border-bottom: 3px solid transparent;
-    border-radius: 0;
-    transition: all .15s;
-}
-.dossier-tabs .nav-link.active {
-    color: #1a3a6b; border-bottom-color: #1a3a6b; background: none;
-}
-.dossier-tabs .nav-link:hover:not(.active) {
-    color: #1a3a6b; border-bottom-color: #e2e8f0; background: none;
-}
+    /* ── Onglets ─────────────────────────────────────── */
+    .dossier-tabs .nav-link {
+        font-weight: 600; font-size: .85rem;
+        color: #64748b; border: none;
+        padding: .6rem 1.1rem;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        transition: all .15s;
+    }
+    .dossier-tabs .nav-link.active {
+        color: #1a3a6b; border-bottom-color: #1a3a6b; background: none;
+    }
+    .dossier-tabs .nav-link:hover:not(.active) {
+        color: #1a3a6b; border-bottom-color: #e2e8f0; background: none;
+    }
 
-/* ── Cartes de degré ─────────────────────────────── */
-.deg-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; margin-bottom: 20px; }
-.deg-card.deg-1 { border-color: var(--deg1); }
-.deg-card.deg-2 { border-color: var(--deg2); }
-.deg-card.deg-3 { border-color: var(--deg3); }
-.deg-card.deg-closed { opacity: .82; }
+    /* ── Cartes de degré ─────────────────────────────── */
+    .deg-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; margin-bottom: 20px; }
+    .deg-card.deg-1 { border-color: var(--deg1); }
+    .deg-card.deg-2 { border-color: var(--deg2); }
+    .deg-card.deg-3 { border-color: var(--deg3); }
+    .deg-card.deg-closed { opacity: .82; }
 
-.deg-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.deg-header.deg-1 { background: var(--deg1); color: #fff; }
-.deg-header.deg-2 { background: var(--deg2); color: #fff; }
-.deg-header.deg-3 { background: var(--deg3); color: #fff; }
+    .deg-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .deg-header.deg-1 { background: var(--deg1); color: #fff; }
+    .deg-header.deg-2 { background: var(--deg2); color: #fff; }
+    .deg-header.deg-3 { background: var(--deg3); color: #fff; }
 
-.deg-num {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: rgba(255,255,255,.2);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: .85rem; flex-shrink: 0;
-}
-.deg-title { font-weight: 700; font-size: 1rem; }
-.deg-sub   { font-size: .78rem; opacity: .8; }
+    .deg-num {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: .85rem; flex-shrink: 0;
+    }
+    .deg-title { font-weight: 700; font-size: 1rem; }
+    .deg-sub   { font-size: .78rem; opacity: .8; }
 
-.deg-body  { background: #fff; }
+    .deg-body  { background: #fff; }
 
-/* ── Timeline audiences ──────────────────────────── */
-.aud-timeline { padding: 20px 20px 8px 52px; position: relative; }
-.aud-timeline::before {
-    content: '';
-    position: absolute; left: 28px; top: 24px; bottom: 12px;
-    width: var(--tl-w); background: #e2e8f0; border-radius: 2px;
-}
+    /* ── Timeline audiences ──────────────────────────── */
+    .aud-timeline { padding: 20px 20px 8px 52px; position: relative; }
+    .aud-timeline::before {
+        content: '';
+        position: absolute; left: 28px; top: 24px; bottom: 12px;
+        width: var(--tl-w); background: #e2e8f0; border-radius: 2px;
+    }
 
-.aud-item { position: relative; margin-bottom: 12px; }
-.aud-dot {
-    position: absolute; left: -38px; top: 10px;
-    width: 20px; height: 20px; border-radius: 50%;
-    border: 2.5px solid #fff; box-shadow: 0 0 0 2px #e2e8f0;
-    background: #b45309;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .55rem; color: #fff; flex-shrink: 0;
-}
-.aud-dot.houkm  { background: var(--houkm); box-shadow: 0 0 0 3px rgba(124,58,237,.3); width: 24px; height: 24px; left: -40px; top: 8px; }
-.aud-dot.future { background: #3b82f6; }
+    .aud-item { position: relative; margin-bottom: 12px; }
+    .aud-dot {
+        position: absolute; left: -38px; top: 10px;
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 2.5px solid #fff; box-shadow: 0 0 0 2px #e2e8f0;
+        background: #b45309;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .55rem; color: #fff; flex-shrink: 0;
+    }
+    .aud-dot.houkm  { background: var(--houkm); box-shadow: 0 0 0 3px rgba(124,58,237,.3); width: 24px; height: 24px; left: -40px; top: 8px; }
+    .aud-dot.future { background: #3b82f6; }
 
-.aud-card {
-    border: 1px solid #e2e8f0; border-radius: 10px;
-    padding: 10px 14px; background: #fff;
-    transition: border-color .15s, box-shadow .15s;
-}
-.aud-card:hover { border-color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-.aud-card.houkm { border-color: rgba(124,58,237,.4); background: #fdf4ff; }
-.aud-card.future{ border-color: rgba(59,130,246,.35); background: #eff6ff; }
+    .aud-card {
+        border: 1px solid #e2e8f0; border-radius: 10px;
+        padding: 10px 14px; background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .aud-card:hover { border-color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .aud-card.houkm { border-color: rgba(124,58,237,.4); background: #fdf4ff; }
+    .aud-card.future{ border-color: rgba(59,130,246,.35); background: #eff6ff; }
 
-.aud-card-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
-.aud-date { font-weight: 700; font-size: .88rem; }
-.aud-type-badge {
-    font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
-}
-.aud-type-badge.normal { background: #fef3c7; color: #92400e; }
-.aud-type-badge.houkm  { background: #f3e8ff; color: #6b21a8; }
-.aud-type-badge.future { background: #dbeafe; color: #1d4ed8; }
+    .aud-card-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .aud-date { font-weight: 700; font-size: .88rem; }
+    .aud-type-badge {
+        font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    }
+    .aud-type-badge.normal { background: #fef3c7; color: #92400e; }
+    .aud-type-badge.houkm  { background: #f3e8ff; color: #6b21a8; }
+    .aud-type-badge.future { background: #dbeafe; color: #1d4ed8; }
 
-.aud-meta { font-size: .78rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
-.aud-renvoi { font-size: .74rem; color: #64748b; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #e2e8f0; }
+    .aud-meta { font-size: .78rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
+    .aud-renvoi { font-size: .74rem; color: #64748b; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #e2e8f0; }
 
-/* ── Jugement bloc ───────────────────────────────── */
-.jug-block {
-    margin: 0 20px 20px;
-    border: 2px solid var(--jug); border-radius: 12px;
-    background: #f0fdfa; padding: 16px 18px;
-}
-.jug-block-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
-.jug-title { font-weight: 800; font-size: .95rem; color: var(--jug); display: flex; align-items: center; gap: 6px; }
-.jug-meta  { font-size: .8rem; color: #475569; display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
-.jug-dispositif {
-    font-size: .82rem; color: #334155; background: #fff;
-    border: 1px solid #ccfbf1; border-left: 3px solid var(--jug);
-    padding: 8px 12px; border-radius: 6px; max-height: 70px; overflow: hidden;
-    position: relative; line-height: 1.6;
-}
-.jug-dispositif.open { max-height: none; }
+    /* ── Jugement bloc ───────────────────────────────── */
+    .jug-block {
+        margin: 0 20px 20px;
+        border: 2px solid var(--jug); border-radius: 12px;
+        background: #f0fdfa; padding: 16px 18px;
+    }
+    .jug-block-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .jug-title { font-weight: 800; font-size: .95rem; color: var(--jug); display: flex; align-items: center; gap: 6px; }
+    .jug-meta  { font-size: .8rem; color: #475569; display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
+    .jug-dispositif {
+        font-size: .82rem; color: #334155; background: #fff;
+        border: 1px solid #ccfbf1; border-left: 3px solid var(--jug);
+        padding: 8px 12px; border-radius: 6px; max-height: 70px; overflow: hidden;
+        position: relative; line-height: 1.6;
+    }
+    .jug-dispositif.open { max-height: none; }
 
-/* Finance mini ─────────────────────────────────── */
-.fin-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; margin-top: 4px; }
-.fin-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+    /* Finance mini ─────────────────────────────────── */
+    .fin-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; margin-top: 4px; }
+    .fin-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
 
-/* Recours ──────────────────────────────────────── */
-.rec-block {
-    margin: 8px 20px 16px;
-    border: 2px dashed var(--rec); border-radius: 10px;
-    background: #fff7ed; padding: 12px 16px;
-}
+    /* Recours ──────────────────────────────────────── */
+    .rec-block {
+        margin: 8px 20px 16px;
+        border: 2px dashed var(--rec); border-radius: 10px;
+        background: #fff7ed; padding: 12px 16px;
+    }
 
-/* Exécution ─────────────────────────────────────  */
-.exec-block {
-    margin: 8px 20px 20px;
-    border: 2px solid var(--exec); border-radius: 10px;
-    background: #f0f9ff; padding: 12px 16px;
-}
+    /* Exécution ─────────────────────────────────────  */
+    .exec-block {
+        margin: 8px 20px 20px;
+        border: 2px solid var(--exec); border-radius: 10px;
+        background: #f0f9ff; padding: 12px 16px;
+    }
 
-/* Connecteur entre degrés ──────────────────────── */
-.deg-connector {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 4px 0; margin-bottom: 0; position: relative; z-index: 1;
-}
-.deg-connector-line { width: 2px; height: 32px; background: #cbd5e1; }
-.deg-connector-tag {
-    background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 20px;
-    padding: 3px 12px; font-size: .7rem; font-weight: 600; color: #64748b;
-    margin: 4px 0;
-}
+    /* Connecteur entre degrés ──────────────────────── */
+    .deg-connector {
+        display: flex; flex-direction: column; align-items: center;
+        padding: 4px 0; margin-bottom: 0; position: relative; z-index: 1;
+    }
+    .deg-connector-line { width: 2px; height: 32px; background: #cbd5e1; }
+    .deg-connector-tag {
+        background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 20px;
+        padding: 3px 12px; font-size: .7rem; font-weight: 600; color: #64748b;
+        margin: 4px 0;
+    }
 
-/* Aucun contenu ────────────────────────────────── */
-.empty-state {
-    padding: 20px; border-radius: 10px; background: #f8fafc;
-    border: 1px dashed #cbd5e1; text-align: center;
-    color: #94a3b8; font-size: .85rem; margin: 12px 20px 20px;
-}
+    /* Aucun contenu ────────────────────────────────── */
+    .empty-state {
+        padding: 20px; border-radius: 10px; background: #f8fafc;
+        border: 1px dashed #cbd5e1; text-align: center;
+        color: #94a3b8; font-size: .85rem; margin: 12px 20px 20px;
+    }
 
-/* Formulaire recours inline ─────────────────────  */
-.recours-form-wrap {
-    margin: 0 20px 20px;
-    border: 1px solid #e2e8f0; border-radius: 10px;
-    background: #fffbeb; padding: 14px;
-}
+    /* Formulaire recours inline ─────────────────────  */
+    .recours-form-wrap {
+        margin: 0 20px 20px;
+        border: 1px solid #e2e8f0; border-radius: 10px;
+        background: #fffbeb; padding: 14px;
+    }
 
-/* Alerte RG ─────────────────────────────────────  */
-.rg-alert { padding: 8px 12px; border-radius: 8px; font-size: .79rem; margin: 8px 20px; display: flex; gap: 8px; }
-.rg-alert.warn { background: #fef9c3; border-left: 3px solid #eab308; color: #713f12; }
-.rg-alert.info { background: #e0f2fe; border-left: 3px solid #0284c7; color: #075985; }
+    /* Alerte RG ─────────────────────────────────────  */
+    .rg-alert { padding: 8px 12px; border-radius: 8px; font-size: .79rem; margin: 8px 20px; display: flex; gap: 8px; }
+    .rg-alert.warn { background: #fef9c3; border-left: 3px solid #eab308; color: #713f12; }
+    .rg-alert.info { background: #e0f2fe; border-left: 3px solid #0284c7; color: #075985; }
 
-/* Badges génériques ─────────────────────────────  */
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; }
-.pill-white   { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); }
-.pill-success { background: #dcfce7; color: #166534; }
-.pill-warning { background: #fef3c7; color: #92400e; }
-.pill-danger  { background: #fee2e2; color: #991b1b; }
-.pill-muted   { background: #f1f5f9; color: #64748b; }
-.pill-info    { background: #e0f2fe; color: #075985; }
-.pill-purple  { background: #f3e8ff; color: #6b21a8; }
+    /* Badges génériques ─────────────────────────────  */
+    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; }
+    .pill-white   { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+    .pill-success { background: #dcfce7; color: #166534; }
+    .pill-warning { background: #fef3c7; color: #92400e; }
+    .pill-danger  { background: #fee2e2; color: #991b1b; }
+    .pill-muted   { background: #f1f5f9; color: #64748b; }
+    .pill-info    { background: #e0f2fe; color: #075985; }
+    .pill-purple  { background: #f3e8ff; color: #6b21a8; }
 
-/* Barre de progression dossier ─────────────────── */
-.progress-steps {
-    display: flex; gap: 4px; background: #f1f5f9;
-    border-radius: 10px; padding: 4px; flex-wrap: wrap; margin-bottom: 24px;
-}
-.progress-step {
-    flex: 1; min-width: 110px; padding: 8px 14px;
-    border-radius: 7px; display: flex; align-items: center; gap: 8px;
-    font-size: .76rem; font-weight: 600; color: #94a3b8;
-}
-.progress-step.s-deg1 { background: var(--deg1); color: #fff; }
-.progress-step.s-deg2 { background: var(--deg2); color: #fff; }
-.progress-step.s-deg3 { background: var(--deg3); color: #fff; }
-.progress-step-num {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(255,255,255,.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: .73rem; font-weight: 800; flex-shrink: 0;
-}
+    /* Barre de progression dossier ─────────────────── */
+    .progress-steps {
+        display: flex; gap: 4px; background: #f1f5f9;
+        border-radius: 10px; padding: 4px; flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .progress-step {
+        flex: 1; min-width: 110px; padding: 8px 14px;
+        border-radius: 7px; display: flex; align-items: center; gap: 8px;
+        font-size: .76rem; font-weight: 600; color: #94a3b8;
+    }
+    .progress-step.s-deg1 { background: var(--deg1); color: #fff; }
+    .progress-step.s-deg2 { background: var(--deg2); color: #fff; }
+    .progress-step.s-deg3 { background: var(--deg3); color: #fff; }
+    .progress-step-num {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .73rem; font-weight: 800; flex-shrink: 0;
+    }
 
-/* Finances & Exécutions sections ────────────────── */
-.section-card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-radius: 12px; }
+    /* Finances & Exécutions sections ────────────────── */
+    .section-card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-radius: 12px; }
 </style>
 @endpush
 
@@ -442,20 +442,6 @@
             @endcan
         </div>
 
-        @if(!$peutAudience && count($manquants) > 0)
-        <div class="alert alert-warning border-0 small mb-3">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>الأدوار الناقصة :</strong>
-
-            @foreach($manquants as $m)
-                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25 mx-1" dir="rtl">
-                    {{ $m }}
-                </span>
-            @endforeach
-
-            — يجب إضافة طرفين على الأقل.
-        </div>
-        @endif
 
         @if($dossierParties->isEmpty())
             <div class="text-center py-5 text-muted">
@@ -584,7 +570,7 @@
             @endphp
             <div class="progress-step {{ $cls }}">
                 <div class="progress-step-num">{{ $idx + 1 }}</div>
-                <div class="text-end">
+                <div >
                     <div style="font-size:.75rem;font-weight:700;line-height:1.2">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
                     <div style="font-size:.65rem;opacity:.8">
                         {{ is_null($dt->date_fin) ? 'قيد النظر' : 'مغلقة' }}
@@ -603,7 +589,7 @@
         <div class="d-flex justify-content-start mb-3">
             @can('update', $dossier)
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterTribunal">
-                    <i class="bi bi-plus-lg ml-1"></i>تعيين محكمة
+                    <i class="bi bi-plus-lg me-1"></i>تعيين محكمة
                 </button>
             @endcan
         </div>
@@ -635,11 +621,11 @@
             <div class="deg-connector-line"></div>
             <div class="deg-connector-tag">
                 @if($prevRecours = $prevDt->jugements->first()?->recours?->first())
-                    <i class="bi bi-arrow-repeat ml-1"></i>
+                    <i class="bi bi-arrow-repeat me-1"></i>
                     {{ $prevRecours->typeRecours->type_recours ?? 'انتقال' }}
                     — {{ $prevRecours->date_recours->format('d/m/Y') }}
                 @else
-                    <i class="bi bi-arrow-down ml-1"></i> انتقال درجة التقاضي
+                    <i class="bi bi-arrow-down me-1"></i> انتقال درجة التقاضي
                 @endif
             </div>
             <div class="deg-connector-line"></div>
@@ -653,25 +639,14 @@
             <div class="deg-header {{ $colorCls }}">
                 <div class="d-flex align-items-center gap-3">
                     <div class="deg-num">{{ $loopIdx + 1 }}</div>
-                    <div class="text-end">
+                    <div>
                         <div class="deg-title">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
                         <div class="deg-sub">
-                            <i class="bi bi-bank ml-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
+                            <i class="bi bi-bank me-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
                         </div>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    {{-- Statut instance --}}
-                    @if($isClosed)
-                        <span class="pill pill-white"><i class="bi bi-lock-fill"></i> مغلقة</span>
-                    @elseif($jugement)
-                        <span class="pill pill-white"><i class="bi bi-hammer"></i> صدر الحكم</span>
-                    @elseif($audienceHoukm)
-                        <span class="pill pill-white"><i class="bi bi-hourglass-split"></i> في المداولة</span>
-                    @else
-                        <span class="pill pill-white"><i class="bi bi-activity"></i> قيد النظر</span>
-                    @endif
-
                     <span class="pill pill-white" style="font-size:.68rem">
                         <i class="bi bi-calendar3"></i> {{ $dt->date_debut?->format('d/m/Y') }} ← {{ $dt->date_fin?->format('d/m/Y') ?? 'الآن' }}
                     </span>
@@ -689,7 +664,7 @@
                         @if(!$isClosed && $peutAudience)
                         <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
                         class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:.75rem">
-                            <i class="bi bi-calendar-plus ml-1"></i>جلسة جديدة
+                            <i class="bi bi-calendar-plus me-1"></i>جلسة جديدة
                         </a>
                         @endif
                     </div>
@@ -703,16 +678,6 @@
                     <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
                     <span>لا توجد جلسات مسجلة في هذه المرحلة حتى الآن.</span>
                 </div>
-            @elseif(!$audienceHoukm && $audiences->isNotEmpty())
-                <div class="rg-alert warn">
-                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                    <span>جلسة <strong>النطق بالحكم</strong> لم تسجل بعد — لا يمكن إدخال تفاصيل الحكم.</span>
-                </div>
-            @elseif($audienceHoukm && !$jugement)
-                <div class="rg-alert warn">
-                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
-                    <span>تم تسجيل جلسة <strong>النطق بالحكم</strong> بتاريخ <strong>{{ $audienceHoukm->date_audience->format('d/m/Y') }}</strong> — يمكنك الآن إدخال نص الحكم.</span>
-                </div>
             @endif
 
             {{-- ── TIMELINE AUDIENCES ───────── --}}
@@ -724,7 +689,7 @@
                 <div class="mt-2">
                     <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
                     class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-calendar-plus ml-1"></i>برمجة جلسة
+                        <i class="bi bi-calendar-plus me-1"></i>برمجة جلسة
                     </a>
                 </div>
                 @endif
@@ -766,14 +731,14 @@
                             </div>
                         </div>
                         <div class="aud-meta">
-                            @if($aud->juge)<span><i class="bi bi-person ml-1"></i>{{ $aud->juge->nom_complet }}</span>@endif
+                            @if($aud->juge)<span><i class="bi bi-person me-1"></i>{{ $aud->juge->nom_complet }}</span>@endif
                             <span>
-                                <i class="bi bi-people ml-1"></i>
-                                طالب: {{ $aud->presence_demandeur ? '✓' : '✗' }}
-                                · مطلوب: {{ $aud->presence_defendeur ? '✓' : '✗' }}
+                                <i class="bi bi-people me-1"></i>
+                                المدعي: {{ $aud->presence_demandeur ? '✓' : '✗' }}
+                                المدعى عليه: {{ $aud->presence_defendeur ? '✓' : '✗' }}
                             </span>
                             @if($aud->resultat_audience)
-                                <span><i class="bi bi-chat-left-text ml-1"></i>{{ Str::limit($aud->resultat_audience, 55) }}</span>
+                                <span><i class="bi bi-chat-left-text me-1"></i>{{ Str::limit($aud->resultat_audience, 55) }}</span>
                             @endif
                         </div>
                         @if($aud->date_prochaine_audience && !$isHoukm)
@@ -795,7 +760,7 @@
                     <div style="padding:6px 0">
                         <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
                         class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-calendar-plus ml-1"></i>برمجة جلسة جديدة
+                            <i class="bi bi-calendar-plus me-1"></i>برمجة جلسة جديدة
                         </a>
                     </div>
                 </div>
@@ -807,7 +772,7 @@
             @if($audienceHoukm)
             <div class="mx-4 my-1 d-flex align-items-center gap-2" style="font-size:.75rem;color:#6b21a8;font-weight:600">
                 <div style="flex:1;height:1px;background:rgba(124,58,237,.2)"></div>
-                <span><i class="bi bi-arrow-down ml-1"></i>جلسة النطق بالحكم {{ $audienceHoukm->date_audience->format('d/m/Y') }} ← نص الحكم</span>
+                <span><i class="bi bi-arrow-down me-1"></i>جلسة النطق بالحكم {{ $audienceHoukm->date_audience->format('d/m/Y') }} ← نص الحكم</span>
                 <div style="flex:1;height:1px;background:rgba(124,58,237,.2)"></div>
             </div>
             @endif
@@ -817,7 +782,7 @@
             <div class="jug-block">
                 <div class="jug-block-header">
                     <div class="jug-title">
-                        <i class="bi bi-hammer ml-1"></i>
+                        <i class="bi bi-hammer me-1"></i>
                         حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -836,16 +801,16 @@
                             @endif
                         @endif
                         <a href="{{ route('jugements.show', $jugement) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.75rem">
-                            <i class="bi bi-eye ml-1"></i>عرض
+                            <i class="bi bi-eye me-1"></i>عرض
                         </a>
                     </div>
                 </div>
                 <div class="jug-meta">
-                    @if($jugement->juge)<span><i class="bi bi-person-workspace ml-1"></i>القاضي: {{ $jugement->juge->nom_complet }}</span>@endif
+                    @if($jugement->juge)<span><i class="bi bi-person-workspace me-1"></i>القاضي: {{ $jugement->juge->nom_complet }}</span>@endif
                     @if($jugement->finance)
                     @php $f = $jugement->finance; @endphp
-                    <span><i class="bi bi-cash ml-1"></i>المبلغ المحكوم: {{ number_format($f->montant_condamne, 2) }} د.م</span>
-                    <span><i class="bi bi-check2-circle ml-1 text-success"></i>المؤدى: {{ number_format($f->montant_paye, 2) }} د.م</span>
+                    <span><i class="bi bi-cash me-1"></i>المبلغ المحكوم: {{ number_format($f->montant_condamne, 2) }} د.م</span>
+                    <span><i class="bi bi-check2-circle me-1 text-success"></i>المؤدى: {{ number_format($f->montant_paye, 2) }} د.م</span>
                     @endif
                 </div>
                 @if($jugement->contenu_dispositif)
@@ -855,7 +820,7 @@
                 </div>
                 <button class="btn btn-link btn-sm p-0 mt-1" style="font-size:.73rem;color:var(--jug)"
                         onclick="document.getElementById('disp-{{ $jugement->id }}').classList.toggle('open');document.getElementById('disp-fade-{{ $jugement->id }}').style.display=document.getElementById('disp-{{ $jugement->id }}').classList.contains('open')?'none':''">
-                    <i class="bi bi-chevron-down ml-1"></i>عرض منطوق الحكم كاملاً
+                    <i class="bi bi-chevron-down me-1"></i>عرض منطوق الحكم كاملاً
                 </button>
                 @endif
                 @if($jugement->finance)
@@ -892,7 +857,7 @@
                             <a href="{{ route('executions.show', $exec) }}" class="btn btn-sm btn-outline-primary py-0 px-2 mr-auto" style="font-size:.7rem"><i class="bi bi-eye"></i></a>
                         </div>
                         <div style="font-size:.8rem;color:#0c4a6e;display:flex;flex-wrap:wrap;gap:12px">
-                            <span><i class="bi bi-bell ml-1"></i>تاريخ التبليغ: {{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</span>
+                            <span><i class="bi bi-bell me-1"></i>تاريخ التبليغ: {{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</span>
                             <span class="pill" style="font-size:.65rem;background:#e0f2fe;color:{{ $sc }}">{{ $sl }}</span>
                             @if($exec->date_execution)<span class="pill pill-success" style="font-size:.65rem">تم التنفيذ بتاريخ {{ $exec->date_execution->format('d/m/Y') }}</span>@endif
                         </div>
@@ -904,7 +869,7 @@
                         حكم نهائي — في انتظار إجراءات التنفيذ.
                         <div class="mt-2">
                             <a href="{{ route('executions.create', ['jugement_id' => $jugement->id]) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-plus-lg ml-1"></i>مباشرة التنفيذ
+                                <i class="bi bi-plus-lg me-1"></i>مباشرة التنفيذ
                             </a>
                         </div>
                     </div>
@@ -940,21 +905,21 @@
                             </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-warning btn-sm w-100" onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
-                                    <i class="bi bi-send ml-1"></i>تسجيل
+                                    <i class="bi bi-send me-1"></i>تسجيل
                                 </button>
                             </div>
                         </div>
                     </form>
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" class="mt-2" onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
                         @csrf
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle ml-1"></i>إغلاق بدون طعن</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>إغلاق بدون طعن</button>
                     </form>
                 </div>
                 @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
                 <div class="mx-4 mb-4">
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('إغلاق المرحلة؟')">
                         @csrf
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock ml-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock me-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
                     </form>
                 </div>
                 @endif
@@ -966,7 +931,7 @@
                 انعقدت جلسة النطق بالحكم — يرجى تسجيل تفاصيل الحكم.
                 <div class="mt-2">
                     <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg ml-1"></i>سجل الحكم
+                        <i class="bi bi-plus-lg me-1"></i>سجل الحكم
                     </a>
                 </div>
             </div>
@@ -990,13 +955,7 @@
         @php $jugements = $instances->flatMap->jugements->sortByDesc('date_jugement'); @endphp
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-hammer ml-2 text-primary"></i>الأحكام القضائية</h6>
-            @php $peutJugement = $instances->contains(fn($dt) => $dt->peutAvoirJugement()); @endphp
-            @if($peutJugement && $peutAudience)
-                <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-plus-lg ml-1"></i>تسجيل حكم جديد
-                </a>
-            @endif
+            <h6 class="fw-semibold mb-0"><i class="bi bi-hammer me-1 text-primary"></i>الأحكام القضائية</h6>
         </div>
 
         @if($jugements->isEmpty())
@@ -1015,7 +974,7 @@
         <div class="card border mb-3" style="border-width:2px!important;border-color:{{ $bordCol }}!important;">
             <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <i class="bi bi-hammer ml-1 text-primary"></i>
+                    <i class="bi bi-hammer me-1 text-primary"></i>
                     <strong>حكم بتاريخ {{ $jug->date_jugement->format('d/m/Y') }}</strong>
                     <span class="text-muted small mr-2">
                         — {{ $dtJ->tribunal->nom_tribunal ?? '—' }}
@@ -1026,11 +985,11 @@
                 </div>
                 <div class="d-flex gap-2 align-items-center">
                     @if($jug->est_definitif)
-                        <span class="badge bg-success"><i class="bi bi-check-circle ml-1"></i>حكم نهائي</span>
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>حكم نهائي</span>
                     @elseif($peutR)
-                        <span class="badge bg-warning text-dark"><i class="bi bi-clock ml-1"></i>متبقي {{ $dr }} يوم</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>متبقي {{ $dr }} يوم</span>
                     @elseif($jug->recours->isNotEmpty())
-                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat ml-1"></i>في الطعن</span>
+                        <span class="badge bg-warning text-dark"><i class="bi bi-arrow-repeat me-1"></i>في الطعن</span>
                     @else
                         <span class="badge bg-secondary">انقضى الأجل</span>
                     @endif
@@ -1040,10 +999,10 @@
             </div>
             <div class="card-body py-2 small">
                 <div class="row g-2 mb-1">
-                    <div class="col-auto text-muted"><i class="bi bi-person ml-1"></i>القاضي: {{ $jug->juge->nom_complet ?? '—' }}</div>
+                    <div class="col-auto text-muted"><i class="bi bi-person me-1"></i>القاضي: {{ $jug->juge->nom_complet ?? '—' }}</div>
                     @if($jug->finance)
                     <div class="col-auto text-muted">
-                        <i class="bi bi-cash ml-1"></i>
+                        <i class="bi bi-cash me-1"></i>
                         المبلغ المحكوم: <strong>{{ number_format($jug->finance->montant_condamne, 2) }} د.م</strong>
                         — المؤدى: <strong class="text-success">{{ number_format($jug->finance->montant_paye, 2) }} د.م</strong>
                     </div>
@@ -1052,7 +1011,7 @@
                 @if($jug->recours->isNotEmpty())
                     @foreach($jug->recours as $r)
                     <div class="p-2 rounded mb-1" style="background:#fff3cd;border-right:3px solid #ffc107">
-                        <i class="bi bi-arrow-repeat text-warning ml-1"></i>
+                        <i class="bi bi-arrow-repeat text-warning me-1"></i>
                         <strong>{{ $r->typeRecours->type_recours ?? '—' }}</strong> — {{ $r->date_recours->format('d/m/Y') }}
                         @if($r->motifs)<em class="text-muted"> — {{ Str::limit($r->motifs, 70) }}</em>@endif
                     </div>
@@ -1075,10 +1034,10 @@
         @endphp
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-cash-stack ml-2 text-success"></i>البيانات المالية</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-cash-stack me-1 text-success"></i>البيانات المالية</h6>
             @if($jugSansFinance->isNotEmpty())
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterFinance">
-                    <i class="bi bi-plus-lg ml-1"></i>إضافة تفاصيل مالية
+                    <i class="bi bi-plus-lg me-1"></i>إضافة تفاصيل مالية
                 </button>
             @endif
         </div>
@@ -1171,10 +1130,10 @@
         @endphp
 
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-shield-check ml-2 text-danger"></i>إجراءات التنفيذ</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-shield-check me-1 text-danger"></i>إجراءات التنفيذ</h6>
             @if($jugDefSansExec)
                 <a href="{{ route('executions.create', ['jugement_id' => $jugDefSansExec->id]) }}" class="btn btn-danger btn-sm">
-                    <i class="bi bi-plus-lg ml-1"></i>بدء إجراء تنفيذ
+                    <i class="bi bi-plus-lg me-1"></i>بدء إجراء تنفيذ
                 </a>
             @endif
         </div>
@@ -1191,14 +1150,14 @@
             <div class="card border mb-3" style="border-right:3px solid var(--exec)!important">
                 <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="small">
-                        <i class="bi bi-hammer text-primary ml-1"></i>
+                        <i class="bi bi-hammer text-primary me-1"></i>
                         <strong>حكم بتاريخ {{ $jug->date_jugement->format('d/m/Y') }}</strong>
                         <span class="text-muted mr-2">— {{ $jug->dossierTribunal->tribunal->nom_tribunal ?? '—' }}</span>
                         <span class="badge bg-{{ match($jug->dossierTribunal?->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }} mr-1" style="font-size:.63rem">
                             {{ $jug->dossierTribunal?->degre?->degre_juridiction ?? '—' }}
                         </span>
                     </div>
-                    <a href="{{ route('jugements.show', $jug) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye ml-1"></i>تفاصيل الحكم</a>
+                    <a href="{{ route('jugements.show', $jug) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye me-1"></i>تفاصيل الحكم</a>
                 </div>
                 <div class="card-body p-0">
                     @foreach($jug->executions as $exec)
@@ -1217,10 +1176,10 @@
                             <div>
                                 <div class="fw-semibold font-monospace">ملف تنفيذ رقم: {{ $exec->numero_dossier_execution }}</div>
                                 <div class="small text-muted mt-1 d-flex flex-wrap gap-3">
-                                    <span><i class="bi bi-bell ml-1"></i>تاريخ التبليغ: <strong>{{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</strong></span>
-                                    <span><i class="bi bi-person ml-1"></i>المسؤول: {{ $exec->responsable?->name ?? '—' }}</span>
+                                    <span><i class="bi bi-bell me-1"></i>تاريخ التبليغ: <strong>{{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</strong></span>
+                                    <span><i class="bi bi-person me-1"></i>المسؤول: {{ $exec->responsable?->name ?? '—' }}</span>
                                     @if($exec->date_execution)
-                                        <span class="text-success"><i class="bi bi-calendar-check ml-1"></i>تم التنفيذ في {{ $exec->date_execution->format('d/m/Y') }}</span>
+                                        <span class="text-success"><i class="bi bi-calendar-check me-1"></i>تم التنفيذ في {{ $exec->date_execution->format('d/m/Y') }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -1246,10 +1205,10 @@
     ══════════════════════════════════════════ --}}
     <div class="tab-pane fade" id="tab-documents" dir="rtl">
         <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-paperclip ml-2 text-primary"></i>الوثائق والمرفقات</h6>
+            <h6 class="fw-semibold mb-0"><i class="bi bi-paperclip me-1 text-primary"></i>الوثائق والمرفقات</h6>
             @can('update', $dossier)
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterDocument">
-                <i class="bi bi-upload ml-1"></i>إرفاق وثيقة
+                <i class="bi bi-upload me-1"></i>إرفاق وثيقة
             </button>
             @endcan
         </div>
@@ -1312,26 +1271,32 @@
 <div class="modal fade" id="modalAjouterPartie" tabindex="-1" dir="rtl">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-person-plus ml-2 text-primary"></i>إضافة طرف جديد</h5>
-                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+    
+                <h5 class="modal-title fw-semibold mb-0">
+                    <i class="bi bi-person-plus me-1 text-primary"></i>
+                    إضافة طرف جديد
+                </h5>
+
+                <button type="button"
+                        class="btn-close ms-auto"
+                        data-bs-dismiss="modal">
+                </button>
+
             </div>
             <div class="modal-body">
                 {{-- Recherche AJAX --}}
                 <div class="mb-3 p-3 rounded-3 border bg-light">
-                    <label class="form-label fw-semibold small text-muted text-uppercase mb-2" style="letter-spacing:.05em">
-                        <i class="bi bi-search ml-1"></i>البحث عن طرف موجود مسبقاً
-                    </label>
                     <div class="input-group">
                         <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="recherchePartie" class="form-control" placeholder="المعرف (بطاقة التعريف / السجل التجاري) أو الاسم…" autocomplete="off">
+                        <input type="text" id="recherchePartie" class="form-control" placeholder="البحث عن طرف موجود مسبقاً" autocomplete="off">
                         <button class="btn btn-outline-secondary" type="button" id="btnNouvellePartie">
-                            <i class="bi bi-plus-lg ml-1"></i>طرف جديد
+                            <i class="bi bi-plus-lg me-1"></i>طرف جديد
                         </button>
                     </div>
                     <div id="resultatRecherche" class="list-group mt-1 shadow-sm" style="display:none;max-height:220px;overflow-y:auto;position:relative;z-index:1060"></div>
                     <div id="partieSelectionnee" class="alert alert-success py-2 px-3 mt-2 d-none small mb-0">
-                        <i class="bi bi-check-circle ml-1"></i>الطرف المختار: <strong id="partieSelectionneeNom"></strong>
+                        <i class="bi bi-check-circle me-1"></i>الطرف المختار: <strong id="partieSelectionneeNom"></strong>
                         <a href="#" id="btnDeselectionner" class="mr-2 text-danger small">(تغيير)</a>
                     </div>
                 </div>
@@ -1341,7 +1306,7 @@
                 <input type="hidden" name="partie_id" id="hidden_partie_id">
                 <div class="row g-3">
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">المعرف الوحيد (CIN / RC) <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">رقم التعريف <span class="text-danger">*</span></label>
                         <input type="text" name="identifiant_unique" id="field_identifiant" class="form-control" required>
                     </div>
                     <div class="col-sm-6">
@@ -1357,20 +1322,44 @@
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">الهاتف</label>
-                        <input type="tel" name="telephone" id="field_telephone" class="form-control" dir="ltr" placeholder="06XXXXXXXX">
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-telephone text-muted"></i>
+                            </span>
+
+                            <input type="tel"
+                                name="telephone"
+                                id="field_telephone"
+                                class="form-control"
+                                dir="ltr"
+                                placeholder="06XXXXXXXX">
+                        </div>
                     </div>
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">البريد الإلكتروني</label>
-                        <input type="email" name="email" id="field_email" class="form-control" dir="ltr">
+
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-envelope text-muted"></i>
+                            </span>
+
+                            <input type="email"
+                                name="email"
+                                id="field_email"
+                                class="form-control"
+                                dir="ltr"
+                                placeholder="example@email.com">
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-semibold small">العنوان</label>
                         <textarea name="adresse" id="field_adresse" class="form-control" rows="2"></textarea>
                     </div>
-                    <div class="col-12">
+                    <div class="col-sm-6">
                         <label class="form-label fw-semibold small">المحامي</label>
                         <div id="bloc_avocat_nouveau">
-                            <select name="id_avocat" id="field_avocat_nouveau_select" class="form-select">
+                            <select name="id_avocat" id="field_avocat_nouveau_select" class="form-select" autocomplete="off">
                                 <option value="">— بدون محامي —</option>
                                 @foreach($avocats as $av)
                                     <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
@@ -1380,10 +1369,12 @@
                         <div id="bloc_avocat_existant" class="d-none">
                             <div class="input-group">
                                 <input type="text" id="field_avocat_display" class="form-control bg-light text-muted" readonly>
-                                <button type="button" class="btn btn-outline-secondary" id="btnModifierAvocat"><i class="bi bi-pencil ml-1"></i>تعديل</button>
+                                <button type="button" class="btn btn-outline-secondary" id="btnModifierAvocat">
+                                    <i class="bi bi-pencil me-1"></i>تعديل
+                                </button>
                             </div>
                             <div id="bloc_avocat_modif" class="d-none mt-2">
-                                <select name="id_avocat" id="field_avocat_modif_select" class="form-select" disabled>
+                                <select name="id_avocat" id="field_avocat_modif_select" class="form-select" autocomplete="off">
                                     <option value="">— بدون محامي —</option>
                                     @foreach($avocats as $av)
                                         <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
@@ -1411,7 +1402,7 @@
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formAjouterPartie" class="btn btn-primary">
-                    <i class="bi bi-check-lg ml-1"></i>إضافة إلى الملف
+                    <i class="bi bi-check-lg me-1"></i>إضافة إلى الملف
                 </button>
             </div>
         </div>
@@ -1423,9 +1414,12 @@
 <div class="modal fade" id="modalEditPartie{{ $dp->id }}" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil ml-2 text-warning"></i>تعديل: {{ $dp->partie->nom_partie ?? '—' }}</h5>
-                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil me-1 text-warning"></i>تعديل: {{ $dp->partie->nom_partie ?? '—' }}</h5>
+                <button type="button"
+                        class="btn-close ms-auto"
+                        data-bs-dismiss="modal">
+                </button> 
             </div>
             <div class="modal-body">
                 <form id="formEditPartie{{ $dp->id }}" action="{{ route('dossiers.parties.update', [$dossier, $dp]) }}" method="POST">
@@ -1449,7 +1443,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formEditPartie{{ $dp->id }}" class="btn btn-warning">
-                    <i class="bi bi-check-lg ml-1"></i>حفظ التغييرات
+                    <i class="bi bi-check-lg me-1"></i>حفظ التغييرات
                 </button>
             </div>
         </div>
@@ -1461,9 +1455,14 @@
 <div class="modal fade" id="modalAjouterTribunal" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-bank ml-2 text-primary"></i>تعيين محكمة للملف</h5>
-                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold mb-0">
+                    <i class="bi bi-bank me-1 text-primary"></i>
+                    تعيين محكمة للملف</h5>
+                    <button type="button"
+                        class="btn-close ms-auto"
+                        data-bs-dismiss="modal">
+                </button>
             </div>
             <div class="modal-body">
                 <form id="formAjouterTribunal" action="{{ route('dossiers.tribunaux.store', $dossier) }}" method="POST">
@@ -1510,7 +1509,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formAjouterTribunal" class="btn btn-primary">
-                    <i class="bi bi-check-lg ml-1"></i>تعيين المحكمة
+                    <i class="bi bi-check-lg me-1"></i>تعيين المحكمة
                 </button>
             </div>
         </div>
@@ -1522,9 +1521,12 @@
 <div class="modal fade" id="modalEditTribunal{{ $dt->id }}" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil ml-2 text-warning"></i>{{ $dt->tribunal->nom_tribunal ?? '—' }}</h5>
-                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-pencil me-1 text-warning"></i>{{ $dt->tribunal->nom_tribunal ?? '—' }}</h5>
+                <button type="button"
+                        class="btn-close ms-auto"
+                        data-bs-dismiss="modal">
+                </button>            
             </div>
             <div class="modal-body">
                 <form id="formEditTribunal{{ $dt->id }}" action="{{ route('dossiers.tribunaux.update', [$dossier, $dt]) }}" method="POST">
@@ -1552,7 +1554,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formEditTribunal{{ $dt->id }}" class="btn btn-warning">
-                    <i class="bi bi-check-lg ml-1"></i>حفظ التغييرات
+                    <i class="bi bi-check-lg me-1"></i>حفظ التغييرات
                 </button>
             </div>
         </div>
@@ -1564,9 +1566,12 @@
 <div class="modal fade" id="modalAjouterFinance" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-cash-stack ml-2 text-success"></i>إضافة بيانات مالية</h5>
-                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-cash-stack me-1 text-success"></i>إضافة بيانات مالية</h5>
+                <button type="button"
+                        class="btn-close ms-auto"
+                        data-bs-dismiss="modal">
+                </button> 
             </div>
             <div class="modal-body">
                 <form id="formAjouterFinance" action="{{ route('finances.store') }}" method="POST">
@@ -1606,7 +1611,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formAjouterFinance" class="btn btn-success">
-                    <i class="bi bi-check-lg ml-1"></i>حفظ البيانات
+                    <i class="bi bi-check-lg me-1"></i>حفظ البيانات
                 </button>
             </div>
         </div>
@@ -1617,9 +1622,12 @@
 <div class="modal fade" id="modalAjouterDocument" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-semibold"><i class="bi bi-upload ml-2 text-primary"></i>إرفاق وثيقة جديدة</h5>
-                <button type="button" class="btn-close ms-0 me-auto" data-bs-dismiss="modal"></button>
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-upload me-1 text-primary"></i>إرفاق وثيقة جديدة</h5>
+                <button type="button"
+                        class="btn-close ms-auto"
+                        data-bs-dismiss="modal">
+                </button>
             </div>
             <div class="modal-body">
                 <form id="formAjouterDocument" action="{{ route('documents.store', $dossier) }}" method="POST" enctype="multipart/form-data">
@@ -1660,7 +1668,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formAjouterDocument" class="btn btn-primary">
-                    <i class="bi bi-upload ml-1"></i>رفع الوثيقة
+                    <i class="bi bi-upload me-1"></i>رفع الوثيقة
                 </button>
             </div>
         </div>
@@ -1670,6 +1678,58 @@
 @endsection
 
 @push('scripts')
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    // 1. Initialisation du premier Select (Nouveau)
+    const selectNouveau = new TomSelect("#field_avocat_nouveau_select", {
+        create: function(input) {
+            window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
+            return false;
+        },
+        sortField: { field: "text", direction: "asc" },
+        placeholder: "— بدون محامي —",
+        render: {
+            no_results: function(data, escape) {
+                return `<div class="no-results">لا توجد نتائج</div>`;
+            },
+
+            option_create: function(data, escape) {
+                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+            }
+        }
+    });
+
+    // 2. Initialisation du deuxième Select (Modification)
+    const selectModif = new TomSelect("#field_avocat_modif_select", {
+        create: function(input) {
+            window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
+            return false;
+        },
+        sortField: { field: "text", direction: "asc" },
+        placeholder: "— بدون محامي —",
+        render: {
+            no_results: function(data, escape) {
+                return `<div class="no-results">لا توجد نتائج</div>`;
+            },
+
+            option_create: function(data, escape) {
+                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+            }
+        }
+    });
+
+    // Exemple si vous gérez le clic sur #btnModifierAvocat :
+    document.getElementById('btnModifierAvocat').addEventListener('click', function() {
+        // Votre code existant pour afficher le bloc...
+        
+        // Activer Tom Select proprement :
+        selectModif.enable(); 
+    });
+});
+</script>
+
+
 <script>
 /* ── Réactiver l'onglet depuis l'URL (fragment) ─── */
 (function () {
@@ -1776,7 +1836,7 @@
         const creer = document.createElement('button');
         creer.type = 'button';
         creer.className = 'list-group-item list-group-item-action py-2 px-3 text-primary text-end';
-        creer.innerHTML = `<i class="bi bi-plus-circle ml-1"></i>إنشاء « ${query} »`;
+        creer.innerHTML = `<i class="bi bi-plus-circle me-1"></i>إنشاء « ${query} »`;
         creer.addEventListener('click', () => { deselect(); if(F.nom) F.nom.value = query; closeDropdown(); if(input) input.value = ''; });
         
         if (!parties.length) {
@@ -1815,7 +1875,7 @@
         blocModif?.classList.toggle('d-none');
         const visible = !blocModif?.classList.contains('d-none');
         if (avocatModif) { avocatModif.disabled = !visible; avocatModif.name = visible ? 'id_avocat' : ''; }
-        if (btnModifier) btnModifier.innerHTML = visible ? '<i class="bi bi-x ml-1"></i>إلغاء' : '<i class="bi bi-pencil ml-1"></i>تعديل';
+        if (btnModifier) btnModifier.innerHTML = visible ? '<i class="bi bi-x me-1"></i>إلغاء' : '<i class="bi bi-pencil me-1"></i>تعديل';
     });
 
     document.getElementById('modalAjouterPartie')?.addEventListener('show.bs.modal', () => {
@@ -1879,4 +1939,5 @@
     });
 })();
 </script>
+
 @endpush

@@ -23,15 +23,6 @@
 
             <div class="card-body p-4">
 
-                @if($dateAudienceParDefaut)
-                    <div class="alert alert-info small">
-                        <i class="bi bi-info-circle me-2"></i>
-                        تم اقتراح تاريخ هذه الجلسة تلقائيًا بناءً على
-                        أقرب جلسة مسجلة سابقًا:
-                        <strong>{{ \Carbon\Carbon::parse($dateAudienceParDefaut)->format('d/m/Y') }}</strong>
-                    </div>
-                @endif
-
                 @if($errors->any())
                 <div class="alert alert-danger mb-4">
                     <ul class="mb-0">

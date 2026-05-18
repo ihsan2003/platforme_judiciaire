@@ -96,11 +96,16 @@ class NotificationService
             $type     = $audience->typeAudience?->type_audience ?? '';
 
             if ($estAujourdhui) {
-                $message = "Audience aujourd'hui — {$dossier?->numero_dossier_interne}";
-                $details = "Tribunal : {$tribunal} | Type : {$type}";
+
+                $message = "جلسة اليوم — {$dossier?->numero_dossier_interne}";
+
+                $details = "المحكمة: {$tribunal} | النوع: {$type}";
+
             } else {
-                $message = "Audience dans {$joursRestants} jour" . ($joursRestants > 1 ? 's' : '') . " — {$dossier?->numero_dossier_interne}";
-                $details = "Le {$audience->date_audience->format('d/m/Y')} | Tribunal : {$tribunal}";
+
+                $message = "جلسة بعد {$joursRestants} يوم — {$dossier?->numero_dossier_interne}";
+
+                $details = "بتاريخ {$audience->date_audience->format('d/m/Y')} | المحكمة: {$tribunal}";
             }
 
             $cleDedup = "audience_{$audience->id}_" . today()->toDateString();
@@ -158,14 +163,19 @@ class NotificationService
             $tribunal = $jugement->dossierTribunal?->tribunal?->nom_tribunal ?? '?';
 
             if ($delaiRestant <= 0) {
-                $niveau  = 'danger';
-                $message = "Délai de recours expiré — {$dossier?->numero_dossier_interne}";
-                $details = "Jugement du {$jugement->date_jugement->format('d/m/Y')} | {$tribunal}";
+
+                $niveau = 'danger';
+
+                $message = "انتهاء أجل الطعن — {$dossier?->numero_dossier_interne}";
+
             } else {
-                $niveau  = $delaiRestant <= 3 ? 'danger' : 'warning';
-                $message = "Délai de recours : {$delaiRestant} jour" . ($delaiRestant > 1 ? 's' : '') . " restant" . ($delaiRestant > 1 ? 's' : '') . " — {$dossier?->numero_dossier_interne}";
-                $details = "Jugement du {$jugement->date_jugement->format('d/m/Y')} | {$tribunal}";
+
+                $niveau = $delaiRestant <= 3 ? 'danger' : 'warning';
+
+                $message = "متبقي {$delaiRestant} يوم للطعن — {$dossier?->numero_dossier_interne}";
             }
+
+            $details = "الحكم بتاريخ {$jugement->date_jugement->format('d/m/Y')} | {$tribunal}";
 
             $cleDedup = "recours_{$jugement->id}_" . today()->toDateString();
 
@@ -208,8 +218,9 @@ class NotificationService
             $joursEcoules = $jugement->date_jugement->diffInDays(today());
             $dossier      = $jugement->dossierTribunal?->dossier;
 
-            $message = "Jugement non définitif depuis {$joursEcoules} jours — {$dossier?->numero_dossier_interne}";
-            $details = "Rendu le {$jugement->date_jugement->format('d/m/Y')} — aucun recours ni clôture enregistrée";
+            $message = "حكم غير نهائي منذ {$joursEcoules} يوم — {$dossier?->numero_dossier_interne}";
+
+            $details = "صدر بتاريخ {$jugement->date_jugement->format('d/m/Y')} — بدون طعن أو إغلاق";
 
             $cleDedup = "jugement_ndf_{$jugement->id}_" . today()->format('Y-W'); // une fois par semaine
 
@@ -250,13 +261,18 @@ class NotificationService
             ->get();
 
         foreach ($reclamations as $reclamation) {
-            $joursAttente = $reclamation->date_reception->diffInDays(today());
-            $nom          = $reclamation->reclamant?->nom ?? 'Inconnu';
-            $statut       = $reclamation->statut?->statut_reclamation ?? '?';
 
-            $niveau  = $joursAttente > 30 ? 'danger' : 'warning';
-            $message = "Réclamation en attente depuis {$joursAttente} jours — {$nom}";
-            $details = "Objet : {$reclamation->objet} | Statut : {$statut}";
+            $joursAttente = $reclamation->date_reception->diffInDays(today());
+
+            $nom = $reclamation->reclamant?->nom ?? 'غير معروف';
+
+            $statut = $reclamation->statut?->statut_reclamation ?? '?';
+
+            $niveau = $joursAttente > 30 ? 'danger' : 'warning';
+
+            $message = "شكاية معلقة منذ {$joursAttente} يوم — {$nom}";
+
+            $details = "الموضوع: {$reclamation->objet} | الحالة: {$statut}";
 
             $cleDedup = "reclamation_{$reclamation->id}_" . today()->format('Y-W');
 
@@ -301,8 +317,9 @@ class NotificationService
             $dossier      = $execution->jugement?->dossierTribunal?->dossier;
 
             $niveau  = $joursEcoules > 60 ? 'danger' : 'warning';
-            $message = "Exécution en cours depuis {$joursEcoules} jours — {$execution->numero_dossier_execution}";
-            $details = "Dossier : {$dossier?->numero_dossier_interne} | Notifiée le {$execution->date_notification->format('d/m/Y')}";
+            $message = "تنفيذ جارٍ منذ {$joursEcoules} يوم — {$execution->numero_dossier_execution}";
+
+            $details = "الملف: {$dossier?->numero_dossier_interne} | تم التبليغ بتاريخ {$execution->date_notification->format('d/m/Y')}";
 
             $cleDedup = "execution_{$execution->id}_" . today()->format('Y-W');
 

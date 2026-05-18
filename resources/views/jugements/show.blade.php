@@ -496,31 +496,25 @@
         </div>
         @endif
 
+        <div class="mt-3" dir="rtl">
+
+            @if($jugement->dossierTribunal?->dossier)
+
+            <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}#tab-jugements"
+            class="btn btn-outline-primary btn-sm me-2 w-100">
+
+                <i class="bi bi-folder2-open ms-1"></i>
+                عرض الملف
+
+            </a>
+
+            @endif
+
+        </div>
+
     </div>
 </div>
 
-<div class="mt-3" dir="rtl">
 
-    <a href="{{ route('jugements.index') }}"
-       class="btn btn-outline-secondary btn-sm">
-
-        <i class="bi bi-arrow-right ms-1"></i>
-        العودة إلى اللائحة
-
-    </a>
-
-    @if($jugement->dossierTribunal?->dossier)
-
-    <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}#tab-jugements"
-       class="btn btn-outline-primary btn-sm me-2">
-
-        <i class="bi bi-folder2-open ms-1"></i>
-        عرض الملف
-
-    </a>
-
-    @endif
-
-</div>
 
 @endsection

@@ -21,13 +21,13 @@
         <i class="bi bi-bell fs-5 {{ $countNonLues > 0 ? 'text-' . $badgeColor : 'text-muted' }}"></i>
 
         @if($countNonLues > 0)
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-{{ $badgeColor }}"
+            <span class="position-absolute top-0 translate-middle badge rounded-pill bg-{{ $badgeColor }}"
                   id="notif-badge"
                   style="font-size:.65rem; transform: translate(-60%,-30%) !important;">
                 {{ $countNonLues > 99 ? '99+' : $countNonLues }}
             </span>
         @else
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-{{ $badgeColor }} d-none"
+            <span class="position-absolute top-0 translate-middle badge rounded-pill bg-{{ $badgeColor }} d-none"
                   id="notif-badge"
                   style="font-size:.65rem; transform: translate(-60%,-30%) !important;">
                 0

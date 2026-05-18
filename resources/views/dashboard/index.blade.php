@@ -191,7 +191,7 @@
         ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>'جارية',           'up'=>null],
         ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>'مستقر',             'up'=>null],
         ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>'5+ هذا الأسبوع',   'up'=>true],
-        ['label'=>'الشكاوى',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_attente'].' في الانتظار', 'up'=>false],
+        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_attente'].' في الانتظار', 'up'=>false],
         ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executes'],      'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>'هذا الشهر: '.$dossiers['ce_mois'], 'up'=>null],
     ] as $s)
     <div class="col-6 col-md-4 col-xl-2">
@@ -292,7 +292,7 @@
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
-                    <div class="card-icon-sm ms-2" style="background:#dcfce7;color:#15803d"><i class="bi bi-balance-scale"></i></div>
+                    <div class="card-icon-sm ms-2" style="background:#dcfce7;color:#15803d"><i class="bi bi-feather"></i></div>
                     نتائج الأحكام
                 </div>
             </div>
@@ -391,7 +391,7 @@
                 </div>
                 <div class="alert-row-item" style="border:none">
                     <div class="alert-dot-sm" style="background:#ef4444"></div>
-                    <div style="flex:1;font-size:.82rem; text-align: right;"><i class="bi bi-chat-dots text-danger me-1"></i>شكاوى في الانتظار</div>
+                    <div style="flex:1;font-size:.82rem; text-align: right;"><i class="bi bi-chat-dots text-danger me-1"></i>شكايات في الانتظار</div>
                     <span class="badge rounded-pill" style="background:#fce7f3;color:#9d174d;font-size:.7rem">{{ $alertes['reclamations_en_attente'] }}</span>
                 </div>
             </div>

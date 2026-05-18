@@ -1,12 +1,12 @@
 {{-- resources/views/finances/show.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Finance — Jugement du ' . ($finance->jugement?->date_jugement?->format('d/m/Y') ?? '—'))
+@section('title', 'المالية — حكم بتاريخ ' . ($finance->jugement?->date_jugement?->format('d/m/Y') ?? '—'))
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('finances.index') }}">Finances</a></li>
-    <li class="breadcrumb-item active">Détail finance</li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('finances.index') }}">المالية</a></li>
+    <li class="breadcrumb-item active">تفاصيل المالية</li>
 @endsection
 
 @section('content')
@@ -26,7 +26,7 @@
     $spColor  = match($sp) { 'Complet' => 'success', 'Partiel' => 'warning', default => 'secondary' };
 @endphp
 
-{{-- ══ EN-TÊTE ══ --}}
+{{-- ══ العنوان الرئيسي ══ --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
@@ -36,19 +36,29 @@
                      style="width:56px;height:56px">
                     <i class="bi bi-cash-stack fs-3 text-success"></i>
                 </div>
+
                 <div>
-                    <h4 class="fw-bold mb-1">Finance — Jugement du {{ $jugement?->date_jugement?->format('d/m/Y') ?? '—' }}</h4>
+                    <h4 class="fw-bold mb-1">
+                        المالية — حكم بتاريخ {{ $jugement?->date_jugement?->format('d/m/Y') ?? '—' }}
+                    </h4>
+
                     @if($dossier)
                         <a href="{{ route('dossiers.show', $dossier) }}"
                            class="text-muted small text-decoration-none">
-                            <i class="bi bi-folder2-open me-1"></i>{{ $dossier->numero_dossier_interne }}
+                            <i class="bi bi-folder2-open me-1"></i>
+                            {{ $dossier->numero_dossier_interne }}
                         </a>
                     @endif
+
                     <div class="mt-1">
-                        <span class="badge bg-{{ $spColor }}">{{ $sp }}</span>
+                        <span class="badge bg-{{ $spColor }}">
+                            {{ $sp === 'Complet' ? 'مكتمل' : ($sp === 'Partiel' ? 'جزئي' : '—') }}
+                        </span>
+
                         @if($jugement?->est_definitif)
                             <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25 ms-1">
-                                <i class="bi bi-check-circle me-1"></i>Jugement définitif
+                                <i class="bi bi-check-circle me-1"></i>
+                                حكم نهائي
                             </span>
                         @endif
                     </div>
@@ -57,124 +67,138 @@
 
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ route('finances.edit', $finance) }}" class="btn btn-warning btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier
+                    <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
+
                 <x-modal-delete
-                                :action="route('finances.destroy', $finance)"
-                                modal-id="deleteFinance{{ $finance->id }}"
-                                title="Supprimer l'entrée financière"
-                                :description="'Finance du ' . $finance->created_at->format('d/m/Y')"
-                            />
+                    :action="route('finances.destroy', $finance)"
+                    modal-id="deleteFinance{{ $finance->id }}"
+                    title="حذف العملية المالية"
+                    :description="'مالية بتاريخ ' . $finance->created_at->format('d/m/Y')"
+                />
+
                 <a href="{{ route('finances.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-left me-1"></i>Retour
+                    <i class="bi bi-arrow-left me-1"></i>رجوع
                 </a>
             </div>
         </div>
 
         <hr class="my-3">
+
         <div class="row g-2 small text-muted">
             <div class="col-sm-3">
                 <i class="bi bi-bank me-1"></i>
-                <strong>Tribunal :</strong> {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
+                <strong>المحكمة :</strong> {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
             </div>
+
             <div class="col-sm-3">
                 <i class="bi bi-layers me-1"></i>
-                <strong>Degré :</strong> {{ $dt?->degre?->degre_juridiction ?? '—' }}
+                <strong>الدرجة :</strong> {{ $dt?->degre?->degre_juridiction ?? '—' }}
             </div>
+
             <div class="col-sm-3">
                 <i class="bi bi-person-workspace me-1"></i>
-                <strong>Juge :</strong> {{ $jugement?->juge?->nom_complet ?? '—' }}
+                <strong>القاضي :</strong> {{ $jugement?->juge?->nom_complet ?? '—' }}
             </div>
+
             <div class="col-sm-3">
                 <i class="bi bi-clock me-1"></i>
-                <strong>Mis à jour :</strong> {{ $finance->updated_at->diffForHumans() }}
+                <strong>آخر تحديث :</strong> {{ $finance->updated_at->diffForHumans() }}
             </div>
         </div>
     </div>
 </div>
 
-{{-- ══ CONTENU ══ --}}
+{{-- ══ المحتوى ══ --}}
 <div class="row g-4">
 
-    {{-- ── Colonne principale ── --}}
+    {{-- العمود الرئيسي --}}
     <div class="col-lg-8">
 
-        {{-- Montants --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-bar-chart me-2 text-primary"></i>Détails financiers
+                    <i class="bi bi-bar-chart me-2 text-primary"></i>تفاصيل مالية
                 </h6>
             </div>
+
             <div class="card-body">
 
-                {{-- Barre de progression globale --}}
+                {{-- نسبة التحصيل --}}
                 <div class="mb-4">
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="fw-semibold small">Taux de recouvrement</span>
+                        <span class="fw-semibold small">نسبة التحصيل</span>
                         <span class="fw-bold text-{{ $pctColor }}">{{ $pct }}%</span>
                     </div>
+
                     <div style="height:12px;background:#e2e8f0;border-radius:6px;overflow:hidden;">
-                        <div style="width:{{ $pct }}%;height:100%;border-radius:6px;transition:width .5s;
-                                    background:{{ $pct >= 100 ? '#16a34a' : ($pct > 50 ? '#d97706' : '#ef4444') }}">
+                        <div style="width:{{ $pct }}%;height:100%;border-radius:6px;
+                            background:{{ $pct >= 100 ? '#16a34a' : ($pct > 50 ? '#d97706' : '#ef4444') }}">
                         </div>
                     </div>
                 </div>
 
                 <div class="row g-3">
-                    {{-- Condamné --}}
+
+                    {{-- المحكوم به --}}
                     <div class="col-sm-4">
                         <div class="p-3 rounded border text-center h-100">
-                            <div class="text-muted small fw-semibold mb-1">Montant condamné</div>
-                            <div class="fw-bold fs-5">{{ number_format($condamne, 2, ',', ' ') }}</div>
-                            <div class="text-muted small">DH</div>
-                        </div>
-                    </div>
-                    {{-- Payé --}}
-                    <div class="col-sm-4">
-                        <div class="p-3 rounded border text-center h-100" style="border-color:#a7f3d0!important;background:#f0fdf4">
-                            <div class="text-success small fw-semibold mb-1">Montant payé</div>
-                            <div class="fw-bold fs-5 text-success">{{ number_format($paye, 2, ',', ' ') }}</div>
-                            <div class="text-muted small">DH</div>
-                        </div>
-                    </div>
-                    {{-- Restant --}}
-                    <div class="col-sm-4">
-                        <div class="p-3 rounded border text-center h-100"
-                             style="{{ $restant > 0 ? 'border-color:#fca5a5!important;background:#fff5f5' : 'border-color:#a7f3d0!important;background:#f0fdf4' }}">
-                            <div class="{{ $restant > 0 ? 'text-danger' : 'text-success' }} small fw-semibold mb-1">Restant dû</div>
-                            <div class="fw-bold fs-5 {{ $restant > 0 ? 'text-danger' : 'text-success' }}">
-                                {{ number_format($restant, 2, ',', ' ') }}
-                            </div>
-                            <div class="text-muted small">DH</div>
+                            <div class="text-muted small fw-semibold mb-1">المحكوم به</div>
+                            <div class="fw-bold fs-5">{{ number_format($condamne, 2, '.', ',') }}</div>
+                            <div class="text-muted small">درهم</div>
                         </div>
                     </div>
 
-                    {{-- Montants réclamés (si renseignés) --}}
+                    {{-- المدفوع --}}
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded border text-center h-100"
+                             style="border-color:#a7f3d0!important;background:#f0fdf4">
+                            <div class="text-success small fw-semibold mb-1">المبلغ المدفوع</div>
+                            <div class="fw-bold fs-5 text-success">{{ number_format($paye, 2, '.', ',') }}</div>
+                            <div class="text-muted small">درهم</div>
+                        </div>
+                    </div>
+
+                    {{-- المتبقي --}}
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded border text-center h-100"
+                             style="{{ $restant > 0 ? 'border-color:#fca5a5!important;background:#fff5f5' : 'border-color:#a7f3d0!important;background:#f0fdf4' }}">
+                            <div class="{{ $restant > 0 ? 'text-danger' : 'text-success' }} small fw-semibold mb-1">
+                                المبلغ المتبقي
+                            </div>
+                            <div class="fw-bold fs-5 {{ $restant > 0 ? 'text-danger' : 'text-success' }}">
+                                {{ number_format($restant, 2, '.', ',') }}
+                            </div>
+                            <div class="text-muted small">درهم</div>
+                        </div>
+                    </div>
+
+                    {{-- المطالبات --}}
                     @if($finance->montant_reclame_demandeur || $finance->montant_reclame_defendeur)
                     <div class="col-sm-6">
                         <div class="p-3 rounded border h-100">
-                            <div class="text-muted small fw-semibold mb-1">Réclamé par le demandeur</div>
+                            <div class="text-muted small fw-semibold mb-1">مبلغ المطالب به (المدعي)</div>
                             <div class="fw-semibold">
-                                {{ $finance->montant_reclame_demandeur ? number_format($finance->montant_reclame_demandeur, 2, ',', ' ').' DH' : '—' }}
+                                {{ $finance->montant_reclame_demandeur ? number_format($finance->montant_reclame_demandeur, 2, '.', ',').' درهم' : '—' }}
                             </div>
                         </div>
                     </div>
+
                     <div class="col-sm-6">
                         <div class="p-3 rounded border h-100">
-                            <div class="text-muted small fw-semibold mb-1">Réclamé par le défendeur</div>
+                            <div class="text-muted small fw-semibold mb-1">مبلغ المطالب به (المدعى عليه)</div>
                             <div class="fw-semibold">
-                                {{ $finance->montant_reclame_defendeur ? number_format($finance->montant_reclame_defendeur, 2, ',', ' ').' DH' : '—' }}
+                                {{ $finance->montant_reclame_defendeur ? number_format($finance->montant_reclame_defendeur, 2, '.', ',').' درهم' : '—' }}
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    {{-- Date de paiement --}}
+                    {{-- تاريخ الدفع --}}
                     @if($finance->date_paiement)
                     <div class="col-12">
                         <div class="p-3 rounded border">
-                            <div class="text-muted small fw-semibold mb-1">Date du paiement</div>
+                            <div class="text-muted small fw-semibold mb-1">تاريخ الدفع</div>
                             <span class="fw-semibold text-success">
                                 <i class="bi bi-calendar-check me-1"></i>
                                 {{ $finance->date_paiement->format('d/m/Y') }}
@@ -182,50 +206,41 @@
                         </div>
                     </div>
                     @endif
+
                 </div>
             </div>
         </div>
 
-        {{-- Jugement lié --}}
+        {{-- الحكم --}}
         @if($jugement)
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+            <div class="card-header bg-white py-3 d-flex justify-content-between">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-hammer me-2 text-primary"></i>Jugement associé
+                    <i class="bi bi-gavel me-2 text-primary"></i>الحكم المرتبط
                 </h6>
                 <a href="{{ route('jugements.show', $jugement) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-eye me-1"></i>Voir
+                    عرض
                 </a>
             </div>
+
             <div class="card-body small">
                 <div class="row g-3">
+
                     <div class="col-sm-4">
-                        <div class="text-muted mb-1">Date</div>
+                        <div class="text-muted mb-1">التاريخ</div>
                         <div class="fw-semibold">{{ $jugement->date_jugement?->format('d/m/Y') ?? '—' }}</div>
                     </div>
+
                     <div class="col-sm-4">
-                        <div class="text-muted mb-1">Juge</div>
+                        <div class="text-muted mb-1">القاضي</div>
                         <div class="fw-semibold">{{ $jugement->juge?->nom_complet ?? '—' }}</div>
                     </div>
+
                     <div class="col-sm-4">
-                        <div class="text-muted mb-1">Caractère</div>
-                        @if($jugement->est_definitif)
-                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
-                                <i class="bi bi-check-circle me-1"></i>Définitif
-                            </span>
-                        @else
-                            <span class="badge bg-warning text-dark">Non définitif</span>
-                        @endif
+                        <div class="text-muted mb-1">النوع</div>
+                        {{ $jugement->est_definitif ? 'نهائي' : 'غير نهائي' }}
                     </div>
-                    @if($jugement->contenu_dispositif)
-                    <div class="col-12">
-                        <div class="text-muted mb-1">Dispositif</div>
-                        <div class="p-2 bg-light rounded border small"
-                             style="white-space:pre-wrap;max-height:80px;overflow:hidden;line-height:1.6">
-                            {{ Str::limit($jugement->contenu_dispositif, 200) }}
-                        </div>
-                    </div>
-                    @endif
+
                 </div>
             </div>
         </div>
@@ -233,54 +248,30 @@
 
     </div>
 
-    {{-- ── Colonne latérale ── --}}
+    {{-- العمود الجانبي --}}
     <div class="col-lg-4">
 
-        {{-- Résumé --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-info-circle me-2 text-muted"></i>Résumé
-                </h6>
+                <h6 class="mb-0 fw-semibold">ملخص</h6>
             </div>
+
             <div class="card-body small">
                 <dl class="row mb-0">
-                    <dt class="col-6 text-muted fw-normal">Statut paiement</dt>
-                    <dd class="col-6">
-                        <span class="badge bg-{{ $spColor }}">{{ $sp }}</span>
-                    </dd>
 
-                    <dt class="col-6 text-muted fw-normal">Date paiement</dt>
+                    <dt class="col-6 text-muted">حالة الدفع</dt>
+                    <dd class="col-6"><span class="badge bg-{{ $spColor }}">{{ $sp }}</span></dd>
+
+                    <dt class="col-6 text-muted">تاريخ الدفع</dt>
                     <dd class="col-6">{{ $finance->date_paiement?->format('d/m/Y') ?? '—' }}</dd>
 
-                    <dt class="col-6 text-muted fw-normal">Créé le</dt>
+                    <dt class="col-6 text-muted">تاريخ الإنشاء</dt>
                     <dd class="col-6">{{ $finance->created_at->format('d/m/Y') }}</dd>
 
-                    <dt class="col-6 text-muted fw-normal">Modifié le</dt>
+                    <dt class="col-6 text-muted">آخر تعديل</dt>
                     <dd class="col-6">{{ $finance->updated_at->format('d/m/Y') }}</dd>
-                </dl>
-            </div>
-        </div>
 
-        {{-- Navigation rapide --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-body py-3 d-flex flex-column gap-2">
-                @if($dossier)
-                <a href="{{ route('dossiers.show', $dossier) }}#tab-finances"
-                   class="btn btn-outline-primary w-100 btn-sm">
-                    <i class="bi bi-folder2-open me-1"></i>Voir le dossier
-                </a>
-                @endif
-                @if($jugement)
-                <a href="{{ route('jugements.show', $jugement) }}"
-                   class="btn btn-outline-secondary w-100 btn-sm">
-                    <i class="bi bi-hammer me-1"></i>Voir le jugement
-                </a>
-                @endif
-                <a href="{{ route('finances.edit', $finance) }}"
-                   class="btn btn-outline-warning w-100 btn-sm">
-                    <i class="bi bi-pencil me-1"></i>Modifier cette finance
-                </a>
+                </dl>
             </div>
         </div>
 

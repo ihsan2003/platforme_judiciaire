@@ -64,8 +64,14 @@ class ExecutionController extends Controller
 
         $statuts      = StatutExecution::orderBy('statut_execution')->get();
         $responsables = User::orderBy('name')->get();
+        $selectedJugement = null;
 
-        return view('executions.create', compact('jugements', 'statuts', 'responsables'));
+        if (request('jugement_id')) {
+            $selectedJugement = Jugement::with(['dossierTribunal.tribunal'])
+                ->find(request('jugement_id'));
+        }
+
+        return view('executions.create', compact('jugements', 'statuts', 'responsables','selectedJugement'));
     }
 
     // ─────────────────────────────────────────

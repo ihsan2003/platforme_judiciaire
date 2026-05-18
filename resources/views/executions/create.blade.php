@@ -20,10 +20,8 @@
 
 <div dir="rtl">
 
-<div class="row g-4">
-
-    {{-- ── MAIN COLUMN ── --}}
-    <div class="col-lg-8">
+<div class="row justify-content-center">
+    <div class="col-lg-6">
 
         <form action="{{ route('executions.store') }}" method="POST">
             @csrf
@@ -47,35 +45,23 @@
                             <span class="text-danger">*</span>
                         </label>
 
-                        <select name="id_jugement"
-                                class="form-select form-select-sm @error('id_jugement') is-invalid @enderror"
-                                required>
+                        @if($selectedJugement)
 
-                            <option value="">
-                                — اختر الحكم —
-                            </option>
-
-                            @foreach($jugements as $j)
-
-                                <option value="{{ $j->id }}">
-
-                                    #{{ $j->id }} —
-
-                                    {{ $j->date_jugement->format('d/m/Y') }}
-
-                                    · {{ $j->dossierTribunal->tribunal->nom_tribunal ?? '' }}
-
-                                </option>
-
-                            @endforeach
-
-                        </select>
-
-                        @error('id_jugement')
-                            <div class="invalid-feedback">
-                                {{ $message }}
+                            <div class="form-control form-control-sm bg-light">
+                                #{{ $selectedJugement->id }}
+                                — {{ $selectedJugement->date_jugement->format('d/m/Y') }}
+                                · {{ $selectedJugement->dossierTribunal->tribunal->nom_tribunal ?? '' }}
                             </div>
-                        @enderror
+
+                            <input type="hidden" name="id_jugement" value="{{ $selectedJugement->id }}">
+
+                        @else
+
+                            <div class="text-danger small">
+                                Aucun jugement sélectionné
+                            </div>
+
+                        @endif
 
                     </div>
 
@@ -165,43 +151,6 @@
             </div>
 
         </form>
-
-    </div>
-
-    {{-- ── SIDEBAR ── --}}
-    <div class="col-lg-4">
-
-        <div class="card border-0 shadow-sm">
-
-            <div class="card-header bg-white py-3">
-
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-info-circle ms-2 text-info"></i>
-                    معلومات
-                </h6>
-
-            </div>
-
-            <div class="card-body small text-muted">
-
-                <p class="mb-2">
-                    يمكن تنفيذ الأحكام
-                    <strong>النهائية</strong>
-                    فقط.
-                </p>
-
-                <p class="mb-2">
-                    يُسمح بتنفيذ واحد فقط لكل حكم.
-                </p>
-
-                <p class="mb-0">
-                    يمكن أن تتغير الحالة:
-                    قيد التنفيذ ← مكتملة.
-                </p>
-
-            </div>
-
-        </div>
 
     </div>
 
