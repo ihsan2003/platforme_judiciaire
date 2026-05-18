@@ -195,7 +195,9 @@
                     <th class="pe-3 text-muted small fw-semibold">التاريخ</th>
                     <th class="text-muted small fw-semibold">الملف</th>
                     <th class="text-muted small fw-semibold">المحكمة</th>
+                    <th class="text-muted small fw-semibold">الدرجة</th>
                     <th class="text-muted small fw-semibold">القاضي</th>
+                    <th class="text-muted small fw-semibold">وضعية المؤسسة</th>
                     <th class="text-muted small fw-semibold">الصفة</th>
                     <th class="text-muted small fw-semibold">الطعن</th>
                     <th class="text-muted small fw-semibold">التنفيذ</th>
@@ -238,8 +240,36 @@
                     </td>
 
                     <td class="text-muted small">
+                       {{ $jugement->dossierTribunal?->degre?->degre_juridiction ?? '—' }}
+                   </td>
+
+                    <td class="text-muted small">
                         {{ $jugement->juge?->nom_complet ?? '—' }}
                     </td>
+
+                     <td>
+                       @php
+                           $etabPartie = $jugement->parties
+                               ->first(fn($p) => $p->est_entraide);
+                           $posLabel = $etabPartie
+                               ? ($etabPartie->pivot->montant_condamne > 0
+                                   ? 'condamné'
+                                   : 'favorable')
+                               : null;
+                       @endphp
+
+                       @if($etabPartie === null)
+                           <span class="text-muted">—</span>
+                       @elseif($posLabel === 'condamné')
+                           <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25">
+                               <i class="bi bi-shield-x ms-1"></i> ضد المؤسسة
+                           </span>
+                       @else
+                           <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
+                               <i class="bi bi-trophy-fill ms-1"></i> لصالح المؤسسة
+                           </span>
+                       @endif
+                   </td>
 
                     <td>
 

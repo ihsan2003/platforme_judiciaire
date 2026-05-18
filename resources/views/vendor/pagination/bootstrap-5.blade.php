@@ -7,14 +7,14 @@
             <li class="entraide-page-item disabled">
                 <span class="entraide-page-link entraide-page-prev">
                     <i class="bi bi-chevron-left"></i>
-                    <span>Précédent</span>
+                    <span>السابق</span>
                 </span>
             </li>
         @else
             <li class="entraide-page-item">
                 <a class="entraide-page-link entraide-page-prev" href="{{ $paginator->previousPageUrl() }}" rel="prev">
                     <i class="bi bi-chevron-left"></i>
-                    <span>Précédent</span>
+                    <span>السابق</span>
                 </a>
             </li>
         @endif
@@ -46,29 +46,20 @@
         @if ($paginator->hasMorePages())
             <li class="entraide-page-item">
                 <a class="entraide-page-link entraide-page-next" href="{{ $paginator->nextPageUrl() }}" rel="next">
-                    <span>Suivant</span>
+                    <span>التالي</span>
                     <i class="bi bi-chevron-right"></i>
                 </a>
             </li>
         @else
             <li class="entraide-page-item disabled">
                 <span class="entraide-page-link entraide-page-next">
-                    <span>Suivant</span>
+                    <span>التالي</span>
                     <i class="bi bi-chevron-right"></i>
                 </span>
             </li>
         @endif
 
     </ul>
-
-    {{-- Infos résultats --}}
-    <div class="entraide-pagination-info">
-        Affichage
-        <strong>{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</strong>
-        sur
-        <strong>{{ $paginator->total() }}</strong>
-        résultats
-    </div>
 </nav>
 
 <style>

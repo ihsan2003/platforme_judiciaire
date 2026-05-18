@@ -27,7 +27,9 @@ class JugementController extends Controller
         $jugements = Jugement::with([
                 'dossierTribunal.dossier',
                 'dossierTribunal.tribunal',
+                'dossierTribunal.degre',
                 'juge',
+                'parties',
                 'createdBy',
                 'recours',
                 'executions.statut',

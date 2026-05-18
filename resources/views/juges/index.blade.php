@@ -197,7 +197,7 @@
                         @endphp
 
                         @if($nbAud > 0)
-                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25">
+                            <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25">
                                 <i class="bi bi-calendar-event me-1"></i>
                                 {{ $nbAud }} جلسة
                             </span>

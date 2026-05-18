@@ -232,4 +232,11 @@ class DossierTribunal extends Model
         }
         return 'success';
     }
+
+    public function getDerniereDtAttribute(): ?DossierTribunal
+    {
+        return $this->dossierTribunaux
+            ->sortByDesc(fn($dt) => $dt->degre?->ordre ?? 0)
+            ->first();
+    }
 }

@@ -235,4 +235,20 @@ class DossierJudiciaire extends Model
     {
         return $query->whereBetween('date_ouverture', [$debut, $fin]);
     }
+    public function getJugementValidAttribute(): ?Jugement
+    {
+        return $this->dossierTribunaux
+            ->sortByDesc(fn($dt) => $dt->degre?->ordre ?? 0)
+            ->flatMap->jugements
+            ->sortByDesc('date_jugement')
+            ->first();
+    }
+
+    /**
+     * Retourne la finance valide (celle du dernier degré).
+     */
+    public function getFinanceValideAttribute(): ?\App\Models\Finance
+    {
+        return $this->jugementValid?->finance;
+    }
 }

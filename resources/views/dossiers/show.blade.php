@@ -238,6 +238,15 @@
 
     $manquants = $dossier->typesPartiesManquants();
     $peutAudience = $dossier->peutAvoirAudience();
+            // On ne garde que la finance du jugement du dernier degré
+            $derniereInstance = $instances->sortByDesc(fn($dt) => $dt->degre?->ordre ?? 0)->first();
+            $jugementValide   = $derniereInstance?->jugements->sortByDesc('date_jugement')->first();
+            $financeValide    = $jugementValide?->finance;
+
+            // Toutes les finances (lecture seule, contexte historique)
+            $finances         = $instances->flatMap->jugements->pluck('finance')->filter();
+            $jugSansFinance   = $instances->flatMap->jugements->filter(fn($j) => !$j->finance);
+        
 @endphp
 
 {{-- ══════════════════════════════════════════════
@@ -306,7 +315,7 @@
 
             <div class="kpi-item">
                 <div class="kpi-val">
-                    <span dir="ltr">{{ number_format($totalFinances, 0, ',', ' ') }}</span>
+                    <span dir="ltr">{{ number_format($financeValide->montant_condamne, 2) }}</span>
                     <small style="font-size:.5em;font-weight:600;opacity:.8"> درهم</small>
                 </div>
                 <div class="kpi-lab">المبلغ المحكوم به</div>
@@ -1028,26 +1037,55 @@
          ONGLET 4 : FINANCES
     ══════════════════════════════════════════ --}}
     <div class="tab-pane fade" id="tab-finances" dir="rtl">
-        @php
-            $finances = $instances->flatMap->jugements->pluck('finance')->filter();
-            $jugSansFinance = $instances->flatMap->jugements->filter(fn($j) => !$j->finance);
-        @endphp
 
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-semibold mb-0"><i class="bi bi-cash-stack me-1 text-success"></i>البيانات المالية</h6>
-            @if($jugSansFinance->isNotEmpty())
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterFinance">
-                    <i class="bi bi-plus-lg me-1"></i>إضافة تفاصيل مالية
-                </button>
-            @endif
-        </div>
-
-        @if($finances->isEmpty())
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-cash-coin fs-1 d-block mb-2 opacity-25"></i>
-                لا توجد بيانات مالية مسجلة.
+        {{-- ══ Banner finance valide ══ --}}
+        @if($financeValide)
+        <div class="alert border-0 mb-3" 
+            style="background:#f0fdf4;border-right:4px solid #16a34a !important;border-radius:10px">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <strong class="small">الوضعية المالية المرجعية</strong>
+                <span class="badge bg-success" style="font-size:.65rem">
+                    {{ $derniereInstance?->degre?->degre_juridiction ?? '—' }}
+                </span>
             </div>
-        @else
+            <div class="row g-2 small">
+                <div class="col-sm-3">
+                    <span class="text-muted">المحكوم به :</span>
+                    <strong>{{ number_format($financeValide->montant_condamne, 2) }} د.م</strong>
+                </div>
+                <div class="col-sm-3">
+                    <span class="text-muted">المؤدى :</span>
+                    <strong class="text-success">{{ number_format($financeValide->montant_paye, 2) }} د.م</strong>
+                </div>
+                <div class="col-sm-3">
+                    <span class="text-muted">المتبقي :</span>
+                    <strong class="{{ $financeValide->montant_restant > 0 ? 'text-danger' : 'text-success' }}">
+                        {{ number_format($financeValide->montant_restant, 2) }} د.م
+                    </strong>
+                </div>
+                <div class="col-sm-3">
+                    @php $pctV = $financeValide->montant_condamne > 0 
+                        ? min(100, round(($financeValide->montant_paye / $financeValide->montant_condamne) * 100)) : 0; @endphp
+                    <div class="fin-bar mt-1">
+                        <div class="fin-bar-fill" 
+                            style="width:{{ $pctV }}%;background:{{ $pctV>=100?'#16a34a':($pctV>0?'#d97706':'#ef4444') }}">
+                        </div>
+                    </div>
+                    <div style="font-size:.68rem;color:#64748b">{{ $pctV }}% محصّل</div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- ══ Tableau complet (historique) ══ --}}
+        @if($finances->count() > 1)
+        <div class="small text-muted mb-2">
+            <i class="bi bi-clock-history me-1"></i>
+            السجل التاريخي لجميع الدرجات
+        </div>
+        @endif
+
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
@@ -1065,57 +1103,63 @@
                 <tbody>
                     @foreach($finances as $fin)
                     @php
-                        $jFin = $fin->jugement;
+                        $jFin  = $fin->jugement;
                         $dtFin = $jFin?->dossierTribunal;
-                        $pct = $fin->montant_condamne > 0 ? min(100, round(($fin->montant_paye / $fin->montant_condamne) * 100)) : 0;
+                        $pct   = $fin->montant_condamne > 0 
+                            ? min(100, round(($fin->montant_paye / $fin->montant_condamne) * 100)) : 0;
                         $pctCol = $pct >= 100 ? 'success' : ($pct > 0 ? 'warning' : 'danger');
+
+                        // Marquer la finance valide
+                        $isValide = $financeValide && $fin->id === $financeValide->id;
                     @endphp
-                    <tr>
-                        <td class="fw-semibold small">{{ $jFin?->date_jugement?->format('d/m/Y') ?? '—' }}</td>
+                    <tr class="{{ $isValide ? 'table-success' : '' }}">
+                        <td class="fw-semibold small">
+                            {{ $jFin?->date_jugement?->format('d/m/Y') ?? '—' }}
+                            @if($isValide)
+                                <span class="badge bg-success ms-1" style="font-size:.6rem">مرجعية</span>
+                            @else
+                                <span class="badge bg-secondary ms-1" style="font-size:.6rem;opacity:.6">تاريخية</span>
+                            @endif
+                        </td>
                         <td>
-                            <span class="badge bg-{{ match($dtFin?->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }}" style="font-size:.65rem">
+                            <span class="badge bg-{{ match($dtFin?->degre?->ordre??0){1=>'success',2=>'primary',3=>'danger',default=>'secondary'} }}" 
+                                style="font-size:.65rem">
                                 {{ $dtFin?->degre?->degre_juridiction ?? '—' }}
                             </span>
                         </td>
                         <td class="fw-semibold">{{ number_format($fin->montant_condamne, 2) }} د.م</td>
                         <td class="text-success fw-semibold">{{ number_format($fin->montant_paye, 2) }} د.م</td>
-                        <td class="{{ $fin->montant_restant > 0 ? 'text-danger' : 'text-success' }} fw-semibold">{{ number_format($fin->montant_restant, 2) }} د.م</td>
+                        <td class="{{ $fin->montant_restant > 0 ? 'text-danger' : 'text-success' }} fw-semibold">
+                            {{ number_format($fin->montant_restant, 2) }} د.م
+                        </td>
                         <td style="min-width:100px">
-                            <div class="fin-bar"><div class="fin-bar-fill bg-{{ $pctCol }}" style="width:{{ $pct }}%"></div></div>
+                            <div class="fin-bar">
+                                <div class="fin-bar-fill bg-{{ $pctCol }}" style="width:{{ $pct }}%"></div>
+                            </div>
                             <div style="font-size:.68rem;color:#64748b;margin-top:2px">{{ $pct }}%</div>
                         </td>
                         <td>
-                            @php 
-                                $sp = $fin->statut_paiement ?? '—';
-                                $spAr = match($sp) {
-                                    'Complet' => 'مكتمل',
-                                    'Partiel' => 'جزئي',
-                                    default   => $sp
-                                };
-                            @endphp
-                            <span class="badge bg-{{ match($sp){ 'Complet' => 'success', 'Partiel' => 'warning', default => 'secondary' } }}">{{ $spAr }}</span>
+                            @php $sp = $fin->statut_paiement ?? '—'; @endphp
+                            <span class="badge bg-{{ match($sp){ 'Complet'=>'success','Partiel'=>'warning',default=>'secondary'} }}">
+                                {{ $sp }}
+                            </span>
                         </td>
                         <td class="text-start">
-                            <a href="{{ route('finances.show', $fin) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
-                            <a href="{{ route('finances.edit', $fin) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ route('finances.show', $fin) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {{-- Modifier uniquement la finance valide --}}
+                            @if($isValide)
+                            <a href="{{ route('finances.edit', $fin) }}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
-                <tfoot class="table-light fw-semibold small">
-                    <tr>
-                        <td colspan="2">المجموع الإجمالي</td>
-                        <td>{{ number_format($finances->sum('montant_condamne'), 2) }} د.م</td>
-                        <td class="text-success">{{ number_format($finances->sum('montant_paye'), 2) }} د.م</td>
-                        <td class="{{ $finances->sum('montant_condamne') - $finances->sum('montant_paye') > 0 ? 'text-danger' : 'text-success' }}">
-                            {{ number_format($finances->sum('montant_condamne') - $finances->sum('montant_paye'), 2) }} د.م
-                        </td>
-                        <td colspan="3"></td>
-                    </tr>
-                </tfoot>
             </table>
         </div>
-        @endif
     </div>{{-- /tab-finances --}}
 
 
