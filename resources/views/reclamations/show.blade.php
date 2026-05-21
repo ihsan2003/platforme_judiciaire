@@ -246,171 +246,380 @@
 
     {{-- ══ التبويب 2 : المتابعة / الإجراءات ══ --}}
     <div class="tab-pane fade" id="tab-suivi">
-        {{-- إضافة إجراء جديد --}}
-        <div class="card border mb-4" style="border-color: #0d6efd !important; border-width: 2px !important;">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-plus-circle me-1 text-primary"></i>إضافة إجراء متابعة
-                </h6>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('reclamations.actions.store', $reclamation) }}"
-                      method="POST"
-                      enctype="multipart/form-data"
-                      id="form-action-suivi">
-                @csrf
-                    @php
-                        $typeActionIhala = $typesAction->firstWhere('type_action', 'إحالة')?->id;
-                        $typeActionRad   = $typesAction->firstWhere('type_action', 'رد')?->id;
-                    @endphp
 
-                    <script>
-                        window._typeActionIhala = {{ $typeActionIhala ?? 'null' }};
-                        window._typeActionRad   = {{ $typeActionRad   ?? 'null' }};
-                    </script>
+        <div class="row g-4">
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small">نوع الإجراء <span class="text-danger">*</span></label>
-                            <select name="id_type_action" id="select-type-action" class="form-select" required>
-                                <option value="">— اختر النوع —</option>
-                                @foreach($typesAction as $type)
-                                    <option value="{{ $type->id }}">{{ $type->type_action }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+            {{-- =========================
+                COLONNE GAUCHE : FORMULAIRE
+            ========================== --}}
+            <div class="col-lg-5">
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small">التاريخ <span class="text-danger">*</span></label>
-                            <input type="date" name="date_action" class="form-control" value="{{ date('Y-m-d') }}" required>
-                        </div>
+                <div class="card border h-100">
 
-                        <div class="col-12">
-                            <label class="form-label fw-semibold small">ملاحظات</label>
-                            <textarea name="commentaire" class="form-control" rows="2" placeholder="اكتب ملاحظاتك هنا..."></textarea>
-                        </div>
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="bi bi-plus-circle me-1 text-primary"></i>
+                            إضافة إجراء متابعة
+                        </h6>
+                    </div>
 
-                        {{-- كتلة الإحالة --}}
-                        <div class="col-12" id="bloc-structure" style="display:none;">
-                            <div class="p-3 rounded-3 border border-warning bg-warning bg-opacity-10">
-                                <label class="form-label fw-semibold small text-warning-emphasis">
-                                    <i class="bi bi-diagram-3 me-1"></i>الهيكل المعني بالإحالة
-                                </label>
-                                <select name="id_structure" class="form-select">
-                                    <option value="">— لا يوجد —</option>
-                                    @foreach($structures as $structure)
-                                        <option value="{{ $structure->id }}">{{ $structure->nom }}</option>
-                                        @foreach($structure->enfants as $enfant)
-                                            <option value="{{ $enfant->id }}">&nbsp;&nbsp;↳ {{ $enfant->nom }}</option>
+                    <div class="card-body">
+
+                        <form action="{{ route('reclamations.actions.store', $reclamation) }}"
+                            method="POST"
+                            enctype="multipart/form-data"
+                            id="form-action-suivi">
+
+                            @csrf
+
+                            @php
+                                $typeActionIhala = $typesAction->firstWhere('type_action', 'إحالة')?->id;
+                                $typeActionRad   = $typesAction->firstWhere('type_action', 'رد')?->id;
+                            @endphp
+
+                            <script>
+                                window._typeActionIhala = {{ $typeActionIhala ?? 'null' }};
+                                window._typeActionRad   = {{ $typeActionRad   ?? 'null' }};
+                            </script>
+
+                            <div class="row g-3">
+
+                                {{-- نوع الإجراء --}}
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold small">
+                                        نوع الإجراء
+                                        <span class="text-danger">*</span>
+                                    </label>
+
+                                    <select name="id_type_action"
+                                            id="select-type-action"
+                                            class="form-select"
+                                            required>
+
+                                        <option value="">— اختر النوع —</option>
+
+                                        @foreach($typesAction as $type)
+                                            <option value="{{ $type->id }}">
+                                                {{ $type->type_action }}
+                                            </option>
                                         @endforeach
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        {{-- كتلة الرد --}}
-                        <div class="col-12" id="bloc-reponse" style="display:none;">
-                            <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
-                                <label class="form-label fw-semibold small text-success-emphasis">
-                                    <i class="bi bi-chat-quote me-1"></i>محتوى الرد <span class="text-danger">*</span>
-                                </label>
-                                <textarea name="reponse" id="input-reponse" class="form-control" rows="4" placeholder="اكتب نص الرد المقدم للمشتكي..."></textarea>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-semibold small">
-                                <i class="bi bi-paperclip me-1"></i>إرفاق مستند (اختياري)
-                            </label>
-                            <input type="file" name="document_action" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
-                            <div class="form-text">PDF, Word, Excel, صور — الحد الأقصى 10 Mo</div>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="bi bi-plus-lg me-1"></i>حفظ الإجراء
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        {{-- سجل الإجراءات --}}
-        @if($reclamation->actions->isEmpty())
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-list-check fs-1 d-block mb-2 opacity-25"></i>
-                لا يوجد أي إجراء مسجل حالياً.
-            </div>
-        @else
-        <h6 class="fw-bold text-muted mb-3 small text-uppercase" style="letter-spacing:.05em">سجل الإجراءات</h6>
-        <div class="position-relative">
-            @if($reclamation->actions->count() > 1)
-            <div style="position:absolute; right:23px; top:40px; bottom:40px; width:2px; background: linear-gradient(to bottom, #0d6efd55, #dee2e6); z-index:0;"></div>
-            @endif
-
-            @foreach($reclamation->actions as $action)
-            @php
-                $typeActionLib = $action->typeAction?->type_action ?? '';
-                [$iconAction, $colorAction] = match(true) {
-                    $typeActionLib === 'إحالة' => ['bi-arrow-left-circle-fill', '#fd7e14'],
-                    $typeActionLib === 'رد'    => ['bi-chat-quote-fill',         '#198754'],
-                    default                    => ['bi-arrow-left-circle',      '#0d6efd'],
-                };
-
-                $commentaire = $action->commentaire ?? '';
-                $reponse     = null;
-                if (str_contains($commentaire, '**Réponse :**') || str_contains($commentaire, '**الرد :**')) {
-                    $delimiter = str_contains($commentaire, '**الرد :**') ? '**الرد :**' : '**Réponse :**';
-                    $parts       = explode($delimiter, $commentaire, 2);
-                    $commentaire = trim($parts[0]);
-                    $reponse     = trim($parts[1]);
-                }
-            @endphp
-            <div class="d-flex gap-3 mb-3 position-relative" style="z-index:1;">
-                <div class="flex-shrink-0">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
-                         style="width:48px;height:48px;background:{{ $colorAction }}; box-shadow:0 0 0 4px {{ $colorAction }}33;">
-                        <i class="bi {{ $iconAction }} fs-5"></i>
-                    </div>
-                </div>
-
-                <div class="card border w-100">
-                    <div class="card-body py-3">
-                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-                            <div>
-                                <div class="fw-bold">{{ $typeActionLib ?: '—' }}</div>
-                                <div class="text-muted small">
-                                    <i class="bi bi-calendar3 me-1"></i> {{ $action->date_action?->format('Y/m/d') ?? '—' }}
-                                    @if($action->structure) &nbsp;·&nbsp; <i class="bi bi-diagram-3 me-1"></i> {{ $action->structure->nom }} @endif
-                                    @if($action->createdBy) &nbsp;·&nbsp; <i class="bi bi-person me-1"></i> {{ $action->createdBy->name }} @endif
+                                    </select>
                                 </div>
-                            </div>
-                        </div>
 
-                        @if($commentaire)
-                            <p class="small text-muted mb-2 lh-lg" style="white-space: pre-wrap;">{{ $commentaire }}</p>
-                        @endif
+                                {{-- التاريخ --}}
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold small">
+                                        التاريخ
+                                        <span class="text-danger">*</span>
+                                    </label>
 
-                        @if($reponse)
-                            <div class="border border-success rounded-2 p-2 mt-2 bg-success bg-opacity-10">
-                                <div class="small fw-bold text-success-emphasis mb-1"><i class="bi bi-chat-quote me-1"></i>الرد المقدم:</div>
-                                <p class="small mb-0 lh-lg" style="white-space: pre-wrap;">{{ $reponse }}</p>
-                            </div>
-                        @endif
+                                    <input type="date"
+                                        name="date_action"
+                                        class="form-control"
+                                        value="{{ date('Y-m-d') }}"
+                                        required>
+                                </div>
 
-                        @if($typeActionLib === 'إحالة' && $action->structure)
-                            <div class="border border-warning rounded-2 p-2 mt-2 bg-warning bg-opacity-10">
-                                <div class="small fw-bold text-warning-emphasis mb-1"><i class="bi bi-diagram-3 me-1"></i>تمت الإحالة إلى:</div>
-                                <span class="small">{{ $action->structure->nom }}</span>
+                                {{-- الملاحظات --}}
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold small">
+                                        ملاحظات
+                                    </label>
+
+                                    <textarea name="commentaire"
+                                            class="form-control"
+                                            rows="3"
+                                            placeholder="اكتب ملاحظاتك هنا..."></textarea>
+                                </div>
+
+                                {{-- كتلة الإحالة --}}
+                                <div class="col-12"
+                                    id="bloc-structure"
+                                    style="display:none;">
+
+                                    <div class="p-3 rounded-3 border border-warning bg-warning bg-opacity-10">
+
+                                        <label class="form-label fw-semibold small text-warning-emphasis">
+                                            <i class="bi bi-diagram-3 me-1"></i>
+                                            الهيكل المعني بالإحالة
+                                        </label>
+
+                                        <select name="id_structure" class="form-select">
+
+                                            <option value="">— لا يوجد —</option>
+
+                                            @foreach($structures as $structure)
+
+                                                <option value="{{ $structure->id }}">
+                                                    {{ $structure->nom }}
+                                                </option>
+
+                                               @foreach($structure->enfants as $enfant)
+                                                    <option value="{{ $enfant->id }}">
+                                                        &nbsp;&nbsp;↲ {{ $enfant->nom }}
+                                                    </option>
+                                                @endforeach
+
+                                            @endforeach
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- كتلة الرد --}}
+                                <div class="col-12"
+                                    id="bloc-reponse"
+                                    style="display:none;">
+
+                                    <div class="p-3 rounded-3 border border-success bg-success bg-opacity-10">
+
+                                        <label class="form-label fw-semibold small text-success-emphasis">
+                                            <i class="bi bi-chat-quote me-1"></i>
+                                            محتوى الرد
+                                            <span class="text-danger">*</span>
+                                        </label>
+
+                                        <textarea name="reponse"
+                                                id="input-reponse"
+                                                class="form-control"
+                                                rows="4"
+                                                placeholder="اكتب نص الرد المقدم للمشتكي..."></textarea>
+                                    </div>
+                                </div>
+
+                                {{-- document --}}
+                                <div class="col-12">
+
+                                    <label class="form-label fw-semibold small">
+                                        <i class="bi bi-paperclip me-1"></i>
+                                        إرفاق مستند (اختياري)
+                                    </label>
+
+                                    <input type="file"
+                                        name="document_action"
+                                        class="form-control"
+                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+
+                                    <div class="form-text">
+                                        PDF, Word, Excel, صور — الحد الأقصى 10 Mo
+                                    </div>
+                                </div>
+
+                                {{-- bouton --}}
+                                <div class="col-12 d-flex justify-content-end">
+
+                                    <button type="submit"
+                                            class="btn btn-primary px-4">
+
+                                        <i class="bi bi-plus-lg me-1"></i>
+                                        حفظ الإجراء
+                                    </button>
+
+                                </div>
+
                             </div>
-                        @endif
+
+                        </form>
+
                     </div>
                 </div>
+
             </div>
-            @endforeach
+
+            {{-- =========================
+                COLONNE DROITE : HISTORIQUE
+            ========================== --}}
+            <div class="col-lg-7">
+
+                <div class="card border h-100">
+
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="bi bi-clock-history me-1 text-secondary"></i>
+                            سجل الإجراءات
+                        </h6>
+                    </div>
+
+                    <div class="card-body">
+
+                        @if($reclamation->actions->isEmpty())
+
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-list-check fs-1 d-block mb-2 opacity-25"></i>
+                                لا يوجد أي إجراء مسجل حالياً.
+                            </div>
+
+                        @else
+
+                            <div class="position-relative">
+
+                                @if($reclamation->actions->count() > 1)
+                                    <div style="
+                                        position:absolute;
+                                        right:23px;
+                                        top:40px;
+                                        bottom:40px;
+                                        width:2px;
+                                        background: linear-gradient(to bottom, #0d6efd55, #dee2e6);
+                                        z-index:0;">
+                                    </div>
+                                @endif
+
+                                @foreach($reclamation->actions as $action)
+
+                                    @php
+                                        $typeActionLib = $action->typeAction?->type_action ?? '';
+
+                                        [$iconAction, $colorAction] = match(true) {
+                                            $typeActionLib === 'إحالة' => ['bi-arrow-left-circle-fill', '#fd7e14'],
+                                            $typeActionLib === 'رد'    => ['bi-chat-quote-fill', '#198754'],
+                                            default                    => ['bi-arrow-left-circle', '#0d6efd'],
+                                        };
+
+                                        $commentaire = $action->commentaire ?? '';
+                                        $reponse     = null;
+
+                                        if (
+                                            str_contains($commentaire, '**Réponse :**') ||
+                                            str_contains($commentaire, '**الرد :**')
+                                        ) {
+                                            $delimiter = str_contains($commentaire, '**الرد :**')
+                                                ? '**الرد :**'
+                                                : '**Réponse :**';
+
+                                            $parts = explode($delimiter, $commentaire, 2);
+
+                                            $commentaire = trim($parts[0]);
+                                            $reponse     = trim($parts[1]);
+                                        }
+                                    @endphp
+
+                                    <div class="d-flex gap-3 mb-3 position-relative"
+                                        style="z-index:1;">
+
+                                        {{-- icon --}}
+                                        <div class="flex-shrink-0">
+
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+                                                style="
+                                                    width:48px;
+                                                    height:48px;
+                                                    background:{{ $colorAction }};
+                                                    box-shadow:0 0 0 4px {{ $colorAction }}33;
+                                                ">
+
+                                                <i class="bi {{ $iconAction }} fs-5"></i>
+                                            </div>
+                                        </div>
+
+                                        {{-- card --}}
+                                        <div class="card border w-100">
+
+                                            <div class="card-body py-3">
+
+                                                {{-- header --}}
+                                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+
+                                                    <div>
+
+                                                        <div class="fw-bold">
+                                                            {{ $typeActionLib ?: '—' }}
+                                                        </div>
+
+                                                        <div class="text-muted small">
+
+                                                            <i class="bi bi-calendar3 me-1"></i>
+                                                            {{ $action->date_action?->format('Y/m/d') ?? '—' }}
+
+                                                            @if($action->structure)
+                                                                &nbsp;·&nbsp;
+                                                                <i class="bi bi-diagram-3 me-1"></i>
+                                                                {{ $action->structure->nom }}
+                                                            @endif
+
+                                                            @if($action->createdBy)
+                                                                &nbsp;·&nbsp;
+                                                                <i class="bi bi-person me-1"></i>
+                                                                {{ $action->createdBy->name }}
+                                                            @endif
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                                {{-- commentaire --}}
+                                                @if($commentaire)
+
+                                                    <p class="small text-muted mb-2 lh-lg"
+                                                    style="white-space: pre-wrap;">
+
+                                                        {{ $commentaire }}
+
+                                                    </p>
+
+                                                @endif
+
+                                                {{-- réponse --}}
+                                                @if($reponse)
+
+                                                    <div class="border border-success rounded-2 p-2 mt-2 bg-success bg-opacity-10">
+
+                                                        <div class="small fw-bold text-success-emphasis mb-1">
+                                                            <i class="bi bi-chat-quote me-1"></i>
+                                                            الرد المقدم:
+                                                        </div>
+
+                                                        <p class="small mb-0 lh-lg"
+                                                        style="white-space: pre-wrap;">
+
+                                                            {{ $reponse }}
+
+                                                        </p>
+
+                                                    </div>
+
+                                                @endif
+
+                                                {{-- إحالة --}}
+                                                @if($typeActionLib === 'إحالة' && $action->structure)
+
+                                                    <div class="border border-warning rounded-2 p-2 mt-2 bg-warning bg-opacity-10">
+
+                                                        <div class="small fw-bold text-warning-emphasis mb-1">
+                                                            <i class="bi bi-diagram-3 me-1"></i>
+                                                            تمت الإحالة إلى:
+                                                        </div>
+
+                                                        <span class="small">
+                                                            {{ $action->structure->nom }}
+                                                        </span>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                @endforeach
+
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-        @endif
+
     </div>
 
 

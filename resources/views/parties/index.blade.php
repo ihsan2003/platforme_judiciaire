@@ -118,9 +118,9 @@ body{
               action="{{ route('parties.index') }}"
               class="row g-2 align-items-end">
 
-            <div class="col-md-5">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">
-                    البحث
+                    بحث
                 </label>
 
                 <div class="input-group">
@@ -131,14 +131,10 @@ body{
                            placeholder="الاسم، المعرف أو البريد الإلكتروني..."
                            value="{{ request('search') }}">
 
-                    <span class="input-group-text bg-white">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">
                     نوع الشخص
                 </label>
@@ -162,11 +158,10 @@ body{
                 </select>
             </div>
 
-            <div class="col-md-4 d-flex gap-2">
+            <div class="col-md-1 d-flex gap-2">
 
-                <button class="btn btn-primary flex-fill">
+                <button class="btn btn-primary">
                     <i class="bi bi-funnel-fill ms-1"></i>
-                    تصفية
                 </button>
 
                 <a href="{{ route('parties.index') }}"

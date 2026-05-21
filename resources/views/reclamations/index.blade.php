@@ -15,6 +15,7 @@
 <div dir="rtl">
 
 {{-- ══ الإحصائيات ══ --}}
+
 <div class="row g-3 mb-4">
     @foreach([
         ['label' => 'المجموع',        'value' => $stats['total'],      'icon' => 'chat-left-text',  'color' => 'primary'],
@@ -98,31 +99,6 @@
                             {{ $type->type_reclamant }}
                         </option>
                     @endforeach
-                </select>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label small text-muted fw-semibold">
-                    الفترة
-                </label>
-
-                <select name="periode" class="form-select">
-                    <option value="">كل الفترات</option>
-
-                    <option value="ce_mois"
-                        @selected(request('periode') == 'ce_mois')>
-                        هذا الشهر
-                    </option>
-
-                    <option value="ce_trimestre"
-                        @selected(request('periode') == 'ce_trimestre')>
-                        هذا الفصل
-                    </option>
-
-                    <option value="cette_annee"
-                        @selected(request('periode') == 'cette_annee')>
-                        هذه السنة
-                    </option>
                 </select>
             </div>
 

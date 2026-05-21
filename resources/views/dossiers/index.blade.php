@@ -73,7 +73,7 @@
 
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">
                     بحث
                 </label>
@@ -206,6 +206,10 @@
                     </th>
 
                     <th class="text-muted small fw-semibold">
+                        الجهة
+                    </th>
+
+                    <th class="text-muted small fw-semibold">
                         نوع القضية
                     </th>
 
@@ -217,15 +221,7 @@
                         الحالة
                     </th>
 
-                    <th class="text-muted small fw-semibold">
-                        تاريخ الفتح
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
-                        أُنشئ بواسطة
-                    </th>
-
-                    <th class="text-muted small fw-semibold text-end pe-3">
+                    <th class="text-muted small fw-semibold pe-3">
                         الإجراءات
                     </th>
                 </tr>
@@ -245,6 +241,18 @@
 
                     <td class="text-muted small">
                         {{ $dossier->numero_dossier_tribunal ?? '—' }}
+                    </td>
+
+                    <td class="text-muted small">
+                        @foreach(
+                            $dossier->dossierTribunaux
+                                ->pluck('tribunal.province.region.region')
+                                ->filter()
+                                ->unique()
+                            as $region
+                        )
+                            {{ $region }}
+                        @endforeach
                     </td>
 
                     <td>
@@ -287,14 +295,6 @@
                             {{ $statut }}
                         </span>
 
-                    </td>
-
-                    <td class="text-muted small">
-                        {{ $dossier->date_ouverture?->format('d/m/Y') ?? '—' }}
-                    </td>
-
-                    <td class="text-muted small">
-                        {{ $dossier->createdBy->name ?? '—' }}
                     </td>
 
                     <td class="text-end pe-3">

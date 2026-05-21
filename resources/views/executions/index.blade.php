@@ -76,55 +76,85 @@
 {{-- ══ الفلاتر ══ --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
+
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-4">
+            {{-- Recherche --}}
+            <div class="col-md-2">
+
+                <label class="form-label small text-muted fw-semibold">
+                    بحث
+                </label>
+
+                <input type="text"
+                       name="search"
+                       class="form-control"
+                       placeholder="رقم التنفيذ أو المحكمة..."
+                       value="{{ request('search') }}">
+
+            </div>
+
+            {{-- Statut --}}
+            <div class="col-md-2">
+
                 <label class="form-label small text-muted fw-semibold">
                     الحالة
                 </label>
 
-                <select name="statut" class="form-select form-select-sm">
+                <select name="statut"
+                        class="form-select">
+
                     <option value="">كل الحالات</option>
 
                     @foreach($statuts as $statut)
+
                         <option value="{{ $statut->id }}"
                             @selected(request('statut') == $statut->id)>
+
                             {{ $statut->statut_execution }}
+
                         </option>
+
                     @endforeach
+
                 </select>
+
             </div>
 
-            <div class="col-md-4">
+            {{-- Date notification --}}
+            <div class="col-md-2">
+
                 <label class="form-label small text-muted fw-semibold">
-                    المسؤول
+                    تاريخ التبليغ
                 </label>
 
-                <select name="responsable" class="form-select form-select-sm">
-                    <option value="">الكل</option>
+                <input type="date"
+                       name="date_notification"
+                       class="form-control"
+                       value="{{ request('date_notification') }}">
 
-                    @foreach($responsables as $user)
-                        <option value="{{ $user->id }}"
-                            @selected(request('responsable') == $user->id)>
-                            {{ $user->name }}
-                        </option>
-                    @endforeach
-                </select>
             </div>
 
-            <div class="col-md-4 d-flex gap-2">
-                <button class="btn btn-primary btn-sm flex-fill">
+            {{-- Buttons --}}
+            <div class="col-md-1 d-flex gap-2">
+
+                <button class="btn btn-primary">
+
                     <i class="bi bi-funnel-fill ms-1"></i>
-                    تصفية
+
                 </button>
 
                 <a href="{{ route('executions.index') }}"
-                   class="btn btn-outline-secondary btn-sm">
+                   class="btn btn-outline-secondary">
+
                     <i class="bi bi-x-lg"></i>
+
                 </a>
+
             </div>
 
         </form>
+
     </div>
 </div>
 

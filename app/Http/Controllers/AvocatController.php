@@ -12,9 +12,34 @@ class AvocatController extends Controller
  
 
     
-    public function index()
+    public function index(Request $request)
     {
-        $avocats = Avocat::orderBy('nom_avocat')->paginate(10);
+        $query = Avocat::query();
+
+        // ══ Recherche ══
+        if ($request->filled('search')) {
+
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('nom_avocat', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('telephone', 'like', "%{$search}%");
+            });
+        }
+
+        // ══ Tri ══
+        $sort = $request->get('sort', 'nom_avocat');
+
+        if ($sort === 'created_at') {
+            $query->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('nom_avocat', 'asc');
+        }
+
+        // ══ Pagination ══
+        $avocats = $query->paginate(10)->withQueryString();
+
         return view('avocats.index', compact('avocats'));
     }
 

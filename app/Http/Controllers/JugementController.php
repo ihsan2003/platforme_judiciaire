@@ -9,6 +9,7 @@ use App\Models\DossierTribunal;
 use App\Models\Juge;
 use App\Models\Partie;
 use App\Models\DossierPartie;
+use App\Models\DegreeJuridiction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,42 @@ class JugementController extends Controller
                 'recours',
                 'executions.statut',
             ])
+
+            // Filtre juge
+            ->when(request('juge'), function ($q, $v) {
+                $q->where('id_juge', $v);
+            })
+
+            // Filtre définitif
+            ->when(request('definitif') === 'oui', function ($q) {
+                $q->where('est_definitif', true);
+            })
+
+            ->when(request('definitif') === 'non', function ($q) {
+                $q->where('est_definitif', false);
+            })
+
+            // Filtre degré
+            ->when(request('degre'), function ($q, $v) {
+                $q->whereHas('dossierTribunal.degre', function ($query) use ($v) {
+                    $query->where('id', $v);
+                });
+            })
+
+            ->when(request('position') === 'contre', function ($q) {
+                $q->whereHas('parties', function ($query) {
+                    $query->where('est_entraide', true)
+                        ->where('jugement_parties.montant_condamne', '>', 0);
+                });
+            })
+
+            ->when(request('position') === 'pour', function ($q) {
+                $q->whereHas('parties', function ($query) {
+                    $query->where('est_entraide', true)
+                        ->where('jugement_parties.montant_condamne', '<=', 0);
+                });
+            })
+
             ->latest('date_jugement')
             ->paginate(15)
             ->withQueryString();
@@ -47,7 +84,15 @@ class JugementController extends Controller
 
         $juges = Juge::orderBy('nom_complet')->get();
 
-        return view('jugements.index', compact('jugements', 'stats', 'juges'));
+        // IMPORTANT
+        $degres = DegreeJuridiction::orderBy('degre_juridiction')->get();
+
+        return view('jugements.index', compact(
+            'jugements',
+            'stats',
+            'juges',
+            'degres'
+        ));
     }
 
     // ─────────────────────────────────────────

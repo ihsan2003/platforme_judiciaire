@@ -66,43 +66,58 @@
 
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-5">
-                <label class="form-label small text-muted fw-semibold">بحث</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input type="text"
-                           name="search"
-                           class="form-control border-start-0"
-                           placeholder="الاسم، الدرجة أو التخصص..."
-                           value="{{ request('search') }}">
-                </div>
+            {{-- Recherche --}}
+            <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">
+                    بحث
+                </label>
+
+                <input type="text"
+                       name="search"
+                       class="form-control"
+                       placeholder="اسم القاضي أو المحكمة..."
+                       value="{{ request('search') }}">
             </div>
 
-            <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">المحكمة</label>
-                <select name="tribunal" class="form-select">
-                    <option value="">كل المحاكم</option>
+            {{-- Spécialité --}}
+            <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">
+                    التخصص
+                </label>
 
-                    @foreach(\App\Models\Tribunal::orderBy('nom_tribunal')->get() as $t)
-                        <option value="{{ $t->id }}" @selected(request('tribunal') == $t->id)>
-                            {{ $t->nom_tribunal }}
+                <select name="specialisation" class="form-select">
+
+                    <option value="">كل التخصصات</option>
+
+                    @foreach(
+                        \App\Models\Juge::select('specialisation')
+                            ->distinct()
+                            ->orderBy('specialisation')
+                            ->pluck('specialisation') as $specialisation
+                    )
+
+                        <option value="{{ $specialisation }}"
+                            @selected(request('specialisation') == $specialisation)>
+                            {{ $specialisation }}
                         </option>
+
                     @endforeach
 
                 </select>
             </div>
 
-            <div class="col-md-4 d-flex gap-2">
+            {{-- Buttons --}}
+            <div class="col-md-1 d-flex gap-2">
 
                 <button class="btn btn-primary flex-fill">
                     <i class="bi bi-funnel-fill me-1"></i>
-                    تصفية
                 </button>
 
-                <a href="{{ route('juges.index') }}" class="btn btn-outline-secondary">
+                <a href="{{ route('juges.index') }}"
+                   class="btn btn-outline-secondary">
+
                     <i class="bi bi-x-lg"></i>
+
                 </a>
 
             </div>
@@ -141,7 +156,7 @@
                     <th class="text-muted small fw-semibold">التخصص</th>
                     <th class="text-muted small fw-semibold">المحكمة</th>
                     <th class="text-muted small fw-semibold">الجلسات القادمة</th>
-                    <th class="text-end pe-3 text-muted small fw-semibold">الإجراءات</th>
+                    <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>
 
@@ -208,8 +223,8 @@
                         @endif
                     </td>
 
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="pe-3">
+                        <div class="d-flex gap-1">
 
                             <a href="{{ route('juges.show', $juge) }}"
                                class="btn btn-sm btn-outline-primary">

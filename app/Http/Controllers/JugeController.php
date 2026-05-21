@@ -11,18 +11,31 @@ class JugeController extends Controller
     public function index()
     {
         $juges = Juge::with('tribunal')
-            ->when(request('search'), fn($q, $v) =>
-                $q->where(fn($q) =>
-                    $q->where('nom_complet', 'like', "%{$v}%")
-                      ->orWhere('grade', 'like', "%{$v}%")
-                      ->orWhere('specialisation', 'like', "%{$v}%")
-                )
-            )
-            ->when(request('tribunal'), fn($q, $v) =>
-                $q->where('id_tribunal', $v)
-            )
+
+            // ══ Recherche nom juge + tribunal ══
+            ->when(request('search'), function ($q, $v) {
+
+                $q->where(function ($query) use ($v) {
+
+                    $query->where('nom_complet', 'like', "%{$v}%")
+
+                        ->orWhereHas('tribunal', function ($tribunal) use ($v) {
+                            $tribunal->where('nom_tribunal', 'like', "%{$v}%");
+                        });
+
+                });
+
+            })
+
+            // ══ Filtre spécialité ══
+            ->when(request('specialisation'), function ($q, $v) {
+                $q->where('specialisation', $v);
+            })
+
             ->orderBy('nom_complet')
+
             ->paginate(10)
+
             ->withQueryString();
 
         return view('juges.index', compact('juges'));

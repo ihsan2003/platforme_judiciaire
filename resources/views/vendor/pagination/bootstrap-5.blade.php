@@ -122,8 +122,8 @@
 
 /* ── Page active --------------------------------------- */
 .entraide-page-item.active .entraide-page-link {
-    background: linear-gradient(135deg, #1a3a5c 0%, #24527f 100%);
-    color: #c8a84b;
+    background: primary;
+    color: primary;
     border-color: #1a3a5c;
     box-shadow: 0 3px 10px rgba(26, 58, 92, 0.30);
     transform: none;

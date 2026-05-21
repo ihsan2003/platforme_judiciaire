@@ -79,7 +79,7 @@
                     <th class="ps-3 text-muted small fw-semibold">الهيكل</th>
                     <th class="text-muted small fw-semibold">النوع</th>
                     <th class="text-muted small fw-semibold">الهيكليات الفرعية</th>
-                    <th class="text-end pe-3 text-muted small fw-semibold">الإجراءات</th>
+                    <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>
 
@@ -121,8 +121,8 @@
                         @endif
                     </td>
 
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="pe-3">
+                        <div class="d-flex gap-1">
                             <a href="{{ route('admin.structures.show', $structure) }}"
                                class="btn btn-sm btn-outline-primary" title="عرض">
                                 <i class="bi bi-eye"></i>
@@ -164,8 +164,8 @@
 
                     <td></td>
 
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="pe-3">
+                        <div class="d-flex gap-1">
                             <a href="{{ route('admin.structures.show', $enfant) }}"
                                class="btn btn-sm btn-outline-primary" title="عرض" style="padding:.2rem .45rem">
                                 <i class="bi bi-eye" style="font-size:.75rem"></i>

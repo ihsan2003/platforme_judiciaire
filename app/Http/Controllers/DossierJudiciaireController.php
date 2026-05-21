@@ -45,8 +45,7 @@ class DossierJudiciaireController extends Controller
             ->with([
                 'typeAffaire',
                 'statut',
-                'createdBy:id,name',                 // seulement id+name, pas tout le modèle User
-                'dossierTribunaux.tribunal',          // pour afficher le ou les tribunaux dans la liste
+                'dossierTribunaux.tribunal.province.region',
             ])
             ->when($request->type,   fn($q, $v) => $q->parType($v))
             ->when($request->statut, fn($q, $v) => $q->whereHas(
@@ -67,7 +66,6 @@ class DossierJudiciaireController extends Controller
         $typesAffaire   = TypeAffaire::orderBy('affaire')->get();
         $statutDossiers = StatutDossier::orderBy('statut_dossier')->get();
 
-        // Un seul appel groupé pour les stats plutôt que 3 COUNT() séparés.
         $stats = [
             'total'   => DossierJudiciaire::count(),
             'actifs'  => DossierJudiciaire::actifs()->count(),

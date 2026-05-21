@@ -80,7 +80,7 @@
                     <th class="text-muted small fw-semibold">الدور</th>
                     <th class="text-muted small fw-semibold">تاريخ الإنشاء</th>
                     <th class="text-muted small fw-semibold">حالة البريد</th>
-                    <th class="text-end pe-3 text-muted small fw-semibold">الإجراءات</th>
+                    <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>
 
@@ -154,8 +154,8 @@
                         @endif
                     </td>
 
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="pe-3">
+                        <div class="d-flex gap-1">
                             <a href="{{ route('admin.users.show', $user) }}"
                                class="btn btn-sm btn-outline-primary" title="عرض">
                                 <i class="bi bi-eye"></i>

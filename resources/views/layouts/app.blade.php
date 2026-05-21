@@ -345,7 +345,7 @@
         <div class="sidebar-brand-icon"><i class="bi bi-bank2"></i></div>
         <div>
             <div class="sidebar-brand-text">المنصة القانونية</div>
-            <div class="sidebar-brand-sub">التضامن الوطني</div>
+            <div class="sidebar-brand-sub">التعاون الوطني</div>
         </div>
     </div>
     

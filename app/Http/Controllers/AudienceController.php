@@ -34,15 +34,6 @@ class AudienceController extends Controller
             ->when(request('dossier'), fn($q, $v) => $q->whereHas(
                 'dossierTribunal', fn($q) => $q->where('id_dossier', $v)
             ))
-            ->when(request('periode'), function ($q, $v) {
-                return match ($v) {
-                    'passees' => $q->whereDate('date_audience', '<', today()),
-                    'today'   => $q->whereDate('date_audience', today()),
-                    'futures' => $q->whereDate('date_audience', '>', today()),
-                    'semaine' => $q->whereBetween('date_audience', [today(), today()->addDays(7)]),
-                    default   => $q,
-                };
-            })
             ->latest('date_audience')
             ->paginate(15)
             ->withQueryString();

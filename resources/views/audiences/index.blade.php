@@ -56,10 +56,11 @@
 {{-- ══ الفلاتر ══ --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
+        
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">القاضي</label>
-                <select name="juge" class="form-select form-select-sm">
+                <select name="juge" class="form-select ">
                     <option value="">جميع القضاة</option>
                     @foreach($juges as $juge)
                         <option value="{{ $juge->id }}" @selected(request('juge') == $juge->id)>
@@ -68,9 +69,9 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">نوع الجلسة</label>
-                <select name="type" class="form-select form-select-sm">
+                <select name="type" class="form-select ">
                     <option value="">جميع الأنواع</option>
                     @foreach($typesAudience as $type)
                         <option value="{{ $type->id }}" @selected(request('type') == $type->id)>
@@ -79,23 +80,18 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small text-muted fw-semibold">الفترة</label>
-                <select name="periode" class="form-select form-select-sm">
-                    <option value="">الكل</option>
-                    <option value="today"   @selected(request('periode') == 'today')>اليوم</option>
-                    <option value="semaine" @selected(request('periode') == 'semaine')>الـ 7 أيام القادمة</option>
-                    <option value="futures" @selected(request('periode') == 'futures')>القادمة</option>
-                    <option value="passees" @selected(request('periode') == 'passees')>السابقة</option>
-                </select>
-            </div>
-            <div class="col-md-3 d-flex gap-2">
-                <button class="btn btn-primary btn-sm flex-fill">
-                    <i class="bi bi-funnel-fill ml-1"></i>تصفية
+            <div class="col-md-1 d-flex gap-1">
+
+                <button class="btn btn-primary flex-fill" title="تصفية">
+                    <i class="bi bi-funnel-fill"></i>
                 </button>
-                <a href="{{ route('audiences.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-clockwise"></i>
+
+                <a href="{{ route('audiences.index') }}"
+                   class="btn btn-outline-secondary"
+                   title="إعادة التعيين">
+                    <i class="bi bi-x-lg"></i>
                 </a>
+
             </div>
         </form>
     </div>

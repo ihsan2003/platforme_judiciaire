@@ -31,23 +31,87 @@ class ExecutionController extends Controller
                 'statut',
                 'responsable',
             ])
-            ->when(request('statut'),      fn($q, $v) => $q->where('statut_execution', $v))
-            ->when(request('responsable'), fn($q, $v) => $q->where('responsable_id', $v))
+
+            // ══ Recherche numéro exécution + tribunal + dossier ══
+            ->when(request('search'), function ($q, $v) {
+
+                $q->where(function ($query) use ($v) {
+
+                    // numéro exécution
+                    $query->where('numero_dossier_execution', 'like', "%{$v}%")
+
+                        // numéro dossier
+                        ->orWhereHas(
+                            'jugement.dossierTribunal.dossier',
+                            function ($dossier) use ($v) {
+
+                                $dossier->where(
+                                    'numero_dossier_interne',
+                                    'like',
+                                    "%{$v}%"
+                                );
+
+                            }
+                        )
+
+                        // nom tribunal
+                        ->orWhereHas(
+                            'jugement.dossierTribunal.tribunal',
+                            function ($tribunal) use ($v) {
+
+                                $tribunal->where(
+                                    'nom_tribunal',
+                                    'like',
+                                    "%{$v}%"
+                                );
+
+                            }
+                        );
+
+                });
+
+            })
+
+            // ══ Filtre statut ══
+            ->when(request('statut'), function ($q, $v) {
+                $q->where('statut_execution', $v);
+            })
+
+            // ══ Filtre date notification ══
+            ->when(request('date_notification'), function ($q, $v) {
+                $q->whereDate('date_notification', $v);
+            })
+
             ->latest('date_notification')
+
             ->paginate(15)
+
             ->withQueryString();
 
         $stats = [
             'total'       => Execution::count(),
-            'en_cours'    => Execution::whereHas('statut', fn($q) => $q->where('statut_execution', 'En cours'))->count(),
+
+            'en_cours'    => Execution::whereHas(
+                'statut',
+                fn($q) => $q->where('statut_execution', 'En cours')
+            )->count(),
+
             'terminees'   => Execution::whereNotNull('date_execution')->count(),
-            'ce_mois'     => Execution::whereMonth('date_notification', now()->month)->count(),
+
+            'ce_mois'     => Execution::whereMonth(
+                'date_notification',
+                now()->month
+            )->count(),
         ];
 
         $statuts      = StatutExecution::orderBy('statut_execution')->get();
+
         $responsables = User::orderBy('name')->get();
 
-        return view('executions.index', compact('executions', 'stats', 'statuts', 'responsables'));
+        return view(
+            'executions.index',
+            compact('executions', 'stats', 'statuts', 'responsables')
+        );
     }
 
     // ─────────────────────────────────────────

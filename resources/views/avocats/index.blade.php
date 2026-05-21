@@ -62,12 +62,9 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-6">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">بحث</label>
                 <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
                     <input type="text"
                            name="search"
                            class="form-control border-start-0"
@@ -76,7 +73,7 @@
                 </div>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">ترتيب حسب</label>
                 <select name="sort" class="form-select">
                     <option value="nom_avocat" @selected(request('sort','nom_avocat') === 'nom_avocat')>الاسم (أ→ي)</option>
@@ -84,9 +81,9 @@
                 </select>
             </div>
 
-            <div class="col-md-2 d-flex gap-2">
+            <div class="col-md-1 d-flex gap-2">
                 <button class="btn btn-primary flex-fill" title="تصفية">
-                    <i class="bi bi-funnel-fill me-1"></i>تصفية
+                    <i class="bi bi-funnel-fill me-1"></i>
                 </button>
                 <a href="{{ route('avocats.index') }}" class="btn btn-outline-secondary" title="إعادة تعيين">
                     <i class="bi bi-x-lg"></i>
@@ -116,7 +113,7 @@
                     <th class="text-muted small fw-semibold">الهاتف</th>
                     <th class="text-muted small fw-semibold">البريد الإلكتروني</th>
                     <th class="text-muted small fw-semibold">الملفات</th>
-                    <th class="text-end pe-3 text-muted small fw-semibold">الإجراءات</th>
+                    <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>
 
@@ -173,8 +170,8 @@
                         @endif
                     </td>
 
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="pe-3">
+                        <div class="d-flex gap-1">
                             <a href="{{ route('avocats.show', $avocat) }}"
                                class="btn btn-sm btn-outline-primary" title="عرض">
                                 <i class="bi bi-eye"></i>

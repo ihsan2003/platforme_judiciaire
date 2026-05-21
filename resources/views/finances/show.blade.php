@@ -66,10 +66,7 @@
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ route('finances.edit', $finance) }}" class="btn btn-warning btn-sm">
-                    <i class="bi bi-pencil me-1"></i>تعديل
-                </a>
-
+    
                 <x-modal-delete
                     :action="route('finances.destroy', $finance)"
                     modal-id="deleteFinance{{ $finance->id }}"

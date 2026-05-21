@@ -63,7 +63,7 @@
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-5">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">بحث</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white">
@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">النوع</label>
                 <select name="type" class="form-select">
                     <option value="">جميع الأنواع</option>
@@ -89,9 +89,9 @@
                 </select>
             </div>
 
-            <div class="col-md-4 d-flex gap-2">
+            <div class="col-md-1 d-flex gap-2">
                 <button class="btn btn-primary flex-fill">
-                    <i class="bi bi-funnel-fill me-1"></i>تصفية
+                    <i class="bi bi-funnel-fill me-1"></i>
                 </button>
                 <a href="{{ route('tribunaux.index') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-x-lg"></i>
@@ -127,7 +127,7 @@
                     <th class="text-muted small fw-semibold">الإقليم</th>
                     <th class="text-muted small fw-semibold">الجهة</th>
                     <th class="text-muted small fw-semibold">القضاة</th>
-                    <th class="text-end pe-3 text-muted small fw-semibold">الإجراءات</th>
+                    <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>
 
@@ -178,8 +178,8 @@
                         @endif
                     </td>
 
-                    <td class="text-end pe-3">
-                        <div class="d-flex gap-1 justify-content-end">
+                    <td class="pe-3">
+                        <div class="d-flex gap-1">
 
                             <a href="{{ route('tribunaux.show', $tribunal) }}"
                                class="btn btn-sm btn-outline-primary" title="عرض">
