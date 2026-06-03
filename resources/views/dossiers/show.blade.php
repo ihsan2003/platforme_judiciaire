@@ -315,7 +315,9 @@
 
             <div class="kpi-item">
                 <div class="kpi-val">
-                    <span dir="ltr">{{ number_format($financeValide->montant_condamne, 2) }}</span>
+                    <span dir="ltr">    
+                       {{ number_format($financeValide->montant_condamne, 2) }}
+                    </span>
                     <small style="font-size:.5em;font-weight:600;opacity:.8"> درهم</small>
                 </div>
                 <div class="kpi-lab">المبلغ المحكوم به</div>

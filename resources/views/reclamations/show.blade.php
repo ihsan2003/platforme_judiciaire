@@ -333,10 +333,7 @@
                                 </div>
 
                                 {{-- كتلة الإحالة --}}
-                                <div class="col-12"
-                                    id="bloc-structure"
-                                    style="display:none;">
-
+                                <div class="col-12" id="bloc-structure" style="display:none;">
                                     <div class="p-3 rounded-3 border border-warning bg-warning bg-opacity-10">
 
                                         <label class="form-label fw-semibold small text-warning-emphasis">
@@ -344,25 +341,33 @@
                                             الهيكل المعني بالإحالة
                                         </label>
 
-                                        <select name="id_structure" class="form-select">
-
-                                            <option value="">— لا يوجد —</option>
-
-                                            @foreach($structures as $structure)
-
-                                                <option value="{{ $structure->id }}">
-                                                    {{ $structure->nom }}
-                                                </option>
-
-                                               @foreach($structure->enfants as $enfant)
-                                                    <option value="{{ $enfant->id }}">
-                                                        &nbsp;&nbsp;↲ {{ $enfant->nom }}
-                                                    </option>
-                                                @endforeach
-
+                                        {{-- المستوى 1 --}}
+                                        <select id="sel-niveau-1" class="form-select mb-2">
+                                            <option value="">— اختر الهيكل الرئيسي —</option>
+                                            @foreach($structures as $s)
+                                                <option value="{{ $s->id }}">{{ $s->nom }}</option>
                                             @endforeach
-
                                         </select>
+
+                                        {{-- المستوى 2 --}}
+                                        <select id="sel-niveau-2" class="form-select mb-2" style="display:none;">
+                                            <option value="">— اختر الهيكل الفرعي —</option>
+                                        </select>
+
+                                        {{-- المستوى 3 --}}
+                                        <select id="sel-niveau-3" class="form-select mb-2" style="display:none;">
+                                            <option value="">— اختر الهيكل الفرعي الثاني —</option>
+                                        </select>
+
+                                        {{-- الحقل الفعلي المرسل --}}
+                                        <input type="hidden" id="hidden-id-structure" name="id_structure" value="">
+
+                                        {{-- عرض الاختيار الحالي --}}
+                                        <div id="struct-selected-label" class="mt-2 small text-warning-emphasis fw-semibold" style="display:none;">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            <span id="struct-selected-text"></span>
+                                        </div>
+
                                     </div>
                                 </div>
 
@@ -671,13 +676,14 @@
 </div>
 
 @endsection
-
+@push('scripts')
 @push('scripts')
 <script>
 (function () {
+
     const hash = window.location.hash;
     if (hash) {
-        const tab = document.querySelector(`[data-bs-target="${hash}"]`);
+        const tab = document.querySelector('[data-bs-target="' + hash + '"]');
         if (tab) new bootstrap.Tab(tab).show();
     }
 
@@ -686,23 +692,167 @@
     const blocReponse  = document.getElementById('bloc-reponse');
     const inputReponse = document.getElementById('input-reponse');
 
+    const sel1         = document.getElementById('sel-niveau-1');
+    const sel2         = document.getElementById('sel-niveau-2');
+    const sel3         = document.getElementById('sel-niveau-3');
+    const hiddenStruct = document.getElementById('hidden-id-structure');
+    const labelDiv     = document.getElementById('struct-selected-label');
+    const labelText    = document.getElementById('struct-selected-text');
+
     if (!selectType) return;
 
+    // ── Données 3 niveaux injectées depuis PHP ────────────────────────────
+    // Structure : { id: { nom, enfants: { id: { nom, enfants: {...} } } } }
+    const niveau1 = {
+        @foreach($structures as $s)
+        {{ $s->id }}: {
+            nom: "{{ addslashes($s->nom) }}",
+            enfants: {
+                @foreach($s->enfants as $e)
+                {{ $e->id }}: {
+                    nom: "{{ addslashes($e->nom) }}",
+                    enfants: {
+                        @foreach($e->enfants as $se)
+                        {{ $se->id }}: { nom: "{{ addslashes($se->nom) }}" },
+                        @endforeach
+                    }
+                },
+                @endforeach
+            }
+        },
+        @endforeach
+    };
+
+    // ── Utilitaire : définir la valeur finale sélectionnée ────────────────
+    function setFinalValue(id, nom) {
+        hiddenStruct.value = id || '';
+        if (id && nom) {
+            labelText.textContent = nom;
+            labelDiv.style.display = '';
+        } else {
+            labelDiv.style.display = 'none';
+        }
+    }
+
+    // ── Reset complet de la cascade ───────────────────────────────────────
+    function resetCascade() {
+        sel1.value = '';
+        resetFrom(2);
+    }
+
+    // ── Reset à partir d'un niveau donné ─────────────────────────────────
+    function resetFrom(niveau) {
+        if (niveau <= 2) {
+            sel2.innerHTML = '<option value="">— اختر الهيكل الفرعي —</option>';
+            sel2.style.display = 'none';
+        }
+        if (niveau <= 3) {
+            sel3.innerHTML = '<option value="">— اختر الهيكل الفرعي الثاني —</option>';
+            sel3.style.display = 'none';
+        }
+        setFinalValue('', '');
+    }
+
+    // ── Remplir un select avec une liste d'objets {id, nom} ──────────────
+    function fillSelect(sel, items, placeholder) {
+        sel.innerHTML = '<option value="">' + placeholder + '</option>';
+        Object.entries(items).forEach(function([id, obj]) {
+            const opt = document.createElement('option');
+            opt.value       = id;
+            opt.textContent = obj.nom;
+            sel.appendChild(opt);
+        });
+        sel.style.display = '';
+    }
+
+    // ── Type d'action → afficher/masquer les blocs ───────────────────────
     function updateBlocs() {
-        const val = parseInt(selectType.value, 10);
+        const val     = parseInt(selectType.value, 10);
         const isIhala = window._typeActionIhala && val === window._typeActionIhala;
         const isRad   = window._typeActionRad   && val === window._typeActionRad;
 
         blocStruct.style.display  = isIhala ? '' : 'none';
         blocReponse.style.display = isRad   ? '' : 'none';
 
-        if (inputReponse) {
-            inputReponse.required = isRad;
-        }
+        if (inputReponse) inputReponse.required = isRad;
+        if (!isIhala) resetCascade();
     }
 
     selectType.addEventListener('change', updateBlocs);
     updateBlocs();
+
+    // ── Niveau 1 → charger niveau 2 ──────────────────────────────────────
+    sel1.addEventListener('change', function () {
+        resetFrom(2);
+
+        const id  = this.value;
+        if (!id) return;
+
+        const node = niveau1[id];
+        if (!node) return;
+
+        const enfants = node.enfants || {};
+        const count   = Object.keys(enfants).length;
+
+        if (count > 0) {
+            // A des enfants → afficher niveau 2, pas de valeur finale encore
+            fillSelect(sel2, enfants, '— اختر الهيكل الفرعي —');
+            setFinalValue('', '');
+        } else {
+            // Feuille niveau 1 → valeur finale = ce parent
+            sel2.style.display = 'none';
+            setFinalValue(id, node.nom);
+        }
+    });
+
+    // ── Niveau 2 → charger niveau 3 ──────────────────────────────────────
+    sel2.addEventListener('change', function () {
+        resetFrom(3);
+
+        const id1  = sel1.value;
+        const id2  = this.value;
+        if (!id2) {
+            // L'utilisateur a remis sur "— choisir —" → valeur finale = parent niveau 1
+            const node1 = niveau1[id1];
+            if (node1) setFinalValue(id1, node1.nom);
+            return;
+        }
+
+        const node1   = niveau1[id1];
+        const node2   = node1 && node1.enfants ? node1.enfants[id2] : null;
+        if (!node2) return;
+
+        const enfants = node2.enfants || {};
+        const count   = Object.keys(enfants).length;
+
+        if (count > 0) {
+            // A des sous-enfants → afficher niveau 3
+            fillSelect(sel3, enfants, '— اختر الهيكل الفرعي الثاني —');
+            setFinalValue('', '');
+        } else {
+            // Feuille niveau 2 → valeur finale = cet enfant
+            sel3.style.display = 'none';
+            setFinalValue(id2, node2.nom);
+        }
+    });
+
+    // ── Niveau 3 → valeur finale ──────────────────────────────────────────
+    sel3.addEventListener('change', function () {
+        const id1  = sel1.value;
+        const id2  = sel2.value;
+        const id3  = this.value;
+
+        if (!id3) {
+            // Remis sur "— choisir —" → valeur finale = niveau 2
+            const node2 = niveau1[id1]?.enfants?.[id2];
+            if (node2) setFinalValue(id2, node2.nom);
+            return;
+        }
+
+        const node3 = niveau1[id1]?.enfants?.[id2]?.enfants?.[id3];
+        if (node3) setFinalValue(id3, node3.nom);
+    });
+
 })();
 </script>
 @endpush

@@ -177,7 +177,9 @@ class ReclamationController extends Controller
         ]);
 
         $typesAction    = TypeAction::orderBy('type_action')->get();
-        $structures     = Structure::with('typeStructure')->whereNull('id_parent')->with('enfants')->get();
+        $structures = Structure::with(['typeStructure', 'enfants.enfants'])
+                ->whereNull('id_parent')
+                ->get();
         $statuts        = StatutReclamation::orderBy('statut_reclamation')->get();
         $typesDocuments = TypeDocument::all();
 
