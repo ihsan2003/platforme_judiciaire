@@ -3,8 +3,8 @@
 @section('title', 'Dossier ' . $dossier->numero_dossier_interne)
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Accueil</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('dossiers.index') }}">Dossiers</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dossiers.index') }}">الملفات</a></li>
     <li class="breadcrumb-item active">{{ $dossier->numero_dossier_interne }}</li>
 @endsection
 
@@ -316,7 +316,7 @@
             <div class="kpi-item">
                 <div class="kpi-val">
                     <span dir="ltr">    
-                       {{ number_format($financeValide->montant_condamne, 2) }}
+                    {{ number_format($financeValide?->montant_condamne ?? 0, 2) }}
                     </span>
                     <small style="font-size:.5em;font-weight:600;opacity:.8"> درهم</small>
                 </div>
