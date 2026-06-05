@@ -38,13 +38,13 @@ class RecoursController extends Controller
         // RG — Impossible si le jugement est déjà définitif
         if ($jugement->est_definitif) {
             return redirect()->back()
-                ->with('error', "Ce jugement est définitif : aucun recours n'est possible.");
+                ->with('error', 'لا يمكن تقديم طعن: الحكم أصبح نهائياً.');
         }
 
         // RG — Un seul recours par jugement
         if ($jugement->recours()->exists()) {
             return redirect()->back()
-                ->with('error', "Un recours a déjà été déposé sur ce jugement.");
+                ->with('error', 'تم بالفعل تقديم طعن على هذا الحكم.');
         }
 
         $typeRecours     = TypeRecours::findOrFail($request->id_type_recours);
@@ -53,9 +53,10 @@ class RecoursController extends Controller
 
         // RG — Vérification du délai légal
         $dateLimite = $jugement->date_jugement->copy()->addDays($typeRecours->delai_legal_jours);
+
         if (today()->gt($dateLimite)) {
             return redirect()->back()
-                ->with('error', "Délai de recours dépassé. La date limite était le {$dateLimite->format('d/m/Y')}.");
+                ->with('error', "انتهت مهلة الطعن. آخر أجل كان {$dateLimite->format('d/m/Y')}.");
         }
 
         DB::transaction(function () use ($request, $jugement, $dossierTribunal, $dossier, $typeRecours) {
@@ -74,30 +75,35 @@ class RecoursController extends Controller
             $nomType = strtolower($typeRecours->type_recours);
 
             if ($this->estCassationRejet($nomType)) {
-                // Cassation-rejet : l'arrêt d'appel attaqué devient définitif → clôture
+
+                // Cassation-rejet : l'arrêt devient définitif → clôture
                 $this->traiterCassationRejet($dossier, $jugement, $dossierTribunal);
 
             } elseif ($this->estCassationRenvoi($nomType)) {
+
                 // Cassation-renvoi : nouvelle instance d'appel créée
                 $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours);
 
             } elseif ($this->estUnPourvoi($nomType)) {
+
                 // Pourvoi pur : ouverture d'une instance de cassation
                 $this->traiterPourvoi($dossier, $dossierTribunal);
 
             } elseif ($this->estUnAppel($nomType)) {
+
                 // Appel : ouverture d'une instance d'appel
                 $this->traiterAppel($dossier, $dossierTribunal, $recours);
 
             } else {
-                // Type inconnu : on enregistre le recours sans transition de degré
-                // Le gestionnaire devra manuellement créer la prochaine instance
+
+                // Type inconnu : aucune transition automatique
+                // Le gestionnaire doit intervenir manuellement
             }
         });
 
         return redirect()
             ->route('jugements.show', $jugement)
-            ->with('success', 'Recours enregistré et statut du dossier mis à jour.');
+            ->with('success', 'تم تسجيل الطعن وتحديث حالة الملف بنجاح.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -109,15 +115,16 @@ class RecoursController extends Controller
 
         if ($jugement->recours()->exists()) {
             return redirect()->back()
-                ->with('error', "Ce jugement a déjà fait l'objet d'un recours.");
+                ->with('error', 'لا يمكن إغلاق الحكم لأنه موضوع طعن بالفعل.');
         }
 
         if ($jugement->est_definitif) {
             return redirect()->back()
-                ->with('error', "Ce jugement est déjà définitif.");
+                ->with('error', 'هذا الحكم نهائي بالفعل.');
         }
 
         DB::transaction(function () use ($jugement) {
+
             $jugement->update(['est_definitif' => true]);
 
             // Clôturer l'instance (date_fin = aujourd'hui)
@@ -125,14 +132,19 @@ class RecoursController extends Controller
 
             // Passer le dossier en "Clôturé" seulement si aucun autre recours actif
             $dossier = $jugement->dossierTribunal->dossier;
-            if (!$dossier->recours()->whereHas('dossierTribunal', fn($q) => $q->whereNull('date_fin'))->exists()) {
-                $this->changerStatutDossier($dossier, 'Clôturé');
+
+            if (
+                ! $dossier->recours()
+                    ->whereHas('dossierTribunal', fn($q) => $q->whereNull('date_fin'))
+                    ->exists()
+            ) {
+                $this->changerStatutDossier($dossier, 'مغلق');
             }
         });
 
         return redirect()
             ->route('jugements.show', $jugement)
-            ->with('success', 'Jugement marqué comme définitif. Dossier clôturé.');
+            ->with('success', 'تم اعتبار الحكم نهائياً وإغلاق الملف.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -154,6 +166,7 @@ class RecoursController extends Controller
         $degreAppel = $this->trouverDegre('استئناف');
 
         if ($degreAppel) {
+
             // Clôturer l'instance d'origine
             $dtOrigine->update(['date_fin' => today()->toDateString()]);
 
@@ -172,7 +185,7 @@ class RecoursController extends Controller
             $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
         }
 
-        $this->changerStatutDossier($dossier, 'En appel');
+        $this->changerStatutDossier($dossier, 'في الاستئناف');
     }
 
     /**
@@ -189,6 +202,7 @@ class RecoursController extends Controller
         $degreCassation = $this->trouverDegre('نقض');
 
         if ($degreCassation) {
+
             $dtOrigine->update(['date_fin' => today()->toDateString()]);
 
             $idTribunal = $this->trouverTribunalSuivant($dtOrigine, $degreCassation);
@@ -202,7 +216,7 @@ class RecoursController extends Controller
             ]);
         }
 
-        $this->changerStatutDossier($dossier, 'En cassation');
+        $this->changerStatutDossier($dossier, 'في النقض');
     }
 
     /**
@@ -223,6 +237,7 @@ class RecoursController extends Controller
         $degreAppel = $this->trouverDegre('استئناف');
 
         if ($degreAppel) {
+
             $dtOrigine->update(['date_fin' => today()->toDateString()]);
 
             $idTribunal = $this->trouverTribunalSuivant($dtOrigine, $degreAppel);
@@ -238,7 +253,7 @@ class RecoursController extends Controller
             $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
         }
 
-        $this->changerStatutDossier($dossier, 'Réouvert');
+        $this->changerStatutDossier($dossier, 'إعادة فتح');
     }
 
     /**
@@ -259,19 +274,19 @@ class RecoursController extends Controller
         $dtCassation->update(['date_fin' => today()->toDateString()]);
 
         // Trouver le jugement d'appel (instance précédente)
-        // qui était à l'origine du pourvoi
         $jugementAppel = $this->trouverJugementAttaque($dossier, $dtCassation);
 
         if ($jugementAppel) {
             $jugementAppel->update(['est_definitif' => true]);
-            // Clôturer aussi l'instance d'appel si ce n'est pas déjà fait
+
+            // Clôturer aussi l'instance d'appel si nécessaire
             $jugementAppel->dossierTribunal->update(['date_fin' => today()->toDateString()]);
         }
 
-        // Le jugement de cassation lui-même (s'il existe) est aussi définitif
+        // Le jugement actuel devient définitif
         $jugement->update(['est_definitif' => true]);
 
-        $this->changerStatutDossier($dossier, 'Clôturé');
+        $this->changerStatutDossier($dossier, 'مغلق');
     }
 
     // ─────────────────────────────────────────────────────────────────────────

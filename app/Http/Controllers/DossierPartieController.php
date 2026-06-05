@@ -84,7 +84,7 @@ class DossierPartieController extends Controller
                     'telephone'     => $request->telephone,
                     'email'         => $request->email,
                     'adresse'       => $request->adresse,
-                    'id_avocat'     => $request->id_avocat, // lié à la partie, pas au dossier
+                    'id_avocat'     => $request->id_avocat,
                 ]
             );
         }
@@ -99,7 +99,7 @@ class DossierPartieController extends Controller
             return redirect()
                 ->route('dossiers.show', $dossier)
                 ->withFragment('tab-parties')
-                ->with('error', 'Cette partie est déjà enregistrée dans ce dossier avec ce rôle.');
+                ->with('error', 'هذه الجهة مسجلة مسبقاً في هذا الملف بنفس الصفة.');
         }
 
         // La table pivot dossier_parties ne stocke PAS id_avocat (c'est sur la partie)
@@ -113,7 +113,7 @@ class DossierPartieController extends Controller
         return redirect()
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-parties')
-            ->with('success', "Partie « {$partie->nom_partie} » ajoutée au dossier.");
+            ->with('success', "تمت إضافة الجهة « {$partie->nom_partie} » إلى الملف بنجاح.");
     }
 
     /**
@@ -134,7 +134,7 @@ class DossierPartieController extends Controller
         return redirect()
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-parties')
-            ->with('success', 'Informations de la partie mises à jour.');
+            ->with('success', 'تم تحديث معلومات الجهة بنجاح.');
     }
 
     /**
@@ -150,6 +150,6 @@ class DossierPartieController extends Controller
         return redirect()
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-parties')
-            ->with('success', "Partie « {$nomPartie} » retirée du dossier.");
+            ->with('success', "تم حذف الجهة « {$nomPartie} » من الملف بنجاح.");
     }
 }

@@ -597,7 +597,7 @@
 
         {{-- Bouton assigner tribunal ─────────── --}}
         @if($instances->isEmpty())
-        <div class="d-flex justify-content-start mb-3">
+        <div class="d-flex justify-content-end mb-3">
             @can('update', $dossier)
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAjouterTribunal">
                     <i class="bi bi-plus-lg me-1"></i>تعيين محكمة
@@ -672,24 +672,11 @@
                                 data-bs-toggle="modal" data-bs-target="#modalEditTribunal{{ $dt->id }}">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        @if(!$isClosed && $peutAudience)
-                        <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
-                        class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);font-size:.75rem">
-                            <i class="bi bi-calendar-plus me-1"></i>جلسة جديدة
-                        </a>
-                        @endif
+                        
                     </div>
                     @endcan
                 </div>
             </div>
-
-            {{-- RG alerts ────────────────────── --}}
-            @if($audiences->isEmpty())
-                <div class="rg-alert info">
-                    <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
-                    <span>لا توجد جلسات مسجلة في هذه المرحلة حتى الآن.</span>
-                </div>
-            @endif
 
             {{-- ── TIMELINE AUDIENCES ───────── --}}
             @if($audiences->isEmpty())
@@ -700,7 +687,7 @@
                 <div class="mt-2">
                     <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
                     class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-calendar-plus me-1"></i>برمجة جلسة
+                        <i class="bi bi-calendar-plus me-1"></i>  برمجة جلسة جديدة
                     </a>
                 </div>
                 @endif

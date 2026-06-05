@@ -48,7 +48,7 @@ class DossierTribunalController extends Controller
         return redirect()
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-tribunaux')
-            ->with('success', "Tribunal « {$tribunal->nom_tribunal} » assigné au dossier.");
+            ->with('success', "تم إسناد المحكمة « {$tribunal->nom_tribunal} » إلى الملف بنجاح.");
     }
 
     /**
@@ -69,7 +69,7 @@ class DossierTribunalController extends Controller
         return redirect()
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-tribunaux')
-            ->with('success', 'Tribunal mis à jour.');
+            ->with('success', 'تم تحديث بيانات المحكمة بنجاح.');
     }
 
     /**
@@ -83,7 +83,7 @@ class DossierTribunalController extends Controller
             return redirect()
                 ->route('dossiers.show', $dossier)
                 ->withFragment('tab-tribunaux')
-                ->with('error', 'Impossible de retirer ce tribunal : il contient des audiences ou des jugements.');
+                ->with('error', 'يتعذر حذف هذه المحكمة لأنها تحتوي على جلسات أو أحكام.');
         }
 
         $tribunal->delete();
@@ -91,6 +91,6 @@ class DossierTribunalController extends Controller
         return redirect()
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-tribunaux')
-            ->with('success', 'Tribunal retiré du dossier.');
+            ->with('success', 'تم حذف المحكمة من الملف بنجاح.');
     }
 }

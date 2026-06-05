@@ -84,7 +84,7 @@
                            style="font-size:1.4rem;color:#dc3545"></i>
                     </div>
 
-                    <div class="flex-grow-1 min-w-0">
+                    <div class="flex-grow-1 min-w-0" style="text-align:right !important; direction:rtl;">
                         <h5 class="modal-title fw-bold mb-0"
                             id="{{ $modalId }}_label"
                             style="color:#1a3a5c;font-size:1.05rem">
@@ -112,7 +112,7 @@
 
                 @if($warning)
                     <div class="d-flex align-items-start gap-2 rounded-3 px-3 py-2 mb-1"
-                         style="background:#fff8f0;border:1px solid #ffe4c4">
+                         style="background:#fff8f0;border:1px solid #ffe4c4;text-align:right !important; direction:rtl;">
 
                         <i class="bi bi-shield-exclamation flex-shrink-0 mt-1"
                            style="color:#e07b00;font-size:.9rem"></i>

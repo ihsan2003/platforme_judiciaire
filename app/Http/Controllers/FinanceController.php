@@ -36,7 +36,7 @@ class FinanceController extends Controller
 
         Finance::create($validated);
 
-        return back()->with('success', 'Finance ajoutée avec succès.');
+        return back()->with('success', 'تمت إضافة البيانات المالية بنجاح.');
     }
 
     public function show(Finance $finance)
@@ -68,7 +68,7 @@ class FinanceController extends Controller
         $finance->update($request->all());
 
         return redirect()->route('finances.index')
-            ->with('success', 'Finance mise à jour');
+            ->with('success', 'تم تحديث البيانات المالية بنجاح');
     }
 
     public function destroy(Finance $finance)
@@ -76,6 +76,6 @@ class FinanceController extends Controller
         $finance->delete();
 
         return redirect()->route('finances.index')
-            ->with('success', 'Finance supprimée');
+            ->with('success', 'تم حذف البيانات المالية بنجاح');
     }
 }

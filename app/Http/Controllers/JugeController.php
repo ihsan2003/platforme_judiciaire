@@ -65,7 +65,7 @@ class JugeController extends Controller
         ]));
 
         return redirect()->route('juges.show', $juge)
-            ->with('success', 'Juge ajouté avec succès.');
+            ->with('success', 'تمت إضافة القاضي بنجاح.');
     }
 
     public function show(Juge $juge)
@@ -104,7 +104,7 @@ class JugeController extends Controller
         ]));
 
         return redirect()->route('juges.show', $juge)
-            ->with('success', 'Juge modifié avec succès.');
+            ->with('success', 'تم تعديل القاضي بنجاح.');
     }
 
     public function destroy(Juge $juge)
@@ -112,6 +112,6 @@ class JugeController extends Controller
         $juge->delete();
 
         return redirect()->route('juges.index')
-            ->with('success', 'Juge supprimé.');
+            ->with('success', 'تم حذف القاضي بنجاح.');
     }
 }

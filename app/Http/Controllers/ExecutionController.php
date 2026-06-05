@@ -160,7 +160,7 @@ class ExecutionController extends Controller
 
         return redirect()
             ->route('executions.show', $execution)
-            ->with('success', "Exécution « {$execution->numero_dossier_execution} » créée avec succès.");
+            ->with('success', "تم إنشاء ملف التنفيذ « {$execution->numero_dossier_execution} » بنجاح.");
     }
 
     // ─────────────────────────────────────────
@@ -207,7 +207,7 @@ class ExecutionController extends Controller
     {
         // ⛔ Bloquer si déjà terminée
         if ($execution->date_execution) {
-            abort(403, 'Exécution déjà terminée.');
+            abort(403, 'التنفيذ منتهي بالفعل.');
         }
 
         $data = $request->validated();
@@ -222,7 +222,7 @@ class ExecutionController extends Controller
             $data['statut_execution'] != 3
         ) {
             return back()->withErrors([
-                'statut_execution' => 'Impossible de revenir en arrière après terminaison.'
+                'statut_execution' => 'لا يمكن الرجوع إلى حالة سابقة بعد إنهاء التنفيذ.'
             ]);
         }
 
@@ -236,7 +236,7 @@ class ExecutionController extends Controller
 
         return redirect()
             ->route('executions.show', $execution)
-            ->with('success', 'Exécution mise à jour.');
+            ->with('success', 'تم تحديث ملف التنفيذ بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -249,6 +249,6 @@ class ExecutionController extends Controller
 
         return redirect()
             ->route('executions.index')
-            ->with('success', "Exécution « {$numero} » supprimée.");
+            ->with('success', "تم حذف ملف التنفيذ « {$numero} » بنجاح.");
     }
 }

@@ -321,23 +321,19 @@
 
                             @endcan
 
-                            {{-- أرشفة --}}
                             @can('delete', $dossier)
 
-                            <form action="{{ route('dossiers.destroy', $dossier) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('هل تريد أرشفة هذا الملف؟')">
-
-                                @csrf
-                                @method('DELETE')
-
-                                <button class="btn btn-sm btn-outline-danger"
-                                        title="أرشفة">
-
-                                    <i class="bi bi-archive"></i>
-                                </button>
-
-                            </form>
+                            <x-modal-delete
+                                :action="route('dossiers.destroy', $dossier)"
+                                modal-id="archiveDossier{{ $dossier->id }}"
+                                trigger-label=""
+                                trigger-class="btn btn-sm btn-outline-danger"
+                                trigger-icon="bi-archive"
+                                title="أرشفة الملف القضائي"
+                                :description="'الملف رقم ' . $dossier->numero_dossier_interne"
+                                warning="هل أنت متأكد من أرشفة هذا الملف؟ هذا الإجراء سيؤدي إلى نقل الملف إلى الأرشيف."
+                                confirm-label="نعم، أرشفة"
+                            />
 
                             @endcan
 

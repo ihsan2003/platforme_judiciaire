@@ -48,7 +48,7 @@ class TribunalController extends Controller
         ]));
 
         return redirect()->route('tribunaux.index')
-            ->with('success', 'Tribunal créé avec succès.');
+            ->with('success', 'تم إنشاء المحكمة بنجاح.');
     }
 
     public function show(Tribunal $tribunal)
@@ -85,7 +85,7 @@ class TribunalController extends Controller
         ]));
 
         return redirect()->route('tribunaux.show', $tribunal)
-            ->with('success', 'Tribunal mis à jour.');
+            ->with('success', 'تم تحديث المحكمة بنجاح.');
     }
 
     public function destroy(Tribunal $tribunal)
@@ -93,6 +93,6 @@ class TribunalController extends Controller
         $tribunal->delete();
 
         return redirect()->route('tribunaux.index')
-            ->with('success', 'Tribunal supprimé.');
+            ->with('success', 'تم حذف المحكمة بنجاح.');
     }
 }

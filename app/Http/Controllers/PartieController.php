@@ -19,7 +19,6 @@ class PartieController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        // $this->authorizeResource(Partie::class, 'partie'); // décommente si tu as une Policy
     }
 
     // =========================================================
@@ -73,7 +72,7 @@ class PartieController extends Controller
 
         return redirect()
             ->route('parties.show', $partie)
-            ->with('success', 'La partie a été créée avec succès.');
+            ->with('success', 'تم إنشاء الجهة بنجاح.');
     }
 
     // =========================================================
@@ -112,7 +111,7 @@ class PartieController extends Controller
 
         return redirect()
             ->route('parties.show', $partie)
-            ->with('success', 'La partie a été modifiée avec succès.');
+            ->with('success', 'تم تعديل الجهة بنجاح.');
     }
 
     // =========================================================
@@ -124,6 +123,6 @@ class PartieController extends Controller
 
         return redirect()
             ->route('parties.index')
-            ->with('success', 'La partie a été supprimée.');
+            ->with('success', 'تم حذف الجهة بنجاح.');
     }
 }

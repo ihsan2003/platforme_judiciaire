@@ -32,8 +32,36 @@ class UpdateDossierRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'numero_dossier_interne.unique' => 'Ce numéro de dossier est déjà utilisé par un autre dossier.',
-            'date_cloture.after_or_equal'   => 'La date de clôture doit être postérieure ou égale à la date d\'ouverture.',
+            // numéro dossier
+            'numero_dossier_interne.required' => 'رقم الملف الداخلي مطلوب.',
+            'numero_dossier_interne.unique'   => 'هذا الرقم مستخدم بالفعل من قبل ملف آخر.',
+
+            // type affaire
+            'id_type_affaire.required'        => 'يرجى اختيار نوع القضية.',
+            'id_type_affaire.exists'          => 'نوع القضية غير صالح.',
+
+            // statut
+            'id_statut_dossier.required'      => 'يرجى اختيار حالة الملف.',
+            'id_statut_dossier.exists'        => 'حالة الملف غير صالحة.',
+
+            // dates
+            'date_ouverture.required'         => 'تاريخ فتح الملف مطلوب.',
+            'date_ouverture.date'             => 'تاريخ فتح الملف غير صالح.',
+
+            'date_cloture.date'               => 'تاريخ الإغلاق غير صالح.',
+            'date_cloture.after_or_equal'     => 'يجب أن يكون تاريخ الإغلاق بعد أو يساوي تاريخ الفتح.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'numero_dossier_interne' => 'رقم الملف الداخلي',
+            'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
+            'id_type_affaire' => 'نوع القضية',
+            'id_statut_dossier' => 'حالة الملف',
+            'date_ouverture' => 'تاريخ فتح الملف',
+            'date_cloture' => 'تاريخ الإغلاق',
         ];
     }
 }

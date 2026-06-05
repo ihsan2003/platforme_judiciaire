@@ -64,7 +64,9 @@ class AvocatController extends Controller
 
         Avocat::create($validated);
 
-        return redirect()->route('avocats.index')->with('success', 'Avocat créé avec succès.');
+        return redirect()
+            ->route('avocats.index')
+            ->with('success', 'تم إنشاء المحامي بنجاح.');
     }
 
     /**
@@ -101,7 +103,9 @@ class AvocatController extends Controller
         $avocat = Avocat::findOrFail($id);
         $avocat->update($validated);
 
-        return redirect()->route('avocats.index')->with('success', 'Avocat mis à jour avec succès.');
+        return redirect()
+            ->route('avocats.index')
+            ->with('success', 'تم تحيين بيانات المحامي بنجاح.');
     }
 
     /**
@@ -112,11 +116,15 @@ class AvocatController extends Controller
         $avocat = Avocat::findOrFail($id);
 
         if($avocat->dossierParties()->count() > 0){
-            return redirect()->route('avocats.index')->with('error', 'Cet avocat ne peut pas être supprimé car il est associé à des dossiers.');
+            return redirect()
+                ->route('avocats.index')
+                ->with('error', 'لا يمكن حذف هذا المحامي لأنه مرتبط بملفات قضائية.');
         }
 
         $avocat->delete();
 
-        return redirect()->route('avocats.index')->with('success', 'Avocat supprimé avec succès.');
+        return redirect()
+            ->route('avocats.index')
+            ->with('success', 'تم حذف المحامي بنجاح.');
     }
 }

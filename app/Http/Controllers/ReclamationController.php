@@ -115,11 +115,12 @@ class ReclamationController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $request) {
+
             // Créer ou trouver le réclamant
             $reclamant = Reclamant::firstOrCreate(
                 [
-                    'nom'              => $validated['nom_reclamant'],
-                    'id_type_reclamant'=> $validated['id_type_reclamant'],
+                    'nom'               => $validated['nom_reclamant'],
+                    'id_type_reclamant' => $validated['id_type_reclamant'],
                 ],
                 [
                     'telephone' => $validated['telephone_reclamant'] ?? null,
@@ -144,12 +145,15 @@ class ReclamationController extends Controller
             // Upload document joint (optionnel)
             if ($request->hasFile('document')) {
                 $file = $request->file('document');
+
                 $path = $file->storeAs(
                     "reclamations/{$reclamation->id}",
                     time() . '_' . $file->getClientOriginalName(),
                     'local'
                 );
+
                 $idTypeDoc = \App\Models\TypeDocument::first()?->id;
+
                 $reclamation->documents()->create([
                     'titre_document'   => $file->getClientOriginalName(),
                     'date_depot'       => now()->toDateString(),
@@ -161,7 +165,7 @@ class ReclamationController extends Controller
 
         return redirect()
             ->route('reclamations.index')
-            ->with('success', 'Réclamation enregistrée avec succès.');
+            ->with('success', 'تم تسجيل الشكوى بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -224,6 +228,7 @@ class ReclamationController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $reclamation) {
+
             // Mettre à jour les coordonnées du réclamant
             $reclamation->reclamant->update([
                 'telephone' => $validated['telephone_reclamant'] ?? $reclamation->reclamant->telephone,
@@ -241,7 +246,7 @@ class ReclamationController extends Controller
 
         return redirect()
             ->route('reclamations.show', $reclamation)
-            ->with('success', 'Réclamation mise à jour.');
+            ->with('success', 'تم تحديث الشكوى بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -254,7 +259,7 @@ class ReclamationController extends Controller
 
         return redirect()
             ->route('reclamations.index')
-            ->with('success', "Réclamation « {$objet} » supprimée.");
+            ->with('success', "تم حذف الشكوى « {$objet} » بنجاح.");
     }
 
     // ─────────────────────────────────────────
@@ -272,10 +277,13 @@ class ReclamationController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $request, $reclamation) {
+
             // Fusionner commentaire + réponse en un seul commentaire si les deux sont présents
             $commentaireFinal = $validated['commentaire'] ?? null;
+
             if (!empty($validated['reponse'])) {
-                $reponseFormatee = "**Réponse :** " . $validated['reponse'];
+                $reponseFormatee = "رد : " . $validated['reponse'];
+
                 $commentaireFinal = $commentaireFinal
                     ? $commentaireFinal . "\n\n" . $reponseFormatee
                     : $reponseFormatee;
@@ -284,7 +292,7 @@ class ReclamationController extends Controller
             $action = ActionReclamation::create([
                 'id_reclamation' => $reclamation->id,
                 'id_type_action' => $validated['id_type_action'],
-                'statut_action'  => 'Traitée', // valeur fixe interne
+                'statut_action'  => 'تمت المعالجة',
                 'date_action'    => $validated['date_action'],
                 'id_structure'   => $validated['id_structure'] ?? null,
                 'commentaire'    => $commentaireFinal,
@@ -294,12 +302,15 @@ class ReclamationController extends Controller
             // Document joint à l'action
             if ($request->hasFile('document_action')) {
                 $file = $request->file('document_action');
+
                 $path = $file->storeAs(
                     "reclamations/{$reclamation->id}/actions/{$action->id}",
                     time() . '_' . $file->getClientOriginalName(),
                     'local'
                 );
+
                 $idTypeDoc = \App\Models\TypeDocument::first()?->id;
+
                 Document::create([
                     'id_reclamation'   => $reclamation->id,
                     'id_action'        => $action->id,
@@ -321,7 +332,7 @@ class ReclamationController extends Controller
 
         return redirect()
             ->route('reclamations.show', $reclamation)
-            ->with('success', 'Action de suivi enregistrée.');
+            ->with('success', 'تم تسجيل إجراء المتابعة بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -335,6 +346,6 @@ class ReclamationController extends Controller
 
         $reclamation->update(['id_statut_reclamation' => $request->id_statut_reclamation]);
 
-        return back()->with('success', 'Statut mis à jour.');
+        return back()->with('success', 'تم تحديث حالة الشكوى بنجاح.');
     }
 }

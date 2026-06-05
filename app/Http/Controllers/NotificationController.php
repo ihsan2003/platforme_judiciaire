@@ -120,7 +120,7 @@ class NotificationController extends Controller
         }
 
         return redirect()->route('notifications.index')
-            ->with('success', "{$count} notification(s) marquée(s) comme lue(s).");
+            ->with('success', "{$count} تم وضعها كمقروءة من الإشعارات.");
     }
 
     // ─────────────────────────────────────────
@@ -136,7 +136,7 @@ class NotificationController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return back()->with('success', 'Notification supprimée.');
+        return back()->with('success', 'تم حذف الإشعار بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -149,7 +149,7 @@ class NotificationController extends Controller
         $count = $service->genererPourUtilisateur(Auth::user());
 
         return redirect()->route('notifications.index')
-            ->with('success', "{$count} nouvelle(s) notification(s) générée(s).");
+            ->with('success', "{$count} تم إنشاء إشعار/إشعارات جديدة بنجاح.");
     }
 
     // ─────────────────────────────────────────

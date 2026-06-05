@@ -43,7 +43,7 @@ class DocumentController extends Controller
             'fichier_path'     => $path,
         ]);
 
-        return back()->with('success', "Document « {$validated['titre_document']} » ajouté.");
+        return back()->with('success', "تمت إضافة الوثيقة « {$validated['titre_document']} » بنجاح.");
     }
 
     /**
@@ -79,6 +79,6 @@ class DocumentController extends Controller
 
         $document->delete();
 
-        return back()->with('success', 'Document supprimé.');
+        return back()->with('success', 'تم حذف الوثيقة بنجاح.');
     }
 }
