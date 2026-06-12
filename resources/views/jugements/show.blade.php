@@ -178,6 +178,44 @@
         </div>
         @endif
 
+        {{-- المالية --}}
+        @if($jugement->finance)
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-cash-stack ms-2 text-success"></i>
+                    الوضعية المالية
+                </h6>
+            </div>
+
+            <div class="card-body small">
+
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">المبلغ المحكوم به</span>
+                    <strong>
+                        {{ number_format($jugement->finance->montant_condamne, 2) }} درهم
+                    </strong>
+                </div>
+
+                <div class="d-flex justify-content-between py-1 border-bottom">
+                    <span class="text-muted">المبلغ المؤدى</span>
+                    <strong class="text-success">
+                        {{ number_format($jugement->finance->montant_paye, 2) }} درهم
+                    </strong>
+                </div>
+
+                <div class="d-flex justify-content-between py-1">
+                    <span class="text-muted">المبلغ المتبقي</span>
+                    <strong class="text-danger">
+                        {{ number_format($jugement->finance->montant_restant, 2) }} درهم
+                    </strong>
+                </div>
+
+            </div>
+        </div>
+        @endif
+
         {{-- الطعون --}}
         @if($jugement->recours->isNotEmpty())
         <div class="card border-0 shadow-sm mb-4">
@@ -248,44 +286,6 @@
 
     {{-- ── العمود الجانبي ── --}}
     <div class="col-lg-4">
-
-        {{-- المالية --}}
-        @if($jugement->finance)
-        <div class="card border-0 shadow-sm mb-4">
-
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-cash-stack ms-2 text-success"></i>
-                    الوضعية المالية
-                </h6>
-            </div>
-
-            <div class="card-body small">
-
-                <div class="d-flex justify-content-between py-1 border-bottom">
-                    <span class="text-muted">المبلغ المحكوم به</span>
-                    <strong>
-                        {{ number_format($jugement->finance->montant_condamne, 2) }} درهم
-                    </strong>
-                </div>
-
-                <div class="d-flex justify-content-between py-1 border-bottom">
-                    <span class="text-muted">المبلغ المؤدى</span>
-                    <strong class="text-success">
-                        {{ number_format($jugement->finance->montant_paye, 2) }} درهم
-                    </strong>
-                </div>
-
-                <div class="d-flex justify-content-between py-1">
-                    <span class="text-muted">المبلغ المتبقي</span>
-                    <strong class="text-danger">
-                        {{ number_format($jugement->finance->montant_restant, 2) }} درهم
-                    </strong>
-                </div>
-
-            </div>
-        </div>
-        @endif
 
         {{-- إجراءات الطعن --}}
         <div class="card border-0 shadow-sm mb-4">
@@ -424,16 +424,13 @@
                         </button>
 
                     </form>
-
-                    <hr class="my-3">
-
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
                           method="POST"
                           onsubmit="return confirm('تأكيد إغلاق الحكم نهائياً بدون طعن؟')">
 
                         @csrf
 
-                        <button class="btn btn-outline-secondary btn-sm w-100">
+                        <button class="btn btn-outline-secondary btn-sm w-100 mt-2">
                             <i class="bi bi-x-circle ms-1"></i>
                             إغلاق بدون طعن
                         </button>
@@ -449,17 +446,14 @@
         @if($jugement->est_definitif && $jugement->executions->isEmpty())
         <div class="card border-0 shadow-sm">
 
-            <div class="card-body text-center py-3">
-
                 <a href="{{ route('executions.create', ['jugement_id' => $jugement->id]) }}"
                    class="btn btn-primary btn-sm">
 
-                    <i class="bi bi-shield-check ms-1"></i>
+                    <i class="bi bi-shield-check ms-1 w-100"></i>
                     بدء التنفيذ
 
                 </a>
 
-            </div>
         </div>
         @endif
 

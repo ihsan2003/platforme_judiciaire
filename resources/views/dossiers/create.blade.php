@@ -14,200 +14,200 @@
 
 @section('content')
 
-{{-- ══════════════════════════════════════════════════════════════════════════
-     Page Header
-═══════════════════════════════════════════════════════════════════════════ --}}
-<div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <h4 class="fw-bold mb-1">
-            <i class="bi bi-folder-plus text-primary me-2"></i>
-            إضافة ملف قضائي جديد
-        </h4>
-        <p class="text-muted small mb-0">
-            قم بإدخال معلومات الملف القضائي بدقة لضمان متابعة فعّالة.
-        </p>
+    {{-- ══════════════════════════════════════════════════════════════════════════
+        Page Header
+    ═══════════════════════════════════════════════════════════════════════════ --}}
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">
+                <i class="bi bi-folder-plus text-primary me-2"></i>
+                إضافة ملف قضائي جديد
+            </h4>
+            <p class="text-muted small mb-0">
+                قم بإدخال معلومات الملف القضائي بدقة لضمان متابعة فعّالة.
+            </p>
+        </div>
+
+        <a href="{{ route('dossiers.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-right me-1"></i>
+            العودة إلى القائمة
+        </a>
     </div>
 
-    <a href="{{ route('dossiers.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-right me-1"></i>
-        العودة إلى القائمة
-    </a>
-</div>
+    <form action="{{ route('dossiers.store') }}" method="POST" id="dossierForm">
+    @csrf
 
-<form action="{{ route('dossiers.store') }}" method="POST" id="dossierForm">
-@csrf
+    <div class="row g-4">
 
-<div class="row g-4">
+        {{-- ══════════════════════════════════════════════════════════════════════
+            العمود الرئيسي
+        ═══════════════════════════════════════════════════════════════════════ --}}
+        <div class="col-lg-8 mx-auto">
 
-    {{-- ══════════════════════════════════════════════════════════════════════
-         العمود الرئيسي
-    ═══════════════════════════════════════════════════════════════════════ --}}
-    <div class="col-lg-8 mx-auto">
+            {{-- ─────────────────────────────────────────────────────────────────
+                بطاقة معلومات الملف الأساسية
+            ───────────────────────────────────────────────────────────────── --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="bi bi-folder2-open me-2 text-primary"></i>
+                        معلومات الملف الأساسية
+                    </h6>
+                </div>
 
-        {{-- ─────────────────────────────────────────────────────────────────
-             بطاقة معلومات الملف الأساسية
-        ───────────────────────────────────────────────────────────────── --}}
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-folder2-open me-2 text-primary"></i>
-                    معلومات الملف الأساسية
-                </h6>
-            </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
 
-            <div class="card-body p-4">
-                <div class="row g-3">
-
-                    {{-- رقم الملف الداخلي --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-dark">
-                            رقم الملف الداخلي
-                            <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-file-earmark-text text-muted"></i>
-                            </span>
-                            <input type="text"
-                                   name="numero_dossier_interne"
-                                   class="form-control border-start-0 @error('numero_dossier_interne') is-invalid @enderror"
-                                   value="{{ old('numero_dossier_interne') }}"
-                                   placeholder="مثال: DOS-2025-001"
-                                   required>
-                            @error('numero_dossier_interne')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    {{-- رقم ملف المحكمة --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-dark">
-                            رقم ملف المحكمة
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-building text-muted"></i>
-                            </span>
-                            <input type="text"
-                                   name="numero_dossier_tribunal"
-                                   class="form-control border-start-0 @error('numero_dossier_tribunal') is-invalid @enderror"
-                                   value="{{ old('numero_dossier_tribunal') }}"
-                                   placeholder="مثال: TRB-2025-001">
-                            @error('numero_dossier_tribunal')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    {{-- نوع القضية --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-dark">
-                            نوع القضية
-                            <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-bookmark text-muted"></i>
-                            </span>
-                            <select name="id_type_affaire"
-                                    class="form-select border-start-0 @error('id_type_affaire') is-invalid @enderror"
+                        {{-- رقم الملف الداخلي --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">
+                                رقم الملف الداخلي
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-file-earmark-text text-muted"></i>
+                                </span>
+                                <input type="text"
+                                    name="numero_dossier_interne"
+                                    class="form-control border-start-0 @error('numero_dossier_interne') is-invalid @enderror"
+                                    value="{{ old('numero_dossier_interne') }}"
+                                    placeholder="مثال: DOS-2025-001"
                                     required>
-                                <option value="">— اختر نوع القضية —</option>
-                                @foreach($typesAffaire as $type)
-                                    <option value="{{ $type->id }}"
-                                        @selected(old('id_type_affaire') == $type->id)>
-                                        {{ $type->affaire }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('id_type_affaire')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                                @error('numero_dossier_interne')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
 
+                        {{-- رقم ملف المحكمة --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">
+                                رقم ملف المحكمة
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-building text-muted"></i>
+                                </span>
+                                <input type="text"
+                                    name="numero_dossier_tribunal"
+                                    class="form-control border-start-0 @error('numero_dossier_tribunal') is-invalid @enderror"
+                                    value="{{ old('numero_dossier_tribunal') }}"
+                                    placeholder="مثال: TRB-2025-001">
+                                @error('numero_dossier_tribunal')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- نوع القضية --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">
+                                نوع القضية
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-bookmark text-muted"></i>
+                                </span>
+                                <select name="id_type_affaire"
+                                        class="form-select border-start-0 @error('id_type_affaire') is-invalid @enderror"
+                                        required>
+                                    <option value="">— اختر نوع القضية —</option>
+                                    @foreach($typesAffaire as $type)
+                                        <option value="{{ $type->id }}"
+                                            @selected(old('id_type_affaire') == $type->id)>
+                                            {{ $type->affaire }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('id_type_affaire')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- ─────────────────────────────────────────────────────────────────
-             بطاقة التواريخ والمواعيد
-        ───────────────────────────────────────────────────────────────── --}}
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-calendar3 me-2 text-success"></i>
-                    التواريخ والمواعيد
-                </h6>
-            </div>
+            {{-- ─────────────────────────────────────────────────────────────────
+                بطاقة التواريخ والمواعيد
+            ───────────────────────────────────────────────────────────────── --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="bi bi-calendar3 me-2 text-success"></i>
+                        التواريخ والمواعيد
+                    </h6>
+                </div>
 
-            <div class="card-body p-4">
-                <div class="row g-3">
+                <div class="card-body p-4">
+                    <div class="row g-3">
 
-                    {{-- تاريخ فتح الملف --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-dark">
-                            تاريخ فتح الملف
-                            <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-calendar-event text-muted"></i>
-                            </span>
-                            <input type="date"
-                                   name="date_ouverture"
-                                   class="form-control border-start-0 @error('date_ouverture') is-invalid @enderror"
-                                   value="{{ old('date_ouverture', date('Y-m-d')) }}"
-                                   required>
-                            @error('date_ouverture')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        {{-- تاريخ فتح الملف --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">
+                                تاريخ فتح الملف
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-calendar-event text-muted"></i>
+                                </span>
+                                <input type="date"
+                                    name="date_ouverture"
+                                    class="form-control border-start-0 @error('date_ouverture') is-invalid @enderror"
+                                    value="{{ old('date_ouverture', date('Y-m-d')) }}"
+                                    required>
+                                @error('date_ouverture')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- تاريخ الإغلاق --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-dark">
-                            تاريخ الإغلاق
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-calendar-check text-muted"></i>
-                            </span>
-                            <input type="date"
-                                   name="date_cloture"
-                                   class="form-control border-start-0 @error('date_cloture') is-invalid @enderror"
-                                   value="{{ old('date_cloture') }}">
-                            @error('date_cloture')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                        {{-- تاريخ الإغلاق --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-dark">
+                                تاريخ الإغلاق
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-calendar-check text-muted"></i>
+                                </span>
+                                <input type="date"
+                                    name="date_cloture"
+                                    class="form-control border-start-0 @error('date_cloture') is-invalid @enderror"
+                                    value="{{ old('date_cloture') }}">
+                                @error('date_cloture')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {{-- ─────────────────────────────────────────────────────────────────
-             أزرار الإرسال والإلغاء
-        ───────────────────────────────────────────────────────────────── --}}
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-check-lg me-2"></i>
-                إنشاء الملف
-            </button>
-            <a href="{{ route('dossiers.index') }}" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-x-lg me-2"></i>
-                إلغاء
-            </a>
+            {{-- ─────────────────────────────────────────────────────────────────
+                أزرار الإرسال والإلغاء
+            ───────────────────────────────────────────────────────────────── --}}
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-check-lg me-2"></i>
+                    إنشاء الملف
+                </button>
+                <a href="{{ route('dossiers.index') }}" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-x-lg me-2"></i>
+                    إلغاء
+                </a>
+            </div>
+
         </div>
 
     </div>
 
-</div>
-
-</form>
+    </form>
 
 @endsection
 

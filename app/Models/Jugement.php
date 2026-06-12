@@ -168,21 +168,32 @@ class Jugement extends Model
     public function getStatutRecoursLabelAttribute(): string
     {
         if ($this->est_definitif) {
-            return 'Définitif';
+            return 'نهائي';
         }
 
-        $dernierRecours = $this->recours()->with('typeRecours')->latest('date_recours')->first();
+        $dernierRecours = $this->recours()
+            ->with('typeRecours')
+            ->latest('date_recours')
+            ->first();
 
         if (!$dernierRecours) {
             $restant = $this->delai_recours_restant;
 
-            if ($restant === null) return 'Non configuré';
-            if ($restant < 0)     return 'Délai expiré';
-            if ($restant === 0)   return 'Expire aujourd\'hui';
+            if ($restant === null) {
+                return 'غير مُهيأ';
+            }
 
-            return "Délai : {$restant} j restants";
+            if ($restant < 0) {
+                return 'انتهت مهلة الطعن';
+            }
+
+            if ($restant === 0) {
+                return 'تنتهي المهلة اليوم';
+            }
+
+            return "المهلة المتبقية: {$restant} يوم";
         }
 
-        return $dernierRecours->typeRecours->type_recours ?? 'Recours déposé';
+        return $dernierRecours->typeRecours->type_recours ?? 'تم تقديم الطعن';
     }
 }

@@ -54,7 +54,7 @@
     }
 
     /* ── Cartes de degré ─────────────────────────────── */
-    .deg-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; margin-bottom: 20px; }
+    .deg-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; margin: 0px 30px; }
     .deg-card.deg-1 { border-color: var(--deg1); }
     .deg-card.deg-2 { border-color: var(--deg2); }
     .deg-card.deg-3 { border-color: var(--deg3); }
@@ -86,14 +86,14 @@
 
     .aud-item { position: relative; margin-bottom: 12px; }
     .aud-dot {
-        position: absolute; left: -38px; top: 10px;
-        width: 20px; height: 20px; border-radius: 50%;
+        position: absolute; left: -39px; 
+        width: 32px; height: 32px; border-radius: 50%;
         border: 2.5px solid #fff; box-shadow: 0 0 0 2px #e2e8f0;
         background: #b45309;
         display: flex; align-items: center; justify-content: center;
-        font-size: .55rem; color: #fff; flex-shrink: 0;
+        font-size: .9rem; color: #fff; flex-shrink: 0;
     }
-    .aud-dot.houkm  { background: var(--houkm); box-shadow: 0 0 0 3px rgba(124,58,237,.3); width: 24px; height: 24px; left: -40px; top: 8px; }
+    .aud-dot.houkm  { background: var(--houkm); box-shadow: 0 0 0 3px rgba(124,58,237,.3); width: 32px; height: 32px; left: -39px; top: 8px; }
     .aud-dot.future { background: #3b82f6; }
 
     .aud-card {
@@ -108,24 +108,24 @@
     .aud-card-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
     .aud-date { font-weight: 700; font-size: .88rem; }
     .aud-type-badge {
-        font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+        font-size: .9rem; font-weight: 700; padding: 2px 10px; border-radius: 8px;
     }
     .aud-type-badge.normal { background: #fef3c7; color: #92400e; }
     .aud-type-badge.houkm  { background: #f3e8ff; color: #6b21a8; }
     .aud-type-badge.future { background: #dbeafe; color: #1d4ed8; }
 
-    .aud-meta { font-size: .78rem; color: #64748b; display: flex; flex-wrap: wrap; gap: 10px; }
-    .aud-renvoi { font-size: .74rem; color: #64748b; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #e2e8f0; }
+    .aud-meta { font-size: .86rem; color: #64748b; display: flex; flex-direction: column; gap: 4px;}
+    .aud-renvoi { font-size: .82rem; color: #64748b; margin-top: 10px; padding-top: 10px; padding-right: 15px; border-top: 1px dashed #e2e8f0; }
 
     /* ── Jugement bloc ───────────────────────────────── */
     .jug-block {
-        margin: 0 20px 20px;
+        margin: 20px 70px 20px 100px;
         border: 2px solid var(--jug); border-radius: 12px;
         background: #f0fdfa; padding: 16px 18px;
     }
     .jug-block-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .jug-title { font-weight: 800; font-size: .95rem; color: var(--jug); display: flex; align-items: center; gap: 6px; }
-    .jug-meta  { font-size: .8rem; color: #475569; display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
+    .jug-meta  { font-size: .86rem; color: #475569; display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
     .jug-dispositif {
         font-size: .82rem; color: #334155; background: #fff;
         border: 1px solid #ccfbf1; border-left: 3px solid var(--jug);
@@ -155,20 +155,20 @@
     /* Connecteur entre degrés ──────────────────────── */
     .deg-connector {
         display: flex; flex-direction: column; align-items: center;
-        padding: 4px 0; margin-bottom: 0; position: relative; z-index: 1;
+        position: relative; z-index: 1;
     }
     .deg-connector-line { width: 2px; height: 32px; background: #cbd5e1; }
     .deg-connector-tag {
         background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 20px;
         padding: 3px 12px; font-size: .7rem; font-weight: 600; color: #64748b;
-        margin: 4px 0;
+        
     }
 
     /* Aucun contenu ────────────────────────────────── */
     .empty-state {
         padding: 20px; border-radius: 10px; background: #f8fafc;
         border: 1px dashed #cbd5e1; text-align: center;
-        color: #94a3b8; font-size: .85rem; margin: 12px 20px 20px;
+        color: #94a3b8; font-size: .85rem; margin: 30px 70px 30px 100px;
     }
 
     /* Formulaire recours inline ─────────────────────  */
@@ -184,7 +184,7 @@
     .rg-alert.info { background: #e0f2fe; border-left: 3px solid #0284c7; color: #075985; }
 
     /* Badges génériques ─────────────────────────────  */
-    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 600; }
+    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 8px; font-size: .9rem; font-weight: 700; }
     .pill-white   { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); }
     .pill-success { background: #dcfce7; color: #166534; }
     .pill-warning { background: #fef3c7; color: #92400e; }
@@ -196,11 +196,11 @@
     /* Barre de progression dossier ─────────────────── */
     .progress-steps {
         display: flex; gap: 4px; background: #f1f5f9;
-        border-radius: 10px; padding: 4px; flex-wrap: wrap; margin-bottom: 24px;
+        border-radius: 10px; padding: 4px; flex-wrap: wrap; margin-bottom: 20px;
     }
     .progress-step {
         flex: 1; min-width: 110px; padding: 8px 14px;
-        border-radius: 7px; display: flex; align-items: center; gap: 8px;
+        border-radius: 7px; display: flex;: align-items: center; gap: 8px;
         font-size: .76rem; font-weight: 600; color: #94a3b8;
     }
     .progress-step.s-deg1 { background: var(--deg1); color: #fff; }
@@ -573,7 +573,7 @@
 
         {{-- Barre de progression ──────────────── --}}
         @if($instances->isNotEmpty())
-        <div class="progress-steps mb-4">
+        <div class="progress-steps mx-4">
             @foreach($instances->sortBy(fn($dt) => $dt->degre?->ordre) as $idx => $dt)
             @php
                 $ord = $dt->degre?->ordre ?? 0;
@@ -582,8 +582,8 @@
             <div class="progress-step {{ $cls }}">
                 <div class="progress-step-num">{{ $idx + 1 }}</div>
                 <div >
-                    <div style="font-size:.75rem;font-weight:700;line-height:1.2">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
-                    <div style="font-size:.65rem;opacity:.8">
+                    <div style="font-size:.8rem;font-weight:700;line-height:1.2">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
+                    <div style="font-size:.7.5rem;opacity:.8">
                         {{ is_null($dt->date_fin) ? 'قيد النظر' : 'مغلقة' }}
                     </div>
                 </div>
@@ -644,7 +644,7 @@
         @endif
 
         {{-- Carte de l'instance ─────────────── --}}
-        <div class="deg-card {{ $colorCls }} {{ $isClosed ? 'deg-closed' : '' }} shadow-sm">
+        <div class="deg-card {{ $colorCls }} {{ $isClosed ? 'deg-closed' : '' }} shadow-sm"> 
 
             {{-- En-tête ─────────────────────── --}}
             <div class="deg-header {{ $colorCls }}">
@@ -705,12 +705,12 @@
                 @endphp
                 <div class="aud-item">
                     <div class="aud-dot {{ $dotCls }}">
-                        <i class="bi {{ $isHoukm ? 'bi-gavel' : 'bi-calendar-event' }}"></i>
+                        <i class="bi {{ $isHoukm ? 'bi-hammer' : 'bi-calendar-event' }}"></i>
                     </div>
-                    <div class="aud-card {{ $cardCls }}">
-                        <div class="aud-card-head">
+                    <div class="aud-card {{ $cardCls }} mt-3 mx-5">
+                        <div class="aud-card-head px-2 pt-2">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="aud-date">{{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</span>
+                                <span class="aud-date"> جلسة بتاريخ {{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</span>
                                 @if($aud->date_audience?->isToday())
                                     <span class="pill pill-danger" style="font-size:.65rem;padding:1px 6px">اليوم</span>
                                 @endif
@@ -720,28 +720,41 @@
                                     {{ $typeLabel }}
                                     @if($isHoukm) <strong class="mr-1">← نهائية</strong>@endif
                                 </span>
-                                <div class="d-flex gap-1">
-                                    <a href="{{ route('audiences.show', $aud) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.7rem"><i class="bi bi-eye"></i></a>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('audiences.show', $aud) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.9rem"><i class="bi bi-eye"></i></a>
                                     @can('update', $dossier)
-                                    <a href="{{ route('audiences.edit', $aud) }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size:.7rem"><i class="bi bi-pencil"></i></a>
+                                    <a href="{{ route('audiences.edit', $aud) }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size:.9rem"><i class="bi bi-pencil"></i></a>
                                     @endcan
                                 </div>
                             </div>
                         </div>
-                        <div class="aud-meta">
-                            @if($aud->juge)<span><i class="bi bi-person me-1"></i>{{ $aud->juge->nom_complet }}</span>@endif
-                            <span>
-                                <i class="bi bi-people me-1"></i>
+                        <div class="aud-meta p-3">
+                            @if($aud->juge)
+                                <span class="d-block">
+                                    <i class="bi bi-person me-1"></i> القاضي {{ $aud->juge->nom_complet }}
+                                </span>
+                            @endif
+
+                            <span class="d-block">
+                                <i class="bi bi-person-check me-1"></i>
                                 المدعي: {{ $aud->presence_demandeur ? '✓' : '✗' }}
+                            </span>
+
+                            <span class="d-block">
+                                <i class="bi bi-person-x me-1"></i>
                                 المدعى عليه: {{ $aud->presence_defendeur ? '✓' : '✗' }}
                             </span>
+
                             @if($aud->resultat_audience)
-                                <span><i class="bi bi-chat-left-text me-1"></i>{{ Str::limit($aud->resultat_audience, 55) }}</span>
+                                <span class="d-block">
+                                    <i class="bi bi-chat-left-text me-1"></i>
+                                    {{ Str::limit($aud->resultat_audience, 55) }}
+                                </span>
                             @endif
                         </div>
                         @if($aud->date_prochaine_audience && !$isHoukm)
                         <div class="aud-renvoi">
-                            <i class="bi bi-calendar-arrow-down text-muted"></i>
+                            <i class="bi bi-calendar-check text-muted me-1"></i>
                             تأجيل إلى <strong>{{ $aud->date_prochaine_audience->format('d/m/Y') }}</strong>
                         </div>
                         @endif
@@ -755,7 +768,7 @@
                     <div class="aud-dot" style="background:#e2e8f0;border:2px dashed #94a3b8">
                         <i class="bi bi-plus" style="color:#94a3b8"></i>
                     </div>
-                    <div style="padding:6px 0">
+                    <div style="padding:6px 0" class="text-center">
                         <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
                         class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-calendar-plus me-1"></i>برمجة جلسة جديدة
@@ -770,83 +783,67 @@
             @if($audienceHoukm)
             <div class="mx-4 my-1 d-flex align-items-center gap-2" style="font-size:.75rem;color:#6b21a8;font-weight:600">
                 <div style="flex:1;height:1px;background:rgba(124,58,237,.2)"></div>
-                <span><i class="bi bi-arrow-down me-1"></i>جلسة النطق بالحكم {{ $audienceHoukm->date_audience->format('d/m/Y') }} ← نص الحكم</span>
+                <span><i class="bi bi-arrow-down me-1"></i>جلسة النطق بالحكم {{ $audienceHoukm->date_audience->format('d/m/Y') }}</span>
                 <div style="flex:1;height:1px;background:rgba(124,58,237,.2)"></div>
             </div>
             @endif
 
             {{-- ── JUGEMENT ─────────────────── --}}
             @if($jugement)
-            <div class="jug-block">
-                <div class="jug-block-header">
-                    <div class="jug-title">
-                        <i class="bi bi-hammer me-1"></i>
-                        حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
-                    </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        @if($jugement->est_definitif)
-                            <span class="pill pill-success"><i class="bi bi-check-circle-fill"></i> حكم نهائي</span>
-                        @else
-                            @php $dr = $jugement->delai_recours_restant; @endphp
-                            @if($dr !== null)
-                                @if($dr > 10)
-                                    <span class="pill pill-success" style="font-size:.68rem"><i class="bi bi-clock"></i> متبقي {{ $dr }} يوم</span>
-                                @elseif($dr > 0)
-                                    <span class="pill pill-warning" style="font-size:.68rem"><i class="bi bi-exclamation-triangle-fill"></i> {{ $dr }} أيام فقط!</span>
-                                @else
-                                    <span class="pill pill-muted" style="font-size:.68rem">انتهى الأجل</span>
+                <div class="jug-block">
+                    <div class="jug-block-header">
+                        <div class="jug-title">
+                            <i class="bi bi-hammer me-1"></i>
+                            حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            @if($jugement->est_definitif)
+                                <span class="pill pill-success"><i class="bi bi-check-circle-fill"></i> حكم نهائي</span>
+                            @else
+                                @php $dr = $jugement->delai_recours_restant; @endphp
+                                @if($dr !== null)
+                                    @if($dr > 10)
+                                        <span class="pill pill-success" style="font-size:.9rem"><i class="bi bi-clock"></i> متبقي {{ $dr }} يوم</span>
+                                    @elseif($dr > 0)
+                                        <span class="pill pill-warning" style="font-size:.9rem"><i class="bi bi-exclamation-triangle-fill"></i> {{ $dr }} أيام فقط!</span>
+                                    @else
+                                        <span class="pill pill-muted" style="font-size:.9rem">انتهى الأجل</span>
+                                    @endif
                                 @endif
                             @endif
-                        @endif
-                        <a href="{{ route('jugements.show', $jugement) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.75rem">
-                            <i class="bi bi-eye me-1"></i>عرض
-                        </a>
+                            <a href="{{ route('jugements.show', $jugement) }}"
+                            class="btn btn-outline-secondary py-0 px-2"
+                            style="font-size:.9rem; border-radius:5px;">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
                     </div>
-                </div>
-                <div class="jug-meta">
-                    @if($jugement->juge)<span><i class="bi bi-person-workspace me-1"></i>القاضي: {{ $jugement->juge->nom_complet }}</span>@endif
+                    <div class="jug-meta">
+                        @if($jugement->juge)<span><i class="bi bi-person-workspace me-1"></i>القاضي: {{ $jugement->juge->nom_complet }}</span>@endif
+                        @if($jugement->finance)
+                        @php $f = $jugement->finance; @endphp
+                        <span><i class="bi bi-cash me-1"></i>المبلغ المحكوم: {{ number_format($f->montant_condamne, 2) }} د.م</span>
+                        <span><i class="bi bi-check2-circle me-1 text-success"></i>المؤدى: {{ number_format($f->montant_paye, 2) }} د.م</span>
+                        @endif
+                    </div>
+                    @if($jugement->contenu_dispositif)
+                    <div class="jug-dispositif" id="disp-{{ $jugement->id }}">
+                        {{ $jugement->contenu_dispositif }}
+                        <div style="position:absolute;bottom:0;left:0;right:0;height:25px;background:linear-gradient(transparent,#f0fdfa)" id="disp-fade-{{ $jugement->id }}"></div>
+                    </div>
+                    <button class="btn btn-link btn-sm p-0 mt-1" style="font-size:.73rem;color:var(--jug)"
+                            onclick="document.getElementById('disp-{{ $jugement->id }}').classList.toggle('open');document.getElementById('disp-fade-{{ $jugement->id }}').style.display=document.getElementById('disp-{{ $jugement->id }}').classList.contains('open')?'none':''">
+                        <i class="bi bi-chevron-down me-1"></i>عرض منطوق الحكم كاملاً
+                    </button>
+                    @endif
                     @if($jugement->finance)
-                    @php $f = $jugement->finance; @endphp
-                    <span><i class="bi bi-cash me-1"></i>المبلغ المحكوم: {{ number_format($f->montant_condamne, 2) }} د.م</span>
-                    <span><i class="bi bi-check2-circle me-1 text-success"></i>المؤدى: {{ number_format($f->montant_paye, 2) }} د.م</span>
+                    @php $f = $jugement->finance; $pct = $f->montant_condamne > 0 ? min(100, round(($f->montant_paye / $f->montant_condamne) * 100)) : 0; $pctCol = $pct >= 100 ? '#16a34a' : ($pct > 0 ? '#d97706' : '#ef4444'); @endphp
+                    <div class="fin-bar mt-2"><div class="fin-bar-fill" style="width:{{ $pct }}%;background:{{ $pctCol }}"></div></div>
                     @endif
-                </div>
-                @if($jugement->contenu_dispositif)
-                <div class="jug-dispositif" id="disp-{{ $jugement->id }}">
-                    {{ $jugement->contenu_dispositif }}
-                    <div style="position:absolute;bottom:0;left:0;right:0;height:25px;background:linear-gradient(transparent,#f0fdfa)" id="disp-fade-{{ $jugement->id }}"></div>
-                </div>
-                <button class="btn btn-link btn-sm p-0 mt-1" style="font-size:.73rem;color:var(--jug)"
-                        onclick="document.getElementById('disp-{{ $jugement->id }}').classList.toggle('open');document.getElementById('disp-fade-{{ $jugement->id }}').style.display=document.getElementById('disp-{{ $jugement->id }}').classList.contains('open')?'none':''">
-                    <i class="bi bi-chevron-down me-1"></i>عرض منطوق الحكم كاملاً
-                </button>
-                @endif
-                @if($jugement->finance)
-                @php $f = $jugement->finance; $pct = $f->montant_condamne > 0 ? min(100, round(($f->montant_paye / $f->montant_condamne) * 100)) : 0; $pctCol = $pct >= 100 ? '#16a34a' : ($pct > 0 ? '#d97706' : '#ef4444'); @endphp
-                <div class="fin-bar mt-2"><div class="fin-bar-fill" style="width:{{ $pct }}%;background:{{ $pctCol }}"></div></div>
-                @endif
-            </div>
-
-                {{-- Recours ─────────────────── --}}
-                @if($recours)
-                <div class="rec-block">
-                    <div style="font-weight:700;font-size:.88rem;color:var(--rec);display:flex;align-items:center;gap:6px;margin-bottom:6px">
-                        <i class="bi bi-arrow-repeat"></i>
-                        {{ $recours->typeRecours->type_recours ?? 'طعن' }}
-                        — {{ $recours->date_recours->format('d/m/Y') }}
-                        @if(($recours->est_dans_delais ?? false))
-                            <span class="pill pill-success" style="font-size:.65rem">✓ داخل الآجال</span>
-                        @else
-                            <span class="pill pill-danger" style="font-size:.65rem">⚠ خارج الآجال</span>
-                        @endif
-                    </div>
-                    @if($recours->motifs)
-                    <div style="font-size:.8rem;color:#7c2d12">{{ Str::limit($recours->motifs, 100) }}</div>
-                    @endif
-                </div>
-
+                </div>        
+                
                 {{-- Exécutions ───────────────── --}}
-                @elseif($jugement->est_definitif)
+                @elseif($jugement?->est_definitif)
                     @foreach($jugement->executions as $exec)
                     @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') || str_contains($sl,'منتهي') ? '#16a34a' : (str_contains($sl,'cours') || str_contains($sl,'قيد') ? '#d97706' : '#64748b'); @endphp
                     <div class="exec-block">
@@ -872,6 +869,7 @@
                         </div>
                     </div>
                     @endif
+
 
                 {{-- Recours possible ────────── --}}
                 @elseif($jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
@@ -913,6 +911,7 @@
                         <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>إغلاق بدون طعن</button>
                     </form>
                 </div>
+                
                 @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
                 <div class="mx-4 mb-4">
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('إغلاق المرحلة؟')">
@@ -920,25 +919,25 @@
                         <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock me-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
                     </form>
                 </div>
-                @endif
 
-            {{-- Pas encore de jugement --}}
-            @elseif($audienceHoukm && !$isClosed)
-            <div class="empty-state">
-                <i class="bi bi-hammer d-block mb-1 fs-4 opacity-30"></i>
-                انعقدت جلسة النطق بالحكم — يرجى تسجيل تفاصيل الحكم.
-                <div class="mt-2">
-                    <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg me-1"></i>سجل الحكم
-                    </a>
+                {{-- Pas encore de jugement --}}
+                @elseif($audienceHoukm && !$isClosed)
+                <div class="empty-state">
+                    <i class="bi bi-hammer d-block mb-1 fs-4 opacity-30"></i>
+                        يرجى تسجيل تفاصيل الحكم.
+                    <div class="mt-2">
+                        <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i>تسجيل الحكم
+                        </a>
+                    </div>
                 </div>
-            </div>
-            @elseif(!$isClosed && $audiences->isNotEmpty())
-            <div class="empty-state" style="margin:0 20px 20px">
-                <i class="bi bi-hourglass d-block mb-1 fs-4 opacity-30"></i>
-                في انتظار جلسة <strong>النطق بالحكم</strong>.
-            </div>
-            @endif
+                
+                @elseif(!$isClosed && $audiences->isNotEmpty())
+                <div class="empty-state" style="margin:0 20px 20px">
+                    <i class="bi bi-hourglass d-block mb-1 fs-4 opacity-30"></i>
+                    في انتظار  <strong>النطق بالحكم</strong>.
+                </div>
+                @endif
 
         </div>{{-- /.deg-card --}}
         @endforeach
