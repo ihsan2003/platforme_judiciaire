@@ -125,7 +125,7 @@
     }
     .jug-block-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .jug-title { font-weight: 800; font-size: .95rem; color: var(--jug); display: flex; align-items: center; gap: 6px; }
-    .jug-meta  { font-size: .86rem; color: #475569; display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; }
+    .jug-meta  { font-size: .86rem; color: #475569; display: flex; flex-direction: column; gap: 4px;}
     .jug-dispositif {
         font-size: .82rem; color: #334155; background: #fff;
         border: 1px solid #ccfbf1; border-left: 3px solid var(--jug);
@@ -147,9 +147,9 @@
 
     /* Exécution ─────────────────────────────────────  */
     .exec-block {
-        margin: 8px 20px 20px;
+        margin: 8px 70px 20px 100px;
         border: 2px solid var(--exec); border-radius: 10px;
-        background: #f0f9ff; padding: 12px 16px;
+        background: #f0f9ff; padding: 20px 16px;
     }
 
     /* Connecteur entre degrés ──────────────────────── */
@@ -173,7 +173,7 @@
 
     /* Formulaire recours inline ─────────────────────  */
     .recours-form-wrap {
-        margin: 0 20px 20px;
+        margin: 0 70px 20px 100px;
         border: 1px solid #e2e8f0; border-radius: 10px;
         background: #fffbeb; padding: 14px;
     }
@@ -840,24 +840,49 @@
                     @php $f = $jugement->finance; $pct = $f->montant_condamne > 0 ? min(100, round(($f->montant_paye / $f->montant_condamne) * 100)) : 0; $pctCol = $pct >= 100 ? '#16a34a' : ($pct > 0 ? '#d97706' : '#ef4444'); @endphp
                     <div class="fin-bar mt-2"><div class="fin-bar-fill" style="width:{{ $pct }}%;background:{{ $pctCol }}"></div></div>
                     @endif
-                </div>        
-                
-                {{-- Exécutions ───────────────── --}}
-                @elseif($jugement?->est_definitif)
+                </div>
+
+                {{-- ── BLOCS SELON STATUT DU JUGEMENT (nested inside @if($jugement)) ── --}}
+
+                @if($jugement->est_definitif)
+                    {{-- Exécutions ───────────────── --}}
                     @foreach($jugement->executions as $exec)
-                    @php $sl = $exec->statut?->statut_execution ?? '—'; $sc = str_contains($sl,'Terminé') || str_contains($sl,'منتهي') ? '#16a34a' : (str_contains($sl,'cours') || str_contains($sl,'قيد') ? '#d97706' : '#64748b'); @endphp
+                    @php
+                        $sl = $exec->statut?->statut_execution ?? '—';
+                        $sc = str_contains($sl,'Terminé') || str_contains($sl,'منتهي') ? '#16a34a' : (str_contains($sl,'cours') || str_contains($sl,'قيد') ? '#d97706' : '#64748b');
+                    @endphp
                     <div class="exec-block">
-                        <div style="font-weight:700;font-size:.88rem;color:var(--exec);display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                            <i class="bi bi-shield-check"></i> ملف تنفيذ رقم: {{ $exec->numero_dossier_execution }}
-                            <a href="{{ route('executions.show', $exec) }}" class="btn btn-sm btn-outline-primary py-0 px-2 mr-auto" style="font-size:.7rem"><i class="bi bi-eye"></i></a>
-                        </div>
-                        <div style="font-size:.8rem;color:#0c4a6e;display:flex;flex-wrap:wrap;gap:12px">
-                            <span><i class="bi bi-bell me-1"></i>تاريخ التبليغ: {{ $exec->date_notification?->format('d/m/Y') ?? '—' }}</span>
-                            <span class="pill" style="font-size:.65rem;background:#e0f2fe;color:{{ $sc }}">{{ $sl }}</span>
-                            @if($exec->date_execution)<span class="pill pill-success" style="font-size:.65rem">تم التنفيذ بتاريخ {{ $exec->date_execution->format('d/m/Y') }}</span>@endif
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+                            <div style="font-size:.9rem;color:var(--exec);">
+                                <div style="font-weight:800;">
+                                    <i class="bi bi-shield-check"></i>
+                                    ملف تنفيذ رقم: {{ $exec->numero_dossier_execution }}
+                                </div>
+                                <div style="font-size:.9rem;color:#0c4a6e;margin-top:5px">
+                                    <i class="bi bi-bell me-1"></i>
+                                    تاريخ التبليغ: {{ $exec->date_notification?->format('d/m/Y') ?? '—' }}
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <span class="pill"
+                                    style="font-size:.9rem;background:#e0f2fe;color:{{ $sc }}">
+                                    {{ $sl }}
+                                </span>
+                                @if($exec->date_execution)
+                                    <span class="pill pill-success" style="font-size:.9rem">
+                                        تم التنفيذ بتاريخ {{ $exec->date_execution->format('d/m/Y') }}
+                                    </span>
+                                @endif
+                                <a href="{{ route('executions.show', $exec) }}"
+                                class="btn btn-sm btn-outline-primary py-0 px-2"
+                                style="font-size:.9rem">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                     @endforeach
+
                     @if($jugement->executions->isEmpty())
                     <div class="empty-state">
                         <i class="bi bi-hourglass-split d-block mb-1 fs-4 opacity-30"></i>
@@ -870,77 +895,111 @@
                     </div>
                     @endif
 
-
-                {{-- Recours possible ────────── --}}
                 @elseif($jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
-                <div class="recours-form-wrap">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-arrow-repeat text-warning"></i>
-                        <strong class="small">تسجيل طعن جديد</strong>
-                        @php $drr = $jugement->delai_recours_restant; @endphp
-                        @if($drr !== null && $drr <= 5)
-                            <span class="pill pill-danger" style="font-size:.65rem">مستعجل — متبقي {{ $drr }} يوم</span>
-                        @endif
-                    </div>
-                    <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
-                        @csrf
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-4">
-                                <select name="id_type_recours" class="form-select form-select-sm" required>
-                                    <option value="">— نوع الطعن —</option>
-                                    @foreach(\App\Models\TypeRecours::orderBy('type_recours')->get() as $tr)
-                                        <option value="{{ $tr->id }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="date" name="date_recours" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
-                            </div>
-                            <div class="col-md-3">
-                                <input type="text" name="motifs" class="form-control form-control-sm" placeholder="الأسباب (اختياري)">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-warning btn-sm w-100" onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
-                                    <i class="bi bi-send me-1"></i>تسجيل
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" class="mt-2" onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
-                        @csrf
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i>إغلاق بدون طعن</button>
-                    </form>
-                </div>
-                
-                @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
-                <div class="mx-4 mb-4">
-                    <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('إغلاق المرحلة؟')">
-                        @csrf
-                        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock me-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
-                    </form>
-                </div>
+                    {{-- Recours possible ────────── --}}
+                    <div class="recours-form-wrap">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-arrow-repeat text-warning"></i>
+        <strong>تسجيل طعن جديد</strong>
 
-                {{-- Pas encore de jugement --}}
-                @elseif($audienceHoukm && !$isClosed)
+        @php $drr = $jugement->delai_recours_restant; @endphp
+        @if($drr !== null && $drr <= 5)
+            <span class="pill pill-danger" style="font-size:.9rem">
+                مستعجل — متبقي {{ $drr }} يوم
+            </span>
+        @endif
+    </div>
+
+    <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
+        @csrf
+
+        {{-- Ligne 1 : Type + Date --}}
+        <div class="row g-2 mb-2">
+            <div class="col-md-8">
+                <select name="id_type_recours" class="form-select form-select-sm" required>
+                    <option value="">— نوع الطعن —</option>
+                    @foreach(\App\Models\TypeRecours::orderBy('type_recours')->get() as $tr)
+                        <option value="{{ $tr->id }}">
+                            {{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <input type="date"
+                       name="date_recours"
+                       class="form-control form-control-sm"
+                       value="{{ date('Y-m-d') }}"
+                       required>
+            </div>
+        </div>
+
+        {{-- Ligne 2 : Motifs --}}
+        <div class="row mb-3">
+            <div class="col-12">
+                <input type="text"
+                       name="motifs"
+                       class="form-control form-control-sm"
+                       placeholder="الأسباب (اختياري)">
+            </div>
+        </div>
+
+        {{-- Ligne 3 : Boutons centrés --}}
+        <div class="d-flex justify-content-center gap-2">
+            <button type="submit"
+                    class="btn btn-warning btn-sm px-4"
+                    onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
+                <i class="bi bi-send me-1"></i>
+                تسجيل
+            </button>
+    </form>
+
+            <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
+                  method="POST"
+                  onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
+                @csrf
+
+                <button type="submit" class="btn btn-outline-secondary btn-sm px-4">
+                    <i class="bi bi-x-circle me-1"></i>
+                    إغلاق بدون طعن
+                </button>
+            </form>
+        </div>
+</div>
+
+                @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
+                    {{-- Délai expiré sans recours --}}
+                    <div class="mx-4 mb-4">
+                        <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('إغلاق المرحلة؟')">
+                            @csrf
+                            <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock me-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
+                        </form>
+                    </div>
+                @endif
+
+            @elseif($audienceHoukm && !$isClosed)
+                {{-- Audience الحكم existe mais pas encore de jugement --}}
                 <div class="empty-state">
                     <i class="bi bi-hammer d-block mb-1 fs-4 opacity-30"></i>
-                        يرجى تسجيل تفاصيل الحكم.
+                    يرجى تسجيل تفاصيل الحكم.
                     <div class="mt-2">
                         <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-lg me-1"></i>تسجيل الحكم
                         </a>
                     </div>
                 </div>
-                
-                @elseif(!$isClosed && $audiences->isNotEmpty())
+
+            @elseif(!$isClosed && $audiences->isNotEmpty())
+                {{-- Pas encore d'audience الحكم --}}
                 <div class="empty-state" style="margin:0 20px 20px">
                     <i class="bi bi-hourglass d-block mb-1 fs-4 opacity-30"></i>
-                    في انتظار  <strong>النطق بالحكم</strong>.
+                    في انتظار <strong>النطق بالحكم</strong>.
                 </div>
-                @endif
+            @endif
 
-        </div>{{-- /.deg-card --}}
-        @endforeach
+            </div>{{-- /.deg-card --}}
+                    @endforeach
 
         @endif{{-- /instances non vides --}}
     </div>{{-- /tab-instances --}}
