@@ -692,6 +692,7 @@
                 </div>
                 @endif
             </div>
+            
             @else
             <div class="aud-timeline">
                 @foreach($audiences as $aud)

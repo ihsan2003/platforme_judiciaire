@@ -24,7 +24,6 @@ class ExecutionObserver
      */
     public function updated(Execution $execution): void
     {
-        $execution->jugement->dossierTribunal->dossier->recalculerStatut();
 
     }
 

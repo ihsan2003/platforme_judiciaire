@@ -24,7 +24,6 @@ class JugementObserver
      */
     public function updated(Jugement $jugement): void
     {
-        $jugement->dossierTribunal->dossier->recalculerStatut();
     }
 
     /**
