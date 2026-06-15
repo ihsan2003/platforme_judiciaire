@@ -255,37 +255,57 @@ class DossierJudiciaire extends Model
 
     public function recalculerStatut(): void
     {
-        $jugement = $this->dossierTribunaux()
-            ->with(['jugement.executions'])
+        // Charger tous les jugements de toutes les instances, triés par date
+        $jugements = $this->dossierTribunaux()
+            ->with(['jugements.executions'])
             ->get()
-            ->pluck('jugement')
-            ->filter()
-            ->last();
+            ->flatMap(fn($dt) => $dt->jugements)
+            ->sortByDesc('date_jugement');
 
-        if (!$jugement) {
+        if ($jugements->isEmpty()) {
             return;
         }
 
-        // Exécution terminée
-        if (
-            $jugement->executions()
-                ->whereNotNull('date_execution')
-                ->exists()
-        ) {
+        // Priorité 1 : un jugement définitif avec exécution terminée
+        $execTerminee = $jugements
+            ->filter(fn($j) => $j->est_definitif)
+            ->flatMap(fn($j) => $j->executions)
+            ->whereNotNull('date_execution')
+            ->isNotEmpty();
+
+        if ($execTerminee) {
             $this->changerStatut('مغلق');
             return;
         }
 
-        // Exécution en cours
-        if ($jugement->executions()->exists()) {
+        // Priorité 2 : un jugement définitif avec exécution en cours
+        $execEnCours = $jugements
+            ->filter(fn($j) => $j->est_definitif)
+            ->flatMap(fn($j) => $j->executions)
+            ->isNotEmpty();
+
+        if ($execEnCours) {
             $this->changerStatut('قيد التنفيذ');
             return;
         }
 
-        // Jugement définitif
-        if ($jugement->est_definitif) {
+        // Priorité 3 : au moins un jugement définitif (sans exécution)
+        $aJugementDefinitif = $jugements->contains('est_definitif', true);
+
+        if ($aJugementDefinitif) {
             $this->changerStatut('تم الحكم');
             return;
+        }
+
+        // Sinon : statut inchangé (جاري)
+    }
+
+    private function changerStatut(string $libelle): void
+    {
+        $statut = StatutDossier::where('statut_dossier', $libelle)->first();
+
+        if ($statut) {
+            $this->update(['id_statut_dossier' => $statut->id]);
         }
     }
 }
