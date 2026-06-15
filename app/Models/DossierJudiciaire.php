@@ -251,4 +251,41 @@ class DossierJudiciaire extends Model
     {
         return $this->jugementValid?->finance;
     }
+
+
+    public function recalculerStatut(): void
+    {
+        $jugement = $this->dossierTribunaux()
+            ->with(['jugement.executions'])
+            ->get()
+            ->pluck('jugement')
+            ->filter()
+            ->last();
+
+        if (!$jugement) {
+            return;
+        }
+
+        // Exécution terminée
+        if (
+            $jugement->executions()
+                ->whereNotNull('date_execution')
+                ->exists()
+        ) {
+            $this->changerStatut('مغلق');
+            return;
+        }
+
+        // Exécution en cours
+        if ($jugement->executions()->exists()) {
+            $this->changerStatut('قيد التنفيذ');
+            return;
+        }
+
+        // Jugement définitif
+        if ($jugement->est_definitif) {
+            $this->changerStatut('تم الحكم');
+            return;
+        }
+    }
 }

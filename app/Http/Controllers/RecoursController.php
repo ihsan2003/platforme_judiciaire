@@ -142,6 +142,9 @@ class RecoursController extends Controller
             }
         });
 
+        $dossier = $jugement->dossierTribunal->dossier;
+        $dossier->recalculerStatut();
+
         return redirect()
             ->route('jugements.show', $jugement)
             ->with('success', 'تم اعتبار الحكم نهائياً وإغلاق الملف.');

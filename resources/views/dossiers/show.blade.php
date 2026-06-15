@@ -898,75 +898,75 @@
                 @elseif($jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
                     {{-- Recours possible ────────── --}}
                     <div class="recours-form-wrap">
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-arrow-repeat text-warning"></i>
-        <strong>تسجيل طعن جديد</strong>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <i class="bi bi-arrow-repeat text-warning"></i>
+                            <strong>تسجيل طعن جديد</strong>
 
-        @php $drr = $jugement->delai_recours_restant; @endphp
-        @if($drr !== null && $drr <= 5)
-            <span class="pill pill-danger" style="font-size:.9rem">
-                مستعجل — متبقي {{ $drr }} يوم
-            </span>
-        @endif
-    </div>
+                            @php $drr = $jugement->delai_recours_restant; @endphp
+                            @if($drr !== null && $drr <= 5)
+                                <span class="pill pill-danger" style="font-size:.9rem">
+                                    مستعجل — متبقي {{ $drr }} يوم
+                                </span>
+                            @endif
+                        </div>
 
-    <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
-        @csrf
+                        <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
+                            @csrf
 
-        {{-- Ligne 1 : Type + Date --}}
-        <div class="row g-2 mb-2">
-            <div class="col-md-8">
-                <select name="id_type_recours" class="form-select form-select-sm" required>
-                    <option value="">— نوع الطعن —</option>
-                    @foreach(\App\Models\TypeRecours::orderBy('type_recours')->get() as $tr)
-                        <option value="{{ $tr->id }}">
-                            {{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                            {{-- Ligne 1 : Type + Date --}}
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-8">
+                                    <select name="id_type_recours" class="form-select form-select-sm" required>
+                                        <option value="">— نوع الطعن —</option>
+                                        @foreach(\App\Models\TypeRecours::orderBy('type_recours')->get() as $tr)
+                                            <option value="{{ $tr->id }}">
+                                                {{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-            <div class="col-md-4">
-                <input type="date"
-                       name="date_recours"
-                       class="form-control form-control-sm"
-                       value="{{ date('Y-m-d') }}"
-                       required>
-            </div>
-        </div>
+                                <div class="col-md-4">
+                                    <input type="date"
+                                        name="date_recours"
+                                        class="form-control form-control-sm"
+                                        value="{{ date('Y-m-d') }}"
+                                        required>
+                                </div>
+                            </div>
 
-        {{-- Ligne 2 : Motifs --}}
-        <div class="row mb-3">
-            <div class="col-12">
-                <input type="text"
-                       name="motifs"
-                       class="form-control form-control-sm"
-                       placeholder="الأسباب (اختياري)">
-            </div>
-        </div>
+                            {{-- Ligne 2 : Motifs --}}
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <input type="text"
+                                        name="motifs"
+                                        class="form-control form-control-sm"
+                                        placeholder="الأسباب (اختياري)">
+                                </div>
+                            </div>
 
-        {{-- Ligne 3 : Boutons centrés --}}
-        <div class="d-flex justify-content-center gap-2">
-            <button type="submit"
-                    class="btn btn-warning btn-sm px-4"
-                    onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
-                <i class="bi bi-send me-1"></i>
-                تسجيل
-            </button>
-    </form>
+                            {{-- Ligne 3 : Boutons centrés --}}
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="submit"
+                                        class="btn btn-warning btn-sm px-4"
+                                        onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
+                                    <i class="bi bi-send me-1"></i>
+                                    تسجيل
+                                </button>
+                        </form>
 
-            <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
-                  method="POST"
-                  onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
-                @csrf
+                                <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
+                                    @csrf
 
-                <button type="submit" class="btn btn-outline-secondary btn-sm px-4">
-                    <i class="bi bi-x-circle me-1"></i>
-                    إغلاق بدون طعن
-                </button>
-            </form>
-        </div>
-</div>
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm px-4">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        إغلاق بدون طعن
+                                    </button>
+                                </form>
+                            </div>
+                    </div>
 
                 @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
                     {{-- Délai expiré sans recours --}}
