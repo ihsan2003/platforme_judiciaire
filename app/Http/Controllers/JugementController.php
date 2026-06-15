@@ -264,8 +264,6 @@ class JugementController extends Controller
             return $jugement;
         });
 
-        $dossier = $dossierTribunal->dossier;
-        $dossier->recalculerStatut();
 
         return redirect()
             ->route('jugements.show', $jugement)
@@ -338,8 +336,6 @@ class JugementController extends Controller
             $jugement->parties()->sync($syncData);
         });
 
-        $dossier = $jugement->dossierTribunal->dossier;
-        $dossier->recalculerStatut();
 
         return redirect()
             ->route('jugements.show', $jugement)

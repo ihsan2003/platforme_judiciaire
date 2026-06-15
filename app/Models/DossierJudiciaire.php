@@ -255,18 +255,19 @@ class DossierJudiciaire extends Model
 
     public function recalculerStatut(): void
     {
-        // Charger tous les jugements de toutes les instances, triés par date
         $jugements = $this->dossierTribunaux()
             ->with(['jugements.executions'])
             ->get()
             ->flatMap(fn($dt) => $dt->jugements)
             ->sortByDesc('date_jugement');
 
+        // ── إذا لا يوجد أي حكم → نعيد إلى جاري ──
         if ($jugements->isEmpty()) {
+            $this->changerStatut('جاري');
             return;
         }
 
-        // Priorité 1 : un jugement définitif avec exécution terminée
+        // Priorité 1 : jugement définitif + exécution terminée
         $execTerminee = $jugements
             ->filter(fn($j) => $j->est_definitif)
             ->flatMap(fn($j) => $j->executions)
@@ -278,7 +279,7 @@ class DossierJudiciaire extends Model
             return;
         }
 
-        // Priorité 2 : un jugement définitif avec exécution en cours
+        // Priorité 2 : jugement définitif + exécution en cours
         $execEnCours = $jugements
             ->filter(fn($j) => $j->est_definitif)
             ->flatMap(fn($j) => $j->executions)
@@ -289,20 +290,20 @@ class DossierJudiciaire extends Model
             return;
         }
 
-        // Priorité 3 : au moins un jugement définitif (sans exécution)
-        $aJugementDefinitif = $jugements->contains('est_definitif', true);
-
-        if ($aJugementDefinitif) {
+        // Priorité 3 : jugement définitif (sans exécution)
+        if ($jugements->contains('est_definitif', true)) {
             $this->changerStatut('تم الحكم');
             return;
         }
 
-        // Sinon : statut inchangé (جاري)
+        // Priorité 4 : jugements existent mais aucun définitif → جاري
+        $this->changerStatut('جاري');
     }
 
     private function changerStatut(string $libelle): void
     {
-        $statut = StatutDossier::where('statut_dossier', $libelle)->first();
+        $statut = StatutDossier::where('statut_dossier', $libelle)->first()
+            ?? StatutDossier::whereRaw('TRIM(statut_dossier) = ?', [trim($libelle)])->first();
 
         if ($statut) {
             $this->update(['id_statut_dossier' => $statut->id]);

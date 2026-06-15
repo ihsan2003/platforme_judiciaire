@@ -158,8 +158,6 @@ class ExecutionController extends Controller
             'statut_execution' => 1, // statut "في الانتظار"
         ]);
 
-        $dossier = $execution->jugement->dossierTribunal->dossier;
-        $dossier->recalculerStatut();
 
         return redirect()
             ->route('executions.show', $execution)
@@ -236,9 +234,6 @@ class ExecutionController extends Controller
         }
 
         $execution->update($data);
-
-        $dossier = $execution->jugement->dossierTribunal->dossier;
-        $dossier->recalculerStatut();
 
         return redirect()
             ->route('executions.show', $execution)
