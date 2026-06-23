@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Audience;
 use App\Models\DossierJudiciaire;
+use App\Models\DossierTribunal;
 use App\Models\Jugement;
 use App\Models\Reclamation;
 use App\Models\StatutDossier;
@@ -243,7 +244,6 @@ class DashboardController extends Controller
         $statsFinancesGraphe['mensuel_labels'] = $financesMensuelLabels;
         $statsFinancesGraphe['mensuel_values'] = $financesMensuelValues;
         unset($statsFinancesGraphe['mensuel']); // on garde seulement les arrays sérialisables
-        
 
         return view('dashboard.index', compact(
             'dossiers',
@@ -254,7 +254,7 @@ class DashboardController extends Controller
             'evolutionMois',
             'dossiersParAffaire',     // ← nouveau
             'resultatsJugements',     // ← nouveau
-            'statsFinancesGraphe', 
+            'statsFinancesGraphe',
         ));
 
     }

@@ -124,7 +124,7 @@ class DossierJudiciaire extends Model
     {
         $degreVise = \App\Models\DegreeJuridiction::find($degreId);
         if (! $degreVise) {
-            return 'Degré introuvable.';
+            return 'درجة تقاضي غير موجودة';
         }
 
         // On récupère les ordres des degrés déjà présents dans ce dossier
@@ -145,11 +145,13 @@ class DossierJudiciaire extends Model
         for ($i = 1; $i < $ordreVise; $i++) {
             if (! in_array($i, $degresExistants)) {
                 $libelle = match($i) {
-                    1 => 'premier degré',
-                    2 => 'appel (2ème degré)',
-                    default => "degré {$i}",
+                    1 => 'الدرجة الأولى',
+                    2 => 'الإستئناف',
+                    3 => 'التعرض',
+                    4 => 'إعادة النظر',
+                    default => "درجة {$i}",
                 };
-                return "Impossible d'ajouter ce degré : le {$libelle} est requis au préalable.";
+                return "لا يمكن إضافة هذه الدرجة: يجب تسجيل {$libelle} أولاً.";
             }
         }
 
@@ -202,8 +204,7 @@ class DossierJudiciaire extends Model
     public function getEstActifAttribute(): bool
     {
         $statut = $this->statut?->statut_dossier ?? '';
-        return !str_contains(strtolower($statut), 'clôturé')
-            && !str_contains(strtolower($statut), 'cloturé');
+        return !str_contains(strtolower($statut), 'حفظ');
     }
 
     public function getDureeTraitementAttribute(): ?int
@@ -221,8 +222,7 @@ class DossierJudiciaire extends Model
     public function scopeActifs($query)
     {
         return $query->whereHas('statut', function ($q) {
-            $q->whereRaw("LOWER(statut_dossier) NOT LIKE '%clôturé%'")
-              ->whereRaw("LOWER(statut_dossier) NOT LIKE '%cloture%'");
+            $q->whereRaw("LOWER(statut_dossier) NOT LIKE '%حفظ%'");
         });
     }
 
@@ -255,58 +255,56 @@ class DossierJudiciaire extends Model
 
     public function recalculerStatut(): void
     {
+        // Récupérer tous les jugements du dossier
         $jugements = $this->dossierTribunaux()
             ->with(['jugements.executions'])
             ->get()
             ->flatMap(fn($dt) => $dt->jugements)
             ->sortByDesc('date_jugement');
 
-        // ── إذا لا يوجد أي حكم → نعيد إلى جاري ──
+        // Cas 1 : Aucun jugement → Statut "جاري"
         if ($jugements->isEmpty()) {
             $this->changerStatut('جاري');
             return;
         }
 
-        // Priorité 1 : jugement définitif + exécution terminée
+        // Cas 2 : Il y a une exécution terminée → Statut "حفظ"
         $execTerminee = $jugements
-            ->filter(fn($j) => $j->est_definitif)
-            ->flatMap(fn($j) => $j->executions)
-            ->whereNotNull('date_execution')
+            ->flatMap(fn($j) => $j->executions) // ← On prend TOUTES les exécutions
+            ->whereNotNull('date_execution')     // ← Qui ont une date d'exécution
             ->isNotEmpty();
 
         if ($execTerminee) {
-            $this->changerStatut('مغلق');
+            $this->changerStatut('حفظ');
             return;
         }
 
-        // Priorité 2 : jugement définitif + exécution en cours
+        // Cas 3 : Il y a une exécution en cours → Statut "قيد التنفيذ"
         $execEnCours = $jugements
-            ->filter(fn($j) => $j->est_definitif)
-            ->flatMap(fn($j) => $j->executions)
-            ->isNotEmpty();
+            ->flatMap(fn($j) => $j->executions) // ← On prend TOUTES les exécutions
+            ->isNotEmpty();                     // ← Qui existent (même sans date)
 
         if ($execEnCours) {
             $this->changerStatut('قيد التنفيذ');
             return;
         }
 
-        // Priorité 3 : jugement définitif (sans exécution)
-        if ($jugements->contains('est_definitif', true)) {
-            $this->changerStatut('تم الحكم');
-            return;
-        }
-
-        // Priorité 4 : jugements existent mais aucun définitif → جاري
-        $this->changerStatut('جاري');
+        // Cas 4 : Il y a un jugement (même non définitif) → Statut "تم الحكم"
+        $this->changerStatut('تم الحكم');
     }
 
     private function changerStatut(string $libelle): void
     {
-        $statut = StatutDossier::where('statut_dossier', $libelle)->first()
-            ?? StatutDossier::whereRaw('TRIM(statut_dossier) = ?', [trim($libelle)])->first();
-
+        // LOG pour savoir ce qu'on cherche
+        \Log::info("👉 Changement vers : " . $libelle);
+        
+        $statut = StatutDossier::where('statut_dossier', $libelle)->first();
+        
         if ($statut) {
             $this->update(['id_statut_dossier' => $statut->id]);
+            \Log::info("✅ Statut changé avec succès vers ID: " . $statut->id);
+        } else {
+            \Log::warning("❌ Statut non trouvé pour : " . $libelle);
         }
     }
 }

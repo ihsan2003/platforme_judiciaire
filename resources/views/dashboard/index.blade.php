@@ -520,10 +520,12 @@
     </div>
 </div>
 
+
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script>
 (function () {
     const BLUE   = '#378ADD';
@@ -680,4 +682,5 @@
     });
 })();
 </script>
+
 @endpush

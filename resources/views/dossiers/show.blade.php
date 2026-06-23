@@ -494,7 +494,7 @@
 
                         <td>
                             @php
-                                $isMorale = $dp->partie->type_personne === 'Morale';
+                                $isMorale = $dp->partie->type_personne === 'اعتباري';
 
                                 $badge = $isMorale
                                     ? ['warning', 'building']
@@ -689,6 +689,7 @@
                     class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-calendar-plus me-1"></i>  برمجة جلسة جديدة
                     </a>
+                    
                 </div>
                 @endif
             </div>
@@ -1408,8 +1409,8 @@
                     <div class="col-sm-4">
                         <label class="form-label fw-semibold small">نوع الشخص</label>
                         <select name="type_personne" id="field_type_personne" class="form-select">
-                            <option value="Physique">ذاتي</option>
-                            <option value="Morale">معنوي</option>
+                            <option value="ذاتي">ذاتي</option>
+                            <option value="اعتباري">اعتباري</option>
                         </select>
                     </div>
                     <div class="col-sm-4">

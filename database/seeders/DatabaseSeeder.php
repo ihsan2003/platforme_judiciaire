@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RegionSeeder::class,
             ProvinceSeeder::class,
             StructureSeeder::class,
+            TribunauxSeeder::class,
 
         ]);
     }

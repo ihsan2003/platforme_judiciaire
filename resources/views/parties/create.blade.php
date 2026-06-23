@@ -168,13 +168,13 @@
                                 — اختر —
                             </option>
 
-                            <option value="Physique"
-                                @selected(old('type_personne') === 'Physique')>
+                            <option value="ذاتي"
+                                @selected(old('type_personne') === 'ذاتي')>
                                 شخص ذاتي
                             </option>
 
-                            <option value="Morale"
-                                @selected(old('type_personne') === 'Morale')>
+                            <option value="اعتباري"
+                                @selected(old('type_personne') === 'اعتباري')>
                                 شخص اعتباري
                             </option>
 

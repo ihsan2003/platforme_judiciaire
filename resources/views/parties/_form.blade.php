@@ -22,8 +22,8 @@
     <label class="form-label">Type de personne *</label>
     <select name="type_personne" class="form-select @error('type_personne') is-invalid @enderror">
         <option value="">-- Choisir --</option>
-        <option value="physique" @selected(old('type_personne', $partie->type_personne ?? '') === 'physique')>Physique</option>
-        <option value="morale"   @selected(old('type_personne', $partie->type_personne ?? '') === 'morale')>Morale</option>
+        <option value="ذاتي" @selected(old('type_personne', $partie->type_personne ?? '') === 'ذاتي')>ذاتي</option>
+        <option value="اعتباري"   @selected(old('type_personne', $partie->type_personne ?? '') === 'اعتباري')>اعتباري</option>
     </select>
     @error('type_personne') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>

@@ -47,7 +47,7 @@ return new class extends Migration
         Schema::create('parties', function (Blueprint $table) {
             $table->id();
             $table->string('nom_partie');
-            $table->enum('type_personne', ['Physique', 'Morale']);
+            $table->enum('type_personne', ['ذاتي','اعتباري']);
             $table->string('identifiant_unique');
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();

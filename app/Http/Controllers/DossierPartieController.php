@@ -56,7 +56,7 @@ class DossierPartieController extends Controller
         $request->validate([
             'identifiant_unique' => ['required', 'string', 'max:255'],
             'nom_partie'         => ['required_without:partie_id', 'nullable', 'string', 'max:255'],
-            'type_personne'      => ['required_without:partie_id', 'nullable', 'in:Physique,Morale'],
+            'type_personne' => ['required_without:partie_id','nullable','in:ذاتي,اعتباري'],
             'telephone'          => ['nullable', 'regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/'],
             'email'              => ['nullable', 'email', 'max:255'],
             'adresse'            => ['nullable', 'string'],
@@ -80,7 +80,7 @@ class DossierPartieController extends Controller
                 ['identifiant_unique' => $request->identifiant_unique],
                 [
                     'nom_partie'    => $request->nom_partie,
-                    'type_personne' => $request->type_personne ?? 'Physique',
+                    'type_personne' => $request->type_personne ?? 'ذاتي',
                     'telephone'     => $request->telephone,
                     'email'         => $request->email,
                     'adresse'       => $request->adresse,

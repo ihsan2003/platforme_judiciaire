@@ -74,7 +74,7 @@ body{
 
                 <div>
                     <div class="fs-2 fw-bold lh-1">
-                        {{ \App\Models\Partie::where('type_personne', 'Physique')->count() }}
+                        {{ \App\Models\Partie::where('type_personne', 'ذاتي')->count() }}
                     </div>
 
                     <div class="text-muted small">
@@ -145,13 +145,13 @@ body{
                         جميع الأنواع
                     </option>
 
-                    <option value="Physique"
-                        @selected(request('type_personne') === 'Physique')>
+                    <option value="ذاتي"
+                        @selected(request('type_personne') === 'ذاتي')>
                         ذاتي
                     </option>
 
-                    <option value="Morale"
-                        @selected(request('type_personne') === 'Morale')>
+                    <option value="اعتباري"
+                        @selected(request('type_personne') === 'اعتباري')>
                         اعتباري
                     </option>
 
