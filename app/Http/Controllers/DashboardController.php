@@ -258,4 +258,24 @@ class DashboardController extends Controller
         ));
 
     }
+
+    public function dossiersParRegion(): JsonResponse
+    {
+        $data = DB::table('dossier_judiciaires')
+            ->join('dossier_tribunaux', 'dossier_judiciaires.id', '=', 'dossier_tribunaux.id_dossier')
+            ->join('tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
+            ->join('provinces', 'tribunaux.id_province', '=', 'provinces.id')
+            ->join('regions', 'provinces.id_region', '=', 'regions.id')
+            ->select(
+                'regions.id',
+                'regions.region as nom_region',
+                DB::raw('COUNT(DISTINCT dossier_judiciaires.id) as total_dossiers'),
+                DB::raw('COUNT(DISTINCT tribunaux.id) as total_tribunaux')
+            )
+            ->groupBy('regions.id', 'regions.region')
+            ->orderByDesc('total_dossiers')
+            ->get();
+
+        return response()->json($data);
+    }
 }

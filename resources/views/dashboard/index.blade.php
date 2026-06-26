@@ -520,6 +520,69 @@
     </div>
 </div>
 
+<div class="card shadow-sm mb-4" dir="ltr">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0 fw-bold">
+            <i class="bi bi-map text-primary me-2"></i>
+            <span dir="rtl">توزيع الملفات حسب الجهة</span>
+        </h6>
+        {{-- Légende --}}
+        <div id="map-legend" class="d-flex align-items-center gap-2 small text-muted"></div>
+    </div>
+
+    <div class="card-body p-0">
+        <div id="morocco-map-wrapper"
+             style="position:relative; width:100%; height:460px; background:#f8fafc; overflow:hidden;">
+
+            {{-- Tooltip --}}
+            <div id="map-tooltip"
+                 style="
+                    position:absolute; pointer-events:none; z-index:20;
+                    background:rgba(15,23,42,.92); color:#fff;
+                    padding:10px 14px; border-radius:8px;
+                    font-size:13px; min-width:190px;
+                    box-shadow:0 4px 16px rgba(0,0,0,.25);
+                    display:none;
+                 ">
+            </div>
+
+            {{-- Spinner pendant le chargement --}}
+            <div id="map-loader"
+                 class="d-flex align-items-center justify-content-center h-100 w-100 position-absolute top-0 start-0"
+                 style="z-index:10; background:#f8fafc;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">تحميل...</span>
+                </div>
+            </div>
+
+            <svg id="morocco-map" width="100%" height="100%"></svg>
+        </div>
+
+        {{-- Tableau récapitulatif --}}
+        <div class="px-3 py-2" dir="rtl">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الجهة</th>
+                            <th class="text-center">عدد الملفات</th>
+                            <th class="text-center">المحاكم</th>
+                            <th style="min-width:120px">النسبة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="map-table-body">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                                جاري التحميل...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
 
@@ -684,3 +747,173 @@
 </script>
 
 @endpush
+
+@once
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    // ── Configuration ─────────────────────────────────────────────────────────
+    const API_URL    = "{{ route('dashboard.map.data') }}";
+    const GEOJSON    = "/geojson/regions.json";
+    const GEO_KEY    = "name";           // propriété dans le GeoJSON
+    const DB_KEY     = "nom_region";     // clé dans la réponse API
+    const TOTAL_KEY  = "total_dossiers"; // clé du count
+    const TRIB_KEY   = "total_tribunaux";
+
+    // ── Éléments DOM ──────────────────────────────────────────────────────────
+    const wrapper  = document.getElementById('morocco-map-wrapper');
+    const svgEl    = document.getElementById('morocco-map');
+    const tooltip  = document.getElementById('map-tooltip');
+    const loader   = document.getElementById('map-loader');
+    const legendEl = document.getElementById('map-legend');
+    const tbody    = document.getElementById('map-table-body');
+
+    // ── Chargement parallèle ──────────────────────────────────────────────────
+    Promise.all([
+        fetch(API_URL, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(r => r.json()),
+        d3.json(GEOJSON)
+    ])
+    .then(([apiData, geoData]) => {
+        loader.style.display = 'none';
+
+        // Map région → données
+        const counts = new Map();
+        apiData.forEach(d => counts.set(d[DB_KEY]?.trim(), d));
+
+        const max = d3.max(apiData, d => +d[TOTAL_KEY]) || 1;
+
+        // Palette de couleur
+        const colorScale = d3.scaleSequential()
+            .domain([0, max])
+            .interpolator(d3.interpolateBlues);
+
+        const noDataColor = '#e2e8f0';
+
+        // ── Projection ───────────────────────────────────────────────────────
+        const W = wrapper.clientWidth;
+        const H = wrapper.clientHeight;
+
+        const projection = d3.geoMercator()
+            .fitSize([W - 10, H - 10], geoData)
+            .translate([W / 2, H / 2]);
+
+        const pathGen = d3.geoPath().projection(projection);
+
+        const svg = d3.select(svgEl)
+            .attr('viewBox', `0 0 ${W} ${H}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
+
+        // ── Dessin des régions ────────────────────────────────────────────────
+        svg.selectAll('path')
+            .data(geoData.features)
+            .join('path')
+            .attr('d', pathGen)
+            .attr('fill', d => {
+                const name = d.properties[GEO_KEY]?.trim();
+                const row  = counts.get(name);
+                return row ? colorScale(+row[TOTAL_KEY]) : noDataColor;
+            })
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 1.2)
+            .style('cursor', 'pointer')
+            .style('transition', 'opacity .15s')
+            .on('mousemove', function (event, d) {
+                const name = d.properties[GEO_KEY]?.trim() ?? '—';
+                const row  = counts.get(name);
+                const tot  = row ? Number(row[TOTAL_KEY]).toLocaleString('ar-MA') : '٠';
+                const trib = row ? Number(row[TRIB_KEY]).toLocaleString('ar-MA') : '٠';
+
+                d3.select(this)
+                    .attr('stroke', '#1e40af')
+                    .attr('stroke-width', 2.5)
+                    .style('opacity', '.85');
+
+                const rect = wrapper.getBoundingClientRect();
+                let tx = event.clientX - rect.left + 14;
+                let ty = event.clientY - rect.top  - 50;
+
+                // Ne pas déborder à droite
+                if (tx + 200 > W) tx = event.clientX - rect.left - 214;
+
+                tooltip.style.display = 'block';
+                tooltip.style.left    = tx + 'px';
+                tooltip.style.top     = ty + 'px';
+                tooltip.innerHTML = `
+                    <div style="font-weight:700;font-size:14px;margin-bottom:6px;
+                                border-bottom:1px solid rgba(255,255,255,.25);
+                                padding-bottom:6px;">${name}</div>
+                    <div style="display:flex;justify-content:space-between;gap:16px;">
+                        <span>عدد الملفات</span>
+                        <span style="color:#93c5fd;font-weight:700;">${tot}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;gap:16px;margin-top:4px;">
+                        <span>المحاكم</span>
+                        <span style="color:#6ee7b7;font-weight:700;">${trib}</span>
+                    </div>`;
+            })
+            .on('mouseleave', function () {
+                d3.select(this)
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 1.2)
+                    .style('opacity', '1');
+                tooltip.style.display = 'none';
+            });
+
+        // ── Légende ───────────────────────────────────────────────────────────
+        const steps = [0, 0.25, 0.5, 0.75, 1];
+        legendEl.innerHTML =
+            '<span class="me-1">أقل</span>' +
+            steps.map(t => {
+                const val = Math.round(t * max);
+                return `<span title="${val}"
+                              style="display:inline-block;width:22px;height:14px;
+                                     border-radius:3px;background:${colorScale(t * max)};
+                                     border:1px solid #cbd5e1;"></span>`;
+            }).join('') +
+            '<span class="ms-1">أكثر</span>';
+
+        // ── Tableau récapitulatif ─────────────────────────────────────────────
+        const totalGlobal = apiData.reduce((s, d) => s + (+d[TOTAL_KEY] || 0), 0);
+        const sorted = [...apiData].sort((a, b) => b[TOTAL_KEY] - a[TOTAL_KEY]);
+
+        tbody.innerHTML = sorted.map((row, i) => {
+            const pct = totalGlobal > 0
+                ? ((+row[TOTAL_KEY] / totalGlobal) * 100).toFixed(1)
+                : 0;
+            const barColor = colorScale(+row[TOTAL_KEY]);
+            return `
+                <tr>
+                    <td>
+                        <span class="badge me-1" style="background:${barColor};width:12px;height:12px;display:inline-block;border-radius:2px;"></span>
+                        ${row[DB_KEY] ?? '—'}
+                    </td>
+                    <td class="text-center fw-bold">${Number(row[TOTAL_KEY]).toLocaleString('ar-MA')}</td>
+                    <td class="text-center text-muted">${Number(row[TRIB_KEY]).toLocaleString('ar-MA')}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height:8px;">
+                                <div class="progress-bar" style="width:${pct}%;background:${barColor};"></div>
+                            </div>
+                            <small class="text-muted" style="min-width:38px;">${pct}%</small>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    })
+    .catch(err => {
+        console.error('Erreur carte :', err);
+        loader.innerHTML = `
+            <div class="text-center text-danger p-4">
+                <i class="bi bi-exclamation-triangle fs-3"></i>
+                <p class="mt-2 mb-0">تعذر تحميل الخريطة</p>
+            </div>`;
+    });
+})();
+</script>
+@endpush
+@endonce

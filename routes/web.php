@@ -35,9 +35,13 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 
+Route::get('/api/dashboard/dossiers-par-region', [DashboardController::class, 'dossiersParRegion'])
+    ->middleware('auth')
+    ->name('dashboard.map.data');
 
 // web.php — Routes AJAX cascade (à placer AVANT le middleware auth si besoin, ou dedans)
 Route::middleware('auth')->prefix('api')->group(function () {
+
 
     // Provinces d'une région
     Route::get('/regions/{regionId}/provinces', function ($regionId) {
