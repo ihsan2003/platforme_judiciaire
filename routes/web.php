@@ -35,6 +35,7 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 
+
 // web.php — Routes AJAX cascade (à placer AVANT le middleware auth si besoin, ou dedans)
 Route::middleware('auth')->prefix('api')->group(function () {
 
