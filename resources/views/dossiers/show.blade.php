@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Dossier ' . $dossier->numero_dossier_interne)
+@section('title', 'Dossier #' . $dossier->id)
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dossiers.index') }}">الملفات</a></li>
-    <li class="breadcrumb-item active">{{ $dossier->numero_dossier_interne }}</li>
+    <li class="breadcrumb-item active">#{{ $dossier->id }}</li>
 @endsection
 
 @push('styles')
@@ -263,7 +263,7 @@
             </div>
 
             <div>
-                <h4 class="fw-bold mb-0 text-white">{{ $dossier->numero_dossier_interne }}</h4>
+                <h4 class="fw-bold mb-0 text-white">#{{ $dossier->id }}</h4>
 
                 @if($dossier->numero_dossier_tribunal)
                     <div class="small" style="opacity:.7">

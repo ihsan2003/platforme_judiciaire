@@ -3,6 +3,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use App\Models\Audience;
 use App\Models\DossierJudiciaire;
 use App\Models\DossierTribunal;
@@ -261,11 +263,13 @@ class DashboardController extends Controller
 
     public function dossiersParRegion(): JsonResponse
     {
-        $data = DB::table('dossier_judiciaires')
-            ->join('dossier_tribunaux', 'dossier_judiciaires.id', '=', 'dossier_tribunaux.id_dossier')
-            ->join('tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
-            ->join('provinces', 'tribunaux.id_province', '=', 'provinces.id')
-            ->join('regions', 'provinces.id_region', '=', 'regions.id')
+        // On part de la table 'regions' pour être sûr de toutes les avoir
+        $data = DB::table('regions')
+            ->leftJoin('provinces', 'regions.id', '=', 'provinces.id_region')
+            ->leftJoin('tribunaux', 'provinces.id', '=', 'tribunaux.id_province')
+            // Jointure cascade pour compter les dossiers
+            ->leftJoin('dossier_tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
+            ->leftJoin('dossier_judiciaires', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
             ->select(
                 'regions.id',
                 'regions.region as nom_region',
@@ -273,7 +277,7 @@ class DashboardController extends Controller
                 DB::raw('COUNT(DISTINCT tribunaux.id) as total_tribunaux')
             )
             ->groupBy('regions.id', 'regions.region')
-            ->orderByDesc('total_dossiers')
+            ->orderBy('regions.id')
             ->get();
 
         return response()->json($data);

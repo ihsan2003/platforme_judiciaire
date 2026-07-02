@@ -79,35 +79,20 @@ class DossierJudiciaireController extends Controller
     // ================= STORE =================
     public function store(StoreDossierRequest $request): RedirectResponse
     {
-        $dossier = DB::transaction(function () use ($request) {
+        // Assemblage du numéro Mahakim à partir des 3 champs
+        $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
 
-            $dossier = DossierJudiciaire::create([
-                ...$request->safe()->only([
-                    'numero_dossier_interne',
-                    'numero_dossier_tribunal',
-                    'id_type_affaire',
-                    'date_ouverture',
-                    'date_cloture',
-                ]),
-                'created_by' => Auth::id(),
+        DB::transaction(function () use ($request, $numero_mahakim) {
+            DossierJudiciaire::create([
+                'numero_dossier_tribunal' => $numero_mahakim,
+                'id_type_affaire'         => $request->id_type_affaire,
+                'date_ouverture'          => $request->date_ouverture,
+                'date_cloture'            => $request->date_cloture,
+                'created_by'              => Auth::id(),
             ]);
-
-            if ($request->filled('id_tribunal')) {
-                DossierTribunal::create([
-                    'id_dossier' => $dossier->id,
-                    'id_tribunal' => $request->id_tribunal,
-                    'id_degre' => $request->id_degre,
-                    'date_debut' => $request->date_debut_tribunal ?? $request->date_ouverture,
-                    'date_fin' => $request->date_fin_tribunal,
-                ]);
-            }
-
-            return $dossier;
         });
 
-        return redirect()
-            ->route('dossiers.show', $dossier)
-            ->with('success', "تم إنشاء الملف القضائي « {$dossier->numero_dossier_interne} » بنجاح.");
+        return redirect()->route('dossiers.index')->with('success', 'تم إنشاء الملف بنجاح.');
     }
 
     // ================= SHOW =================
@@ -191,11 +176,18 @@ class DossierJudiciaireController extends Controller
     // ================= UPDATE =================
     public function update(UpdateDossierRequest $request, DossierJudiciaire $dossier): RedirectResponse
     {
-        DB::transaction(fn() => $dossier->update($request->validated()));
+        // Assemblage du numéro Mahakim à partir des 3 champs
+        $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
 
-        return redirect()
-            ->route('dossiers.show', $dossier)
-            ->with('success', 'تم تحديث الملف القضائي بنجاح.');
+        $dossier->update([
+            'numero_dossier_tribunal' => $numero_mahakim,
+            'id_type_affaire'         => $request->id_type_affaire,
+            'id_statut_dossier'       => $request->id_statut_dossier,
+            'date_ouverture'          => $request->date_ouverture,
+            'date_cloture'            => $request->date_cloture,
+        ]);
+
+        return redirect()->route('dossiers.show', $dossier)->with('success', 'تم تحديث الملف بنجاح.');
     }
 
     // ================= DESTROY =================

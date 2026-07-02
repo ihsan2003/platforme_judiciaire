@@ -17,8 +17,11 @@ class StoreDossierRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'numero_dossier_interne'  => 'required|string|unique:dossier_judiciaires',
-            'numero_dossier_tribunal' => 'nullable|string',
+            'numero_dossier_tribunal' => [
+                'nullable',
+                'string',
+                'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'
+            ],
             'id_type_affaire'         => 'required|exists:type_affaires,id',
             'date_ouverture'          => 'required|date',
             'date_cloture'            => 'nullable|date|after:date_ouverture',
@@ -28,10 +31,6 @@ class StoreDossierRequest extends FormRequest
     public function messages(): array
     {
         return [
-            // numéro dossier
-            'numero_dossier_interne.required' => 'رقم الملف الداخلي مطلوب.',
-            'numero_dossier_interne.unique'   => 'هذا الرقم مستخدم بالفعل.',
-
             // type affaire
             'id_type_affaire.required'       => 'يرجى اختيار نوع القضية.',
             'id_type_affaire.exists'         => 'نوع القضية غير صالح.',
@@ -42,13 +41,13 @@ class StoreDossierRequest extends FormRequest
 
             'date_cloture.date'              => 'تاريخ الإغلاق غير صالح.',
             'date_cloture.after'             => 'يجب أن يكون تاريخ الإغلاق بعد تاريخ الفتح.',
+            'numero_dossier_tribunal.regex'  => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'numero_dossier_interne' => 'رقم الملف الداخلي',
             'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
             'id_type_affaire' => 'نوع القضية',
             'date_ouverture' => 'تاريخ فتح الملف',

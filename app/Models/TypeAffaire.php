@@ -12,7 +12,9 @@ class TypeAffaire extends Model
 
     protected $table = 'type_affaires';
     
-    protected $fillable = ['affaire'];
+    protected $fillable = [
+        'affaire',
+        'code'];
 
     public function dossiers()
     {

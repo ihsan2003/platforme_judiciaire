@@ -198,7 +198,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-muted small fw-semibold ps-3">
-                        الرقم الداخلي
+                        رقم الملف
                     </th>
 
                     <th class="text-muted small fw-semibold">
@@ -235,7 +235,7 @@
 
                     <td class="ps-3">
                         <span class="fw-semibold">
-                            {{ $dossier->numero_dossier_interne }}
+                            #{{ $dossier->id }}
                         </span>
                     </td>
 
@@ -330,7 +330,7 @@
                                 trigger-class="btn btn-sm btn-outline-danger"
                                 trigger-icon="bi-archive"
                                 title="أرشفة الملف القضائي"
-                                :description="'الملف رقم ' . $dossier->numero_dossier_interne"
+                                :description="'الملف رقم #' . $dossier->id"
                                 warning="هل أنت متأكد من أرشفة هذا الملف؟ هذا الإجراء سيؤدي إلى نقل الملف إلى الأرشيف."
                                 confirm-label="نعم، أرشفة"
                             />

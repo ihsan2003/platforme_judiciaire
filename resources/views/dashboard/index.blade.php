@@ -763,6 +763,17 @@
     const TOTAL_KEY  = "total_dossiers"; // clé du count
     const TRIB_KEY   = "total_tribunaux";
 
+    // ── Fonction de normalisation des noms de régions ──────────────────────────
+    function normalizeRegionName(name) {
+        if (!name) return '';
+        return name
+            .trim()
+            .replace(/\s+/g, ' ')           // Normaliser les espaces
+            .replace(/–|—|−/g, '-')          // Normaliser les tirets
+            .toLowerCase()
+            .replace(/[\u064B-\u0652]/g, ''); // Supprimer les diacritiques arabes
+    }
+
     // ── Éléments DOM ──────────────────────────────────────────────────────────
     const wrapper  = document.getElementById('morocco-map-wrapper');
     const svgEl    = document.getElementById('morocco-map');
@@ -779,11 +790,21 @@
         d3.json(GEOJSON)
     ])
     .then(([apiData, geoData]) => {
+        // Correction : Utiliser remove() ou masquer avec une classe Bootstrap pour forcer la disparition
+        loader.classList.add('d-none'); 
         loader.style.display = 'none';
 
-        // Map région → données
+        // ── Créer une Map normalisée pour la recherche ────────────────────────
         const counts = new Map();
-        apiData.forEach(d => counts.set(d[DB_KEY]?.trim(), d));
+        
+        apiData.forEach(d => {
+            const originalName = d[DB_KEY]?.trim();
+            const normalizedName = normalizeRegionName(originalName);
+            counts.set(normalizedName, d);
+        });
+
+        console.log('✓ Données API reçues:', apiData.length, 'régions');
+        console.log('✓ Noms API normalisés:', Array.from(counts.keys()));
 
         const max = d3.max(apiData, d => +d[TOTAL_KEY]) || 1;
 
@@ -799,8 +820,7 @@
         const H = wrapper.clientHeight;
 
         const projection = d3.geoMercator()
-            .fitSize([W - 10, H - 10], geoData)
-            .translate([W / 2, H / 2]);
+            .fitSize([W - 20, H - 20], geoData); // fitSize gère déjà le centrage et la translation
 
         const pathGen = d3.geoPath().projection(projection);
 
@@ -814,8 +834,14 @@
             .join('path')
             .attr('d', pathGen)
             .attr('fill', d => {
-                const name = d.properties[GEO_KEY]?.trim();
-                const row  = counts.get(name);
+                const geoName = d.properties[GEO_KEY]?.trim();
+                const normalizedGeoName = normalizeRegionName(geoName);
+                const row = counts.get(normalizedGeoName);
+                
+                if (!row) {
+                    console.warn('⚠ Pas de match pour:', geoName, '(normalisé:', normalizedGeoName + ')');
+                }
+                
                 return row ? colorScale(+row[TOTAL_KEY]) : noDataColor;
             })
             .attr('stroke', '#fff')
@@ -823,8 +849,9 @@
             .style('cursor', 'pointer')
             .style('transition', 'opacity .15s')
             .on('mousemove', function (event, d) {
-                const name = d.properties[GEO_KEY]?.trim() ?? '—';
-                const row  = counts.get(name);
+                const geoName = d.properties[GEO_KEY]?.trim() ?? '—';
+                const normalizedGeoName = normalizeRegionName(geoName);
+                const row = counts.get(normalizedGeoName);
                 const tot  = row ? Number(row[TOTAL_KEY]).toLocaleString('ar-MA') : '٠';
                 const trib = row ? Number(row[TRIB_KEY]).toLocaleString('ar-MA') : '٠';
 
@@ -846,7 +873,7 @@
                 tooltip.innerHTML = `
                     <div style="font-weight:700;font-size:14px;margin-bottom:6px;
                                 border-bottom:1px solid rgba(255,255,255,.25);
-                                padding-bottom:6px;">${name}</div>
+                                padding-bottom:6px;">${geoName}</div>
                     <div style="display:flex;justify-content:space-between;gap:16px;">
                         <span>عدد الملفات</span>
                         <span style="color:#93c5fd;font-weight:700;">${tot}</span>
@@ -904,13 +931,16 @@
                     </td>
                 </tr>`;
         }).join('');
+        
+        console.log('✓ Carte rendue avec succès!');
     })
     .catch(err => {
-        console.error('Erreur carte :', err);
+        console.error('✗ Erreur carte :', err);
         loader.innerHTML = `
             <div class="text-center text-danger p-4">
                 <i class="bi bi-exclamation-triangle fs-3"></i>
                 <p class="mt-2 mb-0">تعذر تحميل الخريطة</p>
+                <small class="text-muted d-block mt-2">${err.message}</small>
             </div>`;
     });
 })();

@@ -14,7 +14,6 @@ class DossierJudiciaire extends Model
     protected $table = 'dossier_judiciaires';
 
     protected $fillable = [
-        'numero_dossier_interne',
         'numero_dossier_tribunal',
         'id_type_affaire',
         'id_statut_dossier',
