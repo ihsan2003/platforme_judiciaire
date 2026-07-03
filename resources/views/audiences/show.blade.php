@@ -144,7 +144,7 @@
                 <div class="row g-3">
 
                     {{-- حضور الأطراف --}}
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <div class="p-3 rounded border h-100">
 
                             <div class="small text-muted fw-semibold mb-2">
@@ -166,7 +166,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <div class="p-3 rounded border h-100">
 
                             <div class="small text-muted fw-semibold mb-2">
@@ -174,6 +174,28 @@
                             </div>
 
                             @if($audience->presence_defendeur)
+                                <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
+                                    <i class="bi bi-check-circle ms-1"></i>
+                                    حاضر
+                                </span>
+                            @else
+                                <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25">
+                                    <i class="bi bi-x-circle ms-1"></i>
+                                    غائب
+                                </span>
+                            @endif
+
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded border h-100">
+
+                            <div class="small text-muted fw-semibold mb-2">
+                                حضور محامي المؤسسة
+                            </div>
+
+                            @if($audience->presence_avocat_institution)
                                 <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                     <i class="bi bi-check-circle ms-1"></i>
                                     حاضر

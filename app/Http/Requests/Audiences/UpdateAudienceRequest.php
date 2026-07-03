@@ -42,6 +42,7 @@ class UpdateAudienceRequest extends FormRequest
             'date_prochaine_audience' => 'nullable|date|after_or_equal:date_audience',
             'presence_demandeur'      => 'boolean',
             'presence_defendeur'      => 'boolean',
+            'presence_avocat_institution' => 'boolean',
             'resultat_audience'       => 'nullable|string|max:2000',
             'actions_demandees'       => 'nullable|string|max:2000',
         ];
@@ -57,6 +58,7 @@ class UpdateAudienceRequest extends FormRequest
         $this->merge([
             'presence_demandeur' => $this->boolean('presence_demandeur'),
             'presence_defendeur' => $this->boolean('presence_defendeur'),
+            'presence_avocat_institution' => $this->boolean('presence_avocat_institution'),
         ]);
     }
 }
