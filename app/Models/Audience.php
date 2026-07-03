@@ -18,7 +18,7 @@ class Audience extends Model
         'id_juge',
         'presence_demandeur',
         'presence_defendeur',
-        'presence_avocat_institution',
+        'presence_avocat_entraide',
         'date_audience',
         'date_prochaine_audience',
         'resultat_audience',
@@ -28,7 +28,7 @@ class Audience extends Model
     protected $casts = [
         'presence_demandeur' => 'boolean',
         'presence_defendeur' => 'boolean',
-        'presence_avocat_institution' => 'boolean',
+        'presence_avocat_entraide' => 'boolean', 
         'date_audience' => 'date',
         'date_prochaine_audience' => 'date'
     ];

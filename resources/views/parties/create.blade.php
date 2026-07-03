@@ -122,7 +122,6 @@
 
                         <label class="form-label fw-semibold small">
                             رقم التعريف
-                            <span class="text-danger">*</span>
                         </label>
 
                         <div class="input-group">
@@ -131,8 +130,7 @@
                                    name="identifiant_unique"
                                    class="form-control font-ltr @error('identifiant_unique') is-invalid @enderror"
                                    value="{{ old('identifiant_unique') }}"
-                                   placeholder="CIN, RC, CNSS..."
-                                   required>
+                                   placeholder="CIN, RC, CNSS...">
 
                             <span class="input-group-text bg-white">
                                 <i class="bi bi-fingerprint text-muted"></i>
@@ -147,7 +145,7 @@
                         @enderror
 
                         <div class="form-text">
-                            CIN للأشخاص الذاتيين، و RC للأشخاص الاعتباريين.
+                            CIN للأشخاص الذاتيين، و RC للأشخاص الاعتباريين. (اختياري)
                         </div>
 
                     </div>

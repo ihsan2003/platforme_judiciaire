@@ -54,7 +54,7 @@ class DossierPartieController extends Controller
         $this->authorize('update', $dossier);
 
         $request->validate([
-            'identifiant_unique' => ['required', 'string', 'max:255'],
+            'identifiant_unique' => ['nullable', 'string', 'max:255'],
             'nom_partie'         => ['required_without:partie_id', 'nullable', 'string', 'max:255'],
             'type_personne' => ['required_without:partie_id','nullable','in:ذاتي,اعتباري'],
             'telephone'          => ['nullable', 'regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/'],
@@ -76,17 +76,32 @@ class DossierPartieController extends Controller
         } else {
             // ── Nouvelle partie ───────────────────────────────────────────
             // L'avocat est stocké directement sur la partie (RG : lien permanent)
-            $partie = Partie::firstOrCreate(
-                ['identifiant_unique' => $request->identifiant_unique],
-                [
+            // NB : le CIN est optionnel. On ne peut s'en servir comme clé de
+            // dédoublonnage (firstOrCreate) que lorsqu'il est renseigné, sinon
+            // toutes les parties sans CIN finiraient fusionnées entre elles.
+            if ($request->filled('identifiant_unique')) {
+                $partie = Partie::firstOrCreate(
+                    ['identifiant_unique' => $request->identifiant_unique],
+                    [
+                        'nom_partie'    => $request->nom_partie,
+                        'type_personne' => $request->type_personne ?? 'ذاتي',
+                        'telephone'     => $request->telephone,
+                        'email'         => $request->email,
+                        'adresse'       => $request->adresse,
+                        'id_avocat'     => $request->id_avocat,
+                    ]
+                );
+            } else {
+                $partie = Partie::create([
+                    'identifiant_unique' => null,
                     'nom_partie'    => $request->nom_partie,
                     'type_personne' => $request->type_personne ?? 'ذاتي',
                     'telephone'     => $request->telephone,
                     'email'         => $request->email,
                     'adresse'       => $request->adresse,
                     'id_avocat'     => $request->id_avocat,
-                ]
-            );
+                ]);
+            }
         }
 
         // Vérifier que cette partie n'est pas déjà dans le dossier avec ce rôle

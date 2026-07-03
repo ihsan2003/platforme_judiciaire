@@ -244,17 +244,16 @@
                 <div class="col-md-6 d-flex align-items-center">
                     <div class="form-check form-switch">
                         <input class="form-check-input"
-                               type="checkbox"
-                               name="presence_avocat_institution"
-                               value="1"
-                               id="presence_avocat_institution"
-                               @checked(old('presence_avocat_institution'))>
-                        <label class="form-check-label small fw-semibold" for="presence_avocat_institution">
+                            type="checkbox"
+                            name="presence_avocat_entraide"
+                            value="1"
+                            id="presence_avocat_entraide"
+                            @checked(old('presence_avocat_entraide', $audience->presence_avocat_entraide ?? false))>
+                        <label class="form-check-label small fw-semibold" for="presence_avocat_entraide">
                             حضور محامي المؤسسة
                         </label>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>

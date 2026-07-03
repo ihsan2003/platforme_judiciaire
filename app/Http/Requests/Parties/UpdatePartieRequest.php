@@ -18,7 +18,7 @@ class UpdatePartieRequest extends FormRequest
         return [
             'nom_partie'        => ['required', 'string', 'max:255'],
             'type_personne'     => ['required', 'in:ذاتي,اعتباري'],
-            'identifiant_unique'=> ['required', 'string', "unique:parties,identifiant_unique,{$partieId}"],
+            'identifiant_unique'=> ['nullable', 'string', "unique:parties,identifiant_unique,{$partieId}"],
             'date_naissance' => ['nullable', 'date'],
             'telephone'          => ['nullable', new Telephone],
             'email'             => ['nullable', 'email', 'max:255'],

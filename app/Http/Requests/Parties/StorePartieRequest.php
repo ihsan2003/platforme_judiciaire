@@ -17,7 +17,7 @@ class StorePartieRequest extends FormRequest
         return [
             'nom_partie'         => ['required', 'string', 'max:255'],
             'type_personne'      => ['required', 'in:ذاتي,اعتباري'],
-            'identifiant_unique' => ['required', 'string', 'unique:parties,identifiant_unique'],
+            'identifiant_unique' => ['nullable', 'string', 'unique:parties,identifiant_unique'],
             'date_naissance'     => ['nullable', 'date'],
             'telephone'          => ['nullable', new Telephone],
             'email'              => ['nullable', 'email', 'max:255'],
@@ -37,7 +37,6 @@ class StorePartieRequest extends FormRequest
             'type_personne.in'       => 'نوع الشخص يجب أن يكون طبيعي أو معنوي.',
 
             // identifiant
-            'identifiant_unique.required' => 'المعرف الفريد مطلوب.',
             'identifiant_unique.unique'   => 'هذا المعرف مستخدم بالفعل.',
 
             // date naissance

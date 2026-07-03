@@ -65,7 +65,7 @@
                     {{-- المعرف الفريد --}}
                     <div class="col-sm-5">
                         <label class="form-label fw-semibold small">
-                            المعرف الفريد <span class="text-danger">*</span>
+                            المعرف الفريد
                         </label>
 
                         <div class="input-group">
@@ -76,8 +76,7 @@
                             <input type="text"
                                    name="identifiant_unique"
                                    class="form-control @error('identifiant_unique') is-invalid @enderror"
-                                   value="{{ old('identifiant_unique', $partie->identifiant_unique) }}"
-                                   required>
+                                   value="{{ old('identifiant_unique', $partie->identifiant_unique) }}">
                         </div>
 
                         @error('identifiant_unique')
@@ -267,7 +266,7 @@
             <dl class="row mb-0">
 
                 <dt class="col-6 text-muted fw-normal">المعرف</dt>
-                <dd class="col-6 font-monospace">{{ $partie->identifiant_unique }}</dd>
+                <dd class="col-6 font-monospace">{{ $partie->identifiant_unique ?? '—' }}</dd>
 
                 <dt class="col-6 text-muted fw-normal">العمر</dt>
                 <dd class="col-6">

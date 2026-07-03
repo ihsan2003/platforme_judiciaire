@@ -29,7 +29,7 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Identifiant unique *</label>
+    <label class="form-label">Identifiant unique</label>
     <input type="text" name="identifiant_unique" class="form-control @error('identifiant_unique') is-invalid @enderror"
            value="{{ old('identifiant_unique', $partie->identifiant_unique ?? '') }}">
     @error('identifiant_unique') <div class="invalid-feedback">{{ $message }}</div> @enderror

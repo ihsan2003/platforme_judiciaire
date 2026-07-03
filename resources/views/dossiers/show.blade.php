@@ -1396,8 +1396,8 @@
                 <input type="hidden" name="partie_id" id="hidden_partie_id">
                 <div class="row g-3">
                     <div class="col-sm-6">
-                        <label class="form-label fw-semibold small">رقم التعريف <span class="text-danger">*</span></label>
-                        <input type="text" name="identifiant_unique" id="field_identifiant" class="form-control" required>
+                        <label class="form-label fw-semibold small">رقم التعريف</label>
+                        <input type="text" name="identifiant_unique" id="field_identifiant" class="form-control">
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">الاسم / التسمية الاجتماعية <span class="text-danger">*</span></label>
