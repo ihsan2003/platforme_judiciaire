@@ -195,7 +195,7 @@
                                 حضور محامي المؤسسة
                             </div>
 
-                            @if($audience->presence_avocat_institution)
+                            @if($audience->presence_avocat_entraide)
                                 <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                     <i class="bi bi-check-circle ms-1"></i>
                                     حاضر

@@ -162,7 +162,7 @@
                             <i class="bi bi-person-fill {{ $audience->presence_defendeur ? 'text-success' : 'text-danger opacity-25' }}"></i>
                         </span>
                         <span class="ms-1" title="محامي المؤسسة">
-                            <i class="bi bi-person-badge-fill {{ $audience->presence_avocat_institution ? 'text-success' : 'text-danger opacity-25' }}"></i>
+                            <i class="bi bi-person-badge-fill {{ $audience->presence_avocat_entraide ? 'text-success' : 'text-danger opacity-25' }}"></i>
                         </span>
                     </td>
                     <td class="text-muted small">

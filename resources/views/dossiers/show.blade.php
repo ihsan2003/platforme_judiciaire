@@ -741,7 +741,7 @@
                                 <i class="bi bi-person-check me-1"></i>
                                 المدعي: {{ $aud->presence_demandeur ? '✓' : '✗' }} |
                                 المدعى عليه: {{ $aud->presence_defendeur ? '✓' : '✗' }} |
-                                محامي المؤسسة: {{ $aud->presence_avocat_institution ? '✓' : '✗' }}
+                                محامي المؤسسة: {{ $aud->presence_avocat_entraide ? '✓' : '✗' }}
                             </span>
 
                             @if($aud->resultat_audience)
