@@ -35,6 +35,13 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 
+use App\Http\Controllers\RapportController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/rapports/statistiques', [RapportController::class, 'index'])->name('rapports.index');
+    Route::post('/rapports/statistiques/export', [RapportController::class, 'export'])->name('rapports.export');
+});
+
 Route::get('/api/dashboard/dossiers-par-region', [DashboardController::class, 'dossiersParRegion'])
     ->middleware('auth')
     ->name('dashboard.map.data');
