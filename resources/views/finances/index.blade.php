@@ -1,13 +1,13 @@
 {{-- resources/views/finances/index_ar.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'المالية')
+@section('title', 'الحالة المالية')
 
 @section('breadcrumb')
     <li class="breadcrumb-item">
         <a href="{{ route('dashboard') }}">الرئيسية</a>
     </li>
-    <li class="breadcrumb-item active">المالية</li>
+    <li class="breadcrumb-item active">الحالة المالية</li>
 @endsection
 
 @section('content')

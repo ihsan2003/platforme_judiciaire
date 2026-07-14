@@ -57,17 +57,22 @@ class JugementController extends Controller
                 });
             })
 
-            ->when(request('position') === 'contre', function ($q) {
-                $q->whereHas('parties', function ($query) {
-                    $query->where('est_entraide', true)
-                        ->where('jugement_parties.montant_condamne', '>', 0);
-                });
-            })
+            // Filtre position de l'institution (مع / ضد / جزئي)
+            // On s'appuie sur jugement_parties.id_position_institution
+            // (renseigné uniquement sur la ligne de la partie est_entraide = true),
+            // et non plus sur une déduction via montant_condamne.
+            ->when(in_array(request('position'), ['pour', 'contre', 'partiel']), function ($q) {
+                $labelParPosition = ['pour' => 'مع', 'contre' => 'ضد', 'partiel' => 'جزئي'];
+                $label = $labelParPosition[request('position')];
 
-            ->when(request('position') === 'pour', function ($q) {
-                $q->whereHas('parties', function ($query) {
-                    $query->where('est_entraide', true)
-                        ->where('jugement_parties.montant_condamne', '<=', 0);
+                $q->whereExists(function ($sub) use ($label) {
+                    $sub->selectRaw('1')
+                        ->from('jugement_parties')
+                        ->join('parties', 'jugement_parties.id_partie', '=', 'parties.id')
+                        ->join('position_institutions', 'jugement_parties.id_position_institution', '=', 'position_institutions.id')
+                        ->whereColumn('jugement_parties.id_jugement', 'jugements.id')
+                        ->where('parties.est_entraide', true)
+                        ->where('position_institutions.position', $label);
                 });
             })
 
@@ -82,6 +87,22 @@ class JugementController extends Controller
             'executes'   => Jugement::whereHas('executions')->count(),
         ];
 
+        // ─── Répartition pour / contre / partiel (source: position_institutions) ──
+        $positionStats = \App\Models\JugementPartie::query()
+            ->join('parties', 'jugement_parties.id_partie', '=', 'parties.id')
+            ->join('position_institutions', 'jugement_parties.id_position_institution', '=', 'position_institutions.id')
+            ->where('parties.est_entraide', true)
+            ->selectRaw('position_institutions.position, COUNT(*) as total')
+            ->groupBy('position_institutions.position')
+            ->pluck('total', 'position');
+
+        $stats['pour']    = (int) ($positionStats['مع'] ?? 0);
+        $stats['contre']  = (int) ($positionStats['ضد'] ?? 0);
+        $stats['partiel'] = (int) ($positionStats['جزئي'] ?? 0);
+
+        // Positions indexées par id, pour affichage du badge dans le tableau
+        $positionsParId = \App\Models\PositionInstitution::all()->keyBy('id');
+
         $juges = Juge::orderBy('nom_complet')->get();
 
         // IMPORTANT
@@ -91,7 +112,8 @@ class JugementController extends Controller
             'jugements',
             'stats',
             'juges',
-            'degres'
+            'degres',
+            'positionsParId'
         ));
     }
 
@@ -273,22 +295,26 @@ class JugementController extends Controller
     // SHOW
     // ─────────────────────────────────────────
     public function show(Jugement $jugement)
-    {
-        $jugement->load([
-            'dossierTribunal.dossier.typeAffaire',
-            'dossierTribunal.dossier.statut',
-            'dossierTribunal.tribunal',
-            'juge',
-            'createdBy',
-            'parties.documents',
-            'finance',
-            'recours.typeRecours',
-            'executions.statut',
-            'executions.responsable',
-        ]);
-
-        return view('jugements.show', compact('jugement'));
-    }
+        {
+            $jugement->load([
+                'dossierTribunal.dossier.typeAffaire',
+                'dossierTribunal.dossier.statut',
+                'dossierTribunal.tribunal',
+                'juge',
+                'createdBy',
+                'parties.documents',
+                'finance',
+                'recours.typeRecours',
+                'executions.statut',
+                'executions.responsable',
+            ]);
+    
+            // Chargé une seule fois pour retrouver le libellé de "الصفة"
+            // à partir de $partie->pivot->id_position_institution dans la vue.
+            $positionsInstitution = \App\Models\PositionInstitution::pluck('position', 'id');
+    
+            return view('jugements.show', compact('jugement', 'positionsInstitution'));
+        }
 
     // ─────────────────────────────────────────
     // EDIT
@@ -322,18 +348,35 @@ class JugementController extends Controller
         DB::transaction(function () use ($request, $jugement) {
 
             $jugement->update(
-                $request->safe()->except('parties', 'montants')
+                $request->safe()->except('parties', 'montants', 'position_institution_etab')
             );
 
             $syncData = collect($request->parties ?? [])
                 ->mapWithKeys(function ($partieId) use ($request) {
+                    $partie     = \App\Models\Partie::find($partieId);
+                    $positionId = $partie?->est_entraide
+                        ? $request->input('position_institution_etab')
+                        : null;
+
                     return [$partieId => [
-                        'id_position_institution' => null,
+                        'id_position_institution' => $positionId,
                         'montant_condamne' => $request->montants[$partieId] ?? null,
                     ]];
                 })->all();
 
             $jugement->parties()->sync($syncData);
+
+            // ── Recalcul de la Finance après modification des montants ──
+            $montantTotal = collect($request->montants ?? [])
+                ->filter(fn($v) => is_numeric($v) && $v > 0)
+                ->sum();
+
+            if ($montantTotal > 0) {
+                $jugement->finance()->updateOrCreate(
+                    ['id_jugement' => $jugement->id],
+                    ['montant_condamne' => $montantTotal]
+                );
+            }
         });
 
 

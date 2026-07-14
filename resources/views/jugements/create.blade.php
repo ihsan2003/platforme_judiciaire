@@ -267,8 +267,7 @@
                                 <input type="hidden"
                                     name="parties[]"
                                     id="hidden_etab_partie"
-                                    value="{{ $institution->partie->id }}"
-                                    disabled>
+                                    value="{{ $institution->partie->id }}">
 
                                 <div class="mt-4">
 
@@ -893,9 +892,9 @@
         blocEtab.classList.toggle('d-none', !etabCondamne);
     }
 
-    if (hiddenEtab) {
-        hiddenEtab.disabled = !etabCondamne;
-    }
+    // NOTE: hiddenEtab ne doit JAMAIS être désactivé — l'institution doit
+    // toujours avoir une ligne dans jugement_parties, quelle que soit sa
+    // position (مع / ضد / جزئي). Seul le montant dépend de la position.
 
     if (montantEtab) {
 
@@ -994,8 +993,6 @@
 
                 bloc.classList.remove('d-none');
 
-                hiddenPartie.disabled = false;
-
                 card.classList.add('danger');
 
             }
@@ -1004,8 +1001,6 @@
 
                 bloc.classList.remove('d-none');
 
-                hiddenPartie.disabled = false;
-
                 card.classList.add('warning');
 
             }
@@ -1013,8 +1008,6 @@
             else {
 
                 bloc.classList.add('d-none');
-
-                hiddenPartie.disabled = true;
             }
         }
 

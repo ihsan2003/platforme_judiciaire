@@ -140,6 +140,7 @@
                         <tr>
                             <th class="pe-3 small text-muted">الاسم</th>
                             <th class="small text-muted">المعرف</th>
+                            <th class="small text-muted">الصفة</th>
                             <th class="small text-muted">المبلغ المحكوم به</th>
                         </tr>
                     </thead>
@@ -155,6 +156,10 @@
 
                             <td class="text-muted small font-monospace">
                                 {{ $partie->identifiant_unique }}
+                            </td>
+
+                            <td>
+                                {{ $positionsInstitution[$partie->pivot->id_position_institution] ?? '—' }}
                             </td>
 
                             <td>

@@ -131,63 +131,41 @@ class DashboardController extends Controller
             'total'       => $totalDossiersAffaire,
         ];
         
-        // ─── 2. RÉSULTATS POUR / CONTRE L'ÉTABLISSEMENT ──────────────────────────────
-        // L'établissement est identifié par Partie.est_entraide = true
-        // On passe par jugement_parties → parties.est_entraide
-        // puis on compte les jugements où l'établissement est demandeur (المدعي)
-        // vs défendeur (المدعى عليه) selon le type de partie dans le dossier
-        //
-        // Logique retenue (plus fiable car position_institution peut être NULL) :
-        //   - On regarde si l'établissement figure comme المدعي (demandeur) dans le dossier
-        //   - Si oui et jugement favorable → POUR ; sinon → CONTRE
-        //   - "favorable" = déterminé par est_definitif + qui est condamné dans jugement_parties
-        //
-        // Approche simplifiée et robuste : on cherche dans les finances
-        //   - Pour l'établissement : jugements où une partie est_entraide ET n'est PAS dans jugement_parties
-        //     (l'établissement n'est pas la partie condamnée)
-        //   - Contre : jugements où une partie est_entraide EST dans jugement_parties avec montant_condamne > 0
+        // ─── 2. RÉSULTATS POUR / CONTRE / PARTIEL DE L'ÉTABLISSEMENT ─────────────────
+        // On utilise directement la donnée saisie dans jugement_parties.id_position_institution
+        // (مع / ضد / جزئي), renseignée UNIQUEMENT sur la ligne de la partie de
+        // l'établissement (parties.est_entraide = true) — voir JugementController::store().
+        // C'est la source de vérité : plus fiable qu'une déduction, et couvre le "جزئي".
         
-        $jugementsPourContre = \App\Models\Jugement::query()
-            ->whereHas('dossierTribunal.dossier.dossierParties.partie', fn($q) => $q->where('est_entraide', true))
-            ->with([
-                'parties:id,nom_partie,est_entraide',
-                'finance:id,id_jugement,montant_condamne,montant_paye',
-                'dossierTribunal.dossier.dossierParties.partie:id,est_entraide,nom_partie',
-                'dossierTribunal.dossier.dossierParties.typePartie:id,type_partie',
-            ])
-            ->get();
+        $positionStats = \App\Models\JugementPartie::query()
+            ->join('parties', 'jugement_parties.id_partie', '=', 'parties.id')
+            ->join('position_institutions', 'jugement_parties.id_position_institution', '=', 'position_institutions.id')
+            ->where('parties.est_entraide', true)
+            ->selectRaw('position_institutions.position, COUNT(*) as total, SUM(jugement_parties.montant_condamne) as montant')
+            ->groupBy('position_institutions.position')
+            ->get()
+            ->keyBy('position');
         
-        $pour   = 0;
-        $contre = 0;
+        // مع = pour, ضد = contre, جزئي = partiel
+        $pour    = (int) ($positionStats->get('مع')->total ?? 0);
+        $contre  = (int) ($positionStats->get('ضد')->total ?? 0);
+        $partiel = (int) ($positionStats->get('جزئي')->total ?? 0);
         
-        foreach ($jugementsPourContre as $jugement) {
-            // L'établissement est-il parmi les parties CONDAMNÉES dans ce jugement ?
-            $etablissementCondamne = $jugement->parties
-                ->where('est_entraide', true)
-                ->isNotEmpty();
-        
-            if ($etablissementCondamne) {
-                $contre++;
-            } else {
-                $pour++;
-            }
-        }
-        
-        $totalResultats = $pour + $contre;
+        $totalResultats = $pour + $contre + $partiel;
         
         $resultatsJugements = [
             'pour'            => $pour,
             'contre'          => $contre,
+            'partiel'         => $partiel,
             'total'           => $totalResultats,
             'pct_pour'        => $totalResultats > 0 ? round($pour / $totalResultats * 100, 1) : 0,
             'pct_contre'      => $totalResultats > 0 ? round($contre / $totalResultats * 100, 1) : 0,
+            'pct_partiel'     => $totalResultats > 0 ? round($partiel / $totalResultats * 100, 1) : 0,
         ];
         
-        // ─── 3. MONTANTS FINANCIERS (POUR / CONTRE L'ÉTABLISSEMENT) ──────────────────
-        // On s'appuie sur la table finances reliée aux jugements
-        // Pour chaque jugement :
-        //   - Si l'établissement est condamné (dans jugement_parties) → montant CONTRE
-        //   - Sinon → montant POUR (l'établissement est le bénéficiaire de la condamnation)
+        // ─── 3. MONTANTS FINANCIERS PAR POSITION (POUR / CONTRE / PARTIEL) ───────────
+        // Même logique que ci-dessus, mais sur le montant_condamne de la ligne
+        // jugement_parties de l'établissement (et non plus une simple soustraction).
         
         $statsFinances = \App\Models\Finance::query()
             ->join('jugements', 'finances.id_jugement', '=', 'jugements.id')
@@ -201,25 +179,19 @@ class DashboardController extends Controller
             ->whereNotNull('finances.montant_condamne')
             ->first();
         
-        // Montants ventilés pour/contre via jugement_parties + est_entraide
-        $montantContre = \App\Models\Finance::query()
-            ->join('jugements', 'finances.id_jugement', '=', 'jugements.id')
-            ->join('jugement_parties', 'jugements.id', '=', 'jugement_parties.id_jugement')
-            ->join('parties', 'jugement_parties.id_partie', '=', 'parties.id')
-            ->where('parties.est_entraide', true)
-            ->whereNotNull('jugement_parties.montant_condamne')
-            ->sum('jugement_parties.montant_condamne');
+        $montantPour    = (float) ($positionStats->get('مع')->montant ?? 0);
+        $montantContre  = (float) ($positionStats->get('ضد')->montant ?? 0);
+        $montantPartiel = (float) ($positionStats->get('جزئي')->montant ?? 0);
         
-        $montantTotal = (float) ($statsFinances->total_condamne ?? 0);
-        $montantContre = (float) $montantContre;
-        $montantPour   = max(0, $montantTotal - $montantContre);
-        $montantPaye   = (float) ($statsFinances->total_paye ?? 0);
+        $montantTotal   = (float) ($statsFinances->total_condamne ?? 0);
+        $montantPaye    = (float) ($statsFinances->total_paye ?? 0);
         $montantRestant = max(0, $montantTotal - $montantPaye);
         
         $statsFinancesGraphe = [
             'montant_total'   => $montantTotal,
             'montant_pour'    => $montantPour,
             'montant_contre'  => $montantContre,
+            'montant_partiel' => $montantPartiel,
             'montant_paye'    => $montantPaye,
             'montant_restant' => $montantRestant,
             'nb_dossiers'     => (int) ($statsFinances->nb_dossiers ?? 0),

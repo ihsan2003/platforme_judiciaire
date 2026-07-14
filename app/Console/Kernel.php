@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
         // ── Optionnel : une deuxième passe en milieu de journée ───────────
         // pour les audiences créées après 7h
         $schedule->command('notifications:generer')
-                 ->dailyAt('13:00')
+                 ->dailyAt('13:47')
                  ->withoutOverlapping();
     }
 

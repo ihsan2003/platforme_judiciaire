@@ -107,6 +107,9 @@
                             {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
                             ({{ $dt?->degre?->degre_juridiction ?? '—' }})
                         </div>
+                        {{-- Champ caché indispensable : le <div> ci-dessus n'est
+                             qu'un affichage, il n'envoie aucune valeur au serveur. --}}
+                        <input type="hidden" name="id_dossier_tribunal" value="{{ $dt?->id }}">
                         <div class="form-text">لا يمكن تغيير الملف بعد إنشاء الحكم.</div>
                     </div>
 
@@ -268,8 +271,7 @@
                         <input type="hidden"
                                name="parties[]"
                                id="hidden_etab_partie"
-                               value="{{ $institution->partie->id }}"
-                               disabled>
+                               value="{{ $institution->partie->id }}">
 
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-danger text-white border-danger">درهم</span>
@@ -515,9 +517,9 @@ function onPositionChange(radio) {
     if (blocEtab) {
         blocEtab.classList.toggle('d-none', !etabCondamne);
     }
-    if (hiddenEtab) {
-        hiddenEtab.disabled = !etabCondamne;
-    }
+    // NOTE: hiddenEtab ne doit JAMAIS être désactivé — l'institution doit
+    // toujours avoir une ligne dans jugement_parties, quelle que soit sa
+    // position (مع / ضد / جزئي). Seul le montant dépend de la position.
     if (montantEtab) {
         montantEtab.required = etabCondamne;
         if (!etabCondamne) montantEtab.value = '';
