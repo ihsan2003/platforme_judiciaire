@@ -58,7 +58,7 @@
 
                 </div>
 
-                <div>
+                <div class="d-flex flex-column">
 
                     <h4 class="fw-bold mb-0 font-monospace">
                         {{ $execution->numero_dossier_execution }}
@@ -66,12 +66,23 @@
 
                     @if($dossier)
 
-                        <a href="{{ route('dossiers.show', $dossier) }}"
-                           class="text-muted small text-decoration-none">
+                        <a href="{{ route('dossiers.show', $dossier) }}" class="text-decoration-none">
 
                             <i class="bi bi-folder2-open ms-1"></i>
 
-                            {{ $dossier->numero_dossier_interne }}
+                            {{ $dossier->numero_dossier_tribunal }}
+
+                        </a>
+
+                    @endif
+
+                    @if($jugement)
+
+                        <a href="{{ route('jugements.show', $jugement) }}" class="text-decoration-none">
+
+                            <i class="bi bi-hammer ms-1"></i>
+
+                            {{ $jugement->date_jugement }}
 
                         </a>
 

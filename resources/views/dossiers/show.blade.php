@@ -5,7 +5,7 @@
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dossiers.index') }}">الملفات</a></li>
-    <li class="breadcrumb-item active">#{{ $dossier->id }}</li>
+    <li class="breadcrumb-item active">{{ $dossier->id }}</li>
 @endsection
 
 @push('styles')
@@ -501,10 +501,12 @@
                                     : ['success', 'person'];
                             @endphp
 
+
                             <span class="badge bg-{{ $badge[0] }} text-white">
                                 <i class="bi bi-{{ $badge[1] }} me-1"></i>
                                 {{ $dp->partie->type_personne ?? '—' }}
                             </span>
+                            
                         </td>
 
                         <td>
@@ -559,6 +561,7 @@
                 </tbody>
 
             </table>
+            
         </div>
 
         @endif

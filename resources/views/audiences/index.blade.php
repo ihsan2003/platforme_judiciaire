@@ -101,13 +101,13 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
         <h5 class="mb-0 fw-semibold">
-            <i class="bi bi-gavel ml-2 text-primary"></i>مدرج الجلسات
+            <i class="bi bi-gavel ml-2 text-primary"></i> الجلسات
             <span class="badge bg-primary mr-2">{{ $audiences->total() }}</span>
         </h5>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 text-end">
+        <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
                     <th class="pr-3 text-muted small fw-semibold">التاريخ</th>
@@ -137,7 +137,7 @@
                         @if($audience->dossierTribunal?->dossier)
                             <a href="{{ route('dossiers.show', $audience->dossierTribunal->dossier) }}"
                                class="text-decoration-none fw-semibold text-primary">
-                                {{ $audience->dossierTribunal->dossier->numero_dossier_interne }}
+                                {{ $audience->dossierTribunal->dossier->numero_dossier_tribunal }}
                             </a>
                         @else
                             <span class="text-muted">—</span>
@@ -147,7 +147,7 @@
                         {{ $audience->dossierTribunal?->tribunal?->nom_tribunal ?? '—' }}
                     </td>
                     <td>
-                        <span class="badge bg-info bg-opacity-15 text-dark border border-info border-opacity-25">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $audience->typeAudience?->type_audience ?? '—' }}
                         </span>
                     </td>

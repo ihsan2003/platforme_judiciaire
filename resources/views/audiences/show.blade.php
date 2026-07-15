@@ -114,7 +114,7 @@
                 @if($dossier)
                     <a href="{{ route('dossiers.show', $dossier) }}"
                        class="text-decoration-none text-primary">
-                        {{ $dossier->numero_dossier_interne }}
+                        {{ $dossier->numero_dossier_tribunal }}
                     </a>
                 @else
                     —

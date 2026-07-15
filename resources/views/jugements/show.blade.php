@@ -11,7 +11,7 @@
         <a href="{{ route('jugements.index') }}">الأحكام</a>
     </li>
     <li class="breadcrumb-item active">
-        الحكم #{{ $jugement->id }}
+        الحكم {{ $jugement->id }}
     </li>
 @endsection
 
@@ -37,7 +37,7 @@
 
                     <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
                        class="text-decoration-none">
-                        {{ $jugement->dossierTribunal->dossier->numero_dossier_interne ?? '—' }}
+                        {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal ?? '—' }}
                     </a>
                 </div>
             </div>
@@ -79,8 +79,13 @@
             </div>
 
             <div class="col-sm-3">
-                <strong>الملف :</strong>
-                {{ $jugement->dossierTribunal->dossier->numero_dossier_interne ?? '—' }}
+                <strong>ترتيب الملف :</strong>
+                {{ $jugement->dossierTribunal->dossier->id ?? '—' }}
+            </div>
+
+            <div class="col-sm-3">
+                <strong>قضية الملف :</strong>
+                {{ $jugement->dossierTribunal->dossier->id_type_affaire->typeAffaire ?? '—' }}
             </div>
 
             <div class="col-sm-3">
@@ -88,10 +93,6 @@
                 {{ $jugement->dossierTribunal->dossier->statut->statut_dossier ?? '—' }}
             </div>
 
-            <div class="col-sm-3">
-                <strong>تم الإنشاء بواسطة :</strong>
-                {{ $jugement->createdBy->name ?? '—' }}
-            </div>
 
         </div>
     </div>

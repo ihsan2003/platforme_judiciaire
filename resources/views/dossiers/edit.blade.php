@@ -5,7 +5,7 @@
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('dossiers.index') }}">الملفات</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('dossiers.show', $dossier) }}">#{{ $dossier->id }}</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('dossiers.show', $dossier) }}">{{ $dossier->id }}</a></li>
     <li class="breadcrumb-item active">تعديل</li>
 @endsection
 
@@ -17,7 +17,7 @@
             <i class="bi bi-pencil-square text-warning me-2"></i>تعديل الملف القضائي
         </h4>
         <p class="text-muted small mb-0">
-            أنت بصدد تعديل الملف رقم <strong>#{{ $dossier->id }}</strong>
+            أنت بصدد تعديل الملف رقم <strong>{{ $dossier->id }}</strong>
         </p>
     </div>
     <div class="d-flex gap-2">
@@ -71,7 +71,6 @@
 
                     <div class="col-12">
                         <div class="p-3 bg-light rounded border border-warning border-opacity-25">
-                            <label class="form-label fw-bold small mb-3 text-warning">تعديل رقم ملف المحكمة (Mahakim)</label>
                             <div class="row g-2 align-items-end">
                                 <div class="col-md-4">
                                     <label class="small mb-1">السنة</label>
@@ -123,8 +122,8 @@
             </div>
             <div class="card-body small">
                 <dl class="row mb-0">
-                    <dt class="col-5 text-muted">رقم النظام</dt>
-                    <dd class="col-7 fw-bold">#{{ $dossier->id }}</dd>
+                    <dt class="col-5 text-muted">الرقم</dt>
+                    <dd class="col-7 fw-bold">{{ $dossier->id }}</dd>
 
                     <dt class="col-5 text-muted">تاريخ الإنشاء</dt>
                     <dd class="col-7">{{ $dossier->created_at->format('d/m/Y') }}</dd>
@@ -136,7 +135,7 @@
         </div>
 
         <div class="d-grid gap-2 mt-4">
-            <button type="submit" class="btn btn-warning fw-bold py-2">
+            <button type="submit" class="btn btn-warning py-2">
                 <i class="bi bi-check-lg me-1"></i>حفظ التعديلات
             </button>
             <a href="{{ route('dossiers.show', $dossier) }}" class="btn btn-outline-secondary">

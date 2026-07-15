@@ -25,7 +25,6 @@ class ExecutionController extends Controller
     public function index()
     {
         $executions = Execution::with([
-                'jugement.dossierTribunal.dossier',
                 'jugement.dossierTribunal.tribunal',
                 'jugement.juge',
                 'statut',
@@ -46,7 +45,7 @@ class ExecutionController extends Controller
                             function ($dossier) use ($v) {
 
                                 $dossier->where(
-                                    'numero_dossier_interne',
+                                    'numero_dossier_tribunal',
                                     'like',
                                     "%{$v}%"
                                 );

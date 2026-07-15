@@ -101,67 +101,6 @@
 
 </div>
 
-{{-- ══ وضعية المؤسسة (مع / جزئي / ضد) ══ --}}
-<div class="row g-3 mb-4" dir="rtl">
-
-    @php
-        $totalPosition = $stats['pour'] + $stats['partiel'] + $stats['contre'];
-        $pctPourP    = $totalPosition > 0 ? round($stats['pour']    / $totalPosition * 100) : 0;
-        $pctPartielP = $totalPosition > 0 ? round($stats['partiel'] / $totalPosition * 100) : 0;
-        $pctContreP  = $totalPosition > 0 ? round($stats['contre']  / $totalPosition * 100) : 0;
-    @endphp
-
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-
-                <h6 class="fw-semibold mb-3">
-                    <i class="bi bi-bar-chart-fill ms-2 text-primary"></i>
-                    وضعية المؤسسة في الأحكام
-                </h6>
-
-                <div class="row g-3 align-items-center">
-
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi bi-trophy-fill text-success"></i>
-                            <span class="small text-muted flex-fill">لصالح المؤسسة (مع)</span>
-                            <span class="fw-bold text-success">{{ $stats['pour'] }}</span>
-                        </div>
-                        <div class="progress" style="height:8px">
-                            <div class="progress-bar bg-success" style="width:{{ $pctPourP }}%"></div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi bi-dash-circle" style="color:#BA7517"></i>
-                            <span class="small text-muted flex-fill">جزئي</span>
-                            <span class="fw-bold" style="color:#BA7517">{{ $stats['partiel'] }}</span>
-                        </div>
-                        <div class="progress" style="height:8px">
-                            <div class="progress-bar" style="width:{{ $pctPartielP }}%;background:#BA7517"></div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <i class="bi bi-shield-x text-danger"></i>
-                            <span class="small text-muted flex-fill">ضد المؤسسة</span>
-                            <span class="fw-bold text-danger">{{ $stats['contre'] }}</span>
-                        </div>
-                        <div class="progress" style="height:8px">
-                            <div class="progress-bar bg-danger" style="width:{{ $pctContreP }}%"></div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-</div>
 
 {{-- ══ الفلاتر ══ --}}
 <div class="card border-0 shadow-sm mb-4" dir="rtl">
@@ -333,7 +272,7 @@
                             <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
                                class="text-decoration-none fw-semibold text-primary">
 
-                                {{ $jugement->dossierTribunal->dossier->numero_dossier_interne }}
+                                {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
 
                             </a>
 

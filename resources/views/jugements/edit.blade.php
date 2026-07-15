@@ -395,7 +395,7 @@
                 <dl class="row mb-0">
                     <dt class="col-6 text-muted fw-normal">الملف</dt>
                     <dd class="col-6 fw-semibold">
-                        {{ $dt?->dossier?->numero_dossier_interne ?? '—' }}
+                        <a></a>{{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
                     </dd>
 
                     <dt class="col-6 text-muted fw-normal">المحكمة</dt>
@@ -481,7 +481,7 @@
         @if($jugement->executions->isNotEmpty())
             <div class="alert alert-danger border-0 small" dir="rtl">
                 <i class="bi bi-shield-check ms-2"></i>
-                هذا الحكم مرتبط بتنفيذ جارٍ. التعديلات محدودة.
+                هذا الحكم مرتبط بتنفيذ جارٍ. يرجى الحذر أثناء التعديل.
             </div>
         @endif
 

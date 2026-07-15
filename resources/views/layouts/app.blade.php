@@ -433,7 +433,7 @@
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
                 href="{{ route('profile.edit') }}">
-                    <i class="bi bi-person-circle"></i> ملفي الشخصي
+                    <i class="bi bi-person-circle"></i> الملف الشخصي
                 </a>
             </li>
             <li class="nav-item">
