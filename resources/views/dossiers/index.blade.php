@@ -235,11 +235,11 @@
 
                     <td class="ps-3">
                         <span class="fw-semibold">
-                            #{{ $dossier->id }}
+                            {{ $dossier->id }}
                         </span>
                     </td>
 
-                    <td class="text-muted small">
+                    <td class="fw-semibold">
                         {{ $dossier->numero_dossier_tribunal ?? '—' }}
                     </td>
 

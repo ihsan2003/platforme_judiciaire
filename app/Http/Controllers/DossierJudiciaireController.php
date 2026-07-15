@@ -47,8 +47,8 @@ class DossierJudiciaireController extends Controller
             ))
             ->when($request->search, fn($q, $v) =>
                 $q->where(fn($q) =>
-                    $q->where('numero_dossier_interne', 'like', "%{$v}%")
-                      ->orWhere('numero_dossier_tribunal', 'like', "%{$v}%")
+                    $q->where('numero_dossier_tribunal', 'like', "%{$v}%")
+                      ->orWhere('id', 'like', "%{$v}%")
                 )
             )
             ->when($request->date_debut, fn($q, $v) => $q->where('date_ouverture', '>=', $v))
@@ -142,17 +142,23 @@ class DossierJudiciaireController extends Controller
         $typesDocuments = TypeDocument::all();
         $regions = Region::orderBy('region')->get();
 
+        // Chargé une seule fois pour afficher "الصفة" dans les onglets
+        // "الأحكام" et "الوضعية المالية", à partir de
+        // $partie->pivot->id_position_institution.
+        $positionsInstitution = \App\Models\PositionInstitution::pluck('position', 'id');
+
         return view('dossiers.show', compact(
             'dossier',
             'dossierParties',
             'tribunaux',
             'typesPartie',
-            'avocats', // 🔥 IMPORTANT
+            'avocats', 
             'degresJuridiction',
             'parties',
             'stats',
             'typesDocuments',
-            'regions'
+            'regions',
+            'positionsInstitution'
         ));
     }
 

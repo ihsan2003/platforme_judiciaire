@@ -263,7 +263,7 @@
             </div>
 
             <div>
-                <h4 class="fw-bold mb-0 text-white">#{{ $dossier->id }}</h4>
+                <h4 class="fw-bold mb-0 text-white">{{ $dossier->id }}</h4>
 
                 @if($dossier->numero_dossier_tribunal)
                     <div class="small" style="opacity:.7">
@@ -1055,13 +1055,6 @@
             <div class="card-body py-2 small">
                 <div class="row g-2 mb-1">
                     <div class="col-auto text-muted"><i class="bi bi-person me-1"></i>القاضي: {{ $jug->juge->nom_complet ?? '—' }}</div>
-                    @if($jug->finance)
-                    <div class="col-auto text-muted">
-                        <i class="bi bi-cash me-1"></i>
-                        المبلغ المحكوم: <strong>{{ number_format($jug->finance->montant_condamne, 2) }} د.م</strong>
-                        — المؤدى: <strong class="text-success">{{ number_format($jug->finance->montant_paye, 2) }} د.م</strong>
-                    </div>
-                    @endif
                 </div>
                 @if($jug->recours->isNotEmpty())
                     @foreach($jug->recours as $r)
@@ -1071,6 +1064,35 @@
                         @if($r->motifs)<em class="text-muted"> — {{ Str::limit($r->motifs, 70) }}</em>@endif
                     </div>
                     @endforeach
+                @endif
+
+                @if($jug->parties->isNotEmpty())
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm table-borderless mb-0" style="font-size:.8rem">
+                        <thead>
+                            <tr class="text-muted">
+                                <th class="fw-normal">الطرف</th>
+                                <th class="fw-normal">الصفة</th>
+                                <th class="fw-normal">المبلغ المحكوم به</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($jug->parties as $p)
+                            <tr>
+                                <td>{{ $p->nom_partie }}</td>
+                                <td>{{ $positionsInstitution[$p->pivot->id_position_institution] ?? '—' }}</td>
+                                <td>
+                                    @if($p->pivot->montant_condamne)
+                                        {{ number_format($p->pivot->montant_condamne, 2) }} د.م
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
                 @endif
             </div>
         </div>
@@ -1138,6 +1160,7 @@
                     <tr>
                         <th class="small text-muted fw-semibold">الحكم</th>
                         <th class="small text-muted fw-semibold">درجة التقاضي</th>
+                        <th class="small text-muted fw-semibold">الصفة</th>
                         <th class="small text-muted fw-semibold">المحكوم به</th>
                         <th class="small text-muted fw-semibold">المؤدى</th>
                         <th class="small text-muted fw-semibold">المتبقي</th>
@@ -1157,6 +1180,12 @@
 
                         // Marquer la finance valide
                         $isValide = $financeValide && $fin->id === $financeValide->id;
+
+                        // Position de l'institution pour ce jugement (الصفة)
+                        $partieEtab = $jFin?->parties?->first(fn($p) => $p->est_entraide);
+                        $posLabel   = $partieEtab
+                            ? ($positionsInstitution[$partieEtab->pivot->id_position_institution] ?? '—')
+                            : '—';
                     @endphp
                     <tr class="{{ $isValide ? 'table-success' : '' }}">
                         <td class="fw-semibold small">
@@ -1173,6 +1202,7 @@
                                 {{ $dtFin?->degre?->degre_juridiction ?? '—' }}
                             </span>
                         </td>
+                        <td class="small">{{ $posLabel }}</td>
                         <td class="fw-semibold">{{ number_format($fin->montant_condamne, 2) }} د.م</td>
                         <td class="text-success fw-semibold">{{ number_format($fin->montant_paye, 2) }} د.م</td>
                         <td class="{{ $fin->montant_restant > 0 ? 'text-danger' : 'text-success' }} fw-semibold">
