@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Tribunal;
 use App\Models\TypeTribunal;
 use App\Models\Region;
+use App\Models\Province;
+
 
 
 class TribunalController extends Controller
@@ -19,7 +21,26 @@ class TribunalController extends Controller
             ->when(request('type'), fn($q, $v) =>
                 $q->where('id_type_tribunal', $v)
             )
-            ->orderBy('nom_tribunal')
+            ->sortable([
+                'nom' => 'nom_tribunal',
+                'type' => fn($q, $dir) => $q->orderBy(
+                    TypeTribunal::select('tribunal')
+                        ->whereColumn('type_tribunaux.id', 'tribunaux.id_type_tribunal'),
+                    $dir
+                ),
+                'province' => fn($q, $dir) => $q->orderBy(
+                    Province::select('province')
+                        ->whereColumn('provinces.id', 'tribunaux.id_province'),
+                    $dir
+                ),
+                'region' => fn($q, $dir) => $q->orderBy(
+                    Region::select('region')
+                        ->join('provinces', 'provinces.id_region', '=', 'regions.id')
+                        ->whereColumn('provinces.id', 'tribunaux.id_province')
+                        ->limit(1),
+                    $dir
+                ),
+            ], 'nom', 'asc')
             ->paginate(10);
 
         return view('tribunaux.index', compact('tribunaux'));

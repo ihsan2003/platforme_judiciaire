@@ -178,34 +178,34 @@
 
             <thead class="table-light">
                 <tr>
-                    <th class="pe-3 text-muted small fw-semibold">
+                    <x-sortable-th column="numero" class="pe-3 text-muted small fw-semibold">
                         رقم التنفيذ
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-muted small fw-semibold">
                         الحكم / الملف
                     </th>
-
+ 
                     <th class="text-muted small fw-semibold">
                         المحكمة
                     </th>
-
-                    <th class="text-muted small fw-semibold">
+ 
+                    <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="responsable" class="text-muted small fw-semibold">
                         المسؤول
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="notification" class="text-muted small fw-semibold">
                         تاريخ التبليغ
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="execution" class="text-muted small fw-semibold">
                         تاريخ التنفيذ
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-start ps-3 text-muted small fw-semibold">
                         الإجراءات
                     </th>

@@ -122,39 +122,39 @@
             <thead class="table-light">
 
                 <tr>
-
-                    <th class="pe-3 text-muted small fw-semibold">
+ 
+                    <x-sortable-th column="jugement" class="pe-3 text-muted small fw-semibold">
                         الحكم
-                    </th>
+                    </x-sortable-th>
 
-                    <th class="text-muted small fw-semibold">
+                    <x-sortable-th column="tribunal" class="text-muted small fw-semibold">
                         الملف / المحكمة
-                    </th>
-
-                    <th class="text-muted small fw-semibold text-center">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="condamne" class="text-muted small fw-semibold text-center">
                         المحكوم به
-                    </th>
-
-                    <th class="text-muted small fw-semibold text-center">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="paye" class="text-muted small fw-semibold text-center">
                         المدفوع
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-muted small fw-semibold text-center">
                         المتبقي
                     </th>
-
+ 
                     <th class="text-muted small fw-semibold" style="min-width:120px">
                         نسبة الأداء
                     </th>
-
-                    <th class="text-muted small fw-semibold">
+ 
+                    <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-start ps-3 text-muted small fw-semibold">
                         الإجراءات
                     </th>
-
+ 
                 </tr>
 
             </thead>

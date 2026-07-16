@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Audiences\StoreAudienceRequest;
 use App\Http\Requests\Audiences\UpdateAudienceRequest;
 use App\Models\Audience;
+use App\Models\Tribunal;
 use App\Models\DossierTribunal;
 use App\Models\DossierJudiciaire;
 use App\Models\TypeAudience;
@@ -34,7 +35,39 @@ class AudienceController extends Controller
             ->when(request('dossier'), fn($q, $v) => $q->whereHas(
                 'dossierTribunal', fn($q) => $q->where('id_dossier', $v)
             ))
-            ->latest('date_audience')
+           ->sortable([
+                'date' => 'date_audience',
+
+                'dossier' => fn($q, $dir) => $q->orderBy(
+                    DossierJudiciaire::select('numero_dossier_tribunal')
+                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
+                        ->whereColumn('dossier_tribunaux.id', 'audiences.id_dossier_tribunal')
+                        ->limit(1),
+                    $dir
+                ),
+
+                'tribunal' => fn($q, $dir) => $q->orderBy(
+                    Tribunal::select('nom_tribunal') 
+                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
+                        ->whereColumn('dossier_tribunaux.id', 'audiences.id_dossier_tribunal')
+                        ->limit(1),
+                    $dir
+                ),
+
+                'type' => fn($q, $dir) => $q->orderBy(
+                    TypeAudience::select('type_audience')
+                        ->whereColumn('type_audiences.id', 'audiences.id_type_audience'),
+                    $dir
+                ),
+
+                'juge' => fn($q, $dir) => $q->orderBy(
+                    Juge::select('nom_complet')
+                        ->whereColumn('juges.id', 'audiences.id_juge'),
+                    $dir
+                ),
+
+                'prochaine' => 'date_prochaine_audience',
+            ], 'date', 'desc')
             ->paginate(15)
             ->withQueryString();
 

@@ -10,10 +10,26 @@ class FinanceController extends Controller
 {
     public function index()
     {
-        $finances = Finance::with('jugement.dossierTribunal')->latest()->get();
+        $finances = Finance::query()
+            ->leftJoin('jugements', 'finances.id_jugement', '=', 'jugements.id')
+            ->leftJoin('dossier_tribunaux', 'jugements.id_dossier_tribunal', '=', 'dossier_tribunaux.id')
+            ->leftJoin('tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
+            ->select('finances.*')
+            ->with('jugement.dossierTribunal.tribunal')
+            ->sortable([
+                'id'        => 'finances.id',
+                'condamne'  => 'finances.montant_condamne',
+                'paye'      => 'finances.montant_paye',
+                'statut'    => 'finances.statut_paiement',
+                'date'      => 'finances.date_paiement',
+                'jugement'  => 'jugements.date_jugement',
+                'tribunal'  => 'tribunaux.nom_tribunal',
+            ], 'id', 'desc')
+            ->get();
 
         return view('finances.index', compact('finances'));
     }
+    
 
     public function create()
     {

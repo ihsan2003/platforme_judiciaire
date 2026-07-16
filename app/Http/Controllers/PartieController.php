@@ -44,7 +44,17 @@ class PartieController extends Controller
         }
 
         // Pagination : 15 résultats par page, on garde les filtres dans les liens
-        $parties = $query->latest()->paginate(15)->withQueryString();
+        $parties = $query
+                ->sortable([
+                    'id' => 'id',
+                    'nom' => 'nom_partie',
+                    'identifiant' => 'identifiant_unique',
+                    'type' => 'type_personne',
+                    'telephone' => 'telephone',
+                    'email' => 'email',
+                ], 'id', 'desc')
+                ->paginate(15)
+                ->withQueryString();
 
         return view('parties.index', compact('parties'));
     }

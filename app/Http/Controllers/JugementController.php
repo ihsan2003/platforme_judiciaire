@@ -10,6 +10,7 @@ use App\Models\Juge;
 use App\Models\Partie;
 use App\Models\DossierPartie;
 use App\Models\DegreeJuridiction;
+use App\Models\StatutExecution;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -76,7 +77,66 @@ class JugementController extends Controller
                 });
             })
 
-            ->latest('date_jugement')
+            ->sortable([
+                'date' => 'date_jugement',
+
+                'dossier' => fn($q, $dir) => $q->orderBy(
+                    \App\Models\DossierJudiciaire::select('numero_dossier_tribunal')
+                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
+                        ->whereColumn('dossier_tribunaux.id', 'jugements.id_dossier_tribunal')
+                        ->limit(1),
+                    $dir
+                ),
+
+                'tribunal' => fn($q, $dir) => $q->orderBy(
+                    \App\Models\Tribunal::select('nom_tribunal')
+                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
+                        ->whereColumn('dossier_tribunaux.id', 'jugements.id_dossier_tribunal')
+                        ->limit(1),
+                    $dir
+                ),
+
+                'degre' => fn($q, $dir) => $q->orderBy(
+                    \App\Models\DegreeJuridiction::select('degre_juridiction')
+                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_degre', '=', 'degre_juridictions.id')
+                        ->whereColumn('dossier_tribunaux.id', 'jugements.id_dossier_tribunal')
+                        ->limit(1),
+                    $dir
+                ),
+
+                'juge' => fn($q, $dir) => $q->orderBy(
+                    Juge::select('nom_complet')
+                        ->whereColumn('juges.id', 'jugements.id_juge'),
+                    $dir
+                ),
+
+                'position' => fn($q, $dir) => $q->orderBy(
+                    \App\Models\PositionInstitution::select('position')
+                        ->join('jugement_parties', 'jugement_parties.id_position_institution', '=', 'position_institutions.id')
+                        ->join('parties', 'jugement_parties.id_partie', '=', 'parties.id')
+                        ->whereColumn('jugement_parties.id_jugement', 'jugements.id')
+                        ->where('parties.est_entraide', true)
+                        ->limit(1),
+                    $dir
+                ),
+
+                'execution' => fn($q, $dir) => $q->orderBy(
+                    StatutExecution::query()
+                        ->select('statut_executions.statut_execution')
+                        ->join(
+                            'executions',
+                            'executions.statut_execution',
+                            '=',
+                            'statut_executions.id'
+                        )
+                        ->whereColumn('executions.id_jugement', 'jugements.id')
+                        ->limit(1),
+                    $dir
+                ),
+
+                'definitif' => 'est_definitif',
+
+            ], 'date', 'desc')
             ->paginate(15)
             ->withQueryString();
 

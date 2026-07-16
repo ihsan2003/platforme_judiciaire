@@ -101,7 +101,7 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
         <h5 class="mb-0 fw-semibold">
-            <i class="bi bi-gavel ml-2 text-primary"></i> الجلسات
+            <i class="bi bi-calendar-event ml-2 text-primary"></i> الجلسات
             <span class="badge bg-primary mr-2">{{ $audiences->total() }}</span>
         </h5>
     </div>
@@ -110,13 +110,18 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="pr-3 text-muted small fw-semibold">التاريخ</th>
-                    <th class="text-muted small fw-semibold">رقم الملف</th>
-                    <th class="text-muted small fw-semibold">المحكمة</th>
-                    <th class="text-muted small fw-semibold">النوع</th>
-                    <th class="text-muted small fw-semibold">القاضي</th>
+                    <x-sortable-th column="date" class="pr-3 text-muted small fw-semibold">التاريخ</x-sortable-th>
+                    <x-sortable-th column="dossier" class="text-muted small fw-semibold">
+                        رقم الملف
+                    </x-sortable-th>
+
+                    <x-sortable-th column="tribunal" class="text-muted small fw-semibold">
+                        المحكمة
+                    </x-sortable-th>
+                    <x-sortable-th column="type" class="text-muted small fw-semibold">النوع</x-sortable-th>
+                    <x-sortable-th column="juge" class="text-muted small fw-semibold">القاضي</x-sortable-th>
                     <th class="text-muted small fw-semibold">الحضور</th>
-                    <th class="text-muted small fw-semibold">الجلسة القادمة</th>
+                    <x-sortable-th column="prochaine" class="text-muted small fw-semibold">الجلسة القادمة</x-sortable-th>
                     <th class="text-start pl-3 text-muted small fw-semibold">إجراءات</th>
                 </tr>
             </thead>

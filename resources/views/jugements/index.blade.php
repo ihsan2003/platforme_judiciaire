@@ -239,15 +239,33 @@
             <thead class="table-light">
 
                 <tr>
-                    <th class="pe-3 text-muted small fw-semibold">التاريخ</th>
-                    <th class="text-muted small fw-semibold">الملف</th>
-                    <th class="text-muted small fw-semibold">المحكمة</th>
-                    <th class="text-muted small fw-semibold">الدرجة</th>
-                    <th class="text-muted small fw-semibold">القاضي</th>
-                    <th class="text-muted small fw-semibold">وضعية المؤسسة</th>
-                    <th class="text-muted small fw-semibold">الصفة</th>
+                    <x-sortable-th column="date" class="text-muted small fw-semibold ps-3">
+                     التاريخ
+                    </x-sortable-th>
+                    <x-sortable-th column="dossier">
+                        الملف
+                    </x-sortable-th>
+
+                    <x-sortable-th column="tribunal">
+                        المحكمة
+                    </x-sortable-th>
+
+                    <x-sortable-th column="degre">
+                        الدرجة
+                    </x-sortable-th>
+                    <x-sortable-th column="juge" class="text-muted small fw-semibold ps-3">
+                     القاضي
+                    </x-sortable-th>
+                    <x-sortable-th column="position">
+                        وضعية المؤسسة
+                    </x-sortable-th>
+                    <x-sortable-th column="definitif" class="text-muted small fw-semibold ps-3">
+                     الصفة
+                    </x-sortable-th>
                     <th class="text-muted small fw-semibold">الطعن</th>
-                    <th class="text-muted small fw-semibold">التنفيذ</th>
+                    <x-sortable-th column="execution">
+                        التنفيذ
+                    </x-sortable-th>
                     <th class="text-start ps-3 text-muted small fw-semibold">
                         الإجراءات
                     </th>

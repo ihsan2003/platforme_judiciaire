@@ -81,7 +81,21 @@ class ExecutionController extends Controller
                 $q->whereDate('date_notification', $v);
             })
 
-            ->latest('date_notification')
+                        ->sortable([
+                'numero' => 'numero_dossier_execution',
+                'statut' => fn($q, $dir) => $q->orderBy(
+                    StatutExecution::select('statut_execution')
+                        ->whereColumn('statut_executions.id', 'executions.statut_execution'),
+                    $dir
+                ),
+                'responsable' => fn($q, $dir) => $q->orderBy(
+                    User::select('name')
+                        ->whereColumn('users.id', 'executions.responsable_id'),
+                    $dir
+                ),
+                'notification' => 'date_notification',
+                'execution' => 'date_execution',
+            ], 'notification', 'desc')
 
             ->paginate(15)
 

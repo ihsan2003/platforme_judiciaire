@@ -53,7 +53,30 @@ class DossierJudiciaireController extends Controller
             )
             ->when($request->date_debut, fn($q, $v) => $q->where('date_ouverture', '>=', $v))
             ->when($request->date_fin, fn($q, $v) => $q->where('date_ouverture', '<=', $v))
-            ->latest()
+            ->sortable([
+                'id' => 'id',
+                'numero' => 'numero_dossier_tribunal',
+                'type' => fn($q, $dir) => $q->orderBy(
+                    TypeAffaire::select('affaire')
+                        ->whereColumn('type_affaires.id', 'dossier_judiciaires.id_type_affaire'),
+                    $dir
+                ),
+                'statut' => fn($q, $dir) => $q->orderBy(
+                    StatutDossier::select('statut_dossier')
+                        ->whereColumn('statut_dossiers.id', 'dossier_judiciaires.id_statut_dossier'),
+                    $dir
+                ),
+                'date' => 'date_ouverture',
+                'region' => fn($q, $dir) => $q->orderBy(
+                    Region::select('region')
+                        ->join('provinces', 'provinces.id_region', '=', 'regions.id')
+                        ->join('tribunaux', 'tribunaux.id_province', '=', 'provinces.id')
+                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
+                        ->whereColumn('dossier_tribunaux.id_dossier', 'dossier_judiciaires.id')
+                        ->limit(1),
+                    $dir
+                ),
+            ], 'id', 'desc')
             ->paginate(15)
             ->withQueryString();
 

@@ -205,30 +205,30 @@ body{
 
             <thead class="table-light">
                 <tr>
-                    <th class="pe-3 text-muted small fw-semibold">
+                    <x-sortable-th column="nom" class="pe-3 text-muted small fw-semibold">
                         الاسم / التسمية
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="identifiant" class="text-muted small fw-semibold">
                         المعرف
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="type" class="text-muted small fw-semibold">
                         النوع
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="telephone" class="text-muted small fw-semibold">
                         الهاتف
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="email" class="text-muted small fw-semibold">
                         البريد الإلكتروني
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-muted small fw-semibold">
                         الملفات
                     </th>
-
+ 
                     <th class="text-start ps-3 text-muted small fw-semibold">
                         الإجراءات
                     </th>

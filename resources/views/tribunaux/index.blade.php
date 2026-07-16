@@ -122,11 +122,11 @@
 
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3 text-muted small fw-semibold">المحكمة</th>
-                    <th class="text-muted small fw-semibold">النوع</th>
-                    <th class="text-muted small fw-semibold">الإقليم</th>
-                    <th class="text-muted small fw-semibold">الجهة</th>
-                    <th class="text-muted small fw-semibold">القضاة</th>
+                    <x-sortable-th column="nom" class="ps-3 text-muted small fw-semibold">المحكمة</x-sortable-th>
+                    <x-sortable-th column="type" class="text-muted small fw-semibold">النوع</x-sortable-th>
+                    <x-sortable-th column="province" class="text-muted small fw-semibold">الإقليم</x-sortable-th>
+                    <x-sortable-th column="juges" class="text-muted small fw-semibold">الجهة</x-sortable-th>
+                    <th class="pe-3 text-muted small fw-semibold">القضاة</th>
                     <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>

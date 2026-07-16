@@ -151,10 +151,10 @@
 
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3 text-muted small fw-semibold">القاضي</th>
-                    <th class="text-muted small fw-semibold">الدرجة</th>
-                    <th class="text-muted small fw-semibold">التخصص</th>
-                    <th class="text-muted small fw-semibold">المحكمة</th>
+                    <x-sortable-th column="nom" class="ps-3 text-muted small fw-semibold">القاضي</x-sortable-th>
+                    <x-sortable-th column="grade" class="text-muted small fw-semibold">الدرجة</x-sortable-th>
+                    <x-sortable-th column="specialisation" class="text-muted small fw-semibold">التخصص</x-sortable-th>
+                    <x-sortable-th column="tribunal" class="text-muted small fw-semibold">المحكمة</x-sortable-th>
                     <th class="text-muted small fw-semibold">الجلسات القادمة</th>
                     <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>

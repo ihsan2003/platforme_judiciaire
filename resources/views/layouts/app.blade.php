@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'المنصة القانونية') — التضامن الوطني</title>
+    <title>@yield('title', 'المنصة القانونية') — التعاون الوطني</title>
 
     {{-- Bootstrap 5 + Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
@@ -334,6 +334,21 @@
             font-size: 11px; font-weight: 700;
             padding: 1px 7px; border-radius: 20px;
         }
+
+        /* ══ En-têtes de colonnes triables ══ */
+        .sortable-th {
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .sortable-th:hover {
+            color: #0d6efd !important;
+        }
+        .sortable-th .bi-arrow-down-up {
+            transition: opacity .15s ease;
+        }
+        .sortable-th:hover .bi-arrow-down-up {
+            opacity: .6 !important;
+        }
     </style>
     @stack('styles')
 </head>
@@ -528,7 +543,7 @@
                     <div class="user-dropdown-body">
                         <a href="{{ route('profile.edit') }}" class="user-dropdown-item">
                             <span class="user-item-icon"><i class="bi bi-person"></i></span>
-                            <span>ملفي الشخصي</span>
+                            <span>الملف الشخصي</span>
                         </a>
 
                         <a href="{{ route('notifications.index') }}" class="user-dropdown-item">

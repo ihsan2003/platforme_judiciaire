@@ -197,30 +197,31 @@
 
             <thead class="table-light">
                 <tr>
-                    <th class="text-muted small fw-semibold ps-3">
+                    <x-sortable-th column="id" class="text-muted small fw-semibold ps-3">
                         رقم الملف
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="numero" class="text-muted small fw-semibold">
                         رقم المحكمة
-                    </th>
+                    </x-sortable-th>
 
-                    <th class="text-muted small fw-semibold">
-                        الجهة
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    <x-sortable-th column="region" class="text-muted small fw-semibold">
+                        الجهة 
+                    </x-sortable-th>
+ 
+ 
+                    <x-sortable-th column="type" class="text-muted small fw-semibold">
                         نوع القضية
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-muted small fw-semibold">
                         المحكمة
                     </th>
-
-                    <th class="text-muted small fw-semibold">
+ 
+                    <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-muted small fw-semibold pe-3">
                         الإجراءات
                     </th>

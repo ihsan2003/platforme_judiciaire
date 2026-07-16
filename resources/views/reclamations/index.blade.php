@@ -157,30 +157,30 @@
 
             <thead class="table-light">
                 <tr>
-                    <th class="pe-3 text-muted small fw-semibold">
+                    <x-sortable-th column="reclamant" class="pe-3 text-muted small fw-semibold">
                         المشتكي
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="type" class="text-muted small fw-semibold">
                         النوع
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="objet" class="text-muted small fw-semibold">
                         الموضوع
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="date" class="text-muted small fw-semibold">
                         تاريخ الاستلام
-                    </th>
-
-                    <th class="text-muted small fw-semibold">
+                    </x-sortable-th>
+ 
+                    <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
-                    </th>
-
+                    </x-sortable-th>
+ 
                     <th class="text-muted small fw-semibold">
                         آخر إجراء
                     </th>
-
+ 
                     <th class="text-muted small fw-semibold text-start ps-3">
                         الإجراءات
                     </th>

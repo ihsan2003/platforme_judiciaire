@@ -32,7 +32,16 @@ class JugeController extends Controller
                 $q->where('specialisation', $v);
             })
 
-            ->orderBy('nom_complet')
+            ->sortable([
+                'nom' => 'nom_complet',
+                'grade' => 'grade',
+                'specialisation' => 'specialisation',
+                'tribunal' => fn($q, $dir) => $q->orderBy(
+                    Tribunal::select('nom_tribunal')
+                        ->whereColumn('tribunaux.id', 'juges.id_tribunal'),
+                    $dir
+                ),
+            ], 'nom', 'asc')
 
             ->paginate(10)
 

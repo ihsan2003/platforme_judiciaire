@@ -26,7 +26,7 @@ class ReclamationController extends Controller
     }
 
     // ─────────────────────────────────────────
-    // INDEX — Liste avec filtres et stats
+    // INDEX
     // ─────────────────────────────────────────
     public function index(Request $request)
     {
@@ -57,7 +57,26 @@ class ReclamationController extends Controller
                     default => $q,
                 };
             })
-            ->latest('date_reception')
+            ->sortable([
+                'objet' => 'objet',
+                'date' => 'date_reception',
+                'statut' => fn($q, $dir) => $q->orderBy(
+                    StatutReclamation::select('statut_reclamation')
+                        ->whereColumn('statut_reclamations.id', 'reclamations.id_statut_reclamation'),
+                    $dir
+                ),
+                'reclamant' => fn($q, $dir) => $q->orderBy(
+                    Reclamant::select('nom')
+                        ->whereColumn('reclamants.id', 'reclamations.id_reclamant'),
+                    $dir
+                ),
+                'type' => fn($q, $dir) => $q->orderBy(
+                    TypeReclamant::select('type_reclamant')
+                        ->join('reclamants', 'reclamants.id_type_reclamant', '=', 'type_reclamants.id')
+                        ->whereColumn('reclamants.id', 'reclamations.id_reclamant'),
+                    $dir
+                ),
+            ], 'date', 'desc')
             ->paginate(15)
             ->withQueryString();
 

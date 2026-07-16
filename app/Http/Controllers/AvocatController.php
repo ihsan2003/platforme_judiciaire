@@ -29,13 +29,11 @@ class AvocatController extends Controller
         }
 
         // ══ Tri ══
-        $sort = $request->get('sort', 'nom_avocat');
-
-        if ($sort === 'created_at') {
-            $query->orderBy('created_at', 'desc');
-        } else {
-            $query->orderBy('nom_avocat', 'asc');
-        }
+        $query->sortable([
+            'nom' => 'nom_avocat',
+            'telephone' => 'telephone',
+            'email' => 'email',
+        ], 'nom', 'asc');
 
         // ══ Pagination ══
         $avocats = $query->paginate(10)->withQueryString();

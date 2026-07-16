@@ -109,10 +109,10 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-3 text-muted small fw-semibold">المحامي</th>
-                    <th class="text-muted small fw-semibold">الهاتف</th>
-                    <th class="text-muted small fw-semibold">البريد الإلكتروني</th>
-                    <th class="text-muted small fw-semibold">الملفات</th>
+                    <x-sortable-th column="nom" class="ps-3 text-muted small fw-semibold">المحامي</x-sortable-th>
+                    <x-sortable-th column="telephone" class="text-muted small fw-semibold">الهاتف</x-sortable-th>
+                    <x-sortable-th column="email" class="text-muted small fw-semibold">البريد الإلكتروني</x-sortable-th>
+                    <th class="pe-3 text-muted small fw-semibold">الملفات</th>
                     <th class="pe-3 text-muted small fw-semibold">الإجراءات</th>
                 </tr>
             </thead>
