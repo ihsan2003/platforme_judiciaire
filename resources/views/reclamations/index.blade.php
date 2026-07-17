@@ -179,16 +179,17 @@
                     </x-sortable-th>
  
                     <x-sortable-th column="type" class="text-muted small fw-semibold">
-                        النوع
+                         نوع المشتكي
                     </x-sortable-th>
  
                     <x-sortable-th column="objet" class="text-muted small fw-semibold">
                         الموضوع
                     </x-sortable-th>
- 
-                    <th class="text-muted small fw-semibold">
+
+                    <x-sortable-th column="type_reclamation" class="text-muted small fw-semibold">
                         نوع الشكاية
-                    </th>
+
+                    </x-sortable-th>
  
                     <x-sortable-th column="date" class="text-muted small fw-semibold">
                         تاريخ الاستلام

@@ -74,28 +74,41 @@
                             الاسم / التسمية <span class="text-danger">*</span>
                         </label>
 
-                        <input type="text"
-                               name="nom_reclamant"
-                               class="form-control @error('nom_reclamant') is-invalid @enderror"
-                               value="{{ old('nom_reclamant') }}"
-                               placeholder="الاسم الكامل أو اسم المؤسسة"
-                               required>
+                        <select id="reclamant-select" class="form-select @error('nom_reclamant') is-invalid @enderror @error('id_reclamant') is-invalid @enderror">
+                            <option value=""></option>
+                            @foreach($reclamants as $r)
+                                <option value="{{ $r->id }}"
+                                    @selected(old('id_reclamant') == $r->id)>
+                                    {{ $r->nom }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <input type="hidden" name="id_reclamant" id="id_reclamant_hidden" value="{{ old('id_reclamant') }}">
+                        <input type="hidden" name="nom_reclamant" id="nom_reclamant_hidden" value="{{ old('nom_reclamant') }}">
 
                         @error('nom_reclamant')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
+                        @error('id_reclamant')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+
+                        <div class="form-text">
+                            <i class="bi bi-info-circle ms-1"></i>
+                            ابحث عن مشتكي موجود، أو اكتب اسما جديدا للإنشاء.
+                        </div>
 
                     </div>
 
-                    <div class="col-sm-4">
+                    <div class="col-sm-4" id="col-type-reclamant">
 
                         <label class="form-label fw-semibold small">
                             نوع المشتكي <span class="text-danger">*</span>
                         </label>
 
-                        <select name="id_type_reclamant"
+                        <select id="id_type_reclamant"
+                                name="id_type_reclamant"
                                 class="form-select @error('id_type_reclamant') is-invalid @enderror"
                                 required>
 
@@ -124,6 +137,21 @@
 
                     </div>
 
+                </div>
+
+                {{-- بلوك: عرض معلومات مشتكي موجود تم اختياره --}}
+                <div id="bloc-reclamant-info" class="alert alert-light border small mt-3 mb-0 d-none">
+                    <i class="bi bi-person-check text-success ms-1"></i>
+                    مشتكي موجود مسبقا —
+                    <span id="info-type" class="fw-semibold"></span>
+                    <span id="info-tel"></span>
+                    <span id="info-email"></span>
+                    <span id="info-adresse"></span>
+                </div>
+
+                {{-- بلوك: حقول مشتكي جديد --}}
+                <div id="bloc-reclamant-nouveau" class="row g-3 mt-0">
+
                     <div class="col-sm-6">
 
                         <label class="form-label fw-semibold small">
@@ -134,6 +162,7 @@
 
                             <input type="tel"
                                    name="telephone_reclamant"
+                                   id="telephone_reclamant"
                                    class="form-control @error('telephone_reclamant') is-invalid @enderror"
                                    value="{{ old('telephone_reclamant') }}"
                                    placeholder="0612345678">
@@ -162,6 +191,7 @@
 
                             <input type="email"
                                    name="email_reclamant"
+                                   id="email_reclamant"
                                    class="form-control @error('email_reclamant') is-invalid @enderror"
                                    value="{{ old('email_reclamant') }}"
                                    placeholder="contact@example.com">
@@ -187,6 +217,7 @@
                         </label>
 
                         <textarea name="adresse_reclamant"
+                                  id="adresse_reclamant"
                                   class="form-control @error('adresse_reclamant') is-invalid @enderror"
                                   rows="2"
                                   placeholder="العنوان البريدي الكامل">{{ old('adresse_reclamant') }}</textarea>
@@ -219,9 +250,7 @@
 
                 <div class="row g-3">
 
-                
-
-                    <div class="col-sm-6">
+                    <div class="col-sm-12">
 
                         <label class="form-label fw-semibold small">
                             الموضوع <span class="text-danger">*</span>
@@ -241,7 +270,6 @@
                         @enderror
 
                     </div>
-
 
                     <div class="col-12">
 
@@ -351,7 +379,7 @@
                                 class="form-select @error('id_statut_reclamation') is-invalid @enderror">
 
                             <option value="">
-                                — الحالة الافتراضية (مستلمة) —
+                                — اختر —
                             </option>
 
                             @foreach($statuts as $statut)
@@ -433,3 +461,89 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    // Données des réclamants existants (pour préremplissage / détection)
+    const reclamants = @json($reclamants->keyBy('id'));
+
+    const champIdReclamant = document.getElementById('id_reclamant_hidden');
+    const champNomHidden   = document.getElementById('nom_reclamant_hidden');
+    const champType        = document.getElementById('id_type_reclamant');
+    const champTel         = document.getElementById('telephone_reclamant');
+    const champEmail       = document.getElementById('email_reclamant');
+    const champAdresse     = document.getElementById('adresse_reclamant');
+    const blocNouveau      = document.getElementById('bloc-reclamant-nouveau');
+    const blocInfo         = document.getElementById('bloc-reclamant-info');
+
+    function afficherModeExistant(r) {
+        blocNouveau.classList.add('d-none');
+        blocInfo.classList.remove('d-none');
+
+        document.getElementById('info-type').textContent    = r.type_reclamant?.type_reclamant ?? '—';
+        document.getElementById('info-tel').textContent     = r.telephone ? ' — ' + r.telephone : '';
+        document.getElementById('info-email').textContent   = r.email ? ' — ' + r.email : '';
+        document.getElementById('info-adresse').textContent = r.adresse ? ' — ' + r.adresse : '';
+
+        champType.required = false;
+        champType.value = r.id_type_reclamant ?? '';
+        champTel.value = r.telephone ?? '';
+        champEmail.value = r.email ?? '';
+        champAdresse.value = r.adresse ?? '';
+    }
+
+    function afficherModeNouveau(nom) {
+        blocNouveau.classList.remove('d-none');
+        blocInfo.classList.add('d-none');
+
+        champType.required = true;
+        champNomHidden.value = nom ?? '';
+    }
+
+    const tomSelect = new TomSelect('#reclamant-select', {
+        create: function (input) {
+            return { value: input, text: input };
+        },
+        persist: false,
+        placeholder: 'ابحث عن مشتكي موجود أو اكتب اسما جديدا...',
+        loadingText: 'جاري البحث...',
+
+        render: {
+            option_create: function (data, escape) {
+                return `<div class="create">➕ إضافة مشتكي جديد باسم "${escape(data.input)}"</div>`;
+            },
+            no_results: function () {
+                return `<div class="no-results">لا توجد نتائج</div>`;
+            }
+        },
+
+        onItemAdd: function (value) {
+            const r = reclamants[value];
+
+            if (r) {
+                champIdReclamant.value = value;
+                afficherModeExistant(r);
+            } else {
+                champIdReclamant.value = '';
+                afficherModeNouveau(value);
+            }
+        },
+
+        onItemRemove: function () {
+            champIdReclamant.value = '';
+            champNomHidden.value = '';
+            afficherModeNouveau('');
+        }
+    });
+
+    // Pré-remplissage initial en cas de retour après erreur de validation ("old()")
+    @if(old('id_reclamant'))
+        tomSelect.setValue('{{ old('id_reclamant') }}');
+    @elseif(old('nom_reclamant'))
+        tomSelect.addOption({ value: '{{ old('nom_reclamant') }}', text: '{{ old('nom_reclamant') }}' });
+        tomSelect.setValue('{{ old('nom_reclamant') }}');
+    @endif
+})();
+</script>
+@endpush

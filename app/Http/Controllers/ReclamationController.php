@@ -69,6 +69,11 @@ class ReclamationController extends Controller
                         ->whereColumn('statut_reclamations.id', 'reclamations.id_statut_reclamation'),
                     $dir
                 ),
+                'type_reclamation' => fn($q, $dir) => $q->orderBy(
+                    TypeReclamation::select('type_reclamation')
+                        ->whereColumn('type_reclamations.id', 'reclamations.id_type_reclamation'),
+                    $dir
+                ),
                 'reclamant' => fn($q, $dir) => $q->orderBy(
                     Reclamant::select('nom')
                         ->whereColumn('reclamants.id', 'reclamations.id_reclamant'),
@@ -117,8 +122,11 @@ class ReclamationController extends Controller
         $typesReclamant   = TypeReclamant::orderBy('type_reclamant')->get();
         $statuts          = StatutReclamation::orderBy('statut_reclamation')->get();
         $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
+        $reclamants       = Reclamant::orderBy('nom')->get();
 
-        return view('reclamations.create', compact('typesReclamant', 'statuts', 'typesReclamation'));
+        return view('reclamations.create', compact(
+            'typesReclamant', 'statuts', 'typesReclamation', 'reclamants'
+        ));
     }
 
     // ─────────────────────────────────────────
@@ -127,12 +135,13 @@ class ReclamationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            // Réclamant
-            'nom_reclamant'      => 'required|string|max:255',
-            'id_type_reclamant'  => 'required|exists:type_reclamants,id',
-            'telephone_reclamant'=> ['nullable', 'regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/'],
-            'email_reclamant'    => 'nullable|email|max:255',
-            'adresse_reclamant'  => 'nullable|string|max:500',
+            // Réclamant (existant si id_reclamant fourni, sinon nouveau via nom_reclamant)
+            'id_reclamant'        => 'nullable|exists:reclamants,id',
+            'nom_reclamant'       => 'required_without:id_reclamant|nullable|string|max:255',
+            'id_type_reclamant'   => 'required_without:id_reclamant|nullable|exists:type_reclamants,id',
+            'telephone_reclamant' => ['nullable', 'regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/'],
+            'email_reclamant'     => 'nullable|email|max:255',
+            'adresse_reclamant'   => 'nullable|string|max:500',
             // Réclamation
             'objet'              => 'required|string|max:500',
             'id_type_reclamation'=> 'required|exists:type_reclamations,id',
@@ -142,18 +151,18 @@ class ReclamationController extends Controller
 
         DB::transaction(function () use ($validated, $request) {
 
-            // Créer ou trouver le réclamant
-            $reclamant = Reclamant::firstOrCreate(
-                [
+            // Réclamant existant sélectionné, ou nouveau réclamant à créer
+            if (!empty($validated['id_reclamant'])) {
+                $reclamant = Reclamant::findOrFail($validated['id_reclamant']);
+            } else {
+                $reclamant = Reclamant::create([
                     'nom'               => $validated['nom_reclamant'],
                     'id_type_reclamant' => $validated['id_type_reclamant'],
-                ],
-                [
-                    'telephone' => $validated['telephone_reclamant'] ?? null,
-                    'email'     => $validated['email_reclamant'] ?? null,
-                    'adresse'   => $validated['adresse_reclamant'] ?? null,
-                ]
-            );
+                    'telephone'         => $validated['telephone_reclamant'] ?? null,
+                    'email'             => $validated['email_reclamant'] ?? null,
+                    'adresse'           => $validated['adresse_reclamant'] ?? null,
+                ]);
+            }
 
             // Statut automatique = "قيد المعالجة" (En traitement)
             $statutId = StatutReclamation::where('statut_reclamation', 'قيد المعالجة')->first()?->id
