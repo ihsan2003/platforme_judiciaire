@@ -37,10 +37,15 @@ class JugementController extends Controller
                 'executions.statut',
             ])
 
-            // Filtre juge
-            ->when(request('juge'), function ($q, $v) {
-                $q->where('id_juge', $v);
+            ->when(request('recherche'), function ($q, $v) {
+                $q->where(function ($sub) use ($v) {
+                    $sub->whereHas('juge', fn($q) => $q->where('nom_complet', 'like', "%{$v}%"))
+                        ->orWhereHas('dossierTribunal.tribunal', fn($q) => $q->where('nom_tribunal', 'like', "%{$v}%"))
+                        ->orWhereHas('dossierTribunal.dossier', fn($q) => $q->where('numero_dossier_tribunal', 'like', "%{$v}%"));
+                });
             })
+            ->when(request('date_jugement'), fn($q, $v) =>
+                $q->whereDate('date_jugement', $v))
 
             // Filtre définitif
             ->when(request('definitif') === 'oui', function ($q) {
@@ -163,15 +168,12 @@ class JugementController extends Controller
         // Positions indexées par id, pour affichage du badge dans le tableau
         $positionsParId = \App\Models\PositionInstitution::all()->keyBy('id');
 
-        $juges = Juge::orderBy('nom_complet')->get();
-
         // IMPORTANT
         $degres = DegreeJuridiction::orderBy('degre_juridiction')->get();
 
         return view('jugements.index', compact(
             'jugements',
             'stats',
-            'juges',
             'degres',
             'positionsParId'
         ));

@@ -6,6 +6,7 @@ use App\Models\Reclamation;
 use App\Models\Reclamant;
 use App\Models\StatutReclamation;
 use App\Models\TypeReclamant;
+use App\Models\TypeReclamation;
 use App\Models\TypeAction;
 use App\Models\Structure;
 use App\Models\TypeDocument;
@@ -32,6 +33,7 @@ class ReclamationController extends Controller
     {
         $reclamations = Reclamation::with([
                 'reclamant.typeReclamant',
+                'typeReclamation',
                 'statut',
                 'actions' => fn($q) => $q->latest()->limit(1),
             ])
@@ -39,10 +41,12 @@ class ReclamationController extends Controller
             ->when($request->type_reclamant, fn($q, $v) =>
                 $q->whereHas('reclamant', fn($q) => $q->where('id_type_reclamant', $v))
             )
+            ->when($request->type_reclamation, fn($q, $v) => $q->where('id_type_reclamation', $v))
             ->when($request->search, fn($q, $v) =>
                 $q->where(fn($q) =>
                     $q->where('objet', 'like', "%{$v}%")
                       ->orWhereHas('reclamant', fn($q) => $q->where('nom', 'like', "%{$v}%"))
+                      ->orWhereHas('reclamant', fn($q) => $q->where('email', 'like', "%{$v}%"))
                 )
             )
             ->when($request->date_debut, fn($q, $v) => $q->where('date_reception', '>=', $v))
@@ -98,9 +102,10 @@ class ReclamationController extends Controller
 
         $statuts        = StatutReclamation::orderBy('statut_reclamation')->get();
         $typesReclamant = TypeReclamant::orderBy('type_reclamant')->get();
+        $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
 
         return view('reclamations.index', compact(
-            'reclamations', 'stats', 'statuts', 'typesReclamant'
+            'reclamations', 'stats', 'statuts', 'typesReclamant', 'typesReclamation'
         ));
     }
 
@@ -109,10 +114,11 @@ class ReclamationController extends Controller
     // ─────────────────────────────────────────
     public function create()
     {
-        $typesReclamant = TypeReclamant::orderBy('type_reclamant')->get();
-        $statuts        = StatutReclamation::orderBy('statut_reclamation')->get();
+        $typesReclamant   = TypeReclamant::orderBy('type_reclamant')->get();
+        $statuts          = StatutReclamation::orderBy('statut_reclamation')->get();
+        $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
 
-        return view('reclamations.create', compact('typesReclamant', 'statuts'));
+        return view('reclamations.create', compact('typesReclamant', 'statuts', 'typesReclamation'));
     }
 
     // ─────────────────────────────────────────
@@ -129,6 +135,7 @@ class ReclamationController extends Controller
             'adresse_reclamant'  => 'nullable|string|max:500',
             // Réclamation
             'objet'              => 'required|string|max:500',
+            'id_type_reclamation'=> 'required|exists:type_reclamations,id',
             'date_reception'     => 'required|date',
             'details'            => 'nullable|string',
         ]);
@@ -155,6 +162,7 @@ class ReclamationController extends Controller
 
             $reclamation = Reclamation::create([
                 'id_reclamant'          => $reclamant->id,
+                'id_type_reclamation'   => $validated['id_type_reclamation'],
                 'objet'                 => $validated['objet'],
                 'date_reception'        => $validated['date_reception'],
                 'id_statut_reclamation' => $statutId,
@@ -194,6 +202,7 @@ class ReclamationController extends Controller
     {
         $reclamation->load([
             'reclamant.typeReclamant',
+            'typeReclamation',
             'statut',
             'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy'])->latest(),
             'documents.typeDocument',
@@ -217,17 +226,20 @@ class ReclamationController extends Controller
     public function edit(Reclamation $reclamation)
     {
         // Charger les relations nécessaires pour la réclamation actuelle
-        $reclamation->load(['reclamant.typeReclamant', 'statut']);
+        $reclamation->load(['reclamant.typeReclamant', 'typeReclamation', 'statut']);
         
         // 1. Récupérer TOUS les réclamants pour pouvoir en changer si besoin
         $reclamants = Reclamant::orderBy('nom')->get(); 
         
         // 2. Garder vos variables existantes pour les types et statuts
-        $typesReclamant = TypeReclamant::orderBy('type_reclamant')->get();
-        $statuts        = StatutReclamation::orderBy('statut_reclamation')->get();
+        $typesReclamant   = TypeReclamant::orderBy('type_reclamant')->get();
+        $statuts          = StatutReclamation::orderBy('statut_reclamation')->get();
+        $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
 
         // 3. Ajouter 'reclamants' dans le compact
-        return view('reclamations.edit', compact('reclamation', 'reclamants', 'typesReclamant', 'statuts'));
+        return view('reclamations.edit', compact(
+            'reclamation', 'reclamants', 'typesReclamant', 'statuts', 'typesReclamation'
+        ));
     }
 
     // ─────────────────────────────────────────
@@ -237,6 +249,7 @@ class ReclamationController extends Controller
     {
         $validated = $request->validate([
             'objet'                 => 'required|string|max:500',
+            'id_type_reclamation'   => 'required|exists:type_reclamations,id',
             'date_reception'        => 'required|date',
             'details'               => 'nullable|string',
             'id_statut_reclamation' => 'required|exists:statut_reclamations,id',
@@ -257,6 +270,7 @@ class ReclamationController extends Controller
 
             $reclamation->update([
                 'objet'                 => $validated['objet'],
+                'id_type_reclamation'   => $validated['id_type_reclamation'],
                 'date_reception'        => $validated['date_reception'],
                 'details'               => $validated['details'],
                 'id_statut_reclamation' => $validated['id_statut_reclamation'],

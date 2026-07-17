@@ -62,7 +62,7 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-2">
+            <div class="col-md-4">
                 <label class="form-label small text-muted fw-semibold">بحث</label>
                 <div class="input-group">
                     <input type="text"
@@ -71,14 +71,6 @@
                            placeholder="الاسم، البريد الإلكتروني أو الهاتف..."
                            value="{{ request('search') }}">
                 </div>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label small text-muted fw-semibold">ترتيب حسب</label>
-                <select name="sort" class="form-select">
-                    <option value="nom_avocat" @selected(request('sort','nom_avocat') === 'nom_avocat')>الاسم (أ→ي)</option>
-                    <option value="created_at" @selected(request('sort') === 'created_at')>الأحدث</option>
-                </select>
             </div>
 
             <div class="col-md-1 d-flex gap-2">

@@ -85,6 +85,17 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label fw-semibold small">نوع الشكاية <span class="text-danger">*</span></label>
+                                <select name="id_type_reclamation" class="form-select @error('id_type_reclamation') is-invalid @enderror" required>
+                                    @foreach($typesReclamation as $type)
+                                        <option value="{{ $type->id }}" @selected(old('id_type_reclamation', $reclamation->id_type_reclamation) == $type->id)>
+                                            {{ $type->type_reclamation }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label fw-semibold small">حالة الشكاية <span class="text-danger">*</span></label>
                                 <select name="id_statut_reclamation" class="form-select @error('id_statut_reclamation') is-invalid @enderror" required>
                                     @foreach($statuts as $statut)

@@ -34,7 +34,8 @@ class PartieController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nom_partie', 'like', "%{$search}%")
                   ->orWhere('identifiant_unique', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('telephone', 'like', "%{$search}%");
             });
         }
 

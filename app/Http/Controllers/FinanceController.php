@@ -14,19 +14,44 @@ class FinanceController extends Controller
             ->leftJoin('jugements', 'finances.id_jugement', '=', 'jugements.id')
             ->leftJoin('dossier_tribunaux', 'jugements.id_dossier_tribunal', '=', 'dossier_tribunaux.id')
             ->leftJoin('tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
+            ->leftJoin('dossier_judiciaires', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
             ->select('finances.*')
-            ->with('jugement.dossierTribunal.tribunal')
+            ->with('jugement.dossierTribunal.tribunal', 'jugement.dossierTribunal.dossier')
+ 
+            // ══ Recherche (numéro de dossier ou tribunal) ══
+            ->when(request('search'), function ($q, $v) {
+                $q->where(function ($sub) use ($v) {
+                    $sub->where('dossier_judiciaires.numero_dossier_tribunal', 'like', "%{$v}%")
+                        ->orWhere('tribunaux.nom_tribunal', 'like', "%{$v}%");
+                });
+            })
+ 
+            // ══ Filtre date de jugement ══
+            ->when(request('date_jugement'), function ($q, $v) {
+                $q->whereDate('jugements.date_jugement', $v);
+            })
+ 
+            // ══ Filtre statut ══
+            ->when(request('statut'), function ($q, $v) {
+                $q->where('finances.statut_paiement', $v);
+            })
+ 
             ->sortable([
                 'id'        => 'finances.id',
                 'condamne'  => 'finances.montant_condamne',
                 'paye'      => 'finances.montant_paye',
                 'statut'    => 'finances.statut_paiement',
                 'date'      => 'finances.date_paiement',
+
                 'jugement'  => 'jugements.date_jugement',
+
                 'tribunal'  => 'tribunaux.nom_tribunal',
+
+                'dossier'   => 'dossier_judiciaires.numero_dossier_tribunal',
+
             ], 'id', 'desc')
             ->get();
-
+ 
         return view('finances.index', compact('finances'));
     }
     

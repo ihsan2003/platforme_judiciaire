@@ -58,16 +58,10 @@
     <div class="card-body">
         
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-2">
-                <label class="form-label small text-muted fw-semibold">القاضي</label>
-                <select name="juge" class="form-select ">
-                    <option value="">جميع القضاة</option>
-                    @foreach($juges as $juge)
-                        <option value="{{ $juge->id }}" @selected(request('juge') == $juge->id)>
-                            {{ $juge->nom_complet }}
-                        </option>
-                    @endforeach
-                </select>
+            <div class="col-md-3">
+                <label class="form-label small text-muted fw-semibold">بحث </label>
+                <input type="text" name="recherche" value="{{ request('recherche') }}"
+                       class="form-control" placeholder="اسم القاضي، المحكمة أو رقم الملف">
             </div>
             <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">نوع الجلسة</label>
@@ -80,18 +74,26 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">من تاريخ</label>
+                <input type="date" name="date_debut" value="{{ request('date_debut') }}" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">إلى تاريخ</label>
+                <input type="date" name="date_fin" value="{{ request('date_fin') }}" class="form-control">
+            </div>
             <div class="col-md-1 d-flex gap-1">
-
+ 
                 <button class="btn btn-primary flex-fill" title="تصفية">
                     <i class="bi bi-funnel-fill"></i>
                 </button>
-
+ 
                 <a href="{{ route('audiences.index') }}"
                    class="btn btn-outline-secondary"
                    title="إعادة التعيين">
                     <i class="bi bi-x-lg"></i>
                 </a>
-
+ 
             </div>
         </form>
     </div>

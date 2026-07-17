@@ -80,7 +80,7 @@
         <form method="GET" class="row g-2 align-items-end">
 
             {{-- Recherche --}}
-            <div class="col-md-2">
+            <div class="col-md-3">
 
                 <label class="form-label small text-muted fw-semibold">
                     بحث
@@ -89,7 +89,7 @@
                 <input type="text"
                        name="search"
                        class="form-control"
-                       placeholder="رقم التنفيذ أو المحكمة..."
+                       placeholder="رقم التنفيذ، رقم الملف، المحكمة أو القاضي..."
                        value="{{ request('search') }}">
 
             </div>
@@ -132,6 +132,20 @@
                        name="date_notification"
                        class="form-control"
                        value="{{ request('date_notification') }}">
+
+            </div>
+
+            {{-- Date exécution --}}
+            <div class="col-md-2">
+
+                <label class="form-label small text-muted fw-semibold">
+                    تاريخ التنفيذ
+                </label>
+
+                <input type="date"
+                       name="date_execution"
+                       class="form-control"
+                       value="{{ request('date_execution') }}">
 
             </div>
 
@@ -181,14 +195,18 @@
                     <x-sortable-th column="numero" class="pe-3 text-muted small fw-semibold">
                         رقم التنفيذ
                     </x-sortable-th>
- 
-                    <th class="text-muted small fw-semibold">
-                        الحكم / الملف
-                    </th>
- 
-                    <th class="text-muted small fw-semibold">
+
+                    <x-sortable-th column="dossier" class="text-muted small fw-semibold">
+                        رقم الملف
+                    </x-sortable-th>
+
+                    <x-sortable-th column="jugement" class="text-muted small fw-semibold">
+                        الحكم
+                    </x-sortable-th>
+
+                    <x-sortable-th column="tribunal" class="text-muted small fw-semibold">
                         المحكمة
-                    </th>
+                    </x-sortable-th>
  
                     <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
@@ -222,6 +240,16 @@
                         <span class="fw-semibold font-monospace">
                             {{ $execution->numero_dossier_execution }}
                         </span>
+                    </td>
+
+                    <td>
+                        @if($execution->jugement?->dossierTribunal?->dossier?->numero_dossier_tribunal)
+                            <span class="fw-semibold">
+                                {{ $execution->jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
+                            </span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
                     </td>
 
                     <td>
@@ -334,13 +362,13 @@
                 @empty
 
                 <tr>
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
 
                         <i class="bi bi-shield-x fs-1 d-block mb-2 opacity-25"></i>
 
                         لا توجد أي تنفيذات
 
-                        @if(request()->hasAny(['statut','responsable']))
+                        @if(request()->hasAny(['search','statut','date_notification','date_execution']))
                             —
                             <a href="{{ route('executions.index') }}">
                                 إعادة تعيين الفلاتر

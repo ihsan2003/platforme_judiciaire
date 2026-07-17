@@ -219,7 +219,9 @@
 
                 <div class="row g-3">
 
-                    <div class="col-sm-8">
+                
+
+                    <div class="col-sm-6">
 
                         <label class="form-label fw-semibold small">
                             الموضوع <span class="text-danger">*</span>
@@ -240,25 +242,6 @@
 
                     </div>
 
-                    <div class="col-sm-4">
-
-                        <label class="form-label fw-semibold small">
-                            تاريخ الاستلام <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="date"
-                               name="date_reception"
-                               class="form-control @error('date_reception') is-invalid @enderror"
-                               value="{{ old('date_reception', date('Y-m-d')) }}"
-                               required>
-
-                        @error('date_reception')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
-                    </div>
 
                     <div class="col-12">
 
@@ -304,38 +287,95 @@
 
                 <div class="mb-3">
 
-                    <label class="form-label fw-semibold small">
-                        الحالة الأولية
-                    </label>
+                    <div class="mt-2">
 
-                    <select name="id_statut_reclamation"
-                            class="form-select @error('id_statut_reclamation') is-invalid @enderror">
+                        <label class="form-label fw-semibold small">
+                            نوع الشكاية <span class="text-danger">*</span>
+                        </label>
 
-                        <option value="">
-                            — الحالة الافتراضية (مستلمة) —
-                        </option>
+                        <select name="id_type_reclamation"
+                                class="form-select @error('id_type_reclamation') is-invalid @enderror"
+                                required>
 
-                        @foreach($statuts as $statut)
-
-                            <option value="{{ $statut->id }}"
-                                @selected(old('id_statut_reclamation') == $statut->id)>
-
-                                {{ $statut->statut_reclamation }}
-
+                            <option value="">
+                                — اختر —
                             </option>
 
-                        @endforeach
+                            @foreach($typesReclamation as $type)
 
-                    </select>
+                                <option value="{{ $type->id }}"
+                                    @selected(old('id_type_reclamation') == $type->id)>
 
-                    @error('id_statut_reclamation')
-                        <div class="invalid-feedback">
-                            {{ $message }}
+                                    {{ $type->type_reclamation }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                        @error('id_type_reclamation')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
+                    </div>
+
+                    <div class="mt-2">
+
+                        <label class="form-label fw-semibold small">
+                            تاريخ الاستلام <span class="text-danger">*</span>
+                        </label>
+
+                        <input type="date"
+                               name="date_reception"
+                               class="form-control @error('date_reception') is-invalid @enderror"
+                               value="{{ old('date_reception', date('Y-m-d')) }}"
+                               required>
+
+                        @error('date_reception')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
+                    </div>
+
+                    <div class="mt-2">
+                        <label class="form-label fw-semibold small">
+                            الحالة الأولية
+                        </label>
+
+                        <select name="id_statut_reclamation"
+                                class="form-select @error('id_statut_reclamation') is-invalid @enderror">
+
+                            <option value="">
+                                — الحالة الافتراضية (مستلمة) —
+                            </option>
+
+                            @foreach($statuts as $statut)
+
+                                <option value="{{ $statut->id }}"
+                                    @selected(old('id_statut_reclamation') == $statut->id)>
+
+                                    {{ $statut->statut_reclamation }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                        @error('id_statut_reclamation')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
+                        <div class="form-text">
+                            إذا لم يتم تحديد الحالة، سيتم اعتماد "قيد المعالجة" بشكل افتراضي.
                         </div>
-                    @enderror
-
-                    <div class="form-text">
-                        إذا لم يتم تحديد حالة، سيتم اعتماد "مستلمة" بشكل افتراضي.
                     </div>
 
                 </div>

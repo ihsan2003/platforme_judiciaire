@@ -59,7 +59,7 @@
                     <input type="text"
                            name="search"
                            class="form-control border-end-0"
-                           placeholder="موضوع الشكاية أو اسم المشتكي..."
+                           placeholder="موضوع الشكاية، اسم المشتكي أو بريده الإلكتروني..."
                            value="{{ request('search') }}">
 
                     <span class="input-group-text bg-white">
@@ -97,6 +97,23 @@
                         <option value="{{ $type->id }}"
                             @selected(request('type_reclamant') == $type->id)>
                             {{ $type->type_reclamant }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">
+                    نوع الشكاية
+                </label>
+
+                <select name="type_reclamation" class="form-select">
+                    <option value="">كل الأنواع</option>
+
+                    @foreach($typesReclamation as $type)
+                        <option value="{{ $type->id }}"
+                            @selected(request('type_reclamation') == $type->id)>
+                            {{ $type->type_reclamation }}
                         </option>
                     @endforeach
                 </select>
@@ -169,6 +186,10 @@
                         الموضوع
                     </x-sortable-th>
  
+                    <th class="text-muted small fw-semibold">
+                        نوع الشكاية
+                    </th>
+ 
                     <x-sortable-th column="date" class="text-muted small fw-semibold">
                         تاريخ الاستلام
                     </x-sortable-th>
@@ -234,6 +255,12 @@
                            class="text-decoration-none fw-semibold text-dark">
                             {{ Str::limit($reclamation->objet, 55) }}
                         </a>
+                    </td>
+
+                    <td>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                            {{ $reclamation->typeReclamation?->type_reclamation ?? '—' }}
+                        </span>
                     </td>
 
                     <td class="text-muted small">
@@ -305,7 +332,7 @@
                 @empty
 
                 <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
+                    <td colspan="8" class="text-center py-5 text-muted">
 
                         <i class="bi bi-chat-left-x fs-1 d-block mb-2 opacity-25"></i>
 
@@ -315,6 +342,7 @@
                             'search',
                             'statut',
                             'type_reclamant',
+                            'type_reclamation',
                             'periode',
                             'date_debut',
                             'date_fin'

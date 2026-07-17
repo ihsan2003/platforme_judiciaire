@@ -7,6 +7,8 @@ use App\Http\Requests\Executions\StoreExecutionRequest;
 use App\Http\Requests\Executions\UpdateExecutionRequest;
 use App\Models\Execution;
 use App\Models\Jugement;
+use App\Models\Tribunal;
+use App\Models\DossierJudiciaire;
 use App\Models\StatutExecution;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -31,35 +33,68 @@ class ExecutionController extends Controller
                 'responsable',
             ])
 
+            // ══ JOIN pour permettre le tri des relations ══
+            ->leftJoin(
+                'jugements',
+                'jugements.id',
+                '=',
+                'executions.id_jugement'
+            )
+
+            ->leftJoin(
+                'dossier_tribunaux',
+                'dossier_tribunaux.id',
+                '=',
+                'jugements.id_dossier_tribunal'
+            )
+
+            ->leftJoin(
+                'dossier_judiciaires',
+                'dossier_judiciaires.id',
+                '=',
+                'dossier_tribunaux.id_dossier'
+            )
+
+            ->leftJoin(
+                'tribunaux',
+                'tribunaux.id',
+                '=',
+                'dossier_tribunaux.id_tribunal'
+            )
+
+            ->select('executions.*')
+
+
             // ══ Recherche numéro exécution + tribunal + dossier ══
             ->when(request('search'), function ($q, $v) {
 
                 $q->where(function ($query) use ($v) {
 
-                    // numéro exécution
-                    $query->where('numero_dossier_execution', 'like', "%{$v}%")
-
-                        // numéro dossier
-                        ->orWhereHas(
-                            'jugement.dossierTribunal.dossier',
-                            function ($dossier) use ($v) {
-
-                                $dossier->where(
-                                    'numero_dossier_tribunal',
-                                    'like',
-                                    "%{$v}%"
-                                );
-
-                            }
+                    $query
+                        ->where(
+                            'executions.numero_dossier_execution',
+                            'like',
+                            "%{$v}%"
                         )
 
-                        // nom tribunal
-                        ->orWhereHas(
-                            'jugement.dossierTribunal.tribunal',
-                            function ($tribunal) use ($v) {
+                        ->orWhere(
+                            'dossier_judiciaires.numero_dossier_tribunal',
+                            'like',
+                            "%{$v}%"
+                        )
 
-                                $tribunal->where(
-                                    'nom_tribunal',
+                        ->orWhere(
+                            'tribunaux.nom_tribunal',
+                            'like',
+                            "%{$v}%"
+                        )
+
+                        ->orWhereHas(
+                            'jugement.juge',
+                            function ($juge) use ($v) {
+
+                                $juge->where(
+                                    'nom_complet',
                                     'like',
                                     "%{$v}%"
                                 );
@@ -71,59 +106,127 @@ class ExecutionController extends Controller
 
             })
 
+
             // ══ Filtre statut ══
             ->when(request('statut'), function ($q, $v) {
-                $q->where('statut_execution', $v);
+
+                $q->where(
+                    'executions.statut_execution',
+                    $v
+                );
+
             })
+
 
             // ══ Filtre date notification ══
             ->when(request('date_notification'), function ($q, $v) {
-                $q->whereDate('date_notification', $v);
+
+                $q->whereDate(
+                    'executions.date_notification',
+                    $v
+                );
+
             })
 
-                        ->sortable([
-                'numero' => 'numero_dossier_execution',
+
+            // ══ Filtre date exécution ══
+            ->when(request('date_execution'), function ($q, $v) {
+
+                $q->whereDate(
+                    'executions.date_execution',
+                    $v
+                );
+
+            })
+
+
+            // ══ Tri colonnes ══
+            ->sortable([
+
+                'numero' => 'executions.numero_dossier_execution',
+
+                'dossier' => 'dossier_judiciaires.numero_dossier_tribunal',
+
+                'jugement' => 'jugements.date_jugement',
+
+                'tribunal' => 'tribunaux.nom_tribunal',
+
+
                 'statut' => fn($q, $dir) => $q->orderBy(
                     StatutExecution::select('statut_execution')
-                        ->whereColumn('statut_executions.id', 'executions.statut_execution'),
+                        ->whereColumn(
+                            'statut_executions.id',
+                            'executions.statut_execution'
+                        ),
                     $dir
                 ),
+
+
                 'responsable' => fn($q, $dir) => $q->orderBy(
                     User::select('name')
-                        ->whereColumn('users.id', 'executions.responsable_id'),
+                        ->whereColumn(
+                            'users.id',
+                            'executions.responsable_id'
+                        ),
                     $dir
                 ),
-                'notification' => 'date_notification',
-                'execution' => 'date_execution',
+
+
+                'notification' => 'executions.date_notification',
+
+                'execution' => 'executions.date_execution',
+
             ], 'notification', 'desc')
+
 
             ->paginate(15)
 
             ->withQueryString();
 
-        $stats = [
-            'total'       => Execution::count(),
 
-            'en_cours'    => Execution::whereHas(
+        $stats = [
+
+            'total' => Execution::count(),
+
+
+            'en_cours' => Execution::whereHas(
                 'statut',
-                fn($q) => $q->where('statut_execution', 'En cours')
+                fn($q) =>
+                    $q->where('statut_execution', 'En cours')
             )->count(),
 
-            'terminees'   => Execution::whereNotNull('date_execution')->count(),
 
-            'ce_mois'     => Execution::whereMonth(
+            'terminees' => Execution::whereNotNull(
+                'date_execution'
+            )->count(),
+
+
+            'ce_mois' => Execution::whereMonth(
                 'date_notification',
                 now()->month
             )->count(),
+
         ];
 
-        $statuts      = StatutExecution::orderBy('statut_execution')->get();
 
-        $responsables = User::orderBy('name')->get();
+        $statuts = StatutExecution::orderBy(
+            'statut_execution'
+        )->get();
+
+
+        $responsables = User::orderBy(
+            'name'
+        )->get();
+
 
         return view(
             'executions.index',
-            compact('executions', 'stats', 'statuts', 'responsables')
+            compact(
+                'executions',
+                'stats',
+                'statuts',
+                'responsables'
+            )
         );
     }
 

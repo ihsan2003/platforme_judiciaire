@@ -15,6 +15,7 @@ class Reclamation extends Model
     
     protected $fillable = [
         'id_reclamant',
+        'id_type_reclamation',
         'objet',
         'date_reception',
         'id_statut_reclamation',
@@ -28,6 +29,11 @@ class Reclamation extends Model
     public function reclamant()
     {
         return $this->belongsTo(Reclamant::class, 'id_reclamant');
+    }
+
+    public function typeReclamation()
+    {
+        return $this->belongsTo(TypeReclamation::class, 'id_type_reclamation');
     }
 
     public function statut()
@@ -45,10 +51,7 @@ class Reclamation extends Model
         return $this->hasMany(Document::class, 'id_reclamation');
     }
 
-//    public function notifications()
-//    {
-   //     return $this->hasMany(Notification::class, 'id_reclamation');
-    //}
+
 
     public function getDerniereActionAttribute()
     {

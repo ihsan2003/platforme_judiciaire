@@ -102,6 +102,76 @@
 
 </div>
 
+{{-- ══ الفلاتر ══ --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+
+        <form method="GET" class="row g-2 align-items-end">
+
+            {{-- Recherche --}}
+            <div class="col-md-3">
+
+                <label class="form-label small text-muted fw-semibold">
+                    بحث
+                </label>
+
+                <input type="text"
+                       name="search"
+                       class="form-control"
+                       placeholder="رقم الملف أو المحكمة..."
+                       value="{{ request('search') }}">
+
+            </div>
+
+
+            {{-- Statut --}}
+            <div class="col-md-2">
+
+                <label class="form-label small text-muted fw-semibold">
+                    الحالة
+                </label>
+
+                <select name="statut" class="form-select">
+                    <option value="">كل الحالات</option>
+                    <option value="En attente" @selected(request('statut') === 'En attente')>في الانتظار</option>
+                    <option value="Partiel"    @selected(request('statut') === 'Partiel')>جزئي</option>
+                    <option value="Complet"    @selected(request('statut') === 'Complet')>مسدد بالكامل</option>
+                </select>
+
+            </div>
+
+            {{-- Date jugement --}}
+            <div class="col-md-2">
+
+                <label class="form-label small text-muted fw-semibold">
+                    تاريخ الحكم
+                </label>
+
+                <input type="date"
+                       name="date_jugement"
+                       class="form-control"
+                       value="{{ request('date_jugement') }}">
+
+            </div>
+
+            {{-- Buttons --}}
+            <div class="col-md-1 d-flex gap-2">
+
+                <button class="btn btn-primary">
+                    <i class="bi bi-funnel-fill ms-1"></i>
+                </button>
+
+                <a href="{{ route('finances.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
 {{-- ══ الجدول ══ --}}
 <div class="card border-0 shadow-sm">
 
@@ -126,9 +196,13 @@
                     <x-sortable-th column="jugement" class="pe-3 text-muted small fw-semibold">
                         الحكم
                     </x-sortable-th>
+ 
+                    <x-sortable-th column="dossier" class="text-muted small fw-semibold">
+                        رقم الملف
+                    </x-sortable-th>
 
                     <x-sortable-th column="tribunal" class="text-muted small fw-semibold">
-                        الملف / المحكمة
+                         المحكمة
                     </x-sortable-th>
  
                     <x-sortable-th column="condamne" class="text-muted small fw-semibold text-center">
@@ -196,21 +270,21 @@
                     </td>
 
                     <td>
-                        @if($dt?->dossier)
-
-                            <a href="{{ route('dossiers.show', $dt->dossier) }}"
-                               class="text-decoration-none fw-semibold text-primary d-block">
-
-                                {{ $dt->dossier->numero_dossier_interne }}
-
-                            </a>
-
+                        @if($dt?->dossier?->numero_dossier_tribunal)
+                            <span class="fw-semibold">
+                                {{ $dt->dossier->numero_dossier_tribunal }}
+                            </span>
+                        @else
+                            <span class="text-muted">—</span>
                         @endif
+                    </td>
 
+                    <td>
                         <span class="text-muted small">
                             {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
                         </span>
                     </td>
+
 
                     <td class="fw-semibold text-center" dir="ltr">
                         {{ number_format($finance->montant_condamne, 2, ',', ' ') }} DH
@@ -280,11 +354,18 @@
                 @empty
 
                 <tr>
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
 
                         <i class="bi bi-cash-coin fs-1 d-block mb-2 opacity-25"></i>
 
                         لا توجد بيانات مالية مسجلة.
+
+                        @if(request()->hasAny(['search','date_jugement','statut']))
+                            —
+                            <a href="{{ route('finances.index') }}">
+                                إعادة تعيين الفلاتر
+                            </a>
+                        @endif
 
                     </td>
                 </tr>
@@ -299,7 +380,7 @@
 
                 <tr>
 
-                    <td colspan="2" class="pe-3">
+                    <td colspan="3" class="pe-3">
                         المجموع
                     </td>
 

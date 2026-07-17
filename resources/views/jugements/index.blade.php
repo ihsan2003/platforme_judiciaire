@@ -108,107 +108,112 @@
     <div class="card-body">
 
         <form method="GET" class="row g-2 align-items-end">
-
-            <div class="col-md-2">
+ 
+            <div class="col-md-3">
                 <label class="form-label small text-muted fw-semibold">
-                    القاضي
+                    بحث 
                 </label>
-
-                <select name="juge" class="form-select ">
-                    <option value="">جميع القضاة</option>
-
-                    @foreach($juges as $juge)
-                        <option value="{{ $juge->id }}"
-                                @selected(request('juge') == $juge->id)>
-                            {{ $juge->nom_complet }}
-                        </option>
-                    @endforeach
-
-                </select>
+ 
+                <input type="text" name="recherche" value="{{ request('recherche') }}"
+                       class="form-control" placeholder="اسم القاضي، المحكمة أو رقم الملف">
             </div>
 
+ 
             <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">
                     الصفة
                 </label>
-
+ 
                 <select name="definitif" class="form-select ">
-
+ 
                     <option value="">الكل</option>
-
+ 
                     <option value="oui"
                             @selected(request('definitif') === 'oui')>
                         نهائية
                     </option>
-
+ 
                     <option value="non"
                             @selected(request('definitif') === 'non')>
                         غير نهائية
                     </option>
-
+ 
                 </select>
             </div>
-
+ 
             <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">
                     الدرجة
                 </label>
-
+ 
                 <select name="degre" class="form-select ">
-
+ 
                     <option value="">الكل</option>
-
+ 
                     @foreach($degres as $degre)
                         <option value="{{ $degre->id }}"
                                 @selected(request('degre') == $degre->id)>
                             {{ $degre->degre_juridiction }}
                         </option>
                     @endforeach
-
+ 
+                </select>
+            </div>
+ 
+            <div class="col-md-2">
+                <label class="form-label small text-muted fw-semibold">
+                    وضعية المؤسسة
+                </label>
+ 
+                <select name="position" class="form-select">
+ 
+                    <option value="">الكل</option>
+ 
+                    <option value="contre"
+                            @selected(request('position') === 'contre')>
+                        ضد المؤسسة
+                    </option>
+ 
+                    <option value="partiel"
+                            @selected(request('position') === 'partiel')>
+                        جزئي
+                    </option>
+ 
+                    <option value="pour"
+                            @selected(request('position') === 'pour')>
+                        لصالح المؤسسة
+                    </option>
+ 
                 </select>
             </div>
 
             <div class="col-md-2">
                 <label class="form-label small text-muted fw-semibold">
-                    وضعية المؤسسة
+                    تاريخ الحكم
                 </label>
 
-                <select name="position" class="form-select">
-
-                    <option value="">الكل</option>
-
-                    <option value="contre"
-                            @selected(request('position') === 'contre')>
-                        ضد المؤسسة
-                    </option>
-
-                    <option value="partiel"
-                            @selected(request('position') === 'partiel')>
-                        جزئي
-                    </option>
-
-                    <option value="pour"
-                            @selected(request('position') === 'pour')>
-                        لصالح المؤسسة
-                    </option>
-
-                </select>
+                <input type="date"
+                    name="date_jugement"
+                    value="{{ request('date_jugement') }}"
+                    class="form-control">
             </div>
-
+ 
             <div class="col-md-1 d-flex gap-1">
-
+ 
                 <button class="btn btn-primary flex-fill" title="تصفية">
                     <i class="bi bi-funnel-fill"></i>
                 </button>
-
+ 
                 <a href="{{ route('jugements.index') }}"
                    class="btn btn-outline-secondary"
                    title="إعادة التعيين">
                     <i class="bi bi-x-lg"></i>
                 </a>
-
+ 
             </div>
 
+            
+ 
         </form>
 
     </div>

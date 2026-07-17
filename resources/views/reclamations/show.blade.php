@@ -46,6 +46,9 @@
                             <i class="bi bi-circle-fill me-1" style="font-size:.45rem;vertical-align:middle"></i>
                             {{ $statut }}
                         </span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                            {{ $reclamation->typeReclamation?->type_reclamation ?? 'نوع غير محدد' }}
+                        </span>
                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
                             {{ $reclamation->reclamant?->typeReclamant?->type_reclamant ?? '—' }}
                         </span>

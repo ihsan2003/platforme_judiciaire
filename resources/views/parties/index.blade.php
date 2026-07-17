@@ -118,7 +118,7 @@ body{
               action="{{ route('parties.index') }}"
               class="row g-2 align-items-end">
 
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small text-muted fw-semibold">
                     بحث
                 </label>
@@ -128,7 +128,7 @@ body{
                     <input type="text"
                            name="search"
                            class="form-control border-end-0"
-                           placeholder="الاسم، المعرف أو البريد الإلكتروني..."
+                           placeholder="الاسم، المعرف أو البريد أو رقم الهاتف..."
                            value="{{ request('search') }}">
 
                 </div>
@@ -288,7 +288,7 @@ body{
                     <td>
 
                         @php
-                            $isMorale = $partie->type_personne === 'Morale';
+                            $isMorale = $partie->type_personne === 'اعتباري';
                             $color = $isMorale ? 'warning' : 'success';
                             $textColor = $isMorale ? 'text-dark' : 'text-white';
                             $icon = $isMorale ? 'bi-building' : 'bi-person';
@@ -298,7 +298,7 @@ body{
 
                             <i class="bi {{ $icon }} ms-1"></i>
 
-                            {{ $partie->type_personne === 'Morale'
+                            {{ $partie->type_personne === 'اعتباري'
                                 ? 'اعتباري'
                                 : 'ذاتي' }}
 

@@ -30,11 +30,19 @@ class AudienceController extends Controller
                 'typeAudience',
                 'juge',
             ])
-            ->when(request('juge'),    fn($q, $v) => $q->where('id_juge', $v))
-            ->when(request('type'),    fn($q, $v) => $q->where('id_type_audience', $v))
-            ->when(request('dossier'), fn($q, $v) => $q->whereHas(
+            ->when(request('recherche'), function ($q, $v) {
+                $q->where(function ($sub) use ($v) {
+                    $sub->whereHas('juge', fn($q) => $q->where('nom_complet', 'like', "%{$v}%"))
+                        ->orWhereHas('dossierTribunal.tribunal', fn($q) => $q->where('nom_tribunal', 'like', "%{$v}%"))
+                        ->orWhereHas('dossierTribunal.dossier', fn($q) => $q->where('numero_dossier_tribunal', 'like', "%{$v}%"));
+                });
+            })
+            ->when(request('type'),       fn($q, $v) => $q->where('id_type_audience', $v))
+            ->when(request('dossier'),    fn($q, $v) => $q->whereHas(
                 'dossierTribunal', fn($q) => $q->where('id_dossier', $v)
             ))
+            ->when(request('date_debut'), fn($q, $v) => $q->whereDate('date_audience', '>=', $v))
+            ->when(request('date_fin'),   fn($q, $v) => $q->whereDate('date_audience', '<=', $v))
            ->sortable([
                 'date' => 'date_audience',
 
@@ -79,10 +87,9 @@ class AudienceController extends Controller
                 ->count(),
         ];
 
-        $juges        = Juge::orderBy('nom_complet')->get();
         $typesAudience = TypeAudience::orderBy('type_audience')->get();
 
-        return view('audiences.index', compact('audiences', 'stats', 'juges', 'typesAudience'));
+        return view('audiences.index', compact('audiences', 'stats', 'typesAudience'));
     }
 
     // ─────────────────────────────────────────
