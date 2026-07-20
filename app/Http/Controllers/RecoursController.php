@@ -257,10 +257,18 @@ class RecoursController extends Controller
         $degreAppel = $this->trouverDegre('استئناف');
 
         if ($degreAppel) {
-
             $dtOrigine->update(['date_fin' => today()->toDateString()]);
 
-            $idTribunal = $this->trouverTribunalSuivant($dtOrigine, $degreAppel);
+            // Pour un renvoi, on cherche d'abord le tribunal de l'instance d'appel précédente
+            $dtAppelPrecedente = DossierTribunal::where('id_dossier', $dossier->id)
+                ->where('id_degre', $degreAppel->id)
+                ->where('id', '!=', $dtOrigine->id)
+                ->latest('date_fin')
+                ->first();
+
+            $idTribunal = $dtAppelPrecedente 
+                ? $dtAppelPrecedente->id_tribunal 
+                : $this->trouverTribunalSuivant($dtOrigine, $degreAppel);
 
             $nouvelleDt = DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
@@ -385,7 +393,17 @@ class RecoursController extends Controller
     private function trouverTribunalSuivant(DossierTribunal $dtOrigine, DegreeJuridiction $degreCible): int
     {
         $tribunalOrigine = $dtOrigine->tribunal;
-        $provinceId = $tribunalOrigine->id_province;
+        
+        // Si on monte en degré (ex: 1er -> Appel), on cherche par rapport à la province d'origine
+        // Si on est déjà en Cassation et qu'on cherche un tribunal (cas rare hors renvoi),
+        // on essaie de retrouver l'instance de 1er degré pour avoir la province réelle.
+        $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
+            ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
+            ->first();
+            
+        $provinceId = $dtPremierDegre 
+            ? $dtPremierDegre->tribunal->id_province 
+            : $tribunalOrigine->id_province;
 
         // 1. Chercher dans la même province
         if ($provinceId) {
@@ -398,7 +416,9 @@ class RecoursController extends Controller
             }
 
             // 2. Chercher dans la même région
-            $regionId = $tribunalOrigine->province?->id_region;
+            $provinceRef = $dtPremierDegre ? $dtPremierDegre->tribunal->province : $tribunalOrigine->province;
+            $regionId = $provinceRef?->id_region;
+            
             if ($regionId) {
                 $tribunalRegion = Tribunal::whereHas('province', function($query) use ($regionId) {
                     $query->where('id_region', $regionId);
