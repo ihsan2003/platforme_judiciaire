@@ -123,9 +123,10 @@ class ReclamationController extends Controller
         $statuts          = StatutReclamation::orderBy('statut_reclamation')->get();
         $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
         $reclamants       = Reclamant::orderBy('nom')->get();
+        $typesDocuments   = TypeDocument::orderBy('type_document')->get();
 
         return view('reclamations.create', compact(
-            'typesReclamant', 'statuts', 'typesReclamation', 'reclamants'
+            'typesReclamant', 'statuts', 'typesReclamation', 'reclamants', 'typesDocuments'
         ));
     }
 
@@ -147,6 +148,9 @@ class ReclamationController extends Controller
             'id_type_reclamation'=> 'required|exists:type_reclamations,id',
             'date_reception'     => 'required|date',
             'details'            => 'nullable|string',
+
+            'document'           => 'nullable|file|max:10240', 
+            'id_type_document'   => 'nullable|exists:type_documents,id',
         ]);
 
         DB::transaction(function () use ($validated, $request) {
@@ -188,7 +192,10 @@ class ReclamationController extends Controller
                     'local'
                 );
 
-                $idTypeDoc = \App\Models\TypeDocument::first()?->id;
+                $idTypeDoc = $validated['id_type_document']
+                    ?? TypeDocument::where('type_document', 'وثيقة')->first()?->id
+                    ?? TypeDocument::first()?->id; 
+
 
                 $reclamation->documents()->create([
                     'titre_document'   => $file->getClientOriginalName(),

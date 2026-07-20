@@ -96,7 +96,10 @@ class DossierJudiciaireController extends Controller
     public function create()
     {
         $typesAffaire = TypeAffaire::orderBy('affaire')->get();
-        return view('dossiers.create', compact('typesAffaire'));
+        $typesDocuments   = TypeDocument::orderBy('type_document')->get();
+
+        
+        return view('dossiers.create', compact('typesAffaire', 'typesDocuments'));
     }
 
     // ================= STORE =================
@@ -106,13 +109,34 @@ class DossierJudiciaireController extends Controller
         $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
 
         DB::transaction(function () use ($request, $numero_mahakim) {
-            DossierJudiciaire::create([
+            $dossier = DossierJudiciaire::create([
                 'numero_dossier_tribunal' => $numero_mahakim,
                 'id_type_affaire'         => $request->id_type_affaire,
                 'date_ouverture'          => $request->date_ouverture,
                 'date_cloture'            => $request->date_cloture,
                 'created_by'              => Auth::id(),
+
             ]);
+
+            if ($request->hasFile('document')) {
+                $file = $request->file('document');
+                $path = $file->storeAs(
+                    "dossiers/{$dossier->id}",
+                    time() . '_' . $file->getClientOriginalName(),
+                    'local'
+                );
+
+                $idTypeDoc = $request->id_type_document
+                    ?? TypeDocument::where('type_document', 'وثيقة')->first()?->id
+                    ?? TypeDocument::first()?->id;
+
+                $dossier->documents()->create([
+                    'titre_document'   => $file->getClientOriginalName(),
+                    'date_depot'       => now()->toDateString(),
+                    'fichier_path'     => $path,
+                    'id_type_document' => $idTypeDoc,
+                ]);
+            }
         });
 
         return redirect()->route('dossiers.index')->with('success', 'تم إنشاء الملف بنجاح.');

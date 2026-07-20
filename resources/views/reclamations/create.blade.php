@@ -432,6 +432,31 @@
 
                 </div>
 
+                 {{-- Nouveau champ pour le type de document --}}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">
+                        نوع الوثيقة (اختياري)
+                    </label>
+                    <select name="id_type_document"
+                            class="form-select @error('id_type_document') is-invalid @enderror">
+                        <option value="\"></option>
+                        @foreach($typesDocuments as $type)
+                            <option value="{{ $type->id }}"
+                                @selected(old('id_type_document') == $type->id)>
+                                {{ $type->type_document }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_type_document')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                    <div class="form-text">
+                        Sélectionnez le type de document si un fichier est joint.
+                    </div>
+                </div>
+
             </div>
 
         </div>
