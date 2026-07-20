@@ -183,9 +183,13 @@ class RecoursController extends Controller
 
             // Rattacher le recours à la nouvelle instance
             $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
+
+            \Log::info("✅ Instance d'appel #{$nouvelleDt->id} créée pour le dossier #{$dossier->id} (tribunal #{$idTribunal}).");
+        } else {
+            \Log::warning("❌ Transition vers l'appel impossible pour le dossier #{$dossier->id} : aucun degré 'استئناف' trouvé dans degre_juridictions.");
         }
 
-        $this->changerStatutDossier($dossier, 'في الاستئناف');
+        $this->changerStatutDossier($dossier, 'في طور الاستئناف');
     }
 
     /**
@@ -207,16 +211,20 @@ class RecoursController extends Controller
 
             $idTribunal = $this->trouverTribunalSuivant($dtOrigine, $degreCassation);
 
-            DossierTribunal::create([
+            $nouvelleDt = DossierTribunal::create([
                 'id_dossier'  => $dossier->id,
                 'id_tribunal' => $idTribunal,
                 'id_degre'    => $degreCassation->id,
                 'date_debut'  => today()->toDateString(),
                 'date_fin'    => null,
             ]);
+
+            \Log::info("✅ Instance de cassation #{$nouvelleDt->id} créée pour le dossier #{$dossier->id} (tribunal #{$idTribunal}).");
+        } else {
+            \Log::warning("❌ Transition vers la cassation impossible pour le dossier #{$dossier->id} : aucun degré 'نقض' trouvé dans degre_juridictions.");
         }
 
-        $this->changerStatutDossier($dossier, 'في النقض');
+        $this->changerStatutDossier($dossier, 'في طور النقض');
     }
 
     /**
@@ -305,7 +313,10 @@ class RecoursController extends Controller
 
     /**
      * Trouve le tribunal du degré cible dans la même province que l'instance d'origine.
-     * Fallback : même tribunal si aucun tribunal du bon degré trouvé.
+     * Fallback 1 : un tribunal de ce degré ailleurs (une cour d'appel/cassation
+     * couvre en général plusieurs provinces et n'existe pas dans chacune d'elles).
+     * Fallback 2 (dernier recours) : le tribunal d'origine, si vraiment aucun
+     * tribunal de ce degré n'existe en base.
      */
     private function trouverTribunalSuivant(DossierTribunal $dtOrigine, DegreeJuridiction $degreCible): int
     {
@@ -321,7 +332,15 @@ class RecoursController extends Controller
             }
         }
 
-        return $dtOrigine->id_tribunal; // fallback
+        $tribunalDegre = Tribunal::where('id_degre', $degreCible->id)->first();
+
+        if ($tribunalDegre) {
+            \Log::warning("Aucun tribunal '{$degreCible->degre_juridiction}' dans la province #{$provinceId} : rattachement au tribunal #{$tribunalDegre->id} ({$tribunalDegre->nom_tribunal}).");
+            return $tribunalDegre->id;
+        }
+
+        \Log::warning("Aucun tribunal du degré '{$degreCible->degre_juridiction}' trouvé en base : instance rattachée par défaut au tribunal d'origine #{$dtOrigine->id_tribunal}.");
+        return $dtOrigine->id_tribunal; // dernier recours
     }
 
     /**

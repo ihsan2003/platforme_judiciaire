@@ -188,11 +188,7 @@
                             @php
                                 $statut = $dossier->statutDossier?->statut_dossier ?? '—';
 
-                                $sc = match(true) {
-                                    str_contains($statut, 'Actif')   => 'success',
-                                    str_contains($statut, 'Clôturé') => 'secondary',
-                                    default => 'primary',
-                                };
+                                $sc = $dossier->statutDossier?->couleur_bootstrap ?? 'primary';
 
                                 $role = $dossier->pivot->id_type_partie
                                     ? optional(\App\Models\TypePartie::find($dossier->pivot->id_type_partie))->type_partie

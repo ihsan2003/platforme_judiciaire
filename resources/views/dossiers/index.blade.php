@@ -279,15 +279,9 @@
 
                         @php
                             $statut = $dossier->statutDossier->statut_dossier ?? '—';
+                            $color  = $dossier->statutDossier?->couleur_bootstrap ?? 'primary';
 
-                            $color = match(true) {
-                                str_contains($statut, 'Actif')    => 'success',
-                                str_contains($statut, 'Clôturé')  => 'secondary',
-                                str_contains($statut, 'Suspendu') => 'warning',
-                                default                           => 'primary',
-                            };
-
-                            $textClass = in_array($color, ['warning', 'secondary'])
+                            $textClass = in_array($color, ['warning'])
                                 ? 'text-dark'
                                 : 'text-white';
                         @endphp
