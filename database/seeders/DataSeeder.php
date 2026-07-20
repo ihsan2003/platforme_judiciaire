@@ -38,7 +38,13 @@ class DataSeeder extends Seeder
             'تم الحكم',
             'تم التنفيذ',
             'مغلق',
-            'موقوف'
+            'موقوف',
+            'في طور الاستئناف',
+            'في طور النقض',
+            'في طور التعرض',
+            'في طور إعادة النظر',
+            'إعادة فتح',
+            'حفظ'
         ];
         foreach ($statuts as $statut) {
             DB::table('statut_dossiers')->insert(['statut_dossier' => $statut]);
@@ -71,7 +77,7 @@ class DataSeeder extends Seeder
         // درجات التقاضي
         $degres = [
             'الدرجة الأولى',
-            'الاستئناف',
+            'الإستئناف',
             'النقض'
         ];
         foreach ($degres as $degre) {

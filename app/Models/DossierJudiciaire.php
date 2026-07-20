@@ -252,6 +252,15 @@ class DossierJudiciaire extends Model
     }
 
 
+    public function changerStatutDossier(string $libelle = null): void
+    {
+        if ($libelle) {
+            $this->changerStatut($libelle);
+        } else {
+            $this->recalculerStatut();
+        }
+    }
+
     public function recalculerStatut(): void
     {
         // Récupérer tous les jugements du dossier
@@ -297,7 +306,9 @@ class DossierJudiciaire extends Model
         // LOG pour savoir ce qu'on cherche
         \Log::info("👉 Changement vers : " . $libelle);
         
-        $statut = StatutDossier::where('statut_dossier', $libelle)->first();
+        $statut = StatutDossier::where('statut_dossier', $libelle)
+            ->orWhere('statut_dossier', 'LIKE', '%' . $libelle . '%')
+            ->first();
         
         if ($statut) {
             $this->update(['id_statut_dossier' => $statut->id]);

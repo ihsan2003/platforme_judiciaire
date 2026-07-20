@@ -48,6 +48,8 @@ class DiagnosticRecours extends Command
                             && !str_contains($nom, 'rejet') && !str_contains($nom, 'renvoi') => 'pourvoi (cassation)',
                         (str_contains($nom, 'استئناف') || str_contains($nom, 'appel'))
                             && !str_contains($nom, 'نقض') && !str_contains($nom, 'cassation') => 'appel',
+                        str_contains($nom, 'تعرض') || str_contains($nom, 'opposition') => 'opposition',
+                        str_contains($nom, 'إعادة النظر') || str_contains($nom, 'revision') => 'revision',
                         default => '⚠️ AUCUNE TRANSITION (type inconnu)',
                     };
                     return [$t->id, $t->type_recours, $t->delai_legal_jours, $classe];

@@ -96,6 +96,16 @@ class RecoursController extends Controller
                 // Appel : ouverture d'une instance d'appel
                 $this->traiterAppel($dossier, $dossierTribunal, $recours);
 
+            } elseif ($this->estUneOpposition($nomType)) {
+
+                // Opposition : même degré
+                $this->traiterOpposition($dossier, $dossierTribunal, $recours);
+
+            } elseif ($this->estUneRevision($nomType)) {
+
+                // Révision : même degré
+                $this->traiterRevision($dossier, $dossierTribunal, $recours);
+
             } else {
 
                 // Type inconnu : aucune transition automatique
@@ -299,6 +309,50 @@ class RecoursController extends Controller
         $this->changerStatutDossier($dossier, 'مغلق');
     }
 
+    /**
+     * Opposition (تعرض) — même degré, nouvelle instance au même tribunal.
+     */
+    private function traiterOpposition(
+        DossierJudiciaire $dossier,
+        DossierTribunal   $dtOrigine,
+        Recours           $recours
+    ): void {
+        $dtOrigine->update(['date_fin' => today()->toDateString()]);
+
+        $nouvelleDt = DossierTribunal::create([
+            'id_dossier'  => $dossier->id,
+            'id_tribunal' => $dtOrigine->id_tribunal,
+            'id_degre'    => $dtOrigine->id_degre,
+            'date_debut'  => today()->toDateString(),
+            'date_fin'    => null,
+        ]);
+
+        $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
+        $this->changerStatutDossier($dossier, 'في طور التعرض');
+    }
+
+    /**
+     * Révision (إعادة النظر) — même degré, nouvelle instance au même tribunal.
+     */
+    private function traiterRevision(
+        DossierJudiciaire $dossier,
+        DossierTribunal   $dtOrigine,
+        Recours           $recours
+    ): void {
+        $dtOrigine->update(['date_fin' => today()->toDateString()]);
+
+        $nouvelleDt = DossierTribunal::create([
+            'id_dossier'  => $dossier->id,
+            'id_tribunal' => $dtOrigine->id_tribunal,
+            'id_degre'    => $dtOrigine->id_degre,
+            'date_debut'  => today()->toDateString(),
+            'date_fin'    => null,
+        ]);
+
+        $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
+        $this->changerStatutDossier($dossier, 'في طور إعادة النظر');
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
@@ -308,6 +362,14 @@ class RecoursController extends Controller
      */
     private function trouverDegre(string $libelle): ?DegreeJuridiction
     {
+        // Normalisation simplifiée pour l'arabe (Alif avec/sans Hamza)
+        if ($libelle === 'استئناف') {
+            return DegreeJuridiction::where('degre_juridiction', 'LIKE', '%استئناف%')
+                ->orWhere('degre_juridiction', 'LIKE', '%الإستئناف%')
+                ->orWhere('degre_juridiction', 'LIKE', '%الاستئناف%')
+                ->first();
+        }
+
         return DegreeJuridiction::whereRaw('LOWER(degre_juridiction) LIKE ?', [
             '%' . strtolower($libelle) . '%'
         ])->first();
@@ -322,8 +384,10 @@ class RecoursController extends Controller
      */
     private function trouverTribunalSuivant(DossierTribunal $dtOrigine, DegreeJuridiction $degreCible): int
     {
-        $provinceId = $dtOrigine->tribunal()->with('province')->first()?->id_province;
+        $tribunalOrigine = $dtOrigine->tribunal;
+        $provinceId = $tribunalOrigine->id_province;
 
+        // 1. Chercher dans la même province
         if ($provinceId) {
             $tribunal = Tribunal::where('id_province', $provinceId)
                 ->where('id_degre', $degreCible->id)
@@ -332,17 +396,31 @@ class RecoursController extends Controller
             if ($tribunal) {
                 return $tribunal->id;
             }
+
+            // 2. Chercher dans la même région
+            $regionId = $tribunalOrigine->province?->id_region;
+            if ($regionId) {
+                $tribunalRegion = Tribunal::whereHas('province', function($query) use ($regionId) {
+                    $query->where('id_region', $regionId);
+                })
+                ->where('id_degre', $degreCible->id)
+                ->first();
+
+                if ($tribunalRegion) {
+                    return $tribunalRegion->id;
+                }
+            }
         }
 
+        // 3. Fallback national (pour la Cour de Cassation par exemple)
         $tribunalDegre = Tribunal::where('id_degre', $degreCible->id)->first();
 
         if ($tribunalDegre) {
-            \Log::warning("Aucun tribunal '{$degreCible->degre_juridiction}' dans la province #{$provinceId} : rattachement au tribunal #{$tribunalDegre->id} ({$tribunalDegre->nom_tribunal}).");
             return $tribunalDegre->id;
         }
 
-        \Log::warning("Aucun tribunal du degré '{$degreCible->degre_juridiction}' trouvé en base : instance rattachée par défaut au tribunal d'origine #{$dtOrigine->id_tribunal}.");
-        return $dtOrigine->id_tribunal; // dernier recours
+        // 4. Dernier recours : tribunal d'origine
+        return $dtOrigine->id_tribunal;
     }
 
     /**
@@ -416,5 +494,21 @@ class RecoursController extends Controller
         return (str_contains($nom, 'استئناف') || str_contains($nom, 'appel'))
             && !str_contains($nom, 'نقض')
             && !str_contains($nom, 'cassation');
+    }
+
+    /**
+     * Opposition : contient "تعرض" ou "opposition"
+     */
+    private function estUneOpposition(string $nom): bool
+    {
+        return str_contains($nom, 'تعرض') || str_contains($nom, 'opposition');
+    }
+
+    /**
+     * Révision : contient "إعادة النظر" ou "revision"
+     */
+    private function estUneRevision(string $nom): bool
+    {
+        return str_contains($nom, 'إعادة النظر') || str_contains($nom, 'revision');
     }
 }
