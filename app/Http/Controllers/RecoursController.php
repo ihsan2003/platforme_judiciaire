@@ -22,6 +22,8 @@ class RecoursController extends Controller
         $this->middleware('auth');
     }
 
+    
+
     // ─────────────────────────────────────────────────────────────────────────
     // STORE — Enregistre un recours et déclenche la transition de degré
     // ─────────────────────────────────────────────────────────────────────────
