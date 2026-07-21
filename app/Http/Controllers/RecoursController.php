@@ -397,6 +397,19 @@ class RecoursController extends Controller
     private function determinerTypeCible(DossierTribunal $dtOrigine, DegreeJuridiction $degreCible): ?int
     {
         $typeOrigine = $dtOrigine->tribunal->typeTribunal->tribunal;
+        
+        // Si on est à la Cassation, le type est neutre (محكمة النقض). 
+        // Pour un renvoi, il faut retrouver la spécialité d'origine (Administratif/Commercial)
+        if (str_contains($typeOrigine, 'النقض')) {
+            $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
+                ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
+                ->first();
+            
+            if ($dtPremierDegre) {
+                $typeOrigine = $dtPremierDegre->tribunal->typeTribunal->tribunal;
+            }
+        }
+
         $nomDegreCible = $degreCible->degre_juridiction;
 
         // Si on va vers la Cassation, il n'y a qu'un seul type possible
