@@ -396,41 +396,45 @@ class RecoursController extends Controller
      */
     private function determinerTypeCible(DossierTribunal $dtOrigine, DegreeJuridiction $degreCible): ?int
     {
-        $dossier = $dtOrigine->dossier;
-        $typeAffaire = $dossier->typeAffaire->affaire;
+        $typeOrigine = $dtOrigine->tribunal->typeTribunal->tribunal;
+        
+        // Si on est à la Cassation, on remonte à la 1ère instance pour retrouver la spécialité du tribunal
+        if (str_contains($typeOrigine, 'النقض')) {
+            $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
+                ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
+                ->first();
+            
+            if ($dtPremierDegre) {
+                $typeOrigine = $dtPremierDegre->tribunal->typeTribunal->tribunal;
+            }
+        }
+
         $nomDegreCible = $degreCible->degre_juridiction;
 
-        // 1. Cas de la Cassation : toujours le type "محكمة النقض"
+        // 1. Cas de la Cassation
         if (str_contains($nomDegreCible, 'نقض')) {
             $typeCassation = \App\Models\TypeTribunal::where('tribunal', 'LIKE', '%نقض%')->first();
             return $typeCassation?->id;
         }
 
-        // 2. Cas de l'Appel : dépend de la nature de l'affaire
+        // 2. Cas de l'Appel : basé sur le type du tribunal d'origine (ou 1ère instance)
         if (str_contains($nomDegreCible, 'استئناف') || str_contains($nomDegreCible, 'الإستئناف')) {
-            
-            // Affaire Administrative
-            if (str_contains($typeAffaire, 'إداري') || str_contains($typeAffaire, 'الإدارية')) {
+            if (str_contains($typeOrigine, 'إداري') || str_contains($typeOrigine, 'الإدارية')) {
                 $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', '%استئناف%')
                     ->where(fn($q) => $q->where('tribunal', 'LIKE', '%إداري%')->orWhere('tribunal', 'LIKE', '%الإدارية%'))
                     ->first();
                 return $type?->id;
             }
-            
-            // Affaire Commerciale
-            if (str_contains($typeAffaire, 'تجاري') || str_contains($typeAffaire, 'التجارية')) {
+            if (str_contains($typeOrigine, 'تجاري') || str_contains($typeOrigine, 'التجارية')) {
                 $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', '%استئناف%')
                     ->where(fn($q) => $q->where('tribunal', 'LIKE', '%تجاري%')->orWhere('tribunal', 'LIKE', '%التجارية%'))
                     ->first();
                 return $type?->id;
             }
-            
-            // Par défaut : Cour d'appel ordinaire
             $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', 'محكمة الاستئناف')->first();
             return $type?->id;
         }
 
-        // 3. Cas Opposition/Révision : même type que l'instance d'origine
         return $dtOrigine->tribunal->id_type_tribunal;
     }
 
