@@ -1,0 +1,35 @@
+Source : /home/ubuntu/upload/مرسوم-رقم-2.23.665-بتحديد-الخريطة-القضائية-للمملكة(1)(2).pdf
+
+Constatations initiales à partir des pages 1 à 5 :
+- Le document est le décret n° 2.23.665 du 25 Rabii II 1445 (10 novembre 2023) relatif à la détermination de la carte judiciaire du Royaume.
+- La carte judiciaire comprend : les juridictions du premier degré, les juridictions du second degré, et la Cour de cassation dont le siège est à Rabat.
+- Le texte indique les volumes suivants : 108 juridictions du premier degré, dont 88 tribunaux de première instance, 10 tribunaux de première instance commerciaux et 10 tribunaux de première instance administratifs.
+- Il indique aussi 33 juridictions du second degré, dont 23 cours d'appel, 5 cours d'appel commerciales et 5 cours d'appel administratives.
+- Les sièges et ressorts territoriaux détaillés sont annoncés dans les tableaux n° 1, 2, 3 et 4 annexés au décret.
+- Le document précise également quelques exceptions transitoires dans l'article 6, mais la donnée utile pour le seeder sera principalement contenue dans les tableaux annexes.
+
+Étape suivante prévue : extraire textuellement les tableaux annexes pour reconstituer les relations entre tribunaux de premier degré et juridictions d'appel compétentes.
+
+Constatations supplémentaires à partir des pages 6 à 10 du décret :
+
+Les pages consultées correspondent au début du **tableau n° 1** relatif aux juridictions de premier et de second degré de droit commun. La structure du tableau relie, pour chaque cour d'appel, les tribunaux de première instance qui relèvent de son ressort, puis les الجماعات الترابية relevant de chaque tribunal de première instance.
+
+Les correspondances visibles et utiles pour le seeder sont notamment les suivantes :
+
+| Cour d'appel | Tribunal de première instance rattaché |
+| --- | --- |
+| الرباط | الرباط |
+| الرباط | تمارة |
+| الرباط | سلا |
+| الرباط | الخميسات |
+| الرباط | تيفلت |
+| الرباط | الرماني |
+| القنيطرة | القنيطرة |
+| القنيطرة | سيدي قاسم |
+| القنيطرة | مشرع بلقصيري |
+| القنيطرة | سيدي سليمان |
+
+Ces pages confirment bien que le décret fournit directement le **rattachement juridictionnel** nécessaire pour remplir le champ `id_parent` dans `tribunaux`.
+
+Étape suivante : procéder à une extraction textuelle automatisée de l'ensemble des tableaux du PDF afin de produire un seeder complet et fiable.
+

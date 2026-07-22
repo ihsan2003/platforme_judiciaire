@@ -4,30 +4,102 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Tribunal;
+use Illuminate\Support\Facades\Log;
 
 class HierarchieTribunauxSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * Basé sur le Décret n° 2.23.665 du 10 novembre 2023 (Carte Judiciaire du Maroc).
      */
     public function run(): void
     {
-        // Exemple Administratif : Béni Mellal -> Marrakech
-        $tpiAdminBeniMellal = Tribunal::where('nom_tribunal', 'LIKE', '%المحكمة الابتدائية الإدارية ببني ملال%')->first();
-        $caAdminMarrakech = Tribunal::where('nom_tribunal', 'LIKE', '%محكمة الاستئناف الإدارية بمراكش%')->first();
+        $this->seedDroitCommun();
+        $this->seedCommercial();
+        $this->seedAdministratif();
+    }
 
-        if ($tpiAdminBeniMellal && $caAdminMarrakech) {
-            $tpiAdminBeniMellal->update(['id_parent' => $caAdminMarrakech->id]);
+    private function seedDroitCommun()
+    {
+        $hierarchy = [
+            "الرباط" => ["الرباط", "تمارة", "سلا", "الخميسات", "تيفلت", "الرماني"],
+            "القنيطرة" => ["القنيطرة", "سيدي قاسم", "مشرع بلقصيري", "سيدي سليمان", "سوق الأربعاء الغرب"],
+            "الدار البيضاء" => ["الدار البيضاء", "المحمدية", "بنسليمان", "بوزنيقة"],
+            "الجديدة" => ["الجديدة", "سيدي بنور"],
+            "سطات" => ["سطات", "برشيد", "بن أحمد"],
+            "فاس" => ["فاس", "صفرو", "بولمان", "تاونات"],
+            "مكناس" => ["مكناس", "إفران", "الحاجب", "أزرو"],
+            "تطوان" => ["تطوان", "شفشاون", "وزان", "المضيق"],
+            "طنجة" => ["طنجة", "أصيلة", "العرائش", "القصر الكبير"],
+            "وجدة" => ["وجدة", "بركان", "تاوريرت", "جرادة", "فجيج"],
+            "الناظور" => ["الناظور", "الدريوش"],
+            "الحسيمة" => ["الحسيمة", "تارجيست"],
+            "بني ملال" => ["بني ملال", "قصبة تادلة", "أزيلال", "دمنات", "الفقيه بن صالح", "سوق السبت أولاد النمة", "خنيفرة"],
+            "خريبكة" => ["خريبكة", "وادي زم", "أبي الجعد"],
+            "مراكش" => ["مراكش", "تحناوت", "شيشاوة", "إمنتانوت", "قلعة السراغنة", "ابن جرير"],
+            "آسفي" => ["آسفي", "اليوسفية", "الصويرة"],
+            "ورزازات" => ["ورزازات", "زاكورة", "تنغير"],
+            "أكادير" => ["أكادير", "إنزكان", "أيت ملول", "تارودانت", "تيزنيت", "طاطا", "بيوكرى"],
+            "كلميم" => ["كلميم", "طانطان", "أسا الزاك", "سيدي إفني"],
+            "العيون" => ["العيون", "السمارة", "بوجدور"],
+            "الداخلة" => ["الداخلة"],
+            "الرشيدية" => ["الرشيدية", "أرفود", "الريش", "ميدلت"],
+            "تازة" => ["تازة", "جرسيف"]
+        ];
+
+        foreach ($hierarchy as $caName => $tpis) {
+            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الاستئناف ب{$caName}%")
+                ->where('id_degre', 2)
+                ->first();
+
+            if ($ca) {
+                foreach ($tpis as $tpiName) {
+                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الابتدائية ب{$tpiName}%")
+                        ->where('id_degre', 1)
+                        ->update(['id_parent' => $ca->id]);
+                }
+            }
         }
+    }
 
-        // Exemple Simple : Rabat -> Rabat
-        $tpiRabat = Tribunal::where('nom_tribunal', 'LIKE', '%المحكمة الابتدائية بالرباط%')->first();
-        $caRabat = Tribunal::where('nom_tribunal', 'LIKE', '%محكمة الاستئناف بالرباط%')->first();
+    private function seedCommercial()
+    {
+        $hierarchyCom = [
+            "الدار البيضاء" => ["الدار البيضاء", "الرباط"],
+            "فاس" => ["فاس", "وجدة", "طنجة"],
+            "مراكش" => ["مراكش", "أكادير", "بني ملال"]
+            // Note: Le décret 2023 prévoit des extensions (Tanger, Agadir) qui peuvent être ajoutées ici
+        ];
 
-        if ($tpiRabat && $caRabat) {
-            $tpiRabat->update(['id_parent' => $caRabat->id]);
+        foreach ($hierarchyCom as $caName => $tpis) {
+            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الاستئناف التجارية ب{$caName}%")->first();
+            if ($ca) {
+                foreach ($tpis as $tpiName) {
+                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الابتدائية التجارية ب{$tpiName}%")
+                        ->update(['id_parent' => $ca->id]);
+                }
+            }
         }
-        
-        // On peut continuer ainsi pour toute la carte judiciaire
+    }
+
+    private function seedAdministratif()
+    {
+        $hierarchyAdmin = [
+            "الرباط" => ["الرباط", "القنيطرة"],
+            "الدار البيضاء" => ["الدار البيضاء"],
+            "فاس" => ["فاس", "وجدة", "مكناس"],
+            "مراكش" => ["مراكش", "أكادير", "بني ملال"]
+            // Note: Le décret 2023 prévoit aussi Tanger, Agadir, Laâyoune, Dakhla
+        ];
+
+        foreach ($hierarchyAdmin as $caName => $tpis) {
+            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الاستئناف الإدارية ب{$caName}%")->first();
+            if ($ca) {
+                foreach ($tpis as $tpiName) {
+                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الابتدائية الإدارية ب{$tpiName}%")
+                        ->update(['id_parent' => $ca->id]);
+                }
+            }
+        }
     }
 }
