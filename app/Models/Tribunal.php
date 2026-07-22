@@ -17,6 +17,7 @@ class Tribunal extends Model
         'id_type_tribunal',
         'id_province',
         'id_degre',
+        'id_parent',
     ];
 
     public function typeTribunal()
@@ -32,6 +33,16 @@ class Tribunal extends Model
     public function degre()
     {
         return $this->belongsTo(DegreeJuridiction::class, 'id_degre');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'id_parent');
+    }
+
+    public function enfants()
+    {
+        return $this->hasMany(self::class, 'id_parent');
     }
 
     public function juges()

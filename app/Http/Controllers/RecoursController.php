@@ -397,15 +397,27 @@ class RecoursController extends Controller
     private function determinerTypeCible(DossierTribunal $dtOrigine, DegreeJuridiction $degreCible): ?int
     {
         $typeOrigine = $dtOrigine->tribunal->typeTribunal->tribunal;
+        
+        // Si on est à la Cassation, on remonte à la 1ère instance pour retrouver la spécialité du tribunal
+        if (str_contains($typeOrigine, 'النقض')) {
+            $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
+                ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
+                ->first();
+            
+            if ($dtPremierDegre) {
+                $typeOrigine = $dtPremierDegre->tribunal->typeTribunal->tribunal;
+            }
+        }
+
         $nomDegreCible = $degreCible->degre_juridiction;
 
-        // Si on va vers la Cassation, il n'y a qu'un seul type possible
+        // 1. Cas de la Cassation
         if (str_contains($nomDegreCible, 'نقض')) {
             $typeCassation = \App\Models\TypeTribunal::where('tribunal', 'LIKE', '%نقض%')->first();
             return $typeCassation?->id;
         }
 
-        // Si on va vers l'Appel
+        // 2. Cas de l'Appel : basé sur le type du tribunal d'origine (ou 1ère instance)
         if (str_contains($nomDegreCible, 'استئناف') || str_contains($nomDegreCible, 'الإستئناف')) {
             if (str_contains($typeOrigine, 'إداري') || str_contains($typeOrigine, 'الإدارية')) {
                 $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', '%استئناف%')
@@ -419,12 +431,10 @@ class RecoursController extends Controller
                     ->first();
                 return $type?->id;
             }
-            // Par défaut : Cour d'appel ordinaire
             $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', 'محكمة الاستئناف')->first();
             return $type?->id;
         }
 
-        // Pour les autres cas (Opposition/Révision), on garde le même type
         return $dtOrigine->tribunal->id_type_tribunal;
     }
 
@@ -432,10 +442,24 @@ class RecoursController extends Controller
     {
         $tribunalOrigine = $dtOrigine->tribunal;
         $idTypeCible = $this->determinerTypeCible($dtOrigine, $degreCible);
-        
-        // Si on monte en degré (ex: 1er -> Appel), on cherche par rapport à la province d'origine
-        // Si on est déjà en Cassation et qu'on cherche un tribunal (cas rare hors renvoi),
-        // on essaie de retrouver l'instance de 1er degré pour avoir la province réelle.
+        $nomDegreCible = $degreCible->degre_juridiction;
+
+        // 1. Cas de l'Appel : Utiliser la relation directe id_parent
+        if (str_contains($nomDegreCible, 'استئناف') || str_contains($nomDegreCible, 'الإستئناف')) {
+            // Retrouver le tribunal de premier degré (si on est déjà en appel, on cherche l'origine)
+            $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
+                ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
+                ->first();
+            
+            $tribunalPremierDegre = $dtPremierDegre ? $dtPremierDegre->tribunal : $tribunalOrigine;
+
+            // Utiliser id_parent si défini
+            if ($tribunalPremierDegre->id_parent) {
+                return $tribunalPremierDegre->id_parent;
+            }
+        }
+
+        // 2. Fallback ou autres degrés (Cassation, etc.) : Logique existante
         $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
             ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
             ->first();
@@ -444,7 +468,7 @@ class RecoursController extends Controller
             ? $dtPremierDegre->tribunal->id_province 
             : $tribunalOrigine->id_province;
 
-        // 1. Chercher dans la même province avec le bon type
+        // Chercher dans la même province avec le bon type
         if ($provinceId) {
             $query = Tribunal::where('id_province', $provinceId)->where('id_degre', $degreCible->id);
             if ($idTypeCible) { $query->where('id_type_tribunal', $idTypeCible); }
@@ -454,7 +478,7 @@ class RecoursController extends Controller
                 return $tribunal->id;
             }
 
-            // 2. Chercher dans la même région avec le bon type
+            // Chercher dans la même région avec le bon type
             $provinceRef = $dtPremierDegre ? $dtPremierDegre->tribunal->province : $tribunalOrigine->province;
             $regionId = $provinceRef?->id_region;
             
@@ -472,7 +496,7 @@ class RecoursController extends Controller
             }
         }
 
-        // 3. Fallback national avec le bon type
+        // Fallback national avec le bon type
         $queryNational = Tribunal::where('id_degre', $degreCible->id);
         if ($idTypeCible) { $queryNational->where('id_type_tribunal', $idTypeCible); }
         $tribunalDegre = $queryNational->first();
@@ -481,7 +505,6 @@ class RecoursController extends Controller
             return $tribunalDegre->id;
         }
 
-        // 4. Dernier recours : tribunal d'origine
         return $dtOrigine->id_tribunal;
     }
 
