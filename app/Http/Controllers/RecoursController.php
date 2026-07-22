@@ -370,7 +370,7 @@ class RecoursController extends Controller
      */
     private function trouverDegre(string $libelle): ?DegreeJuridiction
     {
-        // Normalisation simplifiée pour l'arabe (Alif avec/sans Hamza)
+        // Normalisation simplifiée pour l'arabe 
         if ($libelle === 'استئناف') {
             return DegreeJuridiction::where('degre_juridiction', 'LIKE', '%استئناف%')
                 ->orWhere('degre_juridiction', 'LIKE', '%الإستئناف%')
