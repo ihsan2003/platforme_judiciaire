@@ -444,7 +444,7 @@ class RecoursController extends Controller
         $idTypeCible = $this->determinerTypeCible($dtOrigine, $degreCible);
         $nomDegreCible = $degreCible->degre_juridiction;
 
-        // 1. Cas de l'Appel : Utiliser la table de correspondance explicite
+        // 1. Cas de l'Appel : Utiliser la relation directe id_parent
         if (str_contains($nomDegreCible, 'استئناف') || str_contains($nomDegreCible, 'الإستئناف')) {
             // Retrouver le tribunal de premier degré (si on est déjà en appel, on cherche l'origine)
             $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
@@ -453,13 +453,9 @@ class RecoursController extends Controller
             
             $tribunalPremierDegre = $dtPremierDegre ? $dtPremierDegre->tribunal : $tribunalOrigine;
 
-            // Chercher la relation explicite
-            $relation = \App\Models\TribunalAppelRelation::where('tribunal_premier_degre_id', $tribunalPremierDegre->id)
-                ->where('type_tribunal_id', $tribunalPremierDegre->id_type_tribunal)
-                ->first();
-
-            if ($relation) {
-                return $relation->tribunal_appel_id;
+            // Utiliser id_parent si défini
+            if ($tribunalPremierDegre->id_parent) {
+                return $tribunalPremierDegre->id_parent;
             }
         }
 
