@@ -81,7 +81,7 @@
                                         data-tribunal-id="{{ $dt->id_tribunal }}"
                                         @selected(old('id_dossier_tribunal',
                                             $dossierTribunaux->count() === 1 ? $dt->id : null) == $dt->id)>
-                                    {{ $dt->dossier?->numero_dossier_interne ?? 'ملف #'.$dt->id_dossier }}
+                                    {{ $dt->dossier?->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
                                     — {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
                                 </option>
                             @endforeach

@@ -260,7 +260,7 @@ class DossierJudiciaireController extends Controller
                 ->with('error', 'لا يمكن أرشفة هذا الملف لأن هناك تنفيذًا قيد التنفيذ.');
         }
 
-        $numero = $dossier->numero_dossier_interne;
+        $numero = $dossier->numero_dossier_tribunal;
         $dossier->delete();
 
         return redirect()

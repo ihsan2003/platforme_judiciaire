@@ -27,7 +27,7 @@
             حكم بتاريخ {{ $jugement?->date_jugement?->format('d/m/Y') ?? '—' }}
             @if($dossier)
                 — <a href="{{ route('dossiers.show', $dossier) }}" class="text-decoration-none">
-                    {{ $dossier->numero_dossier_interne }}
+                    {{ $dossier->numero_dossier_tribunal }}
                 </a>
             @endif
         </p>
@@ -63,7 +63,7 @@
 
                         <div class="form-control bg-light text-muted">
                             حكم بتاريخ {{ $jugement?->date_jugement?->format('d/m/Y') ?? '—' }}
-                            · {{ $dt?->dossier?->numero_dossier_interne ?? '—' }}
+                            · {{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
                             · {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
                         </div>
 

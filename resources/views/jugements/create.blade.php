@@ -76,7 +76,7 @@
                                         @foreach($dossierTribunaux as $dt)
                                             <option value="{{ $dt->id }}"
                                                 @selected(old('id_dossier_tribunal', $defaultDossierTribunalId ?? null) == $dt->id)>
-                                                {{ $dt->dossier->numero_dossier_interne ?? '—' }}
+                                                {{ $dt->dossier->numero_dossier_tribunal ?? '—' }}
                                                 · {{ $dt->tribunal->nom_tribunal ?? '—' }}
                                                 · {{ $dt->degre->degre_juridiction ?? '—' }}
                                             </option>

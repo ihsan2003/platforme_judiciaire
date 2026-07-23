@@ -44,17 +44,17 @@ class HierarchieTribunauxSeeder extends Seeder
             "العيون" => ["العيون", "السمارة", "بوجدور"],
             "الداخلة" => ["الداخلة"],
             "الرشيدية" => ["الرشيدية", "أرفود", "الريش", "ميدلت"],
-            "تازة" => ["تازة", "جرسيف"]
+            "تازة" => ["تازة", "كرسيف"]
         ];
 
         foreach ($hierarchy as $caName => $tpis) {
-            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الاستئناف ب{$caName}%")
+            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الإستئناف ب{$caName}%")
                 ->where('id_degre', 2)
                 ->first();
 
             if ($ca) {
                 foreach ($tpis as $tpiName) {
-                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الابتدائية ب{$tpiName}%")
+                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الإبتدائية ب{$tpiName}%")
                         ->where('id_degre', 1)
                         ->update(['id_parent' => $ca->id]);
                 }
@@ -72,10 +72,10 @@ class HierarchieTribunauxSeeder extends Seeder
         ];
 
         foreach ($hierarchyCom as $caName => $tpis) {
-            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الاستئناف التجارية ب{$caName}%")->first();
+            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الإستئناف التجارية ب{$caName}%")->first();
             if ($ca) {
                 foreach ($tpis as $tpiName) {
-                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الابتدائية التجارية ب{$tpiName}%")
+                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الإبتدائية التجارية ب{$tpiName}%")
                         ->update(['id_parent' => $ca->id]);
                 }
             }
@@ -93,10 +93,10 @@ class HierarchieTribunauxSeeder extends Seeder
         ];
 
         foreach ($hierarchyAdmin as $caName => $tpis) {
-            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الاستئناف الإدارية ب{$caName}%")->first();
+            $ca = Tribunal::where('nom_tribunal', 'LIKE', "%محكمة الإستئناف الإدارية ب{$caName}%")->first();
             if ($ca) {
                 foreach ($tpis as $tpiName) {
-                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الابتدائية الإدارية ب{$tpiName}%")
+                    Tribunal::where('nom_tribunal', 'LIKE', "%المحكمة الإبتدائية الإدارية ب{$tpiName}%")
                         ->update(['id_parent' => $ca->id]);
                 }
             }

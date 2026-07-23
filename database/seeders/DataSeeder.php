@@ -17,33 +17,70 @@ class DataSeeder extends Seeder
     {
         // أنواع القضايا
         $typesAffaire = [
-            'مدني',
-            'إداري',
-            'مدني اجتماعي',
-            'تجاري',
-            'حوادث الشغل',
-            'نزاعات الشغل',
-            'متنوع',
-            'الصفقات العمومية',
-            'استعجالي',
-            'عقاري'
+            [
+                'affaire' => 'مدني',
+                'code' => '1201',
+            ],
+            [
+                'affaire' => 'إداري',
+                'code' => '1204',
+            ],
+            [
+                'affaire' => 'مدني اجتماعي',
+                'code' => '1501',
+            ],
+            [
+                'affaire' => 'تجاري',
+                'code' => '1203',
+            ],
+            [
+                'affaire' => 'حوادث الشغل',
+                'code' => '1502',
+            ],
+            [
+                'affaire' => 'نزاعات الشغل',
+                'code' => '1501',
+            ],
+            [
+                'affaire' => 'متنوع',
+                'code' => '1201',
+            ],
+            [
+                'affaire' => 'الصفقات العمومية',
+                'code' => '7102',
+            ],
+            [
+                'affaire' => 'استعجالي',
+                'code' => '1101',
+            ],
+            [
+                'affaire' => 'عقاري',
+                'code' => '1401',
+            ],
+            [
+                'affaire' => 'جرائم الأموال',
+                'code' => '2105',
+            ],
         ];
+
         foreach ($typesAffaire as $type) {
-            DB::table('type_affaires')->insert(['affaire' => $type]);
+            DB::table('type_affaires')->insert([
+                'affaire' => $type['affaire'],
+                'code' => $type['code'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         // حالات الملف
         $statuts = [
             'جاري',
-            'تم الحكم',
-            'تم التنفيذ',
-            'مغلق',
-            'موقوف',
             'في طور الاستئناف',
             'في طور النقض',
             'في طور التعرض',
             'في طور إعادة النظر',
-            'إعادة فتح',
+            'تم الحكم',
+            'تم التنفيذ',
             'حفظ'
         ];
         foreach ($statuts as $statut) {
@@ -63,12 +100,12 @@ class DataSeeder extends Seeder
         // أنواع المحاكم
         $typesTribunal = [
             'المحكمة الابتدائية',
-            'محكمة الاستئناف',
+            'محكمة الإستئناف',
             'محكمة النقض',
             'المحكمة الإدارية',
-            'محكمة الاستئناف الإدارية',
+            'محكمة الإستئناف الإدارية',
             'المحكمة التجارية',
-            'محكمة الاستئناف التجارية'
+            'محكمة الإستئناف التجارية'
         ];
         foreach ($typesTribunal as $type) {
             DB::table('type_tribunaux')->insert(['tribunal' => $type]);
@@ -78,7 +115,9 @@ class DataSeeder extends Seeder
         $degres = [
             'الدرجة الأولى',
             'الإستئناف',
-            'النقض'
+            'النقض',
+            'التعرض',
+            'إعادة النظر'
         ];
         foreach ($degres as $degre) {
             DB::table('degre_juridictions')->insert(['degre_juridiction' => $degre]);
@@ -89,7 +128,11 @@ class DataSeeder extends Seeder
             'التحقيق',
             'المرافعة',
             'الإعداد',
-            'الحكم'
+            'الحكم',
+            'البحث',
+            'الخبرة',
+            'المداولة',
+            'الإخراج من المداولة',
         ];
         foreach ($typesAudience as $type) {
             DB::table('type_audiences')->insert(['type_audience' => $type]);
@@ -118,11 +161,9 @@ class DataSeeder extends Seeder
 
         // حالات التنفيذ
         $statutsExec = [
-            'في الانتظار',
             'قيد التنفيذ',
             'تنفيذ جزئي',
             'تنفيذ كامل',
-            'متروك'
         ];
         foreach ($statutsExec as $statut) {
             DB::table('statut_executions')->insert(['statut_execution' => $statut]);
@@ -133,9 +174,13 @@ class DataSeeder extends Seeder
             'استدعاء',
             'طلب',
             'حكم',
-            'محضر',
+            'محضر خبرة',
             'عقد',
-            'وثيقة'
+            'وثيقة',
+            'حكم تمهيدي',
+            'مقال إفتتاحي',
+            'مذكرة جوابية',
+            'مذكرة تعقيبية'
         ];
         foreach ($typesDoc as $type) {
             DB::table('type_documents')->insert(['type_document' => $type]);
@@ -153,8 +198,14 @@ class DataSeeder extends Seeder
 
         // أنواع المشتكين
         $typesReclamant = [
-            'مباشر',
-            'مؤسسة',
+            'شركة',
+            'مقاولة',
+            'مرفق عمومي',
+            'مستخدم',
+            'مرتفق',
+            'مؤسسة الوسيط',
+            'مديرية جهوية',
+            'مديرية إقليمية',
             'آخر'
         ];
         foreach ($typesReclamant as $type) {

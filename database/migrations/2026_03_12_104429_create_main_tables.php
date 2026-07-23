@@ -77,7 +77,6 @@ return new class extends Migration
         // Dossiers judiciaires
         Schema::create('dossier_judiciaires', function (Blueprint $table) {
             $table->id();
-            $table->string('numero_dossier_interne')->unique();
             $table->string('numero_dossier_tribunal')->nullable();
             $table->foreignId('id_type_affaire')->constrained('type_affaires');
             $table->foreignId('id_statut_dossier')->constrained('statut_dossiers');

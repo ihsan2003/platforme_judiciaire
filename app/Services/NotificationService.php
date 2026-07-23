@@ -97,13 +97,13 @@ class NotificationService
 
             if ($estAujourdhui) {
 
-                $message = "جلسة اليوم — {$dossier?->numero_dossier_interne}";
+                $message = "جلسة اليوم — {$dossier?->numero_dossier_tribunal}";
 
                 $details = "المحكمة: {$tribunal} | النوع: {$type}";
 
             } else {
 
-                $message = "جلسة بعد {$joursRestants} يوم — {$dossier?->numero_dossier_interne}";
+                $message = "جلسة بعد {$joursRestants} يوم — {$dossier?->numero_dossier_tribunal}";
 
                 $details = "بتاريخ {$audience->date_audience->format('d/m/Y')} | المحكمة: {$tribunal}";
             }
@@ -166,13 +166,13 @@ class NotificationService
 
                 $niveau = 'danger';
 
-                $message = "انتهاء أجل الطعن — {$dossier?->numero_dossier_interne}";
+                $message = "انتهاء أجل الطعن — {$dossier?->numero_dossier_tribunal}";
 
             } else {
 
                 $niveau = $delaiRestant <= 3 ? 'danger' : 'warning';
 
-                $message = "متبقي {$delaiRestant} يوم للطعن — {$dossier?->numero_dossier_interne}";
+                $message = "متبقي {$delaiRestant} يوم للطعن — {$dossier?->numero_dossier_tribunal}";
             }
 
             $details = "الحكم بتاريخ {$jugement->date_jugement->format('d/m/Y')} | {$tribunal}";
@@ -218,7 +218,7 @@ class NotificationService
             $joursEcoules = $jugement->date_jugement->diffInDays(today());
             $dossier      = $jugement->dossierTribunal?->dossier;
 
-            $message = "حكم غير نهائي منذ {$joursEcoules} يوم — {$dossier?->numero_dossier_interne}";
+            $message = "حكم غير نهائي منذ {$joursEcoules} يوم — {$dossier?->numero_dossier_tribunal}";
 
             $details = "صدر بتاريخ {$jugement->date_jugement->format('d/m/Y')} — بدون طعن أو إغلاق";
 
@@ -319,7 +319,7 @@ class NotificationService
             $niveau  = $joursEcoules > 60 ? 'danger' : 'warning';
             $message = "تنفيذ جارٍ منذ {$joursEcoules} يوم — {$execution->numero_dossier_execution}";
 
-            $details = "الملف: {$dossier?->numero_dossier_interne} | تم التبليغ بتاريخ {$execution->date_notification->format('d/m/Y')}";
+            $details = "الملف: {$dossier?->numero_dossier_tribunal} | تم التبليغ بتاريخ {$execution->date_notification->format('d/m/Y')}";
 
             $cleDedup = "execution_{$execution->id}_" . today()->format('Y-W');
 

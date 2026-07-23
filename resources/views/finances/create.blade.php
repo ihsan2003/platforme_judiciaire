@@ -52,7 +52,7 @@
                             @foreach($jugements as $j)
                                 <option value="{{ $j->id }}" @selected(old('id_jugement') == $j->id)>
                                     Jugement du {{ $j->date_jugement?->format('d/m/Y') ?? '—' }}
-                                    · {{ $j->dossierTribunal?->dossier?->numero_dossier_interne ?? '—' }}
+                                    · {{ $j->dossierTribunal?->dossier?->numero_dossier_tribunal ?? '—' }}
                                     · {{ $j->dossierTribunal?->tribunal?->nom_tribunal ?? '—' }}
                                 </option>
                             @endforeach

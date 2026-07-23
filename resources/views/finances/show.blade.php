@@ -46,7 +46,7 @@
                         <a href="{{ route('dossiers.show', $dossier) }}"
                            class="text-muted small text-decoration-none">
                             <i class="bi bi-folder2-open me-1"></i>
-                            {{ $dossier->numero_dossier_interne }}
+                            {{ $dossier->numero_dossier_tribunal }}
                         </a>
                     @endif
 
