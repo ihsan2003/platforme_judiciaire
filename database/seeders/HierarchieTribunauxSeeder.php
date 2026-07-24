@@ -17,6 +17,7 @@ class HierarchieTribunauxSeeder extends Seeder
         $this->seedDroitCommun();
         $this->seedCommercial();
         $this->seedAdministratif();
+        $this->seedCassationParent();
     }
 
     private function seedDroitCommun()
@@ -100,6 +101,14 @@ class HierarchieTribunauxSeeder extends Seeder
                         ->update(['id_parent' => $ca->id]);
                 }
             }
+        }
+    }
+
+    private function seedCassationParent()
+    {
+        $cassation = Tribunal::where('id_degre', 3)->first();
+        if ($cassation) {
+            Tribunal::where('id_degre', 2)->update(['id_parent' => $cassation->id]);
         }
     }
 }

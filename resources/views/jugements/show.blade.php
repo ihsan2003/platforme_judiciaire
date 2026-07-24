@@ -373,19 +373,30 @@
                                 نوع الطعن <span class="text-danger">*</span>
                             </label>
 
-                            <select name="id_type_recours"
-                                    class="form-select form-select-sm @error('id_type_recours') is-invalid @enderror"
-                                    required>
-
+                            <select name="id_type_recours" class="form-select form-select-sm" required>
                                 <option value="">— اختر —</option>
+                                @php
+                                    $ordreActuel = $jugement->dossierTribunal->degre?->ordre ?? 1;
+                                    $typesDisponibles = \App\Models\TypeRecours::query()
+                                        ->when($ordreActuel == 1, function($q) {
+                                            $q->whereIn('type_recours', ['استئناف', 'تعرض']);
+                                        })
+                                        ->when($ordreActuel == 2, function($q) {
+                                            $q->whereIn('type_recours', ['الطعن بالنقض', 'تعرض', 'إعادة النظر']);
+                                        })
+                                        ->when($ordreActuel == 3, function($q) {
+                                            // Propose les types liés au renvoi ou au rejet en cassation
+                                            $q->where(fn($sq) => $sq->where('type_recours', 'LIKE', '%نقض%')
+                                                                    ->orWhere('type_recours', 'LIKE', '%إحالة%')
+                                                                    ->orWhere('type_recours', 'LIKE', '%رفض%'));
+                                        })
+                                        ->orderBy('type_recours')
+                                        ->get();
+                                @endphp
 
-                                @foreach(\App\Models\TypeRecours::orderBy('type_recours')->get() as $tr)
-                                    <option value="{{ $tr->id }}">
-                                        {{ $tr->type_recours }}
-                                        ({{ $tr->delai_legal_jours }} يوم)
-                                    </option>
+                                @foreach($typesDisponibles as $tr)
+                                    <option value="{{ $tr->id }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
                                 @endforeach
-
                             </select>
 
                             @error('id_type_recours')

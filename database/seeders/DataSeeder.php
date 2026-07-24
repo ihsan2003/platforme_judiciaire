@@ -89,8 +89,8 @@ class DataSeeder extends Seeder
 
         // أنواع الأطراف
         $typesPartie = [
-            'مدعي',
-           'مدعى عليه',
+            'المدعي',
+           'المدعى عليه',
             'متدخل'
         ];
         foreach ($typesPartie as $type) {
@@ -100,12 +100,12 @@ class DataSeeder extends Seeder
         // أنواع المحاكم
         $typesTribunal = [
             'المحكمة الابتدائية',
-            'محكمة الإستئناف',
-            'محكمة النقض',
+            'محكمة الإستئناف',  
+            'المحكمة التجارية',
+            'محكمة الإستئناف التجارية',     
             'المحكمة الإدارية',
             'محكمة الإستئناف الإدارية',
-            'المحكمة التجارية',
-            'محكمة الإستئناف التجارية'
+            'محكمة النقض',
         ];
         foreach ($typesTribunal as $type) {
             DB::table('type_tribunaux')->insert(['tribunal' => $type]);
@@ -151,9 +151,11 @@ class DataSeeder extends Seeder
         // أنواع الطعون مع الآجال القانونية
         $recours = [
             ['type_recours' => 'استئناف', 'delai_legal_jours' => 30],
-            ['type_recours' => 'تعرض', 'delai_legal_jours' => 15],
+            ['type_recours' => 'تعرض', 'delai_legal_jours' => 10],
             ['type_recours' => 'الطعن بالنقض', 'delai_legal_jours' => 30],
-            ['type_recours' => 'إعادة النظر', 'delai_legal_jours' => 30],
+            ['type_recours' => 'إعادة النظر', 'delai_legal_jours' => 10],
+            ['type_recours' => 'نقض وإحالة', 'delai_legal_jours' => 30], // NOUVEAU
+            ['type_recours' => 'نقض مع رفض الطعن', 'delai_legal_jours' => 30],
         ];
         foreach ($recours as $r) {
             DB::table('type_recours')->insert($r);

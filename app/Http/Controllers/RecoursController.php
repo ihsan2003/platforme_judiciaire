@@ -73,29 +73,20 @@ class RecoursController extends Controller
             ]);
 
             // ── Routage de la transition selon le type de recours ──────────
-            // ORDRE CRITIQUE : tester rejet/renvoi AVANT le générique cassation
             $nomType = strtolower($typeRecours->type_recours);
 
             if ($this->estCassationRejet($nomType)) {
-
-                // Cassation-rejet : l'arrêt devient définitif → clôture
                 $this->traiterCassationRejet($dossier, $jugement, $dossierTribunal);
-
             } elseif ($this->estCassationRenvoi($nomType)) {
-
-                // Cassation-renvoi : nouvelle instance d'appel créée
                 $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours);
-
             } elseif ($this->estUnPourvoi($nomType)) {
-
-                // Pourvoi pur : ouverture d'une instance de cassation
                 $this->traiterPourvoi($dossier, $dossierTribunal);
-
             } elseif ($this->estUnAppel($nomType)) {
-
-                // Appel : ouverture d'une instance d'appel
-                $this->traiterAppel($dossier, $dossierTribunal, $recours);
-
+                if ($dossierTribunal->degre?->ordre == 3) {
+                    $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours);
+                } else {
+                    $this->traiterAppel($dossier, $dossierTribunal, $recours);
+                }
             } elseif ($this->estUneOpposition($nomType)) {
 
                 // Opposition : même degré
@@ -498,14 +489,15 @@ class RecoursController extends Controller
 
         // Fallback national avec le bon type
         $queryNational = Tribunal::where('id_degre', $degreCible->id);
+        if (str_contains($degreCible->degre_juridiction, 'نقض')) {
+            $tribunalCassation = $queryNational->first();
+            if ($tribunalCassation) return $tribunalCassation->id;
+        }
+
         if ($idTypeCible) { $queryNational->where('id_type_tribunal', $idTypeCible); }
         $tribunalDegre = $queryNational->first();
 
-        if ($tribunalDegre) {
-            return $tribunalDegre->id;
-        }
-
-        return $dtOrigine->id_tribunal;
+        return $tribunalDegre ? $tribunalDegre->id : $dtOrigine->id_tribunal;
     }
 
     /**
