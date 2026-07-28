@@ -422,7 +422,12 @@ class RecoursController extends Controller
                     ->first();
                 return $type?->id;
             }
-            $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', 'محكمة الاستئناف')->first();
+            $type = \App\Models\TypeTribunal::where('tribunal', 'LIKE', '%استئناف%')
+                ->where(fn($q) => $q->where('tribunal', 'NOT LIKE', '%إداري%')
+                    ->where('tribunal', 'NOT LIKE', '%الإدارية%')
+                    ->where('tribunal', 'NOT LIKE', '%تجاري%')
+                    ->where('tribunal', 'NOT LIKE', '%التجارية%'))
+                ->first();
             return $type?->id;
         }
 
@@ -437,17 +442,43 @@ class RecoursController extends Controller
 
         // 1. Cas de l'Appel : Utiliser la relation directe id_parent
         if (str_contains($nomDegreCible, 'استئناف') || str_contains($nomDegreCible, 'الإستئناف')) {
-            // Retrouver le tribunal de premier degré (si on est déjà en appel, on cherche l'origine)
+            // Retrouver le tribunal de première instance du dossier (jamais l'origine du recours
+            // elle-même : si l'origine est déjà une Cour d'Appel, son propre id_parent pointe
+            // vers la Cassation, ce qui ne doit JAMAIS être utilisé comme cible d'un appel).
             $dtPremierDegre = DossierTribunal::where('id_dossier', $dtOrigine->id_dossier)
                 ->whereHas('degre', fn($q) => $q->where('degre_juridiction', 'LIKE', '%الأولى%'))
                 ->first();
-            
-            $tribunalPremierDegre = $dtPremierDegre ? $dtPremierDegre->tribunal : $tribunalOrigine;
 
-            // Utiliser id_parent si défini
-            if ($tribunalPremierDegre->id_parent) {
-                return $tribunalPremierDegre->id_parent;
+            if ($dtPremierDegre) {
+                $tribunalPremierDegre = $dtPremierDegre->tribunal;
+
+                // Garde-fou : on ne fait confiance à id_parent QUE s'il pointe vers un
+                // tribunal (a) du degré cible (Appel) ET (b) de la même spécialité
+                // (civil / commercial / administratif) que l'origine. Sans ce second
+                // contrôle, un TPI commercial ou administratif dont le id_parent a été
+                // mal rattaché (ou rattaché à une Cour d'Appel générique) enverrait le
+                // dossier vers le mauvais type de juridiction d'appel.
+                $parent = $tribunalPremierDegre->id_parent
+                    ? Tribunal::find($tribunalPremierDegre->id_parent)
+                    : null;
+
+                if (
+                    $parent
+                    && $parent->id_degre == $degreCible->id
+                    && (! $idTypeCible || $parent->id_type_tribunal == $idTypeCible)
+                ) {
+                    return $parent->id;
+                }
+
+                \Log::warning("⚠️ id_parent du tribunal de première instance #{$tribunalPremierDegre->id} absent ou incohérent (attendu degré #{$degreCible->id}, type #{$idTypeCible}) pour le dossier #{$dtOrigine->id_dossier} — recherche géographique utilisée à la place.");
+            } else {
+                \Log::warning("⚠️ Aucune instance de première instance ('الدرجة الأولى') trouvée pour le dossier #{$dtOrigine->id_dossier} — impossible d'utiliser le raccourci id_parent, recherche géographique utilisée à la place.");
             }
+
+            // NB: on ne retombe JAMAIS sur $tribunalOrigine->id_parent ici. Si l'instance
+            // d'origine du recours est elle-même une Cour d'Appel, son id_parent pointe vers
+            // la Cassation (cf. HierarchieTribunauxSeeder::seedCassationParent) et ne doit
+            // jamais être utilisé pour créer une nouvelle instance d'Appel.
         }
 
         // 2. Fallback ou autres degrés (Cassation, etc.) : Logique existante
@@ -539,16 +570,16 @@ class RecoursController extends Controller
     // CLASSIFIEURS DE TYPE DE RECOURS
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Cassation-rejet : contient "rejet" (à tester AVANT le générique cassation) */
+    /** Cassation-rejet : contient "rejet" / "رفض" (à tester AVANT le générique cassation) */
     private function estCassationRejet(string $nom): bool
     {
-        return str_contains($nom, 'rejet');
+        return str_contains($nom, 'rejet') || str_contains($nom, 'رفض');
     }
 
-    /** Cassation-renvoi : contient "renvoi" (à tester AVANT le générique cassation) */
+    /** Cassation-renvoi : contient "renvoi" / "إحالة" (à tester AVANT le générique cassation) */
     private function estCassationRenvoi(string $nom): bool
     {
-        return str_contains($nom, 'renvoi');
+        return str_contains($nom, 'renvoi') || str_contains($nom, 'إحالة');
     }
 
     /**
@@ -558,8 +589,8 @@ class RecoursController extends Controller
     private function estUnPourvoi(string $nom): bool
     {
         return (str_contains($nom, 'pourvoi') || str_contains($nom, 'نقض'))
-            && !str_contains($nom, 'rejet')
-            && !str_contains($nom, 'renvoi');
+            && !str_contains($nom, 'rejet') && !str_contains($nom, 'رفض')
+            && !str_contains($nom, 'renvoi') && !str_contains($nom, 'إحالة');
     }
 
     /**
