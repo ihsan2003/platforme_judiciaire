@@ -245,15 +245,15 @@
                     </td>
 
                     <td class="text-muted small">
-                        @foreach(
+                        {{
                             $dossier->dossierTribunaux
-                                ->pluck('tribunal.province.region.region')
-                                ->filter()
-                                ->unique()
-                            as $region
-                        )
-                            {{ $region }}
-                        @endforeach
+                                ->sortBy('date_debut')
+                                ->first()
+                                ?->tribunal
+                                ?->province
+                                ?->region
+                                ?->region ?? '—'
+                        }}
                     </td>
 
                     <td>

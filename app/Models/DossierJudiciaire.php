@@ -276,14 +276,14 @@ class DossierJudiciaire extends Model
             return;
         }
 
-        // Cas 2 : Il y a une exécution terminée → Statut "حفظ"
+        // Cas 2 : Il y a une exécution terminée → Statut "تم التنفيذ"
         $execTerminee = $jugements
             ->flatMap(fn($j) => $j->executions) // ← On prend TOUTES les exécutions
             ->whereNotNull('date_execution')     // ← Qui ont une date d'exécution
             ->isNotEmpty();
 
         if ($execTerminee) {
-            $this->changerStatut('حفظ');
+            $this->changerStatut('تم التنفيذ');
             return;
         }
 
