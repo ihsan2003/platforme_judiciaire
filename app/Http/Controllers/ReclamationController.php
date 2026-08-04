@@ -208,7 +208,7 @@ class ReclamationController extends Controller
 
         return redirect()
             ->route('reclamations.index')
-            ->with('success', 'تم تسجيل الشكوى بنجاح.');
+            ->with('success', 'تم تسجيل الشكاية بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -241,22 +241,34 @@ class ReclamationController extends Controller
     // ─────────────────────────────────────────
     public function edit(Reclamation $reclamation)
     {
-        // Charger les relations nécessaires pour la réclamation actuelle
-        $reclamation->load(['reclamant.typeReclamant', 'typeReclamation', 'statut']);
-        
-        // 1. Récupérer TOUS les réclamants pour pouvoir en changer si besoin
-        $reclamants = Reclamant::orderBy('nom')->get(); 
-        
-        // 2. Garder vos variables existantes pour les types et statuts
-        $typesReclamant   = TypeReclamant::orderBy('type_reclamant')->get();
-        $statuts          = StatutReclamation::orderBy('statut_reclamation')->get();
+        // Charger les relations nécessaires
+        $reclamation->load([
+            'reclamant.typeReclamant',
+            'typeReclamation',
+            'statut'
+        ]);
+
+        // Tous les réclamants avec leur type (nécessaire pour TomSelect)
+        $reclamants = Reclamant::with('typeReclamant')
+            ->orderBy('nom')
+            ->get();
+
+        $typesReclamant = TypeReclamant::orderBy('type_reclamant')->get();
+
+        $statuts = StatutReclamation::orderBy('statut_reclamation')->get();
+
         $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
 
-        // 3. Ajouter 'reclamants' dans le compact
+
         return view('reclamations.edit', compact(
-            'reclamation', 'reclamants', 'typesReclamant', 'statuts', 'typesReclamation'
+            'reclamation',
+            'reclamants',
+            'typesReclamant',
+            'statuts',
+            'typesReclamation'
         ));
     }
+
 
     // ─────────────────────────────────────────
     // UPDATE
@@ -264,38 +276,49 @@ class ReclamationController extends Controller
     public function update(Request $request, Reclamation $reclamation): RedirectResponse
     {
         $validated = $request->validate([
+
+            // Réclamation
             'objet'                 => 'required|string|max:500',
             'id_type_reclamation'   => 'required|exists:type_reclamations,id',
             'date_reception'        => 'required|date',
             'details'               => 'nullable|string',
             'id_statut_reclamation' => 'required|exists:statut_reclamations,id',
-            // Mise à jour du réclamant
-            'telephone_reclamant'   => 'nullable|regex:/^(\+212|00212|0)(5|6|7)[0-9]{8}$/',
-            'email_reclamant'       => 'nullable|email|max:255',
-            'adresse_reclamant'     => 'nullable|string|max:500',
+
+            // Réclamant
+            'id_reclamant'          => 'required|exists:reclamants,id',
+
         ]);
+
 
         DB::transaction(function () use ($validated, $reclamation) {
 
-            // Mettre à jour les coordonnées du réclamant
-            $reclamation->reclamant->update([
-                'telephone' => $validated['telephone_reclamant'] ?? $reclamation->reclamant->telephone,
-                'email'     => $validated['email_reclamant']     ?? $reclamation->reclamant->email,
-                'adresse'   => $validated['adresse_reclamant']   ?? $reclamation->reclamant->adresse,
+
+            // Mise à jour de la réclamation
+            $reclamation->update([
+
+                'id_reclamant'          => $validated['id_reclamant'],
+
+                'objet'                 => $validated['objet'],
+
+                'id_type_reclamation'   => $validated['id_type_reclamation'],
+
+                'date_reception'        => $validated['date_reception'],
+
+                'details'               => $validated['details'] ?? null,
+
+                'id_statut_reclamation' => $validated['id_statut_reclamation'],
+
             ]);
 
-            $reclamation->update([
-                'objet'                 => $validated['objet'],
-                'id_type_reclamation'   => $validated['id_type_reclamation'],
-                'date_reception'        => $validated['date_reception'],
-                'details'               => $validated['details'],
-                'id_statut_reclamation' => $validated['id_statut_reclamation'],
-            ]);
+
         });
 
+
         return redirect()
+
             ->route('reclamations.show', $reclamation)
-            ->with('success', 'تم تحديث الشكوى بنجاح.');
+
+            ->with('success', 'تم تحديث الشكاية بنجاح.');
     }
 
     // ─────────────────────────────────────────
@@ -308,7 +331,7 @@ class ReclamationController extends Controller
 
         return redirect()
             ->route('reclamations.index')
-            ->with('success', "تم حذف الشكوى « {$objet} » بنجاح.");
+            ->with('success', "تم حذف الشكاية « {$objet} » بنجاح.");
     }
 
     // ─────────────────────────────────────────
@@ -395,6 +418,6 @@ class ReclamationController extends Controller
 
         $reclamation->update(['id_statut_reclamation' => $request->id_statut_reclamation]);
 
-        return back()->with('success', 'تم تحديث حالة الشكوى بنجاح.');
+        return back()->with('success', 'تم تحديث حالة الشكاية بنجاح.');
     }
 }

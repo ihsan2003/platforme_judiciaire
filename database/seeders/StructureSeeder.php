@@ -4,57 +4,122 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Structure;
+use App\Models\TypeStructure;
+use App\Models\Region;
+use App\Models\Province;
 
 class StructureSeeder extends Seeder
 {
+
+    
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // 🟢 1. Directeur (racine)
-        Structure::create([
-            'nom' => 'الإدارة المركزية',
-            'id_type_structure' => 5, // إدارة مركزية
-            'id_parent' => null
-        ]);
+        $types = TypeStructure::pluck('id', 'type_structure');
 
 
-        // 🟡 3. المفتشية
-        Structure::create([
-            'nom' => 'المفتشية',
-            'id_type_structure' => 7,
-            'id_parent' => 1
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Direction centrale (racine)
+        |--------------------------------------------------------------------------
+        */
+
+        $directionCentrale = Structure::firstOrCreate(
+            [
+                'nom' => 'الإدارة المركزية'
+            ],
+            [
+                'id_type_structure' => $types['إدارة مركزية'],
+                'id_parent' => null,
+            ]
+        );
 
 
-        // 🟡 4. المديريات الجهوية
-        Structure::create([
-            'nom' => 'المديريات الجهوية',
-            'id_type_structure' => 4,
-            'id_parent' => 1
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Inspection
+        |--------------------------------------------------------------------------
+        */
 
-        Structure::create([
-            'nom' => 'المديريات الإقليمية',
-            'id_type_structure' => 3,
-            'id_parent' => 3
-        ]);
+        Structure::firstOrCreate(
+            [
+                'nom' => 'المفتشية'
+            ],
+            [
+                'id_type_structure' => $types['مفتشية'],
+                'id_parent' => $directionCentrale->id,
+            ]
+        );
 
-        // 🟣 5. مديرية الشؤون الإدارية والمالية
-        Structure::create([
-            'nom' => 'المديرية الفرعية المكلفة بالشؤون الإدارية والمالية',
-            'id_type_structure' => 6,
-            'id_parent' => 1
-        ]);
 
-        Structure::create([
-            'nom' => 'قسم الموارد البشرية',
-            'id_type_structure' => 2,
-            'id_parent' => 5
-        ]);
 
-        Structure::create([
-            'nom' => 'مصلحة تدبير شؤون الموظفين',
-            'id_type_structure' => 1,
-            'id_parent' => 6
-        ]);
+        /*
+        |--------------------------------------------------------------------------
+        | Directions régionales
+        |--------------------------------------------------------------------------
+        */
+
+        $regionsStructures = [];
+
+
+        Region::orderBy('id')->get()->each(function ($region) use (
+            $types,
+            $directionCentrale,
+            &$regionsStructures
+        ) {
+
+            $structure = Structure::firstOrCreate(
+
+                [
+                    'nom' => 'المديرية الجهوية ل' . $region->region
+                ],
+
+                [
+                    'id_type_structure' => $types['مديرية جهوية'],
+                    'id_parent' => $directionCentrale->id,
+                ]
+
+            );
+
+
+            // mémoriser la direction régionale correspondante
+            $regionsStructures[$region->id] = $structure->id;
+
+        });
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Directions provinciales
+        |--------------------------------------------------------------------------
+        */
+
+        Province::orderBy('id')->get()->each(function ($province) use (
+            $types,
+            $regionsStructures
+        ) {
+
+
+            $parentRegional = $regionsStructures[$province->id_region] ?? null;
+
+
+            Structure::firstOrCreate(
+
+                [
+                    'nom' => 'المديرية الإقليمية ب' . $province->province
+                ],
+
+                [
+                    'id_type_structure' => $types['مديرية إقليمية'],
+                    'id_parent' => $parentRegional,
+                ]
+
+            );
+
+        });
+
     }
 }

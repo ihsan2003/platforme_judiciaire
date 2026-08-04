@@ -105,7 +105,7 @@
                         <input type="text"
                                name="nom_partie"
                                class="form-control @error('nom_partie') is-invalid @enderror"
-                               value="{{ old('nom_partie') }}"
+                               value="{{ old('nom_partie', request('nom_partie')) }}"
                                placeholder="الاسم الكامل أو اسم الشركة"
                                required>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Avocat;
+use App\Models\Partie;
 use App\Rules\Telephone;
 
 
@@ -14,7 +15,7 @@ class AvocatController extends Controller
     
     public function index(Request $request)
     {
-        $query = Avocat::query();
+        $query = Avocat::withCount('partiesAssociees');
 
         // ══ Recherche ══
         if ($request->filled('search')) {
@@ -46,7 +47,9 @@ class AvocatController extends Controller
      */
     public function create()
     {
-        return view('avocats.create');
+        $parties = Partie::orderBy('nom_partie')->get();
+
+        return view('avocats.create', compact('parties'));
     }
 
     /**
@@ -57,10 +60,21 @@ class AvocatController extends Controller
         $validated = $request->validate([
             'nom_avocat' => 'required|string|max:255',
             'telephone'  => ['required', new Telephone],
-            'email' => 'required|email|unique:avocats,email'
+            'email' => 'required|email|unique:avocats,email',
+            'parties' => ['nullable', 'array'],
+            'parties.*' => ['integer', 'exists:parties,id'],
         ]);
 
-        Avocat::create($validated);
+        $avocat = Avocat::create([
+            'nom_avocat' => $validated['nom_avocat'],
+            'telephone'  => $validated['telephone'],
+            'email'      => $validated['email'],
+        ]);
+
+        // Associer les parties sélectionnées à ce nouveau محامٍ
+        if (!empty($validated['parties'])) {
+            Partie::whereIn('id', $validated['parties'])->update(['id_avocat' => $avocat->id]);
+        }
 
         return redirect()
             ->route('avocats.index')
@@ -84,7 +98,10 @@ class AvocatController extends Controller
     public function edit(string $id)
     {
         $avocat = Avocat::findOrFail($id);
-        return view('avocats.edit', compact('avocat'));
+        $parties = Partie::orderBy('nom_partie')->get();
+        $selectedPartyIds = Partie::where('id_avocat', $avocat->id)->pluck('id')->toArray();
+
+        return view('avocats.edit', compact('avocat', 'parties', 'selectedPartyIds'));
     }
 
     /**
@@ -95,11 +112,29 @@ class AvocatController extends Controller
         $validated = $request->validate([
             'nom_avocat' => 'required|string|max:255',
             'telephone'  => ['required', new Telephone],
-            'email' => 'required|email|unique:avocats,email,'.$id
+            'email' => 'required|email|unique:avocats,email,'.$id,
+            'parties' => ['nullable', 'array'],
+            'parties.*' => ['integer', 'exists:parties,id'],
         ]);
 
         $avocat = Avocat::findOrFail($id);
-        $avocat->update($validated);
+        $avocat->update([
+            'nom_avocat' => $validated['nom_avocat'],
+            'telephone'  => $validated['telephone'],
+            'email'      => $validated['email'],
+        ]);
+
+        $selectedIds = $validated['parties'] ?? [];
+
+        // Détacher les parties qui ne sont plus sélectionnées
+        Partie::where('id_avocat', $avocat->id)
+            ->whereNotIn('id', $selectedIds)
+            ->update(['id_avocat' => null]);
+
+        // Associer les parties sélectionnées à ce محامٍ
+        if (!empty($selectedIds)) {
+            Partie::whereIn('id', $selectedIds)->update(['id_avocat' => $avocat->id]);
+        }
 
         return redirect()
             ->route('avocats.index')

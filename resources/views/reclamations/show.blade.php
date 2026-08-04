@@ -210,6 +210,8 @@
                             <input type="hidden" name="objet" value="{{ $reclamation->objet }}">
                             <input type="hidden" name="date_reception" value="{{ $reclamation->date_reception?->format('Y-m-d') }}">
                             <input type="hidden" name="details" value="{{ $reclamation->details }}">
+                            <input type="hidden" name="id_type_reclamation" value="{{ $reclamation->id_type_reclamation }}">
+                            <input type="hidden" name="id_reclamant" value="{{ $reclamation->id_reclamant }}">
                             <label class="form-label fw-semibold small text-muted">تغيير الحالة</label>
                             <div class="input-group input-group-sm">
                                 <select name="id_statut_reclamation" class="form-select form-select-sm" required>

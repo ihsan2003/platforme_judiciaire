@@ -6,7 +6,6 @@
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
     <li class="breadcrumb-item"><a href="{{ route('reclamations.index') }}">الشكايات</a></li>
-    <li class="breadcrumb-item"><a href="{{ route('reclamations.show', $reclamation) }}">تفاصيل الشكاية</a></li>
     <li class="breadcrumb-item active">تعديل</li>
 @endsection
 
@@ -15,10 +14,9 @@
 <div class="row justify-content-center">
     <div class="col-lg-12">
         
-        {{-- الرأس --}}
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
-                <h4 class="fw-bold mb-1 text-primary">تعديل بيانات الشكاية</h4>
+                <h4 class="fw-bold mb-1"><i class="bi bi-pencil-square me-2 text-primary"></i>تعديل بيانات الشكاية</h4>
                 <p class="text-muted small mb-0">يرجى تحديث المعلومات الضرورية في النموذج أدناه.</p>
             </div>
             <a href="{{ route('reclamations.show', $reclamation) }}" class="btn btn-outline-secondary btn-sm">
@@ -45,11 +43,6 @@
                 {{-- القسم الأول: معلومات الشكاية --}}
                 <div class="col-md-8">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white py-3 border-bottom-0">
-                            <h6 class="mb-0 fw-bold text-dark">
-                                <i class="bi bi-pencil-square ms-2 text-primary"></i>محتوى الشكاية
-                            </h6>
-                        </div>
                         <div class="card-body">
                             <div class="mb-4">
                                 <label class="form-label fw-semibold small">الموضوع <span class="text-danger">*</span></label>
@@ -69,16 +62,10 @@
                 {{-- القسم الثاني: الإعدادات والحالة --}}
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white py-3 border-bottom-0">
-                            <h6 class="mb-0 fw-bold text-dark">
-                                <i class="bi bi-gear ms-2 text-primary"></i>الإعدادات
-                            </h6>
-                        </div>
                         <div class="card-body pt-0">
-                            <div class="mb-3">
+                            <div class="mb-3 mt-3">
                                 <label class="form-label fw-semibold small">تاريخ الاستلام <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="bi bi-calendar-check"></i></span>
                                     <input type="date" name="date_reception" class="form-control @error('date_reception') is-invalid @enderror" 
                                            value="{{ old('date_reception', $reclamation->date_reception?->format('Y-m-d')) }}" required>
                                 </div>
@@ -107,39 +94,47 @@
                             </div>
 
                             <div class="mb-0">
-                                <label class="form-label fw-semibold small">المشتكي <span class="text-danger">*</span></label>
-                                <select name="id_reclamant" class="form-select @error('id_reclamant') is-invalid @enderror" required>
-                                    @foreach($reclamants as $reclamant)
-                                        <option value="{{ $reclamant->id }}" @selected(old('id_reclamant', $reclamation->id_reclamant) == $reclamant->id)>
-                                            {{ $reclamant->nom }} ({{ $reclamant->typeReclamant?->type_reclamant }})
+
+                                <label class="form-label fw-semibold small">
+                                    المشتكي <span class="text-danger">*</span>
+                                </label>
+
+                                <select id="reclamant-select" class="form-select @error('id_reclamant') is-invalid @enderror">
+                                    <option value=""></option>
+                                    @foreach($reclamants as $r)
+                                        <option value="{{ $r->id }}"
+                                            @selected(old('id_reclamant', $reclamation->id_reclamant) == $r->id)>
+                                            {{ $r->nom }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <div class="form-text small">يمكنك تعديل المشتكي إذا تم ربطه بالخطأ.</div>
+
+                                <input type="hidden" name="id_reclamant" id="id_reclamant_hidden"
+                                    value="{{ old('id_reclamant', $reclamation->id_reclamant) }}">
+
+                                @error('id_reclamant')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+
                             </div>
                         </div>
                     </div>
 
-                    {{-- تنبيه --}}
-                    <div class="alert alert-info border-0 shadow-sm small">
-                        <i class="bi bi-info-circle-fill ms-2"></i>
-                        تعديل البيانات الأساسية لن يؤثر على <strong>سجل الإجراءات</strong> الذي تم تسجيله مسبقاً.
-                    </div>
-                </div>
+                    {{-- ══ الأزرار ══ --}}
+                    <div class="d-grid gap-2 mt-3">
 
-                {{-- أزرار التحكم --}}
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-link text-danger text-decoration-none fw-semibold" 
-                                    onclick="if(confirm('هل أنت متأكد من رغبتك في إلغاء التعديلات؟')) window.location.href='{{ route('reclamations.show', $reclamation) }}'">
-                                إلغاء التغييرات
-                            </button>
-                            <button type="submit" class="btn btn-primary px-5 fw-bold">
-                                <i class="bi bi-check-circle ms-2"></i>حفظ التعديلات
-                            </button>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg ms-1"></i>
+                            حفظ التعديلات
+                        </button>
+
+                        <a href="{{ route('reclamations.show', $reclamation) }}"
+                        class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg ms-1"></i>
+                            إلغاء
+                        </a>
+
+                    </div>                   
                 </div>
             </div>
         </form>
@@ -160,4 +155,30 @@
         border-left: 0 !important;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+(function () {
+    const reclamants = @json($reclamants->keyBy('id'));
+    const champIdReclamant = document.getElementById('id_reclamant_hidden');
+
+    const tomSelect = new TomSelect('#reclamant-select', {
+        persist: false,
+        placeholder: 'ابحث عن مشتكي...',
+        onItemAdd: function (value) {
+            champIdReclamant.value = value;
+        },
+        onItemRemove: function () {
+            champIdReclamant.value = '';
+        }
+    });
+
+    // Pré-sélection : priorité à old() (retour après erreur), sinon le réclamant actuel
+    const valeurInitiale = '{{ old('id_reclamant', $reclamation->id_reclamant) }}';
+    if (valeurInitiale) {
+        tomSelect.setValue(valeurInitiale);
+    }
+})();
+</script>
 @endpush

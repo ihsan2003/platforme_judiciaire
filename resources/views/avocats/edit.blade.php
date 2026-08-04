@@ -109,6 +109,43 @@
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-person-lines-fill me-2 text-warning"></i>ربط بأطراف
+                </h6>
+            </div>
+            <div class="card-body">
+                <label class="form-label fw-semibold small">
+                    الأطراف الممثَّلة
+                </label>
+
+                <div class="input-group">
+                    <select id="parties-select"
+                        name="parties[]"
+                        class="form-select @error('parties') is-invalid @enderror"
+                        multiple>
+
+                        @foreach($parties as $p)
+                            <option value="{{ $p->id }}"
+                                @selected(in_array($p->id, old('parties', $selectedPartyIds)))>
+                                {{ $p->nom_partie }}
+                            </option>
+                        @endforeach
+
+                    </select>
+                </div>
+
+                @error('parties')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+
+                <div class="form-text mt-2">
+                    يمكنك ربط هذا المحامي بطرف أو أكثر يمثلهم.
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
                     <i class="bi bi-info-circle me-2 text-muted"></i>ملخص
                 </h6>
             </div>
@@ -150,3 +187,30 @@
 
 </form>
 @endsection
+
+@push('scripts')
+<script>
+new TomSelect('#parties-select', {
+    plugins: ['remove_button'],
+
+    create: function(input) {
+        window.location.href = "{{ route('parties.create') }}?nom_partie=" + encodeURIComponent(input);
+        return false;
+    },
+
+    placeholder: 'ابحث عن طرف ...',
+
+    loadingText: 'جاري البحث...',
+
+    render: {
+        no_results: function(data, escape) {
+            return `<div class="no-results">لا توجد نتائج</div>`;
+        },
+
+        option_create: function(data, escape) {
+            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+        }
+    }
+});
+</script>
+@endpush

@@ -25,11 +25,10 @@
 <form action="{{ route('avocats.store') }}" method="POST">
 @csrf
 
-<div class="row g-4">
-
+<div class="row g-4 align-items-stretch">
     {{-- ── Colonne principale ── --}}
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-semibold">
                     <i class="bi bi-person-vcard me-2 text-primary"></i>معلومات المحامي
@@ -46,7 +45,7 @@
                         <input type="text"
                                name="nom_avocat"
                                class="form-control @error('nom_avocat') is-invalid @enderror"
-                               value="{{ old('nom_avocat') }}"
+                               value="{{ old('nom_avocat', request('nom')) }}"
                                placeholder="مثال: حسن بن علي"
                                required>
                         @error('nom_avocat')
@@ -104,6 +103,46 @@
         </div>
     </div>
 
+    {{-- ── Colonne latérale ── --}}
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100 mb-3">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>ربط بأطراف
+                </h6>
+            </div>
+            <div class="card-body">
+                <label class="form-label fw-semibold small">
+                    الأطراف الممثَّلة
+                </label>
+
+                <div class="input-group">
+                    <select id="parties-select"
+                        name="parties[]"
+                        class="form-select @error('parties') is-invalid @enderror"
+                        multiple>
+
+                        @foreach($parties as $p)
+                            <option value="{{ $p->id }}"
+                                @selected(in_array($p->id, old('parties', [])))>
+                                {{ $p->nom_partie }}
+                            </option>
+                        @endforeach
+
+                    </select>
+                </div>
+
+                @error('parties')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+
+                <div class="form-text mt-2">
+                    يمكنك ربط هذا المحامي بطرف أو أكثر يمثلهم.
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {{-- ── Actions ── --}}
@@ -118,3 +157,30 @@
 
 </form>
 @endsection
+
+@push('scripts')
+<script>
+new TomSelect('#parties-select', {
+    plugins: ['remove_button'],
+
+    create: function(input) {
+        window.location.href = "{{ route('parties.create') }}?nom_partie=" + encodeURIComponent(input);
+        return false;
+    },
+
+    placeholder: 'ابحث عن طرف ...',
+
+    loadingText: 'جاري البحث...',
+
+    render: {
+        no_results: function(data, escape) {
+            return `<div class="no-results">لا توجد نتائج</div>`;
+        },
+
+        option_create: function(data, escape) {
+            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+        }
+    }
+});
+</script>
+@endpush

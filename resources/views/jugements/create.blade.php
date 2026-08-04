@@ -42,7 +42,9 @@
         @csrf
 
         <div class="row g-4">
-            <div class="col-lg-8 mx-auto">
+
+            {{-- Colonne principale --}}
+            <div class="col-lg-8">
 
                 {{-- ─────────────────────────────────────────────────────────────────
                     بطاقة المعلومات الرئيسية
@@ -166,6 +168,9 @@
                     </div>
                 </div>
 
+            </div>
+
+            <div class="col-lg-4">
                 {{-- ─────────────────────────────────────────────────────────────────
                     بطاقة نتيجة الحكم - المؤسسة
                 ───────────────────────────────────────────────────────────────── --}}
@@ -187,10 +192,6 @@
                     <div class="card-body p-4">
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small text-dark">
-                                وضعية المؤسسة في هذا الحكم
-                                <span class="text-danger">*</span>
-                            </label>
                             <div class="d-flex flex-wrap gap-2">
                                 @foreach($positionsInstitution as $pos)
                                 @php
@@ -356,7 +357,7 @@
 
                                         @foreach($autresParties as $dp)
 
-                                        <div class="col-md-6">
+                                        <div class="col-12-md">
 
                                             <div class="party-item-card">
 
@@ -433,17 +434,21 @@
                 {{-- ─────────────────────────────────────────────────────────────────
                     أزرار الإرسال والإلغاء
                 ───────────────────────────────────────────────────────────────── --}}
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary px-4">
+                <div class="d-grid gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary">
                         <i class="bi bi-check-lg me-2"></i>
                         إنشاء الحكم
                     </button>
-                    <a href="{{ route('jugements.index') }}" class="btn btn-outline-secondary px-4">
+
+                    <a href="{{ route('jugements.index') }}"
+                    class="btn btn-outline-secondary">
                         <i class="bi bi-x-lg me-2"></i>
                         إلغاء
                     </a>
-                </div>
 
+                </div>
             </div>
         </div>
 

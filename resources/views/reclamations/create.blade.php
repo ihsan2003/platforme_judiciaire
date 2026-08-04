@@ -13,7 +13,7 @@
     </li>
 
     <li class="breadcrumb-item active">
-        جديدة
+        شكاية جديدة
     </li>
 @endsection
 
@@ -408,8 +408,32 @@
 
                 </div>
 
+                {{-- Nouveau champ pour le type de document --}}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">
+                        نوع الوثيقة (اختياري)
+                    </label>
+                    <select name="id_type_document"
+                            class="form-select @error('id_type_document') is-invalid @enderror">
+                        <option value="\"> — اختر —</option>
+                        @foreach($typesDocuments as $type)
+                            <option value="{{ $type->id }}"
+                                @selected(old('id_type_document') == $type->id)>
+                                {{ $type->type_document }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_type_document')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                    @enderror
+                    <div class="form-text">
+                        يرجى اختيار نوع الوثيقة في حال إرفاق ملف.
+                    </div>
+                </div>
 
-                <div class="mb-3 mt-5">
+                <div class="mb-3">
 
                     <label class="form-label fw-semibold small">
                         وثيقة مرفقة (اختياري)
@@ -432,32 +456,23 @@
 
                 </div>
 
-                 {{-- Nouveau champ pour le type de document --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold small">
-                        نوع الوثيقة (اختياري)
-                    </label>
-                    <select name="id_type_document"
-                            class="form-select @error('id_type_document') is-invalid @enderror">
-                        <option value="\"></option>
-                        @foreach($typesDocuments as $type)
-                            <option value="{{ $type->id }}"
-                                @selected(old('id_type_document') == $type->id)>
-                                {{ $type->type_document }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('id_type_document')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
-                    <div class="form-text">
-                        Sélectionnez le type de document si un fichier est joint.
-                    </div>
-                </div>
-
             </div>
+
+        </div>
+
+        {{-- ══ الأزرار ══ --}}
+        <div class="d-grid gap-2 mt-3">
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg ms-1"></i>
+                حفظ الشكاية
+            </button>
+
+            <a href="{{ route('reclamations.index') }}"
+            class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg ms-1"></i>
+                إلغاء
+            </a>
 
         </div>
 
@@ -465,21 +480,6 @@
 
 </div>
 
-{{-- ══ الأزرار ══ --}}
-<div class="d-flex gap-2 justify-content-start mt-2">
-
-    <button type="submit" class="btn btn-primary px-4">
-        حفظ الشكاية
-        <i class="bi bi-check-lg ms-1"></i>
-    </button>
-
-    <a href="{{ route('reclamations.index') }}"
-       class="btn btn-outline-secondary">
-        إلغاء
-        <i class="bi bi-x-lg ms-1"></i>
-    </a>
-
-</div>
 
 </form>
 
