@@ -26,11 +26,9 @@ class StatutDossier extends Model
         return match(true) {
             str_contains($this->statut_dossier, 'طور الاستئناف') => 'info',
             str_contains($this->statut_dossier, 'طور النقض')     => 'dark',
-            str_contains($this->statut_dossier, 'إعادة فتح')      => 'warning',
             str_contains($this->statut_dossier, 'قيد التنفيذ')    => 'warning',
             str_contains($this->statut_dossier, 'تم التنفيذ')     => 'success',
             str_contains($this->statut_dossier, 'تم الحكم')       => 'info',
-            str_contains($this->statut_dossier, 'موقوف')          => 'danger',
             str_contains($this->statut_dossier, 'حفظ')            => 'secondary',
             str_contains($this->statut_dossier, 'مغلق')           => 'secondary',
             str_contains($this->statut_dossier, 'جاري')           => 'primary',
