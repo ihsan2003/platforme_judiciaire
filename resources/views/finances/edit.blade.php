@@ -182,7 +182,7 @@
                     $payeActuel = $finance->montant_paye ?? 0;
                     $pctActuel  = $condActuel > 0 ? min(100, round(($payeActuel / $condActuel) * 100)) : 0;
                     $spActuel   = $finance->statut_paiement ?? '—';
-                    $spColor    = match($spActuel) { 'Complet' => 'success', 'Partiel' => 'warning', default => 'secondary' };
+                    $spColor    = match($spActuel) { 'مكتمل' => 'success', 'جزئي' => 'warning', default => 'secondary' };
                 @endphp
 
                 <dl class="row mb-2">

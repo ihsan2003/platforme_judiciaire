@@ -52,7 +52,7 @@
 
                     <div class="mt-1">
                         <span class="badge bg-{{ $spColor }}">
-                            {{ $sp === 'Complet' ? 'مكتمل' : ($sp === 'Partiel' ? 'جزئي' : '—') }}
+                            {{ $sp === 'مكتمل' ? 'مكتمل' : ($sp === 'جزئي' ? 'جزئي' : '—') }}
                         </span>
 
                         @if($jugement?->est_definitif)

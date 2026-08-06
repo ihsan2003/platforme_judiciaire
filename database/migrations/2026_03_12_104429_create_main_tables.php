@@ -180,7 +180,7 @@ return new class extends Migration
             $table->decimal('montant_condamne', 15, 2)->nullable();
             $table->decimal('montant_paye', 15, 2)->default(0);
             $table->date('date_paiement')->nullable();
-            $table->enum('statut_paiement', ['En attente', 'Partiel', 'Complet']);
+            $table->enum('statut_paiement', ['في الانتظار', 'جزئي', 'مكتمل']);
             $table->timestamps();
         });
 

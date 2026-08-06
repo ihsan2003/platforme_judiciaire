@@ -69,13 +69,10 @@ class RapportStatistiqueService
             ->toArray();
     }
 
-    /**
-     * Lignes dynamiques : répartition des dossiers par "الجهة القضائية"
-     * (région), ventilée par degré (ابتدائي / استئناف / نقض) + total.
-     * Une ligne par région ayant au moins un dossier sur la période.
-     */
+ 
     public function lignesRegion(): array
     {
+        // Nombre de dossiers par région et par degré de juridiction
         $rows = DossierTribunal::query()
             ->whereBetween('date_debut', [$this->debut, $this->fin])
             ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
@@ -85,31 +82,54 @@ class RapportStatistiqueService
             ->select(
                 'regions.region as region',
                 'degre_juridictions.ordre as ordre',
-                DB::raw('count(distinct dossier_tribunaux.id_dossier) as nombre')
+                DB::raw('COUNT(DISTINCT dossier_tribunaux.id_dossier) as nombre')
             )
             ->groupBy('regions.region', 'degre_juridictions.ordre')
             ->get();
 
+        // Nombre total de dossiers distincts par région
+        $totauxRegion = DossierTribunal::query()
+            ->whereBetween('date_debut', [$this->debut, $this->fin])
+            ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
+            ->join('provinces', 'provinces.id', '=', 'tribunaux.id_province')
+            ->join('regions', 'regions.id', '=', 'provinces.id_region')
+            ->select(
+                'regions.region',
+                DB::raw('COUNT(DISTINCT dossier_tribunaux.id_dossier) as total')
+            )
+            ->groupBy('regions.region')
+            ->pluck('total', 'region');
+
         $parRegion = [];
+
         foreach ($rows as $r) {
-            $parRegion[$r->region] ??= ['ibtidai' => 0, 'istinaf' => 0, 'naqd' => 0];
-            $parRegion[$r->region][match ((int) $r->ordre) {
+
+            $parRegion[$r->region] ??= [
+                'ibtidai' => 0,
+                'istinaf' => 0,
+                'naqd' => 0,
+            ];
+
+            $cle = match ((int) $r->ordre) {
                 1 => 'ibtidai',
                 2 => 'istinaf',
                 3 => 'naqd',
                 default => 'ibtidai',
-            }] += $r->nombre;
+            };
+
+            $parRegion[$r->region][$cle] += $r->nombre;
         }
 
         $lignes = [];
+
         foreach ($parRegion as $region => $c) {
-            $total = $c['ibtidai'] + $c['istinaf'] + $c['naqd'];
+
             $lignes[] = [
                 'reg_nom'     => $region,
                 'reg_ibtidai' => (string) $c['ibtidai'],
                 'reg_istinaf' => (string) $c['istinaf'],
                 'reg_naqd'    => (string) $c['naqd'],
-                'reg_total'   => (string) $total,
+                'reg_total'   => (string) ($totauxRegion[$region] ?? 0),
             ];
         }
 
@@ -127,14 +147,14 @@ class RapportStatistiqueService
 
         $total = (clone $base)->count();
 
-        $nouveaux = (clone $base)->count(); // ouverts pendant la période = "nouveaux" par définition ici
+        $nouveaux = (clone $base)
+            ->whereDate('date_ouverture', $this->fin)
+            ->count();
 
-        // NB : les libellés exacts dans `statut_dossiers` varient selon les seeders
-        // (ex: 'جاري' vs 'موقوف'), on matche donc par mot-clé (comme le fait déjà
-        // DossierJudiciaire::getEstActifAttribute() dans le modèle existant).
-        $enCours = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'جاري'))->count();
+   
+        $enCours = (clone $base)->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))->count();
 
-        $juges = (clone $base)->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['تم الحكم', 'تم التنفيذ', 'مغلق']))->count();
+        $juges = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم الحكم'))->count();
 
         $executes = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم التنفيذ'))->count();
 
@@ -161,7 +181,7 @@ class RapportStatistiqueService
         $counts = DossierTribunal::whereBetween('date_debut', [$this->debut, $this->fin])
             ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
             ->join('type_tribunaux', 'type_tribunaux.id', '=', 'tribunaux.id_type_tribunal')
-            ->select('type_tribunaux.tribunal as type', DB::raw('count(*) as nombre'))
+            ->select('type_tribunaux.tribunal as type', DB::raw('COUNT(DISTINCT dossier_tribunaux.id_dossier) as nombre'))
             ->groupBy('type_tribunaux.tribunal')
             ->pluck('nombre', 'type');
 
@@ -194,52 +214,82 @@ class RapportStatistiqueService
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesParDegre(): array
     {
-        // On récupère les dossiers concernés par la période (au moins une instance
-        // ouverte durant la période), avec toutes leurs instances pour déterminer
-        // le degré ACTUEL (l'instance la plus récente, pas la plus "haute").
+        // Tous les dossiers ayant au moins une instance commencée
+        // avant ou à la fin de la période.
         $dossiers = DossierJudiciaire::whereHas('dossierTribunaux', function ($q) {
-                $q->whereBetween('date_debut', [$this->debut, $this->fin]);
+                $q->whereDate('date_debut', '<=', $this->fin);
             })
-            ->with('dossierTribunaux.degre')
+            ->with([
+                'dossierTribunaux' => function ($q) {
+                    $q->whereDate('date_debut', '<=', $this->fin)
+                        ->orderByDesc('date_debut')
+                        ->with('degre');
+                }
+            ])
             ->get();
 
-        $counts = ['ibtidai' => 0, 'istinafi' => 0, 'naqd' => 0];
+        $counts = [
+            'ibtidai'  => 0,
+            'istinafi' => 0,
+            'naqd'     => 0,
+        ];
 
         foreach ($dossiers as $dossier) {
-            // Instance actuelle = la plus récente (date_debut max).
-            // En cas d'égalité, on privilégie celle encore ouverte (date_fin null).
+
+            /*
+            * On récupère l'instance représentant la situation
+            * du dossier à la date de fin du rapport.
+            *
+            * Si plusieurs instances ont la même date_debut,
+            * on privilégie celle qui est encore ouverte.
+            */
             $instanceActuelle = $dossier->dossierTribunaux
-                ->sortByDesc(fn ($dt) => [$dt->date_debut, $dt->date_fin === null ? 1 : 0])
+                ->sortByDesc(function ($dt) {
+                    return [
+                        $dt->date_debut,
+                        $dt->date_fin === null ? 1 : 0,
+                    ];
+                })
                 ->first();
 
-            $ordre = $instanceActuelle?->degre?->ordre;
+            if (!$instanceActuelle || !$instanceActuelle->degre) {
+                continue;
+            }
 
-            match ($ordre) {
-                1 => $counts['ibtidai']++,
-                2 => $counts['istinafi']++,
-                3 => $counts['naqd']++,
-                default => null,
-            };
+            switch ((int) $instanceActuelle->degre->ordre) {
+
+                case 1:
+                    $counts['ibtidai']++;
+                    break;
+
+                case 2:
+                    $counts['istinafi']++;
+                    break;
+
+                case 3:
+                    $counts['naqd']++;
+                    break;
+            }
         }
 
-        $ibtidai  = $counts['ibtidai'];
-        $istinafi = $counts['istinafi'];
-        $naqd     = $counts['naqd'];
-
+        // Recours en révision (إعادة النظر)
         $iaadaNadar = DB::table('recours')
             ->join('type_recours', 'type_recours.id', '=', 'recours.id_type_recours')
             ->whereBetween('recours.date_recours', [$this->debut, $this->fin])
             ->where('type_recours.type_recours', 'إعادة النظر')
             ->count();
 
-        $total = $ibtidai + $istinafi + $iaadaNadar + $naqd;
+        $total = $counts['ibtidai']
+                + $counts['istinafi']
+                + $counts['naqd']
+                + $iaadaNadar;
 
         return [
-            'nb_degre_ibtidai'      => (string) $ibtidai,
-            'nb_degre_istinafi'     => (string) $istinafi,
-            'nb_degre_iaada_nadar'  => (string) $iaadaNadar,
-            'nb_degre_naqd'         => (string) $naqd,
-            'nb_degre_total'        => (string) $total,
+            'nb_degre_ibtidai'     => (string) $counts['ibtidai'],
+            'nb_degre_istinafi'    => (string) $counts['istinafi'],
+            'nb_degre_iaada_nadar' => (string) $iaadaNadar,
+            'nb_degre_naqd'        => (string) $counts['naqd'],
+            'nb_degre_total'       => (string) $total,
         ];
     }
 
@@ -301,11 +351,11 @@ class RapportStatistiqueService
             ->distinct('jugements.id')
             ->count('jugements.id');
 
-        $montantExecute = (clone $finances)->where('statut_paiement', 'Complet')->sum('montant_paye');
-        $nbExecute = (clone $finances)->where('statut_paiement', 'Complet')->count();
+        $montantExecute = (clone $finances)->where('statut_paiement', 'مكتمل')->sum('montant_paye');
+        $nbExecute = (clone $finances)->where('statut_paiement', 'مكتمل')->count();
 
-        $montantEnCours = (clone $finances)->where('statut_paiement', 'Partiel')->sum('montant_paye');
-        $nbEnCours = (clone $finances)->whereIn('statut_paiement', ['Partiel', 'En attente'])->count();
+        $montantEnCours = (clone $finances)->where('statut_paiement', 'جزئي')->sum('montant_paye');
+        $nbEnCours = (clone $finances)->whereIn('statut_paiement', ['جزئي', 'في الانتظار'])->count();
 
         $montantTotal = (clone $finances)->sum('montant_condamne');
         $nbTotal = (clone $finances)->count();

@@ -133,9 +133,9 @@
 
                 <select name="statut" class="form-select">
                     <option value="">كل الحالات</option>
-                    <option value="En attente" @selected(request('statut') === 'En attente')>في الانتظار</option>
-                    <option value="Partiel"    @selected(request('statut') === 'Partiel')>جزئي</option>
-                    <option value="Complet"    @selected(request('statut') === 'Complet')>مسدد بالكامل</option>
+                    <option value="في الانتظار" @selected(request('statut') === 'في الانتظار')>في الانتظار</option>
+                    <option value="جزئي"    @selected(request('statut') === 'جزئي')>جزئي</option>
+                    <option value="مكتمل"    @selected(request('statut') === 'مكتمل')>مسدد بالكامل</option>
                 </select>
 
             </div>
@@ -248,8 +248,8 @@
                     $sp = $finance->statut_paiement ?? '—';
 
                     $spColor = match($sp) {
-                        'Complet' => 'success',
-                        'Partiel' => 'warning',
+                        'مكتمل' => 'success',
+                        'جزئي' => 'warning',
                         default   => 'secondary'
                     };
                 @endphp

@@ -167,13 +167,13 @@
                 <ul class="ps-3 mb-0">
                     <li class="mb-2">Le statut de paiement est calculé automatiquement selon les montants saisis.</li>
                     <li class="mb-2">
-                        <strong>Complet</strong> si le montant payé ≥ montant condamné.
+                        <strong>مكتمل</strong> si le montant payé ≥ montant condamné.
                     </li>
                     <li class="mb-2">
-                        <strong>Partiel</strong> si une partie a été réglée.
+                        <strong>جزئي</strong> si une partie a été réglée.
                     </li>
                     <li>
-                        <strong>En attente</strong> si aucun paiement n'a été effectué.
+                        <strong>في الانتظار</strong> si aucun paiement n'a été effectué.
                     </li>
                 </ul>
             </div>
