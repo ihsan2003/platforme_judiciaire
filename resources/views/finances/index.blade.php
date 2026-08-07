@@ -224,6 +224,10 @@
                     <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
                     </x-sortable-th>
+
+                    <x-sortable-th column="position" class="text-muted small fw-semibold text-center">
+                        موقف المؤسسة
+                    </x-sortable-th>
  
                     <th class="text-start ps-3 text-muted small fw-semibold">
                         الإجراءات
@@ -252,6 +256,11 @@
                         'جزئي' => 'warning',
                         default   => 'secondary'
                     };
+
+                    // ── موقف المؤسسة (source: jugement_parties.id_position_institution, parties.est_entraide = true) ──
+                    $etabPartie = $jugement?->parties?->first(fn($p) => $p->est_entraide);
+                    $posId      = $etabPartie?->pivot->id_position_institution;
+                    $posLabel   = $posId ? ($positionsParId[$posId]->position ?? null) : null;
                 @endphp
 
                 <tr>
@@ -323,6 +332,24 @@
                         </span>
                     </td>
 
+                    <td class="text-center">
+                        @if($etabPartie === null || $posLabel === null)
+                            <span class="text-muted">—</span>
+                        @elseif($posLabel === 'ضد')
+                            <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25">
+                                <i class="bi bi-shield-x ms-1"></i> ضد المؤسسة
+                            </span>
+                        @elseif($posLabel === 'جزئي')
+                            <span class="badge text-white" style="background:#BA7517">
+                                <i class="bi bi-dash-circle ms-1"></i> جزئي
+                            </span>
+                        @else
+                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
+                                <i class="bi bi-trophy-fill ms-1"></i> لصالح المؤسسة
+                            </span>
+                        @endif
+                    </td>
+
                     <td class="text-start ps-3">
 
                         <div class="d-flex gap-1">
@@ -354,7 +381,7 @@
                 @empty
 
                 <tr>
-                    <td colspan="9" class="text-center py-5 text-muted">
+                    <td colspan="10" class="text-center py-5 text-muted">
 
                         <i class="bi bi-cash-coin fs-1 d-block mb-2 opacity-25"></i>
 
@@ -396,7 +423,7 @@
                         {{ number_format($totalRestant, 2, ',', ' ') }} DH
                     </td>
 
-                    <td colspan="3"></td>
+                    <td colspan="4"></td>
 
                 </tr>
 

@@ -56,12 +56,13 @@ class Finance extends Model
         parent::boot();
 
         static::saving(function ($finance) {
+         
             if ($finance->montant_paye >= $finance->montant_condamne) {
-                $finance->statut_paiement = 'Complet';
+                $finance->statut_paiement = 'مكتمل';
             } elseif ($finance->montant_paye > 0) {
-                $finance->statut_paiement = 'Partiel';
+                $finance->statut_paiement = 'جزئي';
             } else {
-                $finance->statut_paiement = 'En attente';
+                $finance->statut_paiement = 'في الانتظار';
             }
         });
     }

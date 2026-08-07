@@ -1219,7 +1219,7 @@
                         </td>
                         <td>
                             @php $sp = $fin->statut_paiement ?? '—'; @endphp
-                            <span class="badge bg-{{ match($sp){ 'Complet'=>'success','Partiel'=>'warning',default=>'secondary'} }}">
+                            <span class="badge bg-{{ match($sp){ 'مكتمل'=>'success','جزئي'=>'warning',default=>'secondary'} }}">
                                 {{ $sp }}
                             </span>
                         </td>

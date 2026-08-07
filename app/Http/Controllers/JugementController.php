@@ -341,7 +341,7 @@ class JugementController extends Controller
                     'montant_reclame_defendeur' => $estContre ? $montantEtab : null,
                     'montant_condamne'          => $montantTotal,
                     'montant_paye'              => 0,
-                    'statut_paiement'           => 'En attente',
+                    'statut_paiement'           => 'في الانتظار',
                 ]);
             }
 

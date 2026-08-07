@@ -23,7 +23,7 @@
     $pctColor = $pct >= 100 ? 'success' : ($pct > 0 ? 'warning' : 'danger');
 
     $sp       = $finance->statut_paiement ?? '—';
-    $spColor  = match($sp) { 'Complet' => 'success', 'Partiel' => 'warning', default => 'secondary' };
+    $spColor  = match($sp) { 'مكتمل' => 'success', 'جزئي' => 'warning', default => 'secondary' };
 @endphp
 
 {{-- ══ العنوان الرئيسي ══ --}}

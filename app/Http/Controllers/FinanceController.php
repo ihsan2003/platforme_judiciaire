@@ -16,7 +16,7 @@ class FinanceController extends Controller
             ->leftJoin('tribunaux', 'dossier_tribunaux.id_tribunal', '=', 'tribunaux.id')
             ->leftJoin('dossier_judiciaires', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
             ->select('finances.*')
-            ->with('jugement.dossierTribunal.tribunal', 'jugement.dossierTribunal.dossier')
+            ->with('jugement.dossierTribunal.tribunal', 'jugement.dossierTribunal.dossier', 'jugement.parties')
  
             // ══ Recherche (numéro de dossier ou tribunal) ══
             ->when(request('search'), function ($q, $v) {
@@ -49,10 +49,25 @@ class FinanceController extends Controller
 
                 'dossier'   => 'dossier_judiciaires.numero_dossier_tribunal',
 
+                // ── Position de l'institution (source: position_institutions, voir JugementController) ──
+                'position' => fn($q, $dir) => $q->orderBy(
+                    \App\Models\PositionInstitution::select('position')
+                        ->join('jugement_parties', 'jugement_parties.id_position_institution', '=', 'position_institutions.id')
+                        ->join('parties', 'jugement_parties.id_partie', '=', 'parties.id')
+                        ->whereColumn('jugement_parties.id_jugement', 'finances.id_jugement')
+                        ->where('parties.est_entraide', true)
+                        ->limit(1),
+                    $dir
+                ),
+
             ], 'id', 'desc')
             ->get();
- 
-        return view('finances.index', compact('finances'));
+
+        // Utilisé dans la vue pour résoudre le libellé de la position à partir de son id
+        // (même logique que JugementController::index()).
+        $positionsParId = \App\Models\PositionInstitution::all()->keyBy('id');
+
+        return view('finances.index', compact('finances', 'positionsParId'));
     }
     
 
