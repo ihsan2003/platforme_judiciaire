@@ -319,6 +319,28 @@ class RapportStatistiqueService
     }
 
     // ─────────────────────────────────────────────────────────────
+    // Formatage RTL des montants
+    //
+    // Dans un paragraphe arabe (RTL), un nombre LTR (chiffres, point
+    // décimal, séparateur de milliers) inséré tel quel via setValue()
+    // peut s'afficher dans le mauvais ordre : Word applique l'algorithme
+    // bidi au texte du run, et sans marque de direction explicite, la
+    // ponctuation/l'ordre des groupes de chiffres peut se retrouver
+    // inversée au milieu du texte arabe qui l'entoure.
+    //
+    // On entoure donc la chaîne formatée de deux marques invisibles
+    // "Left-to-Right Mark" (U+200E), qui forcent Word à garder le
+    // nombre dans le bon ordre sans changer le sens de lecture RTL du
+    // reste de la phrase (ex : "...المحكوم بها: ‎19 000.00‎ درهم.").
+    // ─────────────────────────────────────────────────────────────
+    protected function formatMontant(float $montant): string
+    {
+        $formatted = number_format($montant, 2, '.', ' ');
+
+        return "\u{200E}{$formatted}\u{200E}";
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // Sous-requête partagée : un seul jugement par dossier
     // ─────────────────────────────────────────────────────────────
     /**
@@ -405,65 +427,120 @@ class RapportStatistiqueService
         $nbTotal = (clone $finances)->count();
 
         return [
-            'montant_pour'     => number_format((float) $montantPour, 2, '.', ' '),
+            'montant_pour'     => $this->formatMontant((float) $montantPour),
             'nb_pour'          => (string) $nbPour,
-            'montant_contre'   => number_format((float) $montantContre, 2, '.', ' '),
+            'montant_contre'   => $this->formatMontant((float) $montantContre),
             'nb_contre'        => (string) $nbContre,
-            'montant_execute'  => number_format((float) $montantExecute, 2, '.', ' '),
+            'montant_execute'  => $this->formatMontant((float) $montantExecute),
             'nb_execute'       => (string) $nbExecute,
-            'montant_en_cours' => number_format((float) $montantEnCours, 2, '.', ' '),
+            'montant_en_cours' => $this->formatMontant((float) $montantEnCours),
             'nb_en_cours'      => (string) $nbEnCours,
-            'montant_total'    => number_format((float) $montantTotal, 2, '.', ' '),
+            'montant_total'    => $this->formatMontant((float) $montantTotal),
             'nb_total'         => (string) $nbTotal,
         ];
     }
 
     // ─────────────────────────────────────────────────────────────
     // 8) أهم المؤشرات (dossiers)
+    //
+    // Bloc autonome : calcule lui-même les 7 indicateurs affichés dans
+    // le template (${dossiers_total}, ${pct_dossiers_juges},
+    // ${pct_dossiers_encours}, ${pct_dossiers_perdus}, ${montant_total},
+    // ${nb_tribunal_naqd}, ${type_affaire_top}/${type_affaire_top_nb}),
+    // sans dépendre de l'ordre d'exécution des autres méthodes dans
+    // genererStatistiques(). Les définitions et le périmètre (cohortes)
+    // restent volontairement identiques à ceux des sections détaillées
+    // correspondantes, pour que les chiffres affichés dans "أهم
+    // المؤشرات" concordent avec ceux des tableaux qui les précèdent.
     // ─────────────────────────────────────────────────────────────
     protected function indicateursDossiers(): array
     {
-        $globales = $this->statistiquesDossiersGlobales();
+        // 1) إجمالي الملفات القضائية
+        // Même cohorte que statistiquesDossiersGlobales() : dossiers
+        // ouverts (date_ouverture) pendant la période.
+        $baseDossiers = DossierJudiciaire::whereBetween('date_ouverture', [$this->debut, $this->fin]);
+        $totalDossiers = (clone $baseDossiers)->count();
+
+        // Voir la note dans statistiquesDossiersGlobales() : un dossier
+        // "جاري البت" recouvre aussi bien "تم الحكم" que les étapes
+        // d'exécution qui suivent (le jugement a bien été rendu).
+        $dossiersJuges = (clone $baseDossiers)
+            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']))
+            ->count();
+
+        // 2) نسبة الملفات التي تم البث فيها
+        $pctDossiersJuges = round(($dossiersJuges / max(1, $totalDossiers)) * 100, 1);
 
         // Un seul jugement (le plus récent) par dossier, filtré sur la
         // période via sa date_jugement — même cohorte que dans
-        // statistiquesFinancieres(), pour que numérateur et dénominateur
-        // portent sur exactement le même ensemble de dossiers.
+        // statistiquesFinancieres(), pour que "نسبة الملفات... ضد
+        // المؤسسة" et "إجمالي المبالغ المالية" portent tous sur
+        // exactement le même ensemble de jugements.
         $dernierJugement = DB::query()
             ->fromSub($this->dernierJugementParDossierQuery(), 'dj')
             ->where('dj.rn', 1)
             ->whereBetween('dj.date_jugement', [$this->debut, $this->fin]);
 
-        // Dénominateur : nombre de DOSSIERS jugés pendant la période
-        // (et non le "dossiers_juges" de statistiquesDossiersGlobales(),
-        // qui filtre sur la date d'OUVERTURE du dossier, pas sur la date
-        // du jugement — deux périmètres différents qu'il ne faut pas
-        // mélanger avec un numérateur basé sur date_jugement).
-        $totalJuges = (clone $dernierJugement)->count();
-        $total = max(1, $totalJuges); // évite division par zéro
-
-        $dossiersGagnes = (clone $dernierJugement)
-            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
-            ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
-            ->where('position_institutions.position', 'مع')
-            ->distinct('dj.id_dossier')
-            ->count('dj.id_dossier');
-
-        $dossiersPerdus = (clone $dernierJugement)
+        $dossiersContreInstitution = (clone $dernierJugement)
             ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
             ->where('position_institutions.position', 'ضد')
             ->distinct('dj.id_dossier')
             ->count('dj.id_dossier');
 
+        // 3) نسبة الملفات الجارية (en cours)
+        // Statut du dossier lui-même (pas du jugement) : جاري, في طور
+        // الاستئناف, ou في طور النقض. Même définition et même cohorte
+        // (date_ouverture dans la période) que "$enCours" dans
+        // statistiquesDossiersGlobales(), rapportée à $totalDossiers.
+        $dossiersEnCours = (clone $baseDossiers)
+            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
+            ->count();
+
+        $pctDossiersEnCours = round(($dossiersEnCours / max(1, $totalDossiers)) * 100, 1);
+
+        // 4) نسبة الملفات التي صدرت ضد المؤسسة
+        // Rapportée au total des dossiers de la période ($totalDossiers),
+        // et non au seul nombre de dossiers jugés.
+        $pctDossiersContreInstitution = round(($dossiersContreInstitution / max(1, $totalDossiers)) * 100, 1);
+
+        // 5) إجمالي المبالغ المالية المحكوم بها
+        // Même cohorte de jugements que ci-dessus (dernier jugement par
+        // dossier, sur la période) — même périmètre que le "المجموع" du
+        // tableau des montants financiers.
+        $montantTotal = (clone $dernierJugement)
+            ->join('finances', 'finances.id_jugement', '=', 'dj.id')
+            ->sum('finances.montant_condamne');
+
+        // 6) عدد الملفات المعروضة أمام محكمة النقض
+        // Dossiers distincts ayant une instance ouverte devant محكمة
+        // النقض (date_debut de l'instance dans la période) — même
+        // définition que ${nb_tribunal_naqd} dans statistiquesParTypeTribunal().
+        $dossiersNaqd = DossierTribunal::whereBetween('date_debut', [$this->debut, $this->fin])
+            ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
+            ->join('type_tribunaux', 'type_tribunaux.id', '=', 'tribunaux.id_type_tribunal')
+            ->where('type_tribunaux.tribunal', 'محكمة النقض')
+            ->distinct('dossier_tribunaux.id_dossier')
+            ->count('dossier_tribunaux.id_dossier');
+
+        // 7) أكثر أنواع المنازعات تسجيلاً
         $topType = TypeAffaire::withCount(['dossiers' => function ($q) {
             $q->whereBetween('date_ouverture', [$this->debut, $this->fin]);
         }])->orderByDesc('dossiers_count')->first();
 
         return [
-            'pct_dossiers_juges'   => (string) round(((int) $globales['dossiers_juges'] / max(1, (int) $globales['dossiers_total'])) * 100, 1),
-            'pct_dossiers_gagnes'  => (string) round(($dossiersGagnes / $total) * 100, 1),
-            'pct_dossiers_perdus'  => (string) round(($dossiersPerdus / $total) * 100, 1),
+            // Repris ici pour que le bloc "أهم المؤشرات" soit
+            // auto-suffisant ; identiques aux valeurs déjà exposées par
+            // statistiquesDossiersGlobales() / statistiquesFinancieres()
+            // / statistiquesParTypeTribunal() pour les mêmes clés.
+            'dossiers_total'       => (string) $totalDossiers,
+            'montant_total'        => $this->formatMontant((float) $montantTotal),
+            'nb_tribunal_naqd'     => (string) $dossiersNaqd,
+
+            'pct_dossiers_juges'   => (string) $pctDossiersJuges,
+            'pct_dossiers_encours' => (string) $pctDossiersEnCours,
+            'pct_dossiers_perdus'  => (string) $pctDossiersContreInstitution,
+
             'type_affaire_top'     => $topType?->affaire ?? '—',
             'type_affaire_top_nb'  => (string) ($topType?->dossiers_count ?? 0),
         ];
@@ -494,31 +571,34 @@ class RapportStatistiqueService
     // ─────────────────────────────────────────────────────────────
     // توزيع الشكايات حسب الجهة المحيلة
     //
-    // ASSOMPTION : le schéma actuel ne contient pas de champ dédié "جهة محيلة".
-    // On utilise ici la structure rattachée à la première action de traitement
-    // (action_reclamations.id_structure -> structures.nom), en la classant par
-    // mot-clé sur le nom de la structure. À ajuster si votre organigramme
-    // (table `structures`) utilise d'autres libellés.
+    // Classée d'après le type du réclamant lui-même
+    // (reclamations.id_reclamant -> reclamants.id_type_reclamant ->
+    // type_reclamants.type_reclamant), et non plus d'après la
+    // structure de traitement de la réclamation. Chaque réclamation
+    // n'a qu'un seul réclamant, donc pas besoin de distinct().
+    //
+    // Libellés seedés dans DataSeeder (table type_reclamants) :
+    // 'شركة', 'مقاولة', 'مرفق عمومي', 'مستخدم', 'مرتفق',
+    // 'مؤسسة الوسيط', 'مديرية جهوية', 'مديرية إقليمية', 'آخر'.
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesReclamationsParJiha(): array
     {
         $rows = DB::table('reclamations')
-            ->join('action_reclamations', 'action_reclamations.id_reclamation', '=', 'reclamations.id')
-            ->join('structures', 'structures.id', '=', 'action_reclamations.id_structure')
+            ->join('reclamants', 'reclamants.id', '=', 'reclamations.id_reclamant')
+            ->join('type_reclamants', 'type_reclamants.id', '=', 'reclamants.id_type_reclamant')
             ->whereBetween('reclamations.date_reception', [$this->debut, $this->fin])
-            ->select('structures.nom')
-            ->distinct('reclamations.id')
+            ->select('type_reclamants.type_reclamant as type')
             ->get();
 
         $c = ['wasit' => 0, 'regionale' => 0, 'provinciale' => 0, 'usagers' => 0, 'autres' => 0];
 
         foreach ($rows as $r) {
-            $nom = $r->nom;
+            $type = $r->type;
             match (true) {
-                str_contains($nom, 'الوسيط')      => $c['wasit']++,
-                str_contains($nom, 'الجهوية')     => $c['regionale']++,
-                str_contains($nom, 'الإقليمية'), str_contains($nom, 'الاقليمية') => $c['provinciale']++,
-                str_contains($nom, 'مرتفق'), str_contains($nom, 'مستخدم') => $c['usagers']++,
+                str_contains($type, 'الوسيط')      => $c['wasit']++,
+                str_contains($type, 'جهوية')       => $c['regionale']++,
+                str_contains($type, 'إقليمية'), str_contains($type, 'اقليمية') => $c['provinciale']++,
+                str_contains($type, 'مرتفق'), str_contains($type, 'مستخدم') => $c['usagers']++,
                 default => $c['autres']++,
             };
         }
