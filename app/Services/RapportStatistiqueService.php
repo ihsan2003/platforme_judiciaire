@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\DossierJudiciaire;
 use App\Models\DossierTribunal;
-use App\Models\Finance;
 use App\Models\Jugement;
 use App\Models\Reclamation;
 use App\Models\Region;
@@ -154,7 +153,11 @@ class RapportStatistiqueService
    
         $enCours = (clone $base)->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))->count();
 
-        $juges = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم الحكم'))->count();
+        // Un dossier "jugé" a dépassé la phase de litige : qu'il attende
+        // encore l'exécution, soit en cours d'exécution, ou totalement
+        // exécuté, un jugement a bien été rendu. Ne compter que "تم الحكم"
+        // sous-estimait donc les dossiers déjà passés en exécution.
+        $juges = (clone $base)->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']))->count();
 
         $executes = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم التنفيذ'))->count();
 
@@ -316,48 +319,89 @@ class RapportStatistiqueService
     }
 
     // ─────────────────────────────────────────────────────────────
+    // Sous-requête partagée : un seul jugement par dossier
+    // ─────────────────────────────────────────────────────────────
+    /**
+     * Un dossier peut traverser plusieurs instances (1ère instance, appel,
+     * cassation), chacune produisant son propre jugement. Le jugement le
+     * plus récent annule et remplace les précédents : c'est LUI, et lui
+     * seul, qui représente l'état actuel du dossier (montant, issue
+     * gagné/perdu, etc.) — jamais la somme/le compte de toutes les
+     * instances d'un même dossier.
+     *
+     * Retourne une sous-requête exposant, pour CHAQUE jugement :
+     * id, date_jugement, id_dossier, et rn (rang par dossier, rn = 1 =
+     * jugement le plus récent). Le filtre "rn = 1" doit être appliqué par
+     * l'appelant après ->fromSub().
+     *
+     * Nécessite ROW_NUMBER() : MySQL 8+ / MariaDB 10.2+ / SQLite 3.25+.
+     */
+    protected function dernierJugementParDossierQuery()
+    {
+        return DB::table('jugements')
+            ->join('dossier_tribunaux', 'dossier_tribunaux.id', '=', 'jugements.id_dossier_tribunal')
+            ->select([
+                'jugements.id',
+                'jugements.date_jugement',
+                'dossier_tribunaux.id_dossier',
+                DB::raw(
+                    'ROW_NUMBER() OVER (
+                        PARTITION BY dossier_tribunaux.id_dossier
+                        ORDER BY jugements.date_jugement DESC, jugements.id DESC
+                    ) AS rn'
+                ),
+            ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // 7) المبالغ المالية المحكوم بها
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesFinancieres(): array
     {
-        $finances = Finance::join('jugements', 'jugements.id', '=', 'finances.id_jugement')
-            ->whereBetween('jugements.date_jugement', [$this->debut, $this->fin])
-            ->select('finances.*');
+        // Un seul jugement (le plus récent) par dossier, filtré sur la
+        // période via sa date_jugement, puis rattaché à sa ligne "finances".
+        $finances = DB::query()
+            ->fromSub($this->dernierJugementParDossierQuery(), 'dj')
+            ->where('dj.rn', 1)
+            ->whereBetween('dj.date_jugement', [$this->debut, $this->fin])
+            ->join('finances', 'finances.id_jugement', '=', 'dj.id')
+            ->select('finances.*', 'dj.id_dossier', 'dj.id as id_jugement');
 
-        // pour l'institution : montant condamné où la partie gagnante est l'institution
+        // pour l'institution : le dossier (via son jugement retenu) où la
+        // partie gagnante est l'institution
         $montantPour = (clone $finances)
-            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'jugements.id')
+            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
             ->where('position_institutions.position', 'مع')
             ->sum('finances.montant_condamne');
 
         $nbPour = (clone $finances)
-            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'jugements.id')
+            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
             ->where('position_institutions.position', 'مع')
-            ->distinct('jugements.id')
-            ->count('jugements.id');
+            ->distinct('dj.id_dossier')
+            ->count('dj.id_dossier');
 
         $montantContre = (clone $finances)
-            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'jugements.id')
+            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
             ->where('position_institutions.position', 'ضد')
             ->sum('finances.montant_condamne');
 
         $nbContre = (clone $finances)
-            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'jugements.id')
+            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
             ->where('position_institutions.position', 'ضد')
-            ->distinct('jugements.id')
-            ->count('jugements.id');
+            ->distinct('dj.id_dossier')
+            ->count('dj.id_dossier');
 
-        $montantExecute = (clone $finances)->where('statut_paiement', 'مكتمل')->sum('montant_paye');
-        $nbExecute = (clone $finances)->where('statut_paiement', 'مكتمل')->count();
+        $montantExecute = (clone $finances)->where('finances.statut_paiement', 'مكتمل')->sum('finances.montant_paye');
+        $nbExecute = (clone $finances)->where('finances.statut_paiement', 'مكتمل')->count();
 
-        $montantEnCours = (clone $finances)->where('statut_paiement', 'جزئي')->sum('montant_paye');
-        $nbEnCours = (clone $finances)->whereIn('statut_paiement', ['جزئي', 'في الانتظار'])->count();
+        $montantEnCours = (clone $finances)->where('finances.statut_paiement', 'جزئي')->sum('finances.montant_paye');
+        $nbEnCours = (clone $finances)->whereIn('finances.statut_paiement', ['جزئي', 'في الانتظار'])->count();
 
-        $montantTotal = (clone $finances)->sum('montant_condamne');
+        $montantTotal = (clone $finances)->sum('finances.montant_condamne');
         $nbTotal = (clone $finances)->count();
 
         return [
@@ -380,23 +424,37 @@ class RapportStatistiqueService
     protected function indicateursDossiers(): array
     {
         $globales = $this->statistiquesDossiersGlobales();
-        $total = max(1, (int) $globales['dossiers_juges']); // évite division par zéro
 
-        $jugementsGagnes = DB::table('jugement_parties')
-            ->join('jugements', 'jugements.id', '=', 'jugement_parties.id_jugement')
+        // Un seul jugement (le plus récent) par dossier, filtré sur la
+        // période via sa date_jugement — même cohorte que dans
+        // statistiquesFinancieres(), pour que numérateur et dénominateur
+        // portent sur exactement le même ensemble de dossiers.
+        $dernierJugement = DB::query()
+            ->fromSub($this->dernierJugementParDossierQuery(), 'dj')
+            ->where('dj.rn', 1)
+            ->whereBetween('dj.date_jugement', [$this->debut, $this->fin]);
+
+        // Dénominateur : nombre de DOSSIERS jugés pendant la période
+        // (et non le "dossiers_juges" de statistiquesDossiersGlobales(),
+        // qui filtre sur la date d'OUVERTURE du dossier, pas sur la date
+        // du jugement — deux périmètres différents qu'il ne faut pas
+        // mélanger avec un numérateur basé sur date_jugement).
+        $totalJuges = (clone $dernierJugement)->count();
+        $total = max(1, $totalJuges); // évite division par zéro
+
+        $dossiersGagnes = (clone $dernierJugement)
+            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
-            ->whereBetween('jugements.date_jugement', [$this->debut, $this->fin])
             ->where('position_institutions.position', 'مع')
-            ->distinct('jugements.id')
-            ->count('jugements.id');
+            ->distinct('dj.id_dossier')
+            ->count('dj.id_dossier');
 
-        $jugementsPerdus = DB::table('jugement_parties')
-            ->join('jugements', 'jugements.id', '=', 'jugement_parties.id_jugement')
+        $dossiersPerdus = (clone $dernierJugement)
+            ->join('jugement_parties', 'jugement_parties.id_jugement', '=', 'dj.id')
             ->join('position_institutions', 'position_institutions.id', '=', 'jugement_parties.id_position_institution')
-            ->whereBetween('jugements.date_jugement', [$this->debut, $this->fin])
             ->where('position_institutions.position', 'ضد')
-            ->distinct('jugements.id')
-            ->count('jugements.id');
+            ->distinct('dj.id_dossier')
+            ->count('dj.id_dossier');
 
         $topType = TypeAffaire::withCount(['dossiers' => function ($q) {
             $q->whereBetween('date_ouverture', [$this->debut, $this->fin]);
@@ -404,8 +462,8 @@ class RapportStatistiqueService
 
         return [
             'pct_dossiers_juges'   => (string) round(((int) $globales['dossiers_juges'] / max(1, (int) $globales['dossiers_total'])) * 100, 1),
-            'pct_dossiers_gagnes'  => (string) round(($jugementsGagnes / $total) * 100, 1),
-            'pct_dossiers_perdus'  => (string) round(($jugementsPerdus / $total) * 100, 1),
+            'pct_dossiers_gagnes'  => (string) round(($dossiersGagnes / $total) * 100, 1),
+            'pct_dossiers_perdus'  => (string) round(($dossiersPerdus / $total) * 100, 1),
             'type_affaire_top'     => $topType?->affaire ?? '—',
             'type_affaire_top_nb'  => (string) ($topType?->dossiers_count ?? 0),
         ];
