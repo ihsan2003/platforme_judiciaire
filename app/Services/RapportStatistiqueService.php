@@ -618,26 +618,28 @@ class RapportStatistiqueService
     // ─────────────────────────────────────────────────────────────
     // توزيع الشكايات حسب النوع
     //
-    // ASSOMPTION : nécessite la colonne `reclamations.categorie` ajoutée par
-    // la migration fournie. Si vous ne voulez pas ajouter de colonne, un
-    // classement heuristique de secours par mots-clés sur `objet` est utilisé.
+    // Basé sur la relation `reclamations.id_type_reclamation` → table
+    // `type_reclamations` (voir TypeReclamation::class). Les 4 libellés
+    // sont ceux insérés par la migration create_type_reclamations_table.
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesReclamationsParType(): array
     {
-        $base = Reclamation::whereBetween('date_reception', [$this->debut, $this->fin]);
-        $hasColonne = \Illuminate\Support\Facades\Schema::hasColumn('reclamations', 'categorie');
+        $rows = Reclamation::whereBetween('date_reception', [$this->debut, $this->fin])
+            ->join('type_reclamations', 'type_reclamations.id', '=', 'reclamations.id_type_reclamation')
+            ->select('type_reclamations.type_reclamation', DB::raw('count(*) as nombre'))
+            ->groupBy('type_reclamations.type_reclamation')
+            ->pluck('nombre', 'type_reclamation');
 
-        if ($hasColonne) {
-            $judiciaire = (clone $base)->where('categorie', 'قضائية')->count();
-            $rh         = (clone $base)->where('categorie', 'موارد_بشرية')->count();
-            $usagers    = (clone $base)->where('categorie', 'مرتفقين')->count();
-            $autres     = (clone $base)->where('categorie', 'أخرى')->count();
-        } else {
-            $judiciaire = (clone $base)->where('objet', 'like', '%قضائ%')->count();
-            $rh         = (clone $base)->where('objet', 'like', '%موارد بشرية%')->count();
-            $usagers    = (clone $base)->where('objet', 'like', '%مرتفق%')->count();
-            $autres     = (clone $base)->count() - $judiciaire - $rh - $usagers;
-        }
+        $judiciaire = (int) ($rows['شكايات مرتبطة بالمنازعات القضائية'] ?? 0);
+        $rh         = (int) ($rows['شكايات الموارد البشرية'] ?? 0);
+        $usagers    = (int) ($rows['شكايات المرتفقين'] ?? 0);
+        $autres     = (int) ($rows['شكايات أخرى'] ?? 0);
+
+        // Réclamations sans type assigné (id_type_reclamation null) : comptées dans "autres"
+        $sansType = Reclamation::whereBetween('date_reception', [$this->debut, $this->fin])
+            ->whereNull('id_type_reclamation')
+            ->count();
+        $autres += $sansType;
 
         $total = max(1, $judiciaire + $rh + $usagers + $autres);
         $pct = fn ($n) => (string) round(($n / $total) * 100, 1);
@@ -666,19 +668,18 @@ class RapportStatistiqueService
 
         $pctTraitees = round(((int) $g['recl_traitees'] / $total) * 100, 1);
 
-        $topJiha = DB::table('reclamations')
-            ->join('action_reclamations', 'action_reclamations.id_reclamation', '=', 'reclamations.id')
-            ->join('structures', 'structures.id', '=', 'action_reclamations.id_structure')
+        $topReclamant = DB::table('reclamations')
+            ->join('reclamants', 'reclamants.id', '=', 'reclamations.id_reclamant')
             ->whereBetween('reclamations.date_reception', [$this->debut, $this->fin])
-            ->select('structures.nom', DB::raw('count(distinct reclamations.id) as nombre'))
-            ->groupBy('structures.nom')
+            ->select('reclamants.nom', DB::raw('count(distinct reclamations.id) as nombre'))
+            ->groupBy('reclamants.nom')
             ->orderByDesc('nombre')
             ->first();
 
         return [
             'pct_recl_traitees'  => (string) $pctTraitees,
-            'top_jiha_recl'      => $topJiha->nom ?? '—',
-            'top_jiha_recl_nb'   => (string) ($topJiha->nombre ?? 0),
+            'top_jiha_recl'      => $topReclamant->nom ?? '—',
+            'top_jiha_recl_nb'   => (string) ($topReclamant->nombre ?? 0),
         ];
     }
 }
