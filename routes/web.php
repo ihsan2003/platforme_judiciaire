@@ -39,7 +39,6 @@ use App\Http\Controllers\RapportController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/rapports/statistiques', [RapportController::class, 'index'])->name('rapports.index');
-    Route::get('/rapports/statistiques/apercu', [RapportController::class, 'apercu'])->name('rapports.apercu');
     Route::post('/rapports/statistiques/export', [RapportController::class, 'export'])->name('rapports.export');
 });
 
