@@ -417,6 +417,14 @@
                 </a>
             </li>
 
+            <div class="nav-section">التقارير</div>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('rapports.*') ? 'active' : '' }}"
+                href="{{ route('rapports.index') }}">
+                    <i class="bi bi-file-earmark-bar-graph"></i> التقرير الإحصائي
+                </a>
+            </li>
+
             <div class="nav-section">المراجع</div>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('parties.*') ? 'active' : '' }}"
