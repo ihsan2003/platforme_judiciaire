@@ -74,9 +74,17 @@ class RapportController extends Controller
             }
         }
 
-        $nomFichier = 'rapport_statistique_' . $debut->format('Y-m-d') . '_' . $fin->format('Y-m-d') . '.docx';
-        $cheminTemp = storage_path('app/' . $nomFichier);
+        if (! is_file($templatePath) || ! is_readable($templatePath)) {
+            abort(500, 'Le modèle du rapport est indisponible.');
+        }
+
+
+        $cheminTemp = tempnam(storage_path('app'), 'rapport_');
+        $nomFichier = 'rapport_statistique_' . $debut->format('Y-m-d')
+            . '_' . $fin->format('Y-m-d') . '.docx';
+
         $processor->saveAs($cheminTemp);
+
 
         return response()->download($cheminTemp, $nomFichier)->deleteFileAfterSend(true);
     }

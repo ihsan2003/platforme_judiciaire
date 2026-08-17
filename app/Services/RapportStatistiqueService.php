@@ -113,8 +113,13 @@ class RapportStatistiqueService
                 1 => 'ibtidai',
                 2 => 'istinaf',
                 3 => 'naqd',
-                default => 'ibtidai',
+                default => null,
             };
+
+            if ($cle === null) {
+                continue;
+            }
+
 
             $parRegion[$r->region][$cle] += $r->nombre;
         }
@@ -361,18 +366,23 @@ class RapportStatistiqueService
     protected function dernierJugementParDossierQuery()
     {
         return DB::table('jugements')
-            ->join('dossier_tribunaux', 'dossier_tribunaux.id', '=', 'jugements.id_dossier_tribunal')
+            ->join(
+                'dossier_tribunaux',
+                'dossier_tribunaux.id',
+                '=',
+                'jugements.id_dossier_tribunal'
+            )
+            ->whereBetween('jugements.date_jugement', [$this->debut, $this->fin])
             ->select([
                 'jugements.id',
                 'jugements.date_jugement',
                 'dossier_tribunaux.id_dossier',
-                DB::raw(
-                    'ROW_NUMBER() OVER (
-                        PARTITION BY dossier_tribunaux.id_dossier
-                        ORDER BY jugements.date_jugement DESC, jugements.id DESC
-                    ) AS rn'
-                ),
+                DB::raw('ROW_NUMBER() OVER (
+                    PARTITION BY dossier_tribunaux.id_dossier
+                    ORDER BY jugements.date_jugement DESC, jugements.id DESC
+                ) AS rn'),
             ]);
+
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -641,8 +651,16 @@ class RapportStatistiqueService
             ->count();
         $autres += $sansType;
 
-        $total = max(1, $judiciaire + $rh + $usagers + $autres);
-        $pct = fn ($n) => (string) round(($n / $total) * 100, 1);
+        $total = $judiciaire + $rh + $usagers + $autres;
+
+        $pct = function (int $nombre) use ($total): string {
+            if ($total === 0) {
+                return '0';
+            }
+
+            return (string) round(($nombre / $total) * 100, 1);
+        };
+
 
         return [
             'nb_recl_type_judiciaire'  => (string) $judiciaire,
@@ -653,8 +671,9 @@ class RapportStatistiqueService
             'pct_recl_type_usagers'    => $pct($usagers),
             'nb_recl_type_autres'      => (string) $autres,
             'pct_recl_type_autres'     => $pct($autres),
-            'nb_recl_type_total'       => (string) $total,
-            'pct_recl_type_total'      => '100',
+            'nb_recl_type_total' => (string) $total,
+            'pct_recl_type_total' => $total === 0 ? '0' : '100',
+
         ];
     }
 
