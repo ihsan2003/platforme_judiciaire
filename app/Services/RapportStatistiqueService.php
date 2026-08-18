@@ -155,8 +155,16 @@ class RapportStatistiqueService
             ->whereDate('date_ouverture', $this->fin)
             ->count();
 
-   
-        $enCours = (clone $base)->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))->count();
+        // "en cours" = actif PENDANT la période, pas forcément OUVERT
+        // pendant la période. Un dossier ouvert avant $debut mais
+        // toujours جاري / في طور الاستئناف / في طور النقض doit être
+        // compté. On ne peut pas s'appuyer sur $base (qui filtre sur
+        // date_ouverture BETWEEN [debut, fin]) : on requête donc à part,
+        // en ne contraignant que la borne haute (date_ouverture <= fin),
+        // le statut courant faisant office de filtre "toujours actif".
+        $enCours = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)
+            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
+            ->count();
 
         // Un dossier "jugé" a dépassé la phase de litige : qu'il attende
         // encore l'exécution, soit en cours d'exécution, ou totalement
@@ -166,10 +174,16 @@ class RapportStatistiqueService
 
         $executes = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم التنفيذ'))->count();
 
-        // "قيد التنفيذ" = un jugement existe avec une exécution non terminée (date_execution NULL)
-        $enExecution = (clone $base)->whereHas('dossierTribunaux.jugements.executions', function ($q) {
-            $q->whereNull('date_execution');
-        })->count();
+        // "قيد التنفيذ" = un jugement existe avec une exécution non
+        // terminée (date_execution NULL). C'est un état actuel, au même
+        // titre que "$enCours" ci-dessus : un dossier ouvert avant
+        // $debut mais toujours en cours d'exécution aujourd'hui doit
+        // être compté, donc on ne peut pas non plus s'appuyer sur
+        // $base (date_ouverture BETWEEN [debut, fin]).
+        $enExecution = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)
+            ->whereHas('dossierTribunaux.jugements.executions', function ($q) {
+                $q->whereNull('date_execution');
+            })->count();
 
         return [
             'dossiers_total'         => (string) $total,
@@ -501,13 +515,20 @@ class RapportStatistiqueService
         // 3) نسبة الملفات الجارية (en cours)
         // Statut du dossier lui-même (pas du jugement) : جاري, في طور
         // الاستئناف, ou في طور النقض. Même définition et même cohorte
-        // (date_ouverture dans la période) que "$enCours" dans
-        // statistiquesDossiersGlobales(), rapportée à $totalDossiers.
-        $dossiersEnCours = (clone $baseDossiers)
+        // (date_ouverture <= fin, statut courant) que "$enCours" dans
+        // statistiquesDossiersGlobales() — un dossier ouvert avant
+        // $debut mais toujours actif pendant la période doit être
+        // compté, donc on ne peut pas se limiter à $baseDossiers.
+        // Le dénominateur suit la même logique (tous les dossiers
+        // existants à la fin de la période), sinon le pourcentage
+        // pourrait dépasser 100 %.
+        $totalDossiersCumules = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)->count();
+
+        $dossiersEnCours = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)
             ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
             ->count();
 
-        $pctDossiersEnCours = round(($dossiersEnCours / max(1, $totalDossiers)) * 100, 1);
+        $pctDossiersEnCours = round(($dossiersEnCours / max(1, $totalDossiersCumules)) * 100, 1);
 
         // 4) نسبة الملفات التي صدرت ضد المؤسسة
         // Rapportée au total des dossiers de la période ($totalDossiers),
@@ -566,7 +587,18 @@ class RapportStatistiqueService
         $total = (clone $base)->count();
         $nouvelles = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'قيد المعالجة'))->count();
         $traitees = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'تمت المعالجة'))->count();
-        $enCours = $nouvelles; // "قيد المعالجة" couvre à la fois nouvelles et en cours dans le schéma actuel
+
+        // "en cours" = état ACTUEL, pas forcément REÇUE pendant la
+        // période (même problème que "dossiers_en_cours" plus haut).
+        // Une réclamation reçue avant $debut mais toujours "قيد
+        // المعالجة" aujourd'hui doit être comptée : on ne peut donc pas
+        // réutiliser $nouvelles, qui reste scopée sur $base (date_reception
+        // dans la période) et ne représente que le flux "nouvelles
+        // réclamations de la période encore en attente".
+        $enCours = Reclamation::where('date_reception', '<=', $this->fin)
+            ->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'قيد المعالجة'))
+            ->count();
+
         $archivees = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'مغلقة'))->count();
 
         return [
