@@ -272,7 +272,7 @@ class RecoursController extends Controller
             $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
         }
 
-        $this->changerStatutDossier($dossier, 'إعادة فتح');
+        $this->changerStatutDossier($dossier, 'في طور الاستئناف');
     }
 
     /**

@@ -278,29 +278,30 @@
 
         @endif
 
+        {{-- ACTIONS --}}
+        <div class="d-grid gap-2">
+
+            <button type="submit" class="btn btn-warning px-4">
+
+                <i class="bi bi-check-lg me-2"></i>
+
+                حفظ التعديلات
+
+            </button>
+
+            <a href="{{ route('executions.show', $execution) }}"
+            class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+                إلغاء
+
+            </a>
+
+        </div>
+
     </div>
 
 </div>
 
-{{-- ACTIONS --}}
-<div class="d-flex gap-2 justify-content-end mt-2">
-
-    <a href="{{ route('executions.show', $execution) }}"
-       class="btn btn-outline-secondary">
-
-        إلغاء
-
-    </a>
-
-    <button type="submit" class="btn btn-warning px-4">
-
-        <i class="bi bi-check-lg ms-1"></i>
-
-        حفظ
-
-    </button>
-
-</div>
 
 </form>
 

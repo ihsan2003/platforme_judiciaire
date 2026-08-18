@@ -81,6 +81,7 @@ class DataSeeder extends Seeder
             'في طور إعادة النظر',
             'تم الحكم',
             'تم التنفيذ',
+            'قيد التنفيذ',
             'حفظ'
         ];
         foreach ($statuts as $statut) {
