@@ -23,6 +23,26 @@ class RapportStatistiqueService
     }
 
     /**
+     * Périmètre des dossiers à retenir dans un rapport :
+     *
+     * - dossiers créés au plus tard à la fin de la période ;
+     * - qui n'étaient pas déjà clôturés avant le début de la période.
+     *
+     * Cette intersection de périodes inclut donc les dossiers créés pendant
+     * la période ainsi que ceux créés auparavant mais restés actifs pendant
+     * tout ou partie de la période.
+     */
+    protected function dossiersDansPeriode()
+    {
+        return DossierJudiciaire::query()
+            ->whereDate('date_ouverture', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('date_cloture')
+                    ->orWhereDate('date_cloture', '>=', $this->debut);
+            });
+    }
+
+    /**
      * Point d'entrée unique : retourne un tableau plat "clé => valeur",
      * dont les clés correspondent 1 à 1 aux ${...} du template Word,
      * sauf pour les tableaux dynamiques ('type_affaires' et 'regions')
@@ -55,7 +75,7 @@ class RapportStatistiqueService
      */
     public function lignesTypeAffaire(): array
     {
-        return DossierJudiciaire::whereBetween('date_ouverture', [$this->debut, $this->fin])
+        return $this->dossiersDansPeriode()
             ->join('type_affaires', 'type_affaires.id', '=', 'dossier_judiciaires.id_type_affaire')
             ->select('type_affaires.affaire as libelle', DB::raw('count(*) as nombre'))
             ->groupBy('type_affaires.affaire')
@@ -73,7 +93,11 @@ class RapportStatistiqueService
     {
         // Nombre de dossiers par région et par degré de juridiction
         $rows = DossierTribunal::query()
-            ->whereBetween('date_debut', [$this->debut, $this->fin])
+            ->whereDate('date_debut', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('date_fin')
+                    ->orWhereDate('date_fin', '>=', $this->debut);
+            })
             ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
             ->join('provinces', 'provinces.id', '=', 'tribunaux.id_province')
             ->join('regions', 'regions.id', '=', 'provinces.id_region')
@@ -88,7 +112,11 @@ class RapportStatistiqueService
 
         // Nombre total de dossiers distincts par région
         $totauxRegion = DossierTribunal::query()
-            ->whereBetween('date_debut', [$this->debut, $this->fin])
+            ->whereDate('date_debut', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('date_fin')
+                    ->orWhereDate('date_fin', '>=', $this->debut);
+            })
             ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
             ->join('provinces', 'provinces.id', '=', 'tribunaux.id_province')
             ->join('regions', 'regions.id', '=', 'provinces.id_region')
@@ -147,22 +175,18 @@ class RapportStatistiqueService
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesDossiersGlobales(): array
     {
-        $base = DossierJudiciaire::whereBetween('date_ouverture', [$this->debut, $this->fin]);
+        $base = $this->dossiersDansPeriode();
 
         $total = (clone $base)->count();
 
         $nouveaux = (clone $base)
-            ->whereDate('date_ouverture', $this->fin)
+            ->whereBetween('date_ouverture', [$this->debut, $this->fin])
             ->count();
 
-        // "en cours" = actif PENDANT la période, pas forcément OUVERT
-        // pendant la période. Un dossier ouvert avant $debut mais
-        // toujours جاري / في طور الاستئناف / في طور النقض doit être
-        // compté. On ne peut pas s'appuyer sur $base (qui filtre sur
-        // date_ouverture BETWEEN [debut, fin]) : on requête donc à part,
-        // en ne contraignant que la borne haute (date_ouverture <= fin),
-        // le statut courant faisant office de filtre "toujours actif".
-        $enCours = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)
+        // "en cours" = actif pendant la période. Le périmètre $base
+        // contient à la fois les dossiers créés pendant la période et ceux
+        // ouverts auparavant mais non clôturés avant son début.
+        $enCours = (clone $base)
             ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
             ->count();
 
@@ -175,12 +199,10 @@ class RapportStatistiqueService
         $executes = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم التنفيذ'))->count();
 
         // "قيد التنفيذ" = un jugement existe avec une exécution non
-        // terminée (date_execution NULL). C'est un état actuel, au même
-        // titre que "$enCours" ci-dessus : un dossier ouvert avant
-        // $debut mais toujours en cours d'exécution aujourd'hui doit
-        // être compté, donc on ne peut pas non plus s'appuyer sur
-        // $base (date_ouverture BETWEEN [debut, fin]).
-        $enExecution = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)
+        // terminée (date_execution NULL). Le périmètre inclut également
+        // les dossiers ouverts avant $debut dont l'exécution était encore
+        // en cours pendant la période.
+        $enExecution = (clone $base)
             ->whereHas('dossierTribunaux.jugements.executions', function ($q) {
                 $q->whereNull('date_execution');
             })->count();
@@ -200,7 +222,11 @@ class RapportStatistiqueService
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesParTypeTribunal(): array
     {
-        $counts = DossierTribunal::whereBetween('date_debut', [$this->debut, $this->fin])
+        $counts = DossierTribunal::whereDate('date_debut', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('date_fin')
+                    ->orWhereDate('date_fin', '>=', $this->debut);
+            })
             ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
             ->join('type_tribunaux', 'type_tribunaux.id', '=', 'tribunaux.id_type_tribunal')
             ->select('type_tribunaux.tribunal as type', DB::raw('COUNT(DISTINCT dossier_tribunaux.id_dossier) as nombre'))
@@ -238,8 +264,13 @@ class RapportStatistiqueService
     {
         // Tous les dossiers ayant au moins une instance commencée
         // avant ou à la fin de la période.
-        $dossiers = DossierJudiciaire::whereHas('dossierTribunaux', function ($q) {
-                $q->whereDate('date_debut', '<=', $this->fin);
+        $dossiers = $this->dossiersDansPeriode()
+            ->whereHas('dossierTribunaux', function ($q) {
+                $q->whereDate('date_debut', '<=', $this->fin)
+                    ->where(function ($q) {
+                        $q->whereNull('date_fin')
+                            ->orWhereDate('date_fin', '>=', $this->debut);
+                    });
             })
             ->with([
                 'dossierTribunaux' => function ($q) {
@@ -320,7 +351,7 @@ class RapportStatistiqueService
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesParAnnee(): array
     {
-        $counts = DossierJudiciaire::whereBetween('date_ouverture', [$this->debut, $this->fin])
+        $counts = $this->dossiersDansPeriode()
             ->select(DB::raw('YEAR(date_ouverture) as annee'), DB::raw('count(*) as nombre'))
             ->groupBy('annee')
             ->pluck('nombre', 'annee');
@@ -480,9 +511,9 @@ class RapportStatistiqueService
     protected function indicateursDossiers(): array
     {
         // 1) إجمالي الملفات القضائية
-        // Même cohorte que statistiquesDossiersGlobales() : dossiers
-        // ouverts (date_ouverture) pendant la période.
-        $baseDossiers = DossierJudiciaire::whereBetween('date_ouverture', [$this->debut, $this->fin]);
+        // Même périmètre que statistiquesDossiersGlobales() : dossiers
+        // créés ou actifs pendant la période.
+        $baseDossiers = $this->dossiersDansPeriode();
         $totalDossiers = (clone $baseDossiers)->count();
 
         // Voir la note dans statistiquesDossiersGlobales() : un dossier
@@ -514,17 +545,12 @@ class RapportStatistiqueService
 
         // 3) نسبة الملفات الجارية (en cours)
         // Statut du dossier lui-même (pas du jugement) : جاري, في طور
-        // الاستئناف, ou في طور النقض. Même définition et même cohorte
-        // (date_ouverture <= fin, statut courant) que "$enCours" dans
-        // statistiquesDossiersGlobales() — un dossier ouvert avant
-        // $debut mais toujours actif pendant la période doit être
-        // compté, donc on ne peut pas se limiter à $baseDossiers.
-        // Le dénominateur suit la même logique (tous les dossiers
-        // existants à la fin de la période), sinon le pourcentage
-        // pourrait dépasser 100 %.
-        $totalDossiersCumules = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)->count();
+        // الاستئناف, ou في طور النقض. Le dénominateur et le numérateur
+        // utilisent le même périmètre de dossiers créés ou actifs pendant
+        // la période, afin de conserver un pourcentage cohérent.
+        $totalDossiersCumules = (clone $baseDossiers)->count();
 
-        $dossiersEnCours = DossierJudiciaire::where('date_ouverture', '<=', $this->fin)
+        $dossiersEnCours = (clone $baseDossiers)
             ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
             ->count();
 
@@ -547,7 +573,11 @@ class RapportStatistiqueService
         // Dossiers distincts ayant une instance ouverte devant محكمة
         // النقض (date_debut de l'instance dans la période) — même
         // définition que ${nb_tribunal_naqd} dans statistiquesParTypeTribunal().
-        $dossiersNaqd = DossierTribunal::whereBetween('date_debut', [$this->debut, $this->fin])
+        $dossiersNaqd = DossierTribunal::whereDate('date_debut', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('date_fin')
+                    ->orWhereDate('date_fin', '>=', $this->debut);
+            })
             ->join('tribunaux', 'tribunaux.id', '=', 'dossier_tribunaux.id_tribunal')
             ->join('type_tribunaux', 'type_tribunaux.id', '=', 'tribunaux.id_type_tribunal')
             ->where('type_tribunaux.tribunal', 'محكمة النقض')
@@ -556,7 +586,11 @@ class RapportStatistiqueService
 
         // 7) أكثر أنواع المنازعات تسجيلاً
         $topType = TypeAffaire::withCount(['dossiers' => function ($q) {
-            $q->whereBetween('date_ouverture', [$this->debut, $this->fin]);
+            $q->whereDate('date_ouverture', '<=', $this->fin)
+                ->where(function ($q) {
+                    $q->whereNull('date_cloture')
+                        ->orWhereDate('date_cloture', '>=', $this->debut);
+                });
         }])->orderByDesc('dossiers_count')->first();
 
         return [
