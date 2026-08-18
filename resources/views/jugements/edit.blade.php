@@ -194,10 +194,9 @@
         {{-- ── بلوك المؤسسة ── --}}
         @if($institution)
 
-        <div class="card border-0 shadow-sm mb-4"
-             style="border-right: 4px solid #0d6efd !important;">
+        <div class="card border-0 shadow-sm mb-4">
 
-            <div class="card-header bg-white py-3 d-flex align-items-center gap-2">
+            <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
                 <i class="bi bi-building-fill text-primary"></i>
                 <h6 class="mb-0 fw-semibold">
                     وضعية المؤسسة :
@@ -205,10 +204,10 @@
                 </h6>
             </div>
 
-            <div class="card-body">
+            <div class="card-body p-4">
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">
+                    <label class="form-label fw-semibold small text-dark">
                         وضعية المؤسسة في هذا الحكم
                         <span class="text-danger">*</span>
                     </label>
@@ -244,7 +243,7 @@
                                    required>
                             <label class="btn btn-outline-{{ $color }} px-4"
                                    for="pos_{{ $pos->id }}">
-                                <i class="bi bi-{{ $icon }} ms-2"></i>
+                                <i class="bi bi-{{ $icon }} me-1"></i>
                                 {{ $pos->position }}
                             </label>
                         </div>
@@ -258,14 +257,24 @@
 
                 {{-- المؤسسة محكوم عليها --}}
                 <div id="bloc-etab-condamne" class="d-none">
-                    <div class="border rounded p-3 border-danger bg-danger bg-opacity-5">
 
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="bi bi-building text-danger"></i>
-                            <span class="fw-semibold small">{{ $institution->partie->nom_partie }}</span>
-                            <span class="badge bg-danger me-1" style="font-size:.65rem">
-                                المؤسسة محكوم عليها
-                            </span>
+                    <div id="condamnation-card" class="condamnation-card danger">
+
+                        <div class="condamnation-header">
+                            <div class="d-flex align-items-center">
+                                <div id="condamnation-icon" class="condamnation-icon">
+                                    <i class="bi bi-building-fill"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">
+                                        {{ $institution->partie->nom_partie }}
+                                    </h6>
+                                    <span id="condamnation-badge" class="condamnation-badge">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i>
+                                        المؤسسة محكوم عليها
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <input type="hidden"
@@ -273,18 +282,116 @@
                                id="hidden_etab_partie"
                                value="{{ $institution->partie->id }}">
 
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-danger text-white border-danger">درهم</span>
-                            <input type="number"
-                                   step="0.01"
-                                   min="0"
-                                   name="montants[{{ $institution->partie->id }}]"
-                                   id="montant_etab"
-                                   class="form-control"
-                                   value="{{ old('montants.'.$institution->partie->id, $montantsActuels->get($institution->partie->id)) }}"
-                                   placeholder="المبلغ المحكوم به">
+                        <div class="mt-4">
+                            <label class="form-label fw-semibold text-muted small mb-2">
+                                المبلغ المحكوم به
+                            </label>
+                            <div class="input-group amount-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-cash-stack me-2"></i>
+                                    درهم
+                                </span>
+                                <input type="number"
+                                       step="0.01"
+                                       min="0"
+                                       name="montants[{{ $institution->partie->id }}]"
+                                       id="montant_etab"
+                                       class="form-control"
+                                       value="{{ old('montants.'.$institution->partie->id, $montantsActuels->get($institution->partie->id)) }}"
+                                       placeholder="أدخل المبلغ المحكوم به">
+                            </div>
                         </div>
+
                     </div>
+                </div>
+
+                {{-- ── الأطراف الأخرى ── --}}
+                <div id="bloc-parties-adverses" class="d-none mb-4">
+
+                    <div class="condamnation-card success">
+
+                        <div class="condamnation-header">
+                            <div class="d-flex align-items-center">
+                                <div class="condamnation-icon">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">
+                                        الأطراف الأخرى المحكوم عليها
+                                    </h6>
+                                    <span class="condamnation-badge">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        المؤسسة رابحة في هذا الحكم
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($autresParties->isEmpty())
+
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-people fs-1 opacity-25 d-block mb-2"></i>
+                                لا توجد أطراف أخرى في هذا الملف
+                            </div>
+
+                        @else
+
+                        <div class="row g-3 mt-2">
+                            @foreach($autresParties as $dp)
+                            @php
+                                // Pré-cocher si la partie était déjà liée au jugement
+                                $isLinked = in_array($dp->partie->id, $partiesLiees);
+                                $montantExistant = $montantsActuels->get($dp->partie->id);
+                            @endphp
+                            <div class="col-md-6">
+                                <div class="party-item-card">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input"
+                                                type="checkbox"
+                                                name="parties[]"
+                                                value="{{ $dp->partie->id }}"
+                                                id="partie_{{ $dp->partie->id }}"
+                                                @checked(
+                                                    old('parties')
+                                                        ? in_array($dp->partie->id, old('parties', []))
+                                                        : $isLinked
+                                                )>
+                                            <label class="form-check-label fw-semibold"
+                                                for="partie_{{ $dp->partie->id }}">
+                                                {{ $dp->partie->nom_partie }}
+                                            </label>
+                                        </div>
+
+                                        <span class="party-type-badge">
+                                            {{ $dp->typePartie->type_partie ?? '—' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="input-group amount-group">
+                                        <span class="input-group-text">
+                                            <i class="bi bi-cash-stack me-2"></i>
+                                            درهم
+                                        </span>
+                                        <input type="number"
+                                            step="0.01"
+                                            min="0"
+                                            name="montants[{{ $dp->partie->id }}]"
+                                            class="form-control"
+                                            value="{{ old('montants.'.$dp->partie->id, $montantExistant) }}"
+                                            placeholder="المبلغ المحكوم به">
+                                    </div>
+
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        @endif
+
+                    </div>
+
                 </div>
 
             </div>
@@ -298,87 +405,6 @@
         </div>
 
         @endif
-
-        {{-- ── الأطراف الأخرى ── --}}
-        <div id="bloc-parties-adverses" class="d-none">
-
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white py-3 d-flex align-items-center gap-2">
-                    <i class="bi bi-people text-secondary"></i>
-                    <h6 class="mb-0 fw-semibold">الأطراف الأخرى المحكوم عليها</h6>
-                    <span class="text-muted small me-1">(اختر الأطراف وأدخل المبالغ)</span>
-                </div>
-
-                <div class="card-body">
-
-                    @if($autresParties->isEmpty())
-                        <div class="text-center py-3 text-muted small">
-                            <i class="bi bi-people fs-2 d-block mb-2 opacity-25"></i>
-                            لا توجد أطراف أخرى في هذا الملف.
-                        </div>
-                    @else
-                    <div class="row g-3">
-                        @foreach($autresParties as $dp)
-                        @php
-                            // Pré-cocher si la partie était déjà liée au jugement
-                            $isLinked = in_array($dp->partie->id, $partiesLiees);
-                            $montantExistant = $montantsActuels->get($dp->partie->id);
-                        @endphp
-                        <div class="col-md-6">
-                            <div class="border rounded p-3 {{ $isLinked ? 'border-primary bg-primary bg-opacity-5' : '' }}">
-
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           name="parties[]"
-                                           value="{{ $dp->partie->id }}"
-                                           id="partie_{{ $dp->partie->id }}"
-                                           @checked(
-                                               old('parties')
-                                                   ? in_array($dp->partie->id, old('parties', []))
-                                                   : $isLinked
-                                           )>
-                                    <label class="form-check-label small fw-semibold"
-                                           for="partie_{{ $dp->partie->id }}">
-                                        {{ $dp->partie->nom_partie }}
-                                        <span class="badge bg-secondary me-1" style="font-size:.65rem">
-                                            {{ $dp->typePartie->type_partie ?? '—' }}
-                                        </span>
-                                    </label>
-                                </div>
-
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">درهم</span>
-                                    <input type="number"
-                                           step="0.01"
-                                           min="0"
-                                           name="montants[{{ $dp->partie->id }}]"
-                                           class="form-control"
-                                           value="{{ old('montants.'.$dp->partie->id, $montantExistant) }}"
-                                           placeholder="المبلغ المحكوم به">
-                                </div>
-
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @endif
-
-                </div>
-            </div>
-
-        </div>
-
-        {{-- ── الإجراءات ── --}}
-        <div class="d-flex gap-2 justify-content-between mt-2">
-            <a href="{{ route('jugements.show', $jugement) }}"
-               class="btn btn-outline-secondary">
-                <i class="bi bi-x-lg ms-1"></i>إلغاء
-            </a>
-            <button type="submit" class="btn btn-warning px-4">
-                <i class="bi bi-check-lg ms-1"></i>حفظ التعديلات
-            </button>
-        </div>
 
     </div>{{-- /col-lg-8 --}}
 
@@ -485,6 +511,22 @@
             </div>
         @endif
 
+        <div class="d-grid gap-2">
+
+            <button type="submit"
+                        class="btn btn-warning">
+                <i class="bi bi-check-lg me-2"></i>
+                حفظ التعديلات
+            </button>
+
+            <a href="{{ route('jugements.show', $jugement) }}"
+                class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+                    إلغاء
+            </a>
+
+        </div>
+
     </div>{{-- /col-lg-4 --}}
 
 </div>{{-- /row --}}
@@ -492,6 +534,172 @@
 </form>
 
 @endsection
+
+@push('styles')
+<style>
+    /* ==========================
+    CARTE CONDAMNATION
+    ========================== */
+
+    .condamnation-card{
+        background:#fff;
+        border:1px solid #f1d3d6;
+        border-right:5px solid #dc3545;
+        border-radius:16px;
+        padding:20px;
+        transition:all .3s ease;
+        box-shadow:0 4px 15px rgba(0,0,0,.04);
+    }
+
+    .condamnation-header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+    }
+
+    .condamnation-icon{
+        width:48px;
+        height:48px;
+        border-radius:12px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:1.2rem;
+        margin-left:12px;
+        transition:.3s;
+    }
+
+    .condamnation-badge{
+        display:inline-flex;
+        align-items:center;
+        padding:6px 12px;
+        border-radius:30px;
+        font-size:.75rem;
+        font-weight:600;
+        transition:.3s;
+    }
+
+    .amount-group{
+        overflow:hidden;
+        border-radius:12px;
+    }
+
+    .amount-group .input-group-text{
+        border:none;
+        font-weight:600;
+        transition:.3s;
+    }
+
+    .amount-group .form-control{
+        min-height:48px;
+    }
+
+    /* ==========================
+    DANGER
+    ========================== */
+
+    .condamnation-card.danger{
+        border-color:#f1d3d6;
+        border-right-color:#dc3545;
+        background:#fff;
+    }
+
+    .condamnation-card.danger .condamnation-icon{
+        background:rgba(220,53,69,.1);
+        color:#dc3545;
+    }
+
+    .condamnation-card.danger .condamnation-badge{
+        background:rgba(220,53,69,.1);
+        color:#dc3545;
+    }
+
+    .condamnation-card.danger .input-group-text{
+        background:#dc3545;
+        color:#fff;
+    }
+
+    /* ==========================
+    WARNING
+    ========================== */
+
+    .condamnation-card.warning{
+        border-color:#ffe69c;
+        border-right-color:#ffc107;
+    }
+
+    .condamnation-card.warning .condamnation-icon{
+        background:rgba(255,193,7,.15);
+        color:#b58100;
+    }
+
+    .condamnation-card.warning .condamnation-badge{
+        background:rgba(255,193,7,.15);
+        color:#b58100;
+    }
+
+    .condamnation-card.warning .input-group-text{
+        background:#ffc107;
+        color:#212529;
+    }
+
+    /* ==========================
+    SUCCESS
+    ========================== */
+
+    .condamnation-card.success{
+        border-color:#d1e7dd;
+        border-right-color:#198754;
+        background:#ffffff;
+    }
+
+    .condamnation-card.success .condamnation-icon{
+        background:rgba(25,135,84,.12);
+        color:#198754;
+    }
+
+    .condamnation-card.success .condamnation-badge{
+        background:rgba(25,135,84,.12);
+        color:#198754;
+    }
+
+    .condamnation-card.success .input-group-text{
+        background:#198754;
+        color:#fff;
+    }
+
+    /* ==========================
+    PARTY ITEM
+    ========================== */
+
+    .party-item-card{
+        border:1px solid #e9ecef;
+        border-radius:14px;
+        padding:16px;
+        background:#fff;
+        transition:.25s;
+    }
+
+    .party-item-card:hover{
+        border-color:#198754;
+        box-shadow:0 5px 15px rgba(25,135,84,.08);
+    }
+
+    .party-type-badge{
+        background:rgba(25,135,84,.1);
+        color:#198754;
+        padding:5px 10px;
+        border-radius:20px;
+        font-size:.75rem;
+        font-weight:600;
+    }
+
+    .party-item-card .form-check-input:checked{
+        background:#198754;
+        border-color:#198754;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -554,5 +762,163 @@ window.addEventListener('DOMContentLoaded', () => {
         onPositionChange(checkedRadio);
     }
 });
+</script>
+<script>
+    // ══════════════════════════════════════════════════════════════════
+    // وضعية المؤسسة → لون البطاقة (danger / warning)
+    // ══════════════════════════════════════════════════════════════════
+        const radios         = document.querySelectorAll('input[name="position_institution_etab"]');
+    const blocEtab       = document.getElementById('bloc-etab-condamne');
+    const blocPartiesAdv = document.getElementById('bloc-parties-adverses');
+    const hiddenEtab     = document.getElementById('hidden_etab_partie');
+    const montantEtab    = document.getElementById('montant_etab');
+
+    function onPositionChange(radio) {
+
+    const label = radio.dataset.label ?? '';
+
+    const etabCondamne =
+        label.includes('ضد') || label.includes('جزئي');
+
+    const adverseCondamne =
+        label.includes('مع');
+
+    // =========================
+    // Institution
+    // =========================
+
+    if (blocEtab) {
+        blocEtab.classList.toggle('d-none', !etabCondamne);
+    }
+
+    // NOTE: hiddenEtab ne doit JAMAIS être désactivé — l'institution doit
+    // toujours avoir une ligne dans jugement_parties, quelle que soit sa
+    // position (مع / ضد / جزئي). Seul le montant dépend de la position.
+
+    if (montantEtab) {
+
+        montantEtab.required = etabCondamne;
+
+        if (!etabCondamne) {
+            montantEtab.value = '';
+        }
+    }
+
+    // =========================
+    // Parties adverses
+    // =========================
+
+    if (blocPartiesAdv) {
+
+        blocPartiesAdv.classList.toggle(
+            'd-none',
+            !adverseCondamne
+        );
+    }
+
+    if (!adverseCondamne) {
+
+        document.querySelectorAll(
+            '#bloc-parties-adverses input[type="checkbox"]'
+        ).forEach(cb => {
+
+            cb.checked = false;
+
+        });
+
+        document.querySelectorAll(
+            '#bloc-parties-adverses input[type="number"]'
+        ).forEach(input => {
+
+            input.value = '';
+
+        });
+    }
+
+    }
+
+
+    radios.forEach(r => {
+        r.addEventListener('change', () => onPositionChange(r));
+    });
+
+    // ══════════════════════════════════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════════════════════════════════
+    window.addEventListener('DOMContentLoaded', () => {
+
+        if (selectDt?.value)
+            onDtChange();
+
+        const checkedRadio =
+            document.querySelector('input[name="position_institution_etab"]:checked');
+
+        if (checkedRadio)
+            onPositionChange(checkedRadio);
+
+    });
+</script>
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const radios = document.querySelectorAll(
+            'input[name="position_institution_etab"]'
+        );
+
+        const bloc = document.getElementById('bloc-etab-condamne');
+
+        const card = document.getElementById('condamnation-card');
+
+        const hiddenPartie = document.getElementById('hidden_etab_partie');
+
+        function updateCondamnationBlock() {
+
+            const selected = document.querySelector(
+                'input[name="position_institution_etab"]:checked'
+            );
+
+            if (!selected) {
+
+                bloc.classList.add('d-none');
+                return;
+            }
+
+            const label = selected.dataset.label.trim();
+
+            card.classList.remove('danger', 'warning');
+
+            if (label.includes('ضد')) {
+
+                bloc.classList.remove('d-none');
+
+                card.classList.add('danger');
+
+            }
+
+            else if (label.includes('جزئي')) {
+
+                bloc.classList.remove('d-none');
+
+                card.classList.add('warning');
+
+            }
+
+            else {
+
+                bloc.classList.add('d-none');
+            }
+        }
+
+        radios.forEach(radio => {
+
+            radio.addEventListener('change', updateCondamnationBlock);
+
+        });
+
+        updateCondamnationBlock();
+
+    });
+
 </script>
 @endpush
