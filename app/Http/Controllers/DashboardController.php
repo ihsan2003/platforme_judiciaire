@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Audience;
 use App\Models\DossierJudiciaire;
 use App\Models\DossierTribunal;
+use App\Models\Execution;
 use App\Models\Jugement;
 use App\Models\Reclamation;
 use App\Models\StatutDossier;
@@ -24,20 +25,56 @@ class DashboardController extends Controller
     public function index()
     {
         // ─── DOSSIERS ───────────────────────────────────────────────
-        // Utilise les scopes du modèle + un seul count par statut via DB groupBy
-        $statsDossiers = DossierJudiciaire::query()
-            ->join('statut_dossiers', 'dossier_judiciaires.id_statut_dossier', '=', 'statut_dossiers.id')
-            ->selectRaw('statut_dossiers.statut_dossier, COUNT(*) as total')
-            ->groupBy('statut_dossiers.statut_dossier')
-            ->pluck('total', 'statut_dossier');
+        // Regroupement des statuts (statut_dossiers.statut_dossier) par catégorie
+        // affichée sur le tableau de bord. Les 3 groupes ci-dessous forment une
+        // partition complète des 9 statuts saisis dans StatutDossierSeeder/DataSeeder :
+        // النشطة (5) + المحكومة (3) + حفظ (1) = تام. On ne réutilise pas le scope
+        // DossierJudiciaire::actifs() (qui exclut uniquement "حفظ" et sert ailleurs
+        // — Avocat, JugementController) pour ne pas changer son comportement existant.
+        $statutsActifs = [
+            'جاري',
+            'في طور الاستئناف',
+            'في طور النقض',
+            'في طور التعرض',
+            'في طور إعادة النظر',
+        ];
+        $statutsEnReexamen = ['في طور إعادة النظر'];               // قيد النظر
+        $statutsJuges      = ['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']; // المحكومة
+
+        $dossiersMoisActuel = DossierJudiciaire::whereYear('date_ouverture', now()->year)
+            ->whereMonth('date_ouverture', now()->month)
+            ->count();
+
+        $dossiersMoisPrecedent = DossierJudiciaire::whereYear('date_ouverture', now()->subMonthNoOverflow()->year)
+            ->whereMonth('date_ouverture', now()->subMonthNoOverflow()->month)
+            ->count();
+
+        $croissanceTotal = $dossiersMoisPrecedent > 0
+            ? round((($dossiersMoisActuel - $dossiersMoisPrecedent) / $dossiersMoisPrecedent) * 100, 1)
+            : ($dossiersMoisActuel > 0 ? 100.0 : 0.0);
+
+        $jugementsCetteSemaine = Jugement::whereBetween('date_jugement', [now()->startOfWeek(), now()->endOfWeek()])->count();
 
         $dossiers = [
-            'total'     => DossierJudiciaire::count(),
-            'actifs'    => DossierJudiciaire::actifs()->count(),
-            'en_cours'  => $statsDossiers->get('En cours', 0),
-            'juges'     => $statsDossiers->get('Jugé', 0),
-            'executes'  => $statsDossiers->get('Exécuté', 0),
-            'ce_mois'   => DossierJudiciaire::whereMonth('date_ouverture', now()->month)->count(),
+            'total'              => DossierJudiciaire::count(),
+            'actifs'             => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))->count(),
+            'en_cours'           => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))->count(),
+            'juges'              => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsJuges))->count(),
+            'executions'         => Execution::count(),
+            'ce_mois'            => $dossiersMoisActuel,
+            'croissance_pct'     => $croissanceTotal,
+            'actifs_ce_mois'     => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))
+                                        ->whereYear('date_ouverture', now()->year)
+                                        ->whereMonth('date_ouverture', now()->month)
+                                        ->count(),
+            'en_cours_ce_mois'   => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))
+                                        ->whereYear('date_ouverture', now()->year)
+                                        ->whereMonth('date_ouverture', now()->month)
+                                        ->count(),
+            'jugements_semaine'  => $jugementsCetteSemaine,
+            'executions_ce_mois' => Execution::whereYear('created_at', now()->year)
+                                        ->whereMonth('created_at', now()->month)
+                                        ->count(),
         ];
 
         // ─── RÉCLAMATIONS ────────────────────────────────────────────

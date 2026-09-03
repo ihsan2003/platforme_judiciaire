@@ -16,6 +16,7 @@ class StructureController extends Controller
             ->with('enfants.typeStructure')
             ->orderBy('nom')
             ->get();
+
         return view('admin.structures.index', compact('structures'));
     }
 
@@ -23,6 +24,7 @@ class StructureController extends Controller
     {
         $typesStructure = TypeStructure::all();
         $parents        = Structure::orderBy('nom')->get();
+
         return view('admin.structures.create', compact('typesStructure', 'parents'));
     }
 
@@ -32,22 +34,34 @@ class StructureController extends Controller
             'nom'               => 'required|string|max:255',
             'id_type_structure' => 'required|exists:type_structures,id',
             'id_parent'         => 'nullable|exists:structures,id',
-        ]);
+        ], $this->messages());
+
         Structure::create($validated);
-        return redirect()->route('admin.structures.index')->with('success', 'Structure créée.');
+
+        return redirect()
+            ->route('admin.structures.index')
+            ->with('success', 'تم إنشاء الهيكل بنجاح.');
     }
 
     public function show(Structure $structure)
     {
         $structure->load(['typeStructure', 'parent', 'enfants.typeStructure']);
+
         return view('admin.structures.show', compact('structure'));
     }
 
     public function edit(Structure $structure)
     {
         $typesStructure = TypeStructure::all();
-        $parents        = Structure::where('id', '!=', $structure->id)->orderBy('nom')->get();
-        return view('admin.structures.edit', compact('structure', 'typesStructure', 'parents'));
+        $parents        = Structure::where('id', '!=', $structure->id)
+            ->orderBy('nom')
+            ->get();
+
+        return view('admin.structures.edit', compact(
+            'structure',
+            'typesStructure',
+            'parents'
+        ));
     }
 
     public function update(Request $request, Structure $structure)
@@ -56,14 +70,38 @@ class StructureController extends Controller
             'nom'               => 'required|string|max:255',
             'id_type_structure' => 'required|exists:type_structures,id',
             'id_parent'         => 'nullable|exists:structures,id',
-        ]);
+        ], $this->messages());
+
         $structure->update($validated);
-        return redirect()->route('admin.structures.index')->with('success', 'Structure mise à jour.');
+
+        return redirect()
+            ->route('admin.structures.index')
+            ->with('success', 'تم تحديث الهيكل بنجاح.');
     }
 
     public function destroy(Structure $structure)
     {
         $structure->delete();
-        return redirect()->route('admin.structures.index')->with('success', 'Structure supprimée.');
+
+        return redirect()
+            ->route('admin.structures.index')
+            ->with('success', 'تم حذف الهيكل بنجاح.');
+    }
+
+    /**
+     * Messages de validation en arabe.
+     */
+    protected function messages()
+    {
+        return [
+            'nom.required' => 'اسم الهيكل مطلوب.',
+            'nom.string'   => 'اسم الهيكل يجب أن يكون نصاً.',
+            'nom.max'      => 'اسم الهيكل يجب ألا يتجاوز 255 حرفاً.',
+
+            'id_type_structure.required' => 'نوع الهيكل مطلوب.',
+            'id_type_structure.exists'   => 'نوع الهيكل المحدد غير موجود.',
+
+            'id_parent.exists' => 'الهيكل الأب المحدد غير موجود.',
+        ];
     }
 }

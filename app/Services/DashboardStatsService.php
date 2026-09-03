@@ -5,7 +5,9 @@ namespace App\Services;
 
 use App\Models\Audience;
 use App\Models\DossierJudiciaire;
+use App\Models\Execution;
 use App\Models\Finance;
+use App\Models\Jugement;
 use App\Models\JugementPartie;
 use App\Models\Reclamation;
 
@@ -31,19 +33,51 @@ class DashboardStatsService
     public function genererDonnees(): array
     {
         // ─── DOSSIERS ───────────────────────────────────────────────
-        $statsDossiers = DossierJudiciaire::query()
-            ->join('statut_dossiers', 'dossier_judiciaires.id_statut_dossier', '=', 'statut_dossiers.id')
-            ->selectRaw('statut_dossiers.statut_dossier, COUNT(*) as total')
-            ->groupBy('statut_dossiers.statut_dossier')
-            ->pluck('total', 'statut_dossier');
+        // Regroupement des statuts par catégorie affichée sur le tableau de bord
+        // (mêmes règles que DashboardController::index — voir les commentaires
+        // là-bas pour le détail). Les 3 groupes forment une partition complète.
+        $statutsActifs = [
+            'جاري',
+            'في طور الاستئناف',
+            'في طور النقض',
+            'في طور التعرض',
+            'في طور إعادة النظر',
+        ];
+        $statutsEnReexamen = ['في طور إعادة النظر'];               // قيد النظر
+        $statutsJuges      = ['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']; // المحكومة
+
+        $dossiersMoisActuel = DossierJudiciaire::whereYear('date_ouverture', now()->year)
+            ->whereMonth('date_ouverture', now()->month)
+            ->count();
+
+        $dossiersMoisPrecedent = DossierJudiciaire::whereYear('date_ouverture', now()->subMonthNoOverflow()->year)
+            ->whereMonth('date_ouverture', now()->subMonthNoOverflow()->month)
+            ->count();
+
+        $croissanceTotal = $dossiersMoisPrecedent > 0
+            ? round((($dossiersMoisActuel - $dossiersMoisPrecedent) / $dossiersMoisPrecedent) * 100, 1)
+            : ($dossiersMoisActuel > 0 ? 100.0 : 0.0);
 
         $dossiers = [
-            'total'     => DossierJudiciaire::count(),
-            'actifs'    => DossierJudiciaire::actifs()->count(),
-            'en_cours'  => $statsDossiers->get('En cours', 0),
-            'juges'     => $statsDossiers->get('Jugé', 0),
-            'executes'  => $statsDossiers->get('Exécuté', 0),
-            'ce_mois'   => DossierJudiciaire::whereMonth('date_ouverture', now()->month)->count(),
+            'total'              => DossierJudiciaire::count(),
+            'actifs'             => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))->count(),
+            'en_cours'           => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))->count(),
+            'juges'              => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsJuges))->count(),
+            'executions'         => Execution::count(),
+            'ce_mois'            => $dossiersMoisActuel,
+            'croissance_pct'     => $croissanceTotal,
+            'actifs_ce_mois'     => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))
+                                        ->whereYear('date_ouverture', now()->year)
+                                        ->whereMonth('date_ouverture', now()->month)
+                                        ->count(),
+            'en_cours_ce_mois'   => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))
+                                        ->whereYear('date_ouverture', now()->year)
+                                        ->whereMonth('date_ouverture', now()->month)
+                                        ->count(),
+            'jugements_semaine'  => Jugement::whereBetween('date_jugement', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            'executions_ce_mois' => Execution::whereYear('created_at', now()->year)
+                                        ->whereMonth('created_at', now()->month)
+                                        ->count(),
         ];
 
         // ─── RÉCLAMATIONS ────────────────────────────────────────────

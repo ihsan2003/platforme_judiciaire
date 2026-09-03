@@ -186,13 +186,19 @@
 
 {{-- ══ STAT CARDS ══ --}}
 <div class="row g-3 mb-4" style="direction: rtl;">
+    @php
+        // Toutes les valeurs "trend" sont calculées dynamiquement dans DashboardController
+        // (aucun texte ni pourcentage codé en dur ici).
+        $trendTotal = ($dossiers['croissance_pct'] >= 0 ? '+' : '').$dossiers['croissance_pct'].'% هذا الشهر';
+        $upTotal    = $dossiers['croissance_pct'] > 0 ? true : ($dossiers['croissance_pct'] < 0 ? false : null);
+    @endphp
     @foreach([
-        ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>'12%+ هذا الشهر',       'up'=>true],
-        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>'جارية',           'up'=>null],
-        ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>'مستقر',             'up'=>null],
-        ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>'5+ هذا الأسبوع',   'up'=>true],
-        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_attente'].' في الانتظار', 'up'=>false],
-        ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executes'],      'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>'هذا الشهر: '.$dossiers['ce_mois'], 'up'=>null],
+        ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>$trendTotal,                                     'up'=>$upTotal],
+        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['actifs_ce_mois'].' جديد هذا الشهر',   'up'=>null],
+        ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>$dossiers['en_cours_ce_mois'].' هذا الشهر',       'up'=>null],
+        ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>$dossiers['jugements_semaine'].' هذا الأسبوع',    'up'=>$dossiers['jugements_semaine'] > 0 ? true : null],
+        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_attente'].' في الانتظار',       'up'=>$reclamations['en_attente'] > 0 ? false : null],
+        ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executions'],    'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['executions_ce_mois'].' هذا الشهر',     'up'=>null],
     ] as $s)
     <div class="col-6 col-md-4 col-xl-2">
         <div class="stat-card-new text-start">
@@ -271,10 +277,9 @@
                 </div>
                 <div class="d-flex flex-column gap-2 mt-3">
                     @foreach([
-                        ['قيد النظر',$dossiers['en_cours'],'#378ADD'],
+                        ['نشطة',$dossiers['actifs'],'#378ADD'],
                         ['محكومة',$dossiers['juges'],'#639922'],
-                        ['منفذة',$dossiers['executes'],'#BA7517'],
-                        ['أخرى',$dossiers['total']-$dossiers['en_cours']-$dossiers['juges']-$dossiers['executes'],'#888780'],
+                        ['محفوظة',max(0, $dossiers['total']-$dossiers['actifs']-$dossiers['juges']),'#888780'],
                     ] as [$lbl,$val,$col])
                     <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
                         <div class="legend-dot-sm" style="background:{{ $col }}"></div>
@@ -527,19 +532,19 @@
     </div>
 </div>
 
-<div class="card shadow-sm mb-4" dir="ltr">
-    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h6 class="mb-0 fw-bold">
-            <i class="bi bi-map text-primary me-2"></i>
-            <span dir="rtl">توزيع الملفات حسب الجهة</span>
-        </h6>
+<div class="card-modern mb-4">
+    <div class="card-modern-hd">
+        <div class="card-modern-title">
+            <div class="card-icon-sm ms-2" style="background:rgba(200,168,75,.15);color:var(--accent)"><i class="bi bi-map"></i></div>
+            توزيع الملفات حسب الجهة
+        </div>
         {{-- Légende --}}
-        <div id="map-legend" class="d-flex align-items-center gap-2 small text-muted"></div>
+        <div id="map-legend" class="d-flex align-items-center gap-2" style="font-size:.72rem;color:#64748b"></div>
     </div>
 
-    <div class="card-body p-0">
-        <div id="morocco-map-wrapper"
-             style="position:relative; width:100%; height:460px; background:#f8fafc; overflow:hidden;">
+    <div style="padding:0">
+        <div id="morocco-map-wrapper" dir="ltr"
+             style="position:relative; width:100%; height:460px; background:#f8fafd; overflow:hidden;">
 
             {{-- Tooltip --}}
             <div id="map-tooltip"
@@ -556,7 +561,7 @@
             {{-- Spinner pendant le chargement --}}
             <div id="map-loader"
                  class="d-flex align-items-center justify-content-center h-100 w-100 position-absolute top-0 start-0"
-                 style="z-index:10; background:#f8fafc;">
+                 style="z-index:10; background:#f8fafd;">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">تحميل...</span>
                 </div>
@@ -566,10 +571,10 @@
         </div>
 
         {{-- Tableau récapitulatif --}}
-        <div class="px-3 py-2" dir="rtl">
+        <div class="px-3 py-3" style="border-top:1px solid var(--border)">
             <div class="table-responsive">
-                <table class="table table-sm table-hover align-middle small mb-0">
-                    <thead class="table-light">
+                <table class="table table-hover align-middle mini-tbl mb-0">
+                    <thead>
                         <tr>
                             <th>الجهة</th>
                             <th class="text-center">عدد الملفات</th>
@@ -613,11 +618,10 @@
     const finLabels = {!! json_encode($statsFinancesGraphe['mensuel_labels']) !!};
     const finVals   = {!! json_encode($statsFinancesGraphe['mensuel_values']) !!};
 
-    const dossEnCours  = {{ $dossiers['en_cours'] }};
+    const dossActifs   = {{ $dossiers['actifs'] }};
     const dossJuges    = {{ $dossiers['juges'] }};
-    const dossExecutes = {{ $dossiers['executes'] }};
     const dossTotal    = {{ $dossiers['total'] }};
-    const dossAutres   = Math.max(0, dossTotal - dossEnCours - dossJuges - dossExecutes);
+    const dossHifd     = Math.max(0, dossTotal - dossActifs - dossJuges);
 
     const pourVal    = {{ $resultatsJugements['pour'] }};
     const contreVal  = {{ $resultatsJugements['contre'] }};
@@ -682,10 +686,10 @@
     new Chart(document.getElementById('chartStatut'), {
         type: 'doughnut',
         data: {
-            labels: ['قيد النظر', 'محكومة', 'منفذة', 'أخرى'],
+            labels: ['نشطة', 'محكومة', 'محفوظة'],
             datasets: [{
-                data: [dossEnCours, dossJuges, dossExecutes, dossAutres],
-                backgroundColor: [BLUE, GREEN, AMBER, GRAY],
+                data: [dossActifs, dossJuges, dossHifd],
+                backgroundColor: [BLUE, GREEN, GRAY],
                 borderWidth: 0,
                 hoverOffset: 5,
             }]
@@ -816,10 +820,12 @@
 
         const max = d3.max(apiData, d => +d[TOTAL_KEY]) || 1;
 
-        // Palette de couleur
+        // Palette de couleur — dégradé doré → bleu-nuit, cohérent avec le thème
+        // du tableau de bord (--accent: #c8a84b, --primary: #1a3a5c), au lieu
+        // du bleu générique de d3.interpolateBlues.
         const colorScale = d3.scaleSequential()
             .domain([0, max])
-            .interpolator(d3.interpolateBlues);
+            .interpolator(d3.interpolateRgb('#e9c46a', '#1a3a5c'));
 
         const noDataColor = '#e2e8f0';
 
@@ -864,7 +870,7 @@
                 const trib = row ? Number(row[TRIB_KEY]).toLocaleString('ar-MA') : '٠';
 
                 d3.select(this)
-                    .attr('stroke', '#1e40af')
+                    .attr('stroke', '#1a3a5c')
                     .attr('stroke-width', 2.5)
                     .style('opacity', '.85');
 
@@ -884,7 +890,7 @@
                                 padding-bottom:6px;">${geoName}</div>
                     <div style="display:flex;justify-content:space-between;gap:16px;">
                         <span>عدد الملفات</span>
-                        <span style="color:#93c5fd;font-weight:700;">${tot}</span>
+                        <span style="color:#e9c46a;font-weight:700;">${tot}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;gap:16px;margin-top:4px;">
                         <span>المحاكم</span>
@@ -924,15 +930,15 @@
             return `
                 <tr>
                     <td>
-                        <span class="badge me-1" style="background:${barColor};width:12px;height:12px;display:inline-block;border-radius:2px;"></span>
-                        ${row[DB_KEY] ?? '—'}
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${barColor};margin-inline-end:8px;"></span>
+                        <span style="font-weight:600;color:#1a3a5c">${row[DB_KEY] ?? '—'}</span>
                     </td>
                     <td class="text-center fw-bold">${Number(row[TOTAL_KEY]).toLocaleString('ar-MA')}</td>
                     <td class="text-center text-muted">${Number(row[TRIB_KEY]).toLocaleString('ar-MA')}</td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height:8px;">
-                                <div class="progress-bar" style="width:${pct}%;background:${barColor};"></div>
+                            <div class="pct-bar flex-grow-1" style="margin-top:0">
+                                <div class="pct-fill" style="width:${pct}%;background:${barColor};"></div>
                             </div>
                             <small class="text-muted" style="min-width:38px;">${pct}%</small>
                         </div>
