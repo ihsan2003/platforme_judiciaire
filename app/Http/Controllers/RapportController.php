@@ -79,6 +79,7 @@ class RapportController extends Controller
         }
 
 
+
         $cheminTemp = tempnam(storage_path('app'), 'rapport_');
         $nomFichier = 'rapport_statistique_' . $debut->format('Y-m-d')
             . '_' . $fin->format('Y-m-d') . '.docx';

@@ -198,7 +198,6 @@
                                     $color = match(true) {
                                         str_contains(strtolower($pos->position), 'مع') => 'success',
                                         str_contains(strtolower($pos->position), 'ضد') => 'danger',
-                                        str_contains(strtolower($pos->position), 'جزئي') => 'warning',
                                         default => 'secondary',
                                     };
                                     $icon = match($color) {
@@ -884,7 +883,7 @@
     const label = radio.dataset.label ?? '';
 
     const etabCondamne =
-        label.includes('ضد') || label.includes('جزئي');
+        label.includes('ضد');
 
     const adverseCondamne =
         label.includes('مع');
@@ -899,7 +898,7 @@
 
     // NOTE: hiddenEtab ne doit JAMAIS être désactivé — l'institution doit
     // toujours avoir une ligne dans jugement_parties, quelle que soit sa
-    // position (مع / ضد / جزئي). Seul le montant dépend de la position.
+    // position (مع / ضد). Seul le montant dépend de la position.
 
     if (montantEtab) {
 
@@ -999,14 +998,6 @@
                 bloc.classList.remove('d-none');
 
                 card.classList.add('danger');
-
-            }
-
-            else if (label.includes('جزئي')) {
-
-                bloc.classList.remove('d-none');
-
-                card.classList.add('warning');
 
             }
 

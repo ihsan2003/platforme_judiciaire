@@ -143,7 +143,6 @@ class DataSeeder extends Seeder
         $positions = [
             'مع',
             'ضد',
-            'جزئي'
         ];
         foreach ($positions as $position) {
             DB::table('position_institutions')->insert(['position' => $position]);

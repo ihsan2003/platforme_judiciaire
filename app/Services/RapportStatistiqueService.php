@@ -187,7 +187,7 @@ class RapportStatistiqueService
         // contient à la fois les dossiers créés pendant la période et ceux
         // ouverts auparavant mais non clôturés avant son début.
         $enCours = (clone $base)
-            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
+            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض', 'في طور إعادة النظر', 'في طور التعرض']))
             ->count();
 
         // Un dossier "jugé" a dépassé la phase de litige : qu'il attende

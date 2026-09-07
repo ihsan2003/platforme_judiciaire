@@ -216,9 +216,8 @@
                         @foreach($positionsInstitution as $pos)
                         @php
                             $color = match(true) {
-                                str_contains(strtolower($pos->position), 'ضد')   => 'danger',
-                                str_contains(strtolower($pos->position), 'جزئي') => 'warning',
-                                default                                           => 'success',
+                                str_contains(strtolower($pos->position), 'ضد') => 'danger',
+                                default                                         => 'success',
                             };
                             $icon = match($color) {
                                 'success' => 'trophy-fill',
@@ -715,8 +714,8 @@ const montantEtab    = document.getElementById('montant_etab');
 function onPositionChange(radio) {
     const label = radio.dataset.label ?? '';
 
-    // المؤسسة محكوم عليها : contient "ضد" ou "جزئي"
-    const etabCondamne = label.includes('ضد') || label.includes('جزئي');
+    // المؤسسة محكوم عليها : contient "ضد"
+    const etabCondamne = label.includes('ضد');
 
     // الأطراف الأخرى محكوم عليها : contient "مع" (pour / en faveur)
     const adverseCondamne = !etabCondamne;
@@ -727,7 +726,7 @@ function onPositionChange(radio) {
     }
     // NOTE: hiddenEtab ne doit JAMAIS être désactivé — l'institution doit
     // toujours avoir une ligne dans jugement_parties, quelle que soit sa
-    // position (مع / ضد / جزئي). Seul le montant dépend de la position.
+    // position (مع / ضد). Seul le montant dépend de la position.
     if (montantEtab) {
         montantEtab.required = etabCondamne;
         if (!etabCondamne) montantEtab.value = '';
@@ -778,7 +777,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const label = radio.dataset.label ?? '';
 
     const etabCondamne =
-        label.includes('ضد') || label.includes('جزئي');
+        label.includes('ضد');
 
     const adverseCondamne =
         label.includes('مع');
@@ -793,7 +792,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // NOTE: hiddenEtab ne doit JAMAIS être désactivé — l'institution doit
     // toujours avoir une ligne dans jugement_parties, quelle que soit sa
-    // position (مع / ضد / جزئي). Seul le montant dépend de la position.
+    // position (مع / ضد). Seul le montant dépend de la position.
 
     if (montantEtab) {
 
@@ -893,14 +892,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 bloc.classList.remove('d-none');
 
                 card.classList.add('danger');
-
-            }
-
-            else if (label.includes('جزئي')) {
-
-                bloc.classList.remove('d-none');
-
-                card.classList.add('warning');
 
             }
 

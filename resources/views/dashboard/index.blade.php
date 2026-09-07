@@ -317,11 +317,6 @@
                         <span class="fw-bold text-success">{{ $resultatsJugements['pour'] }}</span>
                     </div>
                     <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
-                        <div class="legend-dot-sm" style="background:#BA7517"></div>
-                        <span class="text-muted" style="flex:1; text-align: right;">جزئي</span>
-                        <span class="fw-bold" style="color:#BA7517">{{ $resultatsJugements['partiel'] }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
                         <div class="legend-dot-sm" style="background:#E24B4A"></div>
                         <span class="text-muted" style="flex:1; text-align: right;">ضد المؤسسة</span>
                         <span class="fw-bold text-danger">{{ $resultatsJugements['contre'] }}</span>
@@ -350,7 +345,6 @@
                     $mRestant = $statsFinancesGraphe['montant_restant'];
                     $mPour    = $statsFinancesGraphe['montant_pour'];
                     $mContre  = $statsFinancesGraphe['montant_contre'];
-                    $mPartiel = $statsFinancesGraphe['montant_partiel'];
                     $pctPaye  = $mTotal > 0 ? min(100, round($mPaye/$mTotal*100)) : 0;
                     $fmt = fn($v) => $v >= 1000000
                         ? number_format($v/1000000,2,',',' ').' م.د'
@@ -369,7 +363,6 @@
 
                 <div class="mt-3 pt-3" style="border-top:1px solid var(--border)">
                     <div class="fin-row mb-1"><span class="fin-label-sm"><i class="bi bi-arrow-up-circle text-success me-1"></i>لصالح المؤسسة</span><span class="fin-val-sm" style="color:#15803d">{{ $fmt($mPour) }}</span></div>
-                    <div class="fin-row mb-1"><span class="fin-label-sm"><i class="bi bi-dash-circle me-1" style="color:#BA7517"></i>جزئي</span><span class="fin-val-sm" style="color:#BA7517">{{ $fmt($mPartiel) }}</span></div>
                     <div class="fin-row"><span class="fin-label-sm"><i class="bi bi-arrow-down-circle text-danger me-1"></i>ضد المؤسسة</span><span class="fin-val-sm" style="color:#dc2626">{{ $fmt($mContre) }}</span></div>
                 </div>
             </div>
@@ -623,9 +616,8 @@
     const dossTotal    = {{ $dossiers['total'] }};
     const dossHifd     = Math.max(0, dossTotal - dossActifs - dossJuges);
 
-    const pourVal    = {{ $resultatsJugements['pour'] }};
-    const contreVal  = {{ $resultatsJugements['contre'] }};
-    const partielVal = {{ $resultatsJugements['partiel'] }};
+    const pourVal   = {{ $resultatsJugements['pour'] }};
+    const contreVal = {{ $resultatsJugements['contre'] }};
 
     const defaults = {
         responsive: true,
@@ -701,14 +693,14 @@
         }
     });
 
-    /* Donut pour/partiel/contre */
+    /* Donut pour/contre */
     new Chart(document.getElementById('chartPourContre'), {
         type: 'doughnut',
         data: {
-            labels: ['لصالح المؤسسة (مع)', 'جزئي', 'ضد المؤسسة'],
+            labels: ['لصالح المؤسسة (مع)', 'ضد المؤسسة'],
             datasets: [{
-                data: [pourVal, partielVal, contreVal],
-                backgroundColor: [GREEN, AMBER, RED],
+                data: [pourVal, contreVal],
+                backgroundColor: [GREEN, RED],
                 borderWidth: 0,
                 hoverOffset: 5,
             }]

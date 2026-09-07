@@ -162,7 +162,7 @@ class DashboardStatsService
             'total'       => $totalDossiersAffaire,
         ];
 
-        // ─── 2. RÉSULTATS POUR / CONTRE / PARTIEL DE L'ÉTABLISSEMENT ─────
+        // ─── 2. RÉSULTATS POUR / CONTRE DE L'ÉTABLISSEMENT ─────
         // Source de vérité : jugement_parties.id_position_institution,
         // renseignée uniquement sur la ligne de la partie de l'établissement
         // (parties.est_entraide = true) — voir JugementController::store().
@@ -175,21 +175,18 @@ class DashboardStatsService
             ->get()
             ->keyBy('position');
 
-        // مع = pour, ضد = contre, جزئي = partiel
-        $pour    = (int) ($positionStats->get('مع')->total ?? 0);
-        $contre  = (int) ($positionStats->get('ضد')->total ?? 0);
-        $partiel = (int) ($positionStats->get('جزئي')->total ?? 0);
+        // مع = pour, ضد = contre
+        $pour   = (int) ($positionStats->get('مع')->total ?? 0);
+        $contre = (int) ($positionStats->get('ضد')->total ?? 0);
 
-        $totalResultats = $pour + $contre + $partiel;
+        $totalResultats = $pour + $contre;
 
         $resultatsJugements = [
-            'pour'        => $pour,
-            'contre'      => $contre,
-            'partiel'     => $partiel,
-            'total'       => $totalResultats,
-            'pct_pour'    => $totalResultats > 0 ? round($pour / $totalResultats * 100, 1) : 0,
-            'pct_contre'  => $totalResultats > 0 ? round($contre / $totalResultats * 100, 1) : 0,
-            'pct_partiel' => $totalResultats > 0 ? round($partiel / $totalResultats * 100, 1) : 0,
+            'pour'       => $pour,
+            'contre'     => $contre,
+            'total'      => $totalResultats,
+            'pct_pour'   => $totalResultats > 0 ? round($pour / $totalResultats * 100, 1) : 0,
+            'pct_contre' => $totalResultats > 0 ? round($contre / $totalResultats * 100, 1) : 0,
         ];
 
         // ─── 3. MONTANTS FINANCIERS PAR POSITION ─────────────────────────
@@ -207,7 +204,6 @@ class DashboardStatsService
 
         $montantPour    = (float) ($positionStats->get('مع')->montant ?? 0);
         $montantContre  = (float) ($positionStats->get('ضد')->montant ?? 0);
-        $montantPartiel = (float) ($positionStats->get('جزئي')->montant ?? 0);
 
         $montantTotal   = (float) ($statsFinances->total_condamne ?? 0);
         $montantPaye    = (float) ($statsFinances->total_paye ?? 0);
@@ -217,7 +213,6 @@ class DashboardStatsService
             'montant_total'   => $montantTotal,
             'montant_pour'    => $montantPour,
             'montant_contre'  => $montantContre,
-            'montant_partiel' => $montantPartiel,
             'montant_paye'    => $montantPaye,
             'montant_restant' => $montantRestant,
             'nb_dossiers'     => (int) ($statsFinances->nb_dossiers ?? 0),

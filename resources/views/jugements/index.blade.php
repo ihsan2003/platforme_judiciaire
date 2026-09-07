@@ -174,11 +174,6 @@
                         ضد المؤسسة
                     </option>
  
-                    <option value="partiel"
-                            @selected(request('position') === 'partiel')>
-                        جزئي
-                    </option>
- 
                     <option value="pour"
                             @selected(request('position') === 'pour')>
                         لصالح المؤسسة
@@ -330,10 +325,6 @@
                        @elseif($posLabel === 'ضد')
                            <span class="badge bg-danger bg-opacity-15 text-white border border-danger border-opacity-25">
                                <i class="bi bi-shield-x ms-1"></i> ضد المؤسسة
-                           </span>
-                       @elseif($posLabel === 'جزئي')
-                           <span class="badge text-white" style="background:#BA7517">
-                               <i class="bi bi-dash-circle ms-1"></i> جزئي
                            </span>
                        @else
                            <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">

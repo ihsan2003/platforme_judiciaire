@@ -415,7 +415,7 @@
                     </label>
                     <select name="id_type_document"
                             class="form-select @error('id_type_document') is-invalid @enderror">
-                        <option value="\"> — اختر —</option>
+                        <option value=""> — اختر —</option>
                         @foreach($typesDocuments as $type)
                             <option value="{{ $type->id }}"
                                 @selected(old('id_type_document') == $type->id)>
