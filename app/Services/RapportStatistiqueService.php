@@ -43,6 +43,50 @@ class RapportStatistiqueService
     }
 
     /**
+     * IDs des dossiers dont le statut, TEL QU'IL ÉTAIT À LA DATE DE FIN DE
+     * LA PÉRIODE ($this->fin), fait partie de $libelles.
+     *
+     * À la différence de ->whereHas('statut', fn ($q) => $q->whereIn(...)),
+     * qui interroge dossier_judiciaires.id_statut_dossier — donc le statut
+     * COURANT du dossier, c'est-à-dire son statut au moment où le rapport
+     * est généré, pas celui qu'il avait à la fin de la période couverte —
+     * cette méthode reconstruit le statut effectif à $this->fin à partir de
+     * statut_dossier_historiques. Sans ça, régénérer le même rapport
+     * historique à des dates différentes donnait des chiffres différents
+     * (les dossiers ayant continué à progresser entre-temps), et
+     * dossiers_nouveaux (basé sur une date) n'était pas cohérent avec
+     * dossiers_en_cours/dossiers_juges (basés sur l'état présent).
+     */
+    protected function dossiersAvecStatutAuFinDePeriode(array $libelles)
+    {
+        return DB::table('statut_dossier_historiques')
+            ->join('statut_dossiers', 'statut_dossiers.id', '=', 'statut_dossier_historiques.id_statut_dossier')
+            ->where('statut_dossier_historiques.date_debut', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('statut_dossier_historiques.date_fin')
+                    ->orWhere('statut_dossier_historiques.date_fin', '>', $this->fin);
+            })
+            ->whereIn('statut_dossiers.statut_dossier', $libelles)
+            ->pluck('statut_dossier_historiques.id_dossier');
+    }
+
+    /**
+     * Équivalent pour les réclamations, voir dossiersAvecStatutAuFinDePeriode().
+     */
+    protected function reclamationsAvecStatutAuFinDePeriode(array $libelles)
+    {
+        return DB::table('statut_reclamation_historiques')
+            ->join('statut_reclamations', 'statut_reclamations.id', '=', 'statut_reclamation_historiques.id_statut_reclamation')
+            ->where('statut_reclamation_historiques.date_debut', '<=', $this->fin)
+            ->where(function ($q) {
+                $q->whereNull('statut_reclamation_historiques.date_fin')
+                    ->orWhere('statut_reclamation_historiques.date_fin', '>', $this->fin);
+            })
+            ->whereIn('statut_reclamations.statut_reclamation', $libelles)
+            ->pluck('statut_reclamation_historiques.id_reclamation');
+    }
+
+    /**
      * Point d'entrée unique : retourne un tableau plat "clé => valeur",
      * dont les clés correspondent 1 à 1 aux ${...} du template Word,
      * sauf pour les tableaux dynamiques ('type_affaires' et 'regions')
@@ -183,30 +227,37 @@ class RapportStatistiqueService
             ->whereBetween('date_ouverture', [$this->debut, $this->fin])
             ->count();
 
-        // "en cours" = actif pendant la période. Le périmètre $base
-        // contient à la fois les dossiers créés pendant la période et ceux
-        // ouverts auparavant mais non clôturés avant son début.
-        $enCours = (clone $base)
-            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض', 'في طور إعادة النظر', 'في طور التعرض']))
-            ->count();
+        // "en cours" = statut actif à la fin de la période (et non le
+        // statut courant au moment de la génération du rapport — voir
+        // dossiersAvecStatutAuFinDePeriode()). Le périmètre $base contient
+        // à la fois les dossiers créés pendant la période et ceux ouverts
+        // auparavant mais non clôturés avant son début.
+        $idsEnCours = $this->dossiersAvecStatutAuFinDePeriode(['جاري', 'في طور الاستئناف', 'في طور النقض', 'في طور إعادة النظر', 'في طور التعرض']);
+        $enCours = (clone $base)->whereIn('dossier_judiciaires.id', $idsEnCours)->count();
 
         // Un dossier "jugé" a dépassé la phase de litige : qu'il attende
         // encore l'exécution, soit en cours d'exécution, ou totalement
         // exécuté, un jugement a bien été rendu. Ne compter que "تم الحكم"
         // sous-estimait donc les dossiers déjà passés en exécution.
-        $juges = (clone $base)->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']))->count();
+        $idsJuges = $this->dossiersAvecStatutAuFinDePeriode(['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']);
+        $juges = (clone $base)->whereIn('dossier_judiciaires.id', $idsJuges)->count();
 
-        $executes = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_dossier', 'تم التنفيذ'))->count();
+        $idsExecutes = $this->dossiersAvecStatutAuFinDePeriode(['تم التنفيذ']);
+        $executes = (clone $base)->whereIn('dossier_judiciaires.id', $idsExecutes)->count();
 
-        // "قيد التنفيذ" = un jugement existe avec une exécution non
-        // terminée (date_execution NULL). Le périmètre inclut également
-        // les dossiers ouverts avant $debut dont l'exécution était encore
-        // en cours pendant la période.
-        $enExecution = (clone $base)
-            ->whereHas('dossierTribunaux.jugements.executions', function ($q) {
-                $q->whereNull('date_execution');
-            })->count();
+        // "قيد التنفيذ" au sens statut du dossier tel qu'il était à la fin
+        // de la période — voir dossiersAvecStatutAuFinDePeriode().
+        $idsEnExecution = $this->dossiersAvecStatutAuFinDePeriode(['قيد التنفيذ']);
+        $enExecution = (clone $base)->whereIn('dossier_judiciaires.id', $idsEnExecution)->count();
 
+        // NB : dossiers_executes et dossiers_en_execution sont des
+        // SOUS-ENSEMBLES de dossiers_juges (voir le commentaire ci-dessus :
+        // "jugé" couvre تم الحكم + قيد التنفيذ + تم التنفيذ). Ce ne sont
+        // pas des catégories qui s'additionnent à dossiers_juges — le
+        // template rapport_template.docx affiche donc ces deux lignes
+        // préfixées par "منها" (= "dont / parmi eux") pour que ça reste
+        // lisible comme un détail de dossiers_juges plutôt que comme des
+        // dossiers supplémentaires.
         return [
             'dossiers_total'         => (string) $total,
             'dossiers_nouveaux'      => (string) $nouveaux,
@@ -475,7 +526,15 @@ class RapportStatistiqueService
         $montantExecute = (clone $finances)->where('finances.statut_paiement', 'مكتمل')->sum('finances.montant_paye');
         $nbExecute = (clone $finances)->where('finances.statut_paiement', 'مكتمل')->count();
 
-        $montantEnCours = (clone $finances)->where('finances.statut_paiement', 'جزئي')->sum('finances.montant_paye');
+        // "قيد التنفيذ" doit désigner le même ensemble de jugements pour le
+        // montant et pour le nombre : les deux portent maintenant sur
+        // 'جزئي' ET 'في الانتظار' (précédemment, montant_en_cours ne
+        // sommait que 'جزئي', alors que nb_en_cours comptait aussi 'في
+        // الانتظار' — un jugement en attente de tout premier paiement
+        // disparaissait donc du montant affiché tout en étant compté dans
+        // le nombre, ce qui rendait les deux chiffres de la même ligne du
+        // rapport incohérents entre eux).
+        $montantEnCours = (clone $finances)->whereIn('finances.statut_paiement', ['جزئي', 'في الانتظار'])->sum('finances.montant_paye');
         $nbEnCours = (clone $finances)->whereIn('finances.statut_paiement', ['جزئي', 'في الانتظار'])->count();
 
         $montantTotal = (clone $finances)->sum('finances.montant_condamne');
@@ -520,7 +579,7 @@ class RapportStatistiqueService
         // "جاري البت" recouvre aussi bien "تم الحكم" que les étapes
         // d'exécution qui suivent (le jugement a bien été rendu).
         $dossiersJuges = (clone $baseDossiers)
-            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']))
+            ->whereIn('dossier_judiciaires.id', $this->dossiersAvecStatutAuFinDePeriode(['تم الحكم', 'تم التنفيذ', 'قيد التنفيذ']))
             ->count();
 
         // 2) نسبة الملفات التي تم البث فيها
@@ -551,7 +610,7 @@ class RapportStatistiqueService
         $totalDossiersCumules = (clone $baseDossiers)->count();
 
         $dossiersEnCours = (clone $baseDossiers)
-            ->whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', ['جاري', 'في طور الاستئناف', 'في طور النقض']))
+            ->whereIn('dossier_judiciaires.id', $this->dossiersAvecStatutAuFinDePeriode(['جاري', 'في طور الاستئناف', 'في طور النقض']))
             ->count();
 
         $pctDossiersEnCours = round(($dossiersEnCours / max(1, $totalDossiersCumules)) * 100, 1);
@@ -619,21 +678,28 @@ class RapportStatistiqueService
         $base = Reclamation::whereBetween('date_reception', [$this->debut, $this->fin]);
 
         $total = (clone $base)->count();
-        $nouvelles = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'قيد المعالجة'))->count();
-        $traitees = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'تمت المعالجة'))->count();
 
-        // "en cours" = état ACTUEL, pas forcément REÇUE pendant la
-        // période (même problème que "dossiers_en_cours" plus haut).
-        // Une réclamation reçue avant $debut mais toujours "قيد
-        // المعالجة" aujourd'hui doit être comptée : on ne peut donc pas
-        // réutiliser $nouvelles, qui reste scopée sur $base (date_reception
-        // dans la période) et ne représente que le flux "nouvelles
-        // réclamations de la période encore en attente".
+        // Les quatre compteurs ci-dessous utilisent tous le statut de la
+        // réclamation TEL QU'IL ÉTAIT À LA FIN DE LA PÉRIODE ($this->fin),
+        // reconstruit via statut_reclamation_historiques — pas son statut
+        // courant au moment où le rapport est généré (voir
+        // reclamationsAvecStatutAuFinDePeriode()). C'est ce qui rend
+        // "en cours" cohérent avec les autres : une réclamation reçue
+        // avant $debut mais toujours "قيد المعالجة" à la date de fin du
+        // rapport doit être comptée, d'où l'usage de Reclamation::where
+        // (sans borner par date_reception) plutôt que $base pour ce
+        // compteur précis, comme pour les autres méthodes de ce fichier.
+        $idsQuidMaalaja = $this->reclamationsAvecStatutAuFinDePeriode(['قيد المعالجة']);
+        $idsTraitees    = $this->reclamationsAvecStatutAuFinDePeriode(['تمت المعالجة']);
+        $idsArchivees   = $this->reclamationsAvecStatutAuFinDePeriode(['مغلقة']);
+
+        $nouvelles = (clone $base)->whereIn('reclamations.id', $idsQuidMaalaja)->count();
+        $traitees  = (clone $base)->whereIn('reclamations.id', $idsTraitees)->count();
+        $archivees = (clone $base)->whereIn('reclamations.id', $idsArchivees)->count();
+
         $enCours = Reclamation::where('date_reception', '<=', $this->fin)
-            ->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'قيد المعالجة'))
+            ->whereIn('id', $idsQuidMaalaja)
             ->count();
-
-        $archivees = (clone $base)->whereHas('statut', fn ($q) => $q->where('statut_reclamation', 'مغلقة'))->count();
 
         return [
             'recl_total'      => (string) $total,

@@ -41,6 +41,52 @@ class Reclamation extends Model
         return $this->belongsTo(StatutReclamation::class, 'id_statut_reclamation');
     }
 
+    public function historiqueStatuts()
+    {
+        return $this->hasMany(StatutReclamationHistorique::class, 'id_reclamation');
+    }
+
+    // ── Historique des statuts (voir DossierJudiciaire::booted() pour le
+    // même mécanisme, avec les explications détaillées) ────────────────
+    protected static function booted()
+    {
+        static::created(function ($reclamation) {
+            if ($reclamation->id_statut_reclamation) {
+                StatutReclamationHistorique::create([
+                    'id_reclamation'        => $reclamation->id,
+                    'id_statut_reclamation' => $reclamation->id_statut_reclamation,
+                    'date_debut'            => $reclamation->date_reception ?? now(),
+                    'date_fin'              => null,
+                ]);
+            }
+        });
+
+        static::updated(function ($reclamation) {
+            if (!$reclamation->wasChanged('id_statut_reclamation')) {
+                return;
+            }
+
+            $ancienStatutId = $reclamation->getOriginal('id_statut_reclamation');
+            $maintenant = now();
+
+            if ($ancienStatutId) {
+                StatutReclamationHistorique::where('id_reclamation', $reclamation->id)
+                    ->where('id_statut_reclamation', $ancienStatutId)
+                    ->whereNull('date_fin')
+                    ->update(['date_fin' => $maintenant]);
+            }
+
+            if ($reclamation->id_statut_reclamation) {
+                StatutReclamationHistorique::create([
+                    'id_reclamation'        => $reclamation->id,
+                    'id_statut_reclamation' => $reclamation->id_statut_reclamation,
+                    'date_debut'            => $maintenant,
+                    'date_fin'              => null,
+                ]);
+            }
+        });
+    }
+
     public function actions()
     {
         return $this->hasMany(ActionReclamation::class, 'id_reclamation')->orderBy('created_at', 'desc');

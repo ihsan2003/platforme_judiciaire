@@ -194,6 +194,60 @@ class DossierJudiciaire extends Model
                 $dossier->id_statut_dossier = $statut?->id;
             }
         });
+
+        // ── Historique des statuts ──────────────────────────────────
+        //
+        // Ces deux hooks alimentent statut_dossier_historiques quel que
+        // soit le point d'entrée qui modifie id_statut_dossier
+        // (changerStatut(), un controller qui fait ->update([...]),
+        // une mise à jour en masse via save(), etc.) : contrairement à un
+        // appel explicite ajouté dans changerStatut(), un événement Eloquent
+        // se déclenche pour toute écriture de l'attribut, d'où son choix ici.
+        //
+        // C'est cet historique qui permet à RapportStatistiqueService de
+        // reconstruire "le statut du dossier à la date de fin du rapport"
+        // au lieu de lire son statut courant (voir
+        // RapportStatistiqueService::dossiersAvecStatutAuFinDePeriode()).
+        static::created(function ($dossier) {
+            if ($dossier->id_statut_dossier) {
+                StatutDossierHistorique::create([
+                    'id_dossier'        => $dossier->id,
+                    'id_statut_dossier' => $dossier->id_statut_dossier,
+                    'date_debut'        => $dossier->date_ouverture ?? now(),
+                    'date_fin'          => null,
+                ]);
+            }
+        });
+
+        static::updated(function ($dossier) {
+            if (!$dossier->wasChanged('id_statut_dossier')) {
+                return;
+            }
+
+            $ancienStatutId = $dossier->getOriginal('id_statut_dossier');
+            $maintenant = now();
+
+            if ($ancienStatutId) {
+                StatutDossierHistorique::where('id_dossier', $dossier->id)
+                    ->where('id_statut_dossier', $ancienStatutId)
+                    ->whereNull('date_fin')
+                    ->update(['date_fin' => $maintenant]);
+            }
+
+            if ($dossier->id_statut_dossier) {
+                StatutDossierHistorique::create([
+                    'id_dossier'        => $dossier->id,
+                    'id_statut_dossier' => $dossier->id_statut_dossier,
+                    'date_debut'        => $maintenant,
+                    'date_fin'          => null,
+                ]);
+            }
+        });
+    }
+
+    public function historiqueStatuts()
+    {
+        return $this->hasMany(StatutDossierHistorique::class, 'id_dossier');
     }
 
     // ─────────────────────────────────────────
