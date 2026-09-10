@@ -129,12 +129,13 @@ class Notification extends Model
     public function getCategorieAttribute(): string
     {
         return match($this->type_notification) {
-            'audience_proche'        => 'Audience',
-            'delai_recours'          => 'Délai de recours',
-            'jugement_non_definitif' => 'Jugement',
-            'reclamation_en_attente' => 'Réclamation',
-            'execution_en_retard'    => 'Exécution',
-            default                  => 'Système',
+            'audience_proche'        => 'جلسة قريبة',
+            'delai_recours'          => 'أجل الطعن',
+            'jugement_non_definitif' => 'حكم',
+            'reclamation_en_attente' => 'شكاية',
+            'execution_en_retard'    => 'تنفيذ متأخر',
+            default                  => 'النظام',
         };
     }
+
 }

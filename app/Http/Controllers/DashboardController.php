@@ -90,7 +90,6 @@ class DashboardController extends Controller
             'recues'    => $statsReclamations->get('Reçue', 0),
             'en_cours'  => $statsReclamations->get('En cours', 0),
             'cloturees' => $statsReclamations->get('Clôturée', 0),
-            'en_attente'=> Reclamation::enAttente()->count(),
         ];
 
         // ─── ALERTES / AGENDA ─────────────────────────────────────────
@@ -109,7 +108,7 @@ class DashboardController extends Controller
         $alertes = [
             'audiences_proches'       => $audiencesAVenir->count(),
             'jugements_non_definitifs'=> Jugement::where('est_definitif', false)->count(),
-            'reclamations_en_attente' => $reclamations['en_attente'],
+            'reclamations_en_cours'    => $reclamations['en_cours'],
         ];
 
         // ─── DERNIERS DOSSIERS ────────────────────────────────────────

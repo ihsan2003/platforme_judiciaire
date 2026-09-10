@@ -90,67 +90,64 @@
 
 </div>
 
-{{-- Filters --}}
-<div class="card border-0 shadow-sm mb-3">
+{{-- ══ الفلاتر ══ --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
 
-    <div class="card-body py-2">
+        <form method="GET" class="row g-2 align-items-end">
 
-        <form method="GET" class="d-flex gap-3 align-items-center flex-wrap">
+            <div class="col-md-3">
 
-            <div class="form-check mb-0">
-
-                <input class="form-check-input"
-                       type="checkbox"
-                       name="non_lues"
-                       value="1"
-                       id="filterNonLues"
-                       {{ request()->boolean('non_lues') ? 'checked' : '' }}
-                       onchange="this.form.submit()">
-
-                <label class="form-check-label small" for="filterNonLues">
-                    غير المقروءة فقط
-                </label>
-
+                <select name="non_lues" class="form-select">
+                    <option value="" {{ !request()->boolean('non_lues') ? 'selected' : '' }}>
+                        جميع الإشعارات
+                    </option>
+                    <option value="1" {{ request()->boolean('non_lues') ? 'selected' : '' }}>
+                        غير المقروءة فقط
+                    </option>
+                </select>
             </div>
 
-            <select name="niveau"
-                    class="form-select form-select-sm w-auto"
-                    onchange="this.form.submit()">
+            <div class="col-md-3">
 
-                <option value="">جميع المستويات</option>
+                <select name="niveau" class="form-select">
+                    <option value="">جميع المستويات</option>
 
-                <option value="danger"
-                    {{ request('niveau') === 'danger' ? 'selected' : '' }}>
-                    🔴 عاجل
-                </option>
+                    <option value="danger"
+                        {{ request('niveau') === 'danger' ? 'selected' : '' }}>
+                        عاجل
+                    </option>
 
-                <option value="warning"
-                    {{ request('niveau') === 'warning' ? 'selected' : '' }}>
-                    🟡 تنبيه
-                </option>
+                    <option value="warning"
+                        {{ request('niveau') === 'warning' ? 'selected' : '' }}>
+                        تنبيه
+                    </option>
 
-                <option value="info"
-                    {{ request('niveau') === 'info' ? 'selected' : '' }}>
-                    🔵 معلومات
-                </option>
+                    <option value="info"
+                        {{ request('niveau') === 'info' ? 'selected' : '' }}>
+                        معلومات
+                    </option>
 
-            </select>
+                </select>
+            </div>
 
-            @if(request()->hasAny(['non_lues', 'niveau']))
+            <div class="col-md-1 d-flex gap-1">
+
+                <button class="btn btn-primary flex-fill" title="تصفية">
+                    <i class="bi bi-funnel-fill"></i>
+                </button>
 
                 <a href="{{ route('notifications.index') }}"
-                   class="btn btn-sm btn-outline-secondary">
-
-                    <i class="bi bi-x-circle ms-1"></i>
-                    إعادة التعيين
+                   class="btn btn-outline-secondary"
+                   title="إعادة التعيين">
+                    <i class="bi bi-x-lg"></i>
                 </a>
 
-            @endif
+            </div>
 
         </form>
 
     </div>
-
 </div>
 
 {{-- Notifications List --}}
@@ -175,8 +172,7 @@
                 <div>
 
                     <span class="badge bg-{{ $notif->couleur }}
-                        bg-opacity-15
-                        text-{{ $notif->couleur }}
+                        {{ in_array($notif->couleur, ['danger', 'primary', 'secondary']) ? 'text-white' : 'text-dark' }}
                         border
                         border-{{ $notif->couleur }}
                         border-opacity-25 mb-1"
@@ -185,6 +181,7 @@
                         {{ $notif->categorie }}
 
                     </span>
+
 
                     <div class="fw-semibold" style="font-size:.9rem;">
                         {{ $notif->message }}
@@ -202,86 +199,95 @@
                         <i class="bi bi-clock ms-1"></i>
                         {{ $notif->created_at->diffForHumans() }}
 
+                    </div>
+
+                </div>
+
+                {{-- Bottom row: Date + Actions --}}
+                <div class="d-flex align-items-center justify-content-between gap-3 mt-2 flex-wrap">
+
+                    {{-- Date / Read information --}}
+                    <div class="read-info d-flex align-items-center flex-wrap gap-2">
+
                         @if($notif->est_lue && $notif->date_lecture)
+                            <span>
+                                <i class="bi bi-check2-all ms-1 text-success"></i>
+                                تمت القراءة
+                                {{ $notif->date_lecture->locale('ar')->diffForHumans() }}
+                            </span>
+                        @endif
 
-                            &nbsp;·&nbsp;
+                    </div>
 
-                            <i class="bi bi-check2-all ms-1 text-success"></i>
 
-                            تمت القراءة
-                            {{ $notif->date_lecture->diffForHumans() }}
+                    {{-- Actions --}}
+                    <div class="d-flex gap-1 flex-shrink-0">
+
+                        {{-- View --}}
+                        @if($notif->url_action)
+
+                        <form method="POST"
+                            action="{{ route('notifications.lire', $notif) }}">
+
+                            @csrf
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-{{ $notif->couleur }} px-3"
+                                    style="font-size:.78rem;">
+
+                                <i class="bi bi-arrow-left ms-1"></i>
+                                عرض
+
+                            </button>
+
+                        </form>
 
                         @endif
+
+                        {{-- Mark as read --}}
+                        @if(!$notif->est_lue)
+
+                        <form method="POST"
+                            action="{{ route('notifications.lire', $notif) }}">
+
+                            @csrf
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-secondary px-2"
+                                    style="font-size:.78rem;"
+                                    title="تحديد كمقروء">
+
+                                <i class="bi bi-check2"></i>
+
+                            </button>
+
+                        </form>
+
+                        @endif
+
+                        {{-- Delete --}}
+                        <form method="POST"
+                            action="{{ route('notifications.destroy', $notif) }}">
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit"
+                                    class="btn btn-sm btn-outline-danger px-2"
+                                    style="font-size:.78rem;"
+                                    title="حذف"
+                                    onclick="return confirm('هل تريد حذف هذا الإشعار؟')">
+
+                                <i class="bi bi-trash3"></i>
+
+                            </button>
+
+                        </form>
 
                     </div>
 
                 </div>
 
-                {{-- Actions --}}
-                <div class="d-flex gap-1 flex-shrink-0">
-
-                    {{-- View --}}
-                    @if($notif->url_action)
-
-                    <form method="POST"
-                          action="{{ route('notifications.lire', $notif) }}">
-
-                        @csrf
-
-                        <button type="submit"
-                                class="btn btn-sm btn-{{ $notif->couleur }} px-3"
-                                style="font-size:.78rem;">
-
-                            <i class="bi bi-arrow-left ms-1"></i>
-                            عرض
-
-                        </button>
-
-                    </form>
-
-                    @endif
-
-                    {{-- Mark as read --}}
-                    @if(!$notif->est_lue)
-
-                    <form method="POST"
-                          action="{{ route('notifications.lire', $notif) }}">
-
-                        @csrf
-
-                        <button type="submit"
-                                class="btn btn-sm btn-outline-secondary px-2"
-                                style="font-size:.78rem;"
-                                title="تحديد كمقروء">
-
-                            <i class="bi bi-check2"></i>
-
-                        </button>
-
-                    </form>
-
-                    @endif
-
-                    {{-- Delete --}}
-                    <form method="POST"
-                          action="{{ route('notifications.destroy', $notif) }}">
-
-                        @csrf
-                        @method('DELETE')
-
-                        <button type="submit"
-                                class="btn btn-sm btn-outline-danger px-2"
-                                style="font-size:.78rem;"
-                                title="حذف"
-                                onclick="return confirm('هل تريد حذف هذا الإشعار؟')">
-
-                            <i class="bi bi-trash3"></i>
-
-                        </button>
-
-                    </form>
-
-                </div>
 
             </div>
 
@@ -332,11 +338,12 @@
 {{-- Pagination --}}
 @if($notifications->hasPages())
 
-<div class="mt-3">
+<div class="mt-3 d-flex justify-content-end">
     {{ $notifications->links() }}
 </div>
 
 @endif
+
 
 @endsection
 
@@ -403,6 +410,18 @@
         padding-left: .5rem;
         padding-right: 0;
     }
+    .read-info {
+        font-size: .75rem;
+        color: #6b7280;
+
+        border: 1px solid #d1e7dd;
+        background: #f0fdf4;
+
+        border-radius: 8px;
+
+        padding: 4px 10px;
+    }
+
 
 </style>
 

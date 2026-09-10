@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
 
+use Carbon\Carbon;
+
 use App\Observers\JugementObserver;
 use App\Observers\ExecutionObserver;
 
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
         Jugement::observe(JugementObserver::class);
         Execution::observe(ExecutionObserver::class);
+        Carbon::setLocale('ar');
 
         $this->registerSortableMacro();
     }

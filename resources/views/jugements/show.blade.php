@@ -85,7 +85,7 @@
 
             <div class="col-sm-3">
                 <strong>قضية الملف :</strong>
-                {{ $jugement->dossierTribunal->dossier->id_type_affaire->typeAffaire ?? '—' }}
+                {{ $jugement->dossierTribunal->dossier->typeAffaire->affaire ?? '—' }}
             </div>
 
             <div class="col-sm-3">

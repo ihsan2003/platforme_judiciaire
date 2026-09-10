@@ -170,9 +170,9 @@
                 <i class="bi bi-calendar-check me-1"></i>{{ $alertes['audiences_proches'] }} جلسة (جلسات) خلال 7 أيام
             </span>
             @endif
-            @if($alertes['reclamations_en_attente'] > 0)
+            @if($alertes['reclamations_en_cours'] > 0)
             <span style="background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.2);padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:600">
-                <i class="bi bi-exclamation-triangle me-1"></i>{{ $alertes['reclamations_en_attente'] }} شكوى (شكاوى) في الانتظار
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ $alertes['reclamations_en_cours'] }} شكاية قيد المعالجة
             </span>
             @endif
             @if($alertes['jugements_non_definitifs'] > 0)
@@ -187,17 +187,15 @@
 {{-- ══ STAT CARDS ══ --}}
 <div class="row g-3 mb-4" style="direction: rtl;">
     @php
-        // Toutes les valeurs "trend" sont calculées dynamiquement dans DashboardController
-        // (aucun texte ni pourcentage codé en dur ici).
         $trendTotal = ($dossiers['croissance_pct'] >= 0 ? '+' : '').$dossiers['croissance_pct'].'% هذا الشهر';
         $upTotal    = $dossiers['croissance_pct'] > 0 ? true : ($dossiers['croissance_pct'] < 0 ? false : null);
     @endphp
     @foreach([
         ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>$trendTotal,                                     'up'=>$upTotal],
-        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['actifs_ce_mois'].' جديد هذا الشهر',   'up'=>null],
+        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['actifs_ce_mois'].' هذا الشهر',   'up'=>null],
         ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>$dossiers['en_cours_ce_mois'].' هذا الشهر',       'up'=>null],
         ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>$dossiers['jugements_semaine'].' هذا الأسبوع',    'up'=>$dossiers['jugements_semaine'] > 0 ? true : null],
-        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_attente'].' في الانتظار',       'up'=>$reclamations['en_attente'] > 0 ? false : null],
+        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_cours'].' قيد المعالجة',       'up'=>$reclamations['en_cours'] > 0 ? false : null],
         ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executions'],    'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['executions_ce_mois'].' هذا الشهر',     'up'=>null],
     ] as $s)
     <div class="col-6 col-md-4 col-xl-2">
@@ -396,8 +394,8 @@
                 </div>
                 <div class="alert-row-item" style="border:none">
                     <div class="alert-dot-sm" style="background:#ef4444"></div>
-                    <div style="flex:1;font-size:.82rem; text-align: right;"><i class="bi bi-chat-dots text-danger me-1"></i>شكايات في الانتظار</div>
-                    <span class="badge rounded-pill" style="background:#fce7f3;color:#9d174d;font-size:.7rem">{{ $alertes['reclamations_en_attente'] }}</span>
+                    <div style="flex:1;font-size:.82rem; text-align: right;"><i class="bi bi-chat-dots text-danger me-1"></i>شكايات قيد المعالجة</div>
+                    <span class="badge rounded-pill" style="background:#fce7f3;color:#9d174d;font-size:.7rem">{{ $alertes['reclamations_en_cours'] }}</span>
                 </div>
             </div>
         </div>

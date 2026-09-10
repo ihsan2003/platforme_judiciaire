@@ -40,8 +40,8 @@ class NotificationController extends Controller
         $stats = [
             'total'    => Notification::pourUtilisateur(Auth::id())->count(),
             'non_lues' => Notification::pourUtilisateur(Auth::id())->nonLues()->count(),
-            'danger'   => Notification::pourUtilisateur(Auth::id())->nonLues()->parNiveau('danger')->count(),
-            'warning'  => Notification::pourUtilisateur(Auth::id())->nonLues()->parNiveau('warning')->count(),
+            'danger'   => Notification::pourUtilisateur(Auth::id())->parNiveau('danger')->count(),
+            'warning'  => Notification::pourUtilisateur(Auth::id())->parNiveau('warning')->count(),
         ];
 
         return view('notifications.index', compact('notifications', 'stats'));

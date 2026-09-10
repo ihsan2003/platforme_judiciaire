@@ -16,273 +16,424 @@
 
 @section('content')
 
-<div class="row justify-content-center" dir="rtl">
+{{-- ══════════════════════════════════════════════════════════════════════════
+    Page Header
+═══════════════════════════════════════════════════════════════════════════ --}}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">
+            <i class="bi bi-pencil text-warning me-2"></i>
+            تعديل جلسة {{ $audience->date_audience->format('d/m/Y') }}
+        </h4>
+        <p class="text-muted small mb-0">
+            حدّث معلومات الجلسة أدناه، ثم احفظ التعديلات.
+        </p>
+    </div>
+
+    <a href="{{ route('audiences.show', $audience) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-right me-1"></i>
+        العودة إلى الجلسة
+    </a>
+</div>
+
+@if($errors->any())
+<div class="alert alert-danger mb-4">
+    <ul class="mb-0">
+        @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+<form method="POST" action="{{ route('audiences.update', $audience) }}" id="audienceForm" dir="rtl">
+@csrf
+@method('PUT')
+
+<div class="row g-4">
+
+    {{-- Colonne principale --}}
     <div class="col-lg-8">
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-pencil ms-2 text-warning"></i>
-                    تعديل جلسة {{ $audience->date_audience->format('d/m/Y') }}
-                </h5>
+        {{-- ─────────────────────────────────────────────────────────────────
+            بطاقة المعلومات الرئيسية
+        ───────────────────────────────────────────────────────────────── --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-folder2-open me-2 text-primary"></i>
+                    معلومات الملف والمحكمة
+                </h6>
             </div>
 
             <div class="card-body p-4">
+                <div class="row g-3">
 
-                @if($errors->any())
-                <div class="alert alert-danger mb-4">
-                    <ul class="mb-0">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-                @endif
-
-                <form method="POST" action="{{ route('audiences.update', $audience) }}">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="row g-3 mb-3">
-                        {{-- الملف / المحكمة --}}
-                        <div class="col-md-6">
-                            <label for="id_dossier_tribunal" class="form-label fw-semibold">
-                                الملف والمحكمة <span class="text-danger">*</span>
-                            </label>
-
-                            <select name="id_dossier_tribunal" id="id_dossier_tribunal"
-                                    class="form-select @error('id_dossier_tribunal') is-invalid @enderror"
+                    {{-- الملف / المحكمة --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-dark">
+                            الملف والمحكمة
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-folder2 text-muted"></i>
+                            </span>
+                            <select name="id_dossier_tribunal"
+                                    id="id_dossier_tribunal"
+                                    class="form-select border-start-0 @error('id_dossier_tribunal') is-invalid @enderror"
                                     required>
-
                                 <option value="">— اختر ملفًا —</option>
-
                                 @foreach($dossierTribunaux as $dt)
                                     <option value="{{ $dt->id }}"
-                                        @selected(old('id_dossier_tribunal', $audience->id_dossier_tribunal) == $dt->id)>
-
+                                            data-tribunal-id="{{ $dt->id_tribunal }}"
+                                            @selected(old('id_dossier_tribunal', $audience->id_dossier_tribunal) == $dt->id)>
                                         {{ $dt->dossier?->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
-                                        —
-                                        {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
-
+                                        — {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
                                     </option>
                                 @endforeach
                             </select>
-
                             @error('id_dossier_tribunal')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
 
-                        {{-- القاضي --}}
-                        <div class="col-md-6">
-                            <label for="id_juge" class="form-label fw-semibold">
-                                القاضي <span class="text-danger">*</span>
-                            </label>
-
+                    {{-- القاضي --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-dark">
+                            القاضي
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-person text-muted"></i>
+                            </span>
                             <select name="id_juge" id="id_juge"
-                                    class="form-select @error('id_juge') is-invalid @enderror"
+                                    data-selected-id="{{ old('id_juge', $audience->id_juge) }}"
+                                    class="form-select border-start-0 @error('id_juge') is-invalid @enderror"
                                     required>
-
-                                <option value="">— اختر القاضي —</option>
-
+                                <option value="">— اختر المحكمة أولاً —</option>
                                 @foreach($juges as $juge)
                                     <option value="{{ $juge->id }}"
                                         @selected(old('id_juge', $audience->id_juge) == $juge->id)>
-
-                                        {{ $juge->nom_complet }}
-
-                                        @if($juge->tribunal)
-                                            ({{ $juge->tribunal->nom_tribunal }})
-                                        @endif
-
+                                        {{ $juge->grade ? $juge->grade.' ' : '' }}{{ $juge->nom_complet }}
                                     </option>
                                 @endforeach
                             </select>
-
                             @error('id_juge')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div id="juge_hint" class="form-text text-info d-none">
+                            <i class="bi bi-info-circle me-1"></i>
+                            القائمة يتم تصفيتها حسب المحكمة المختارة.
+                        </div>
+                        <div id="juge_aucun" class="form-text text-warning d-none">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            لا يوجد قضاة مسجلون لهذه المحكمة.
+                        </div>
                     </div>
-                    
-                    <div class="row g-3 mb-3">
-                        {{-- نوع الجلسة --}}
-                        <div class="col-md-6">
-                            <label for="id_type_audience" class="form-label fw-semibold">
-                                نوع الجلسة <span class="text-danger">*</span>
-                            </label>
 
+                    {{-- نوع الجلسة --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-dark">
+                            نوع الجلسة
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-bookmark text-muted"></i>
+                            </span>
                             <select name="id_type_audience" id="id_type_audience"
-                                    class="form-select @error('id_type_audience') is-invalid @enderror"
+                                    class="form-select border-start-0 @error('id_type_audience') is-invalid @enderror"
                                     required>
-
-                                <option value="">— اختر النوع —</option>
-
+                                <option value="">— اختر —</option>
                                 @foreach($typesAudience as $type)
                                     <option value="{{ $type->id }}"
                                         @selected(old('id_type_audience', $audience->id_type_audience) == $type->id)>
-
                                         {{ $type->libelle ?? $type->type_audience }}
-
                                     </option>
                                 @endforeach
                             </select>
-
                             @error('id_type_audience')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
-                    {{-- التواريخ --}}
-                    <div class="row g-3 mb-3">
+                </div>
+            </div>
+        </div>
+        {{-- ─────────────────────────────────────────────────────────────────
+        بطاقة النتائج والإجراءات
+        ───────────────────────────────────────────────────────────────── --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-card-text me-2 text-secondary"></i>
+                    النتائج والإجراءات
+                </h6>
+            </div>
 
-                        <div class="col-md-6">
-                            <label for="date_audience" class="form-label fw-semibold">
-                                تاريخ الجلسة <span class="text-danger">*</span>
-                            </label>
+            <div class="card-body p-4">
+                <div class="row g-3">
 
-                            <input type="date"
-                                   name="date_audience"
-                                   id="date_audience"
-                                   class="form-control @error('date_audience') is-invalid @enderror"
-                                   value="{{ old('date_audience', $audience->date_audience->format('Y-m-d')) }}"
-                                   required>
-
-                            @error('date_audience')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="date_prochaine_audience" class="form-label fw-semibold">
-                                الجلسة القادمة
-                            </label>
-
-                            <input type="date"
-                                   name="date_prochaine_audience"
-                                   id="date_prochaine_audience"
-                                   class="form-control @error('date_prochaine_audience') is-invalid @enderror"
-                                   value="{{ old('date_prochaine_audience', $audience->date_prochaine_audience?->format('Y-m-d')) }}">
-
-                            @error('date_prochaine_audience')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                    </div>
-
-                    {{-- الحضور --}}
-                    <div class="row g-3 mb-3">
-
-                        <div class="col-md-6">
-                            <div class="form-check form-switch">
-
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="presence_demandeur"
-                                       id="presence_demandeur"
-                                       value="1"
-                                       @checked(old('presence_demandeur', $audience->presence_demandeur))>
-
-                                <label class="form-check-label fw-semibold" for="presence_demandeur">
-                                    حضور المدعي
-                                </label>
-
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-check form-switch">
-
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="presence_defendeur"
-                                       id="presence_defendeur"
-                                       value="1"
-                                       @checked(old('presence_defendeur', $audience->presence_defendeur))>
-
-                                <label class="form-check-label fw-semibold" for="presence_defendeur">
-                                    حضور المدعى عليه
-                                </label>
-
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-check form-switch">
-
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       name="presence_avocat_entraide"
-                                       id="presence_avocat_entraide"
-                                       value="1"
-                                       @checked(old('presence_avocat_entraide', $audience->presence_avocat_entraide))>
-
-                                <label class="form-check-label fw-semibold" for="presence_avocat_entraide">
-                                    حضور محامي المؤسسة
-                                </label>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                    {{-- نتيجة الجلسة --}}
-                    <div class="mb-3">
-                        <label for="resultat_audience" class="form-label fw-semibold">
-                            نتيجة الجلسة
-                        </label>
-
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-dark">النتيجة</label>
                         <textarea name="resultat_audience"
-                                  id="resultat_audience"
-                                  class="form-control @error('resultat_audience') is-invalid @enderror"
-                                  rows="3">{{ old('resultat_audience', $audience->resultat_audience) }}</textarea>
-
+                                class="form-control @error('resultat_audience') is-invalid @enderror"
+                                rows="3"
+                                placeholder="نتيجة الجلسة...">{{ old('resultat_audience', $audience->resultat_audience) }}</textarea>
                         @error('resultat_audience')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- الإجراءات المطلوبة --}}
-                    <div class="mb-4">
-                        <label for="actions_demandees" class="form-label fw-semibold">
-                            الإجراءات المطلوبة
-                        </label>
-
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-dark">الإجراءات المطلوبة</label>
                         <textarea name="actions_demandees"
-                                  id="actions_demandees"
-                                  class="form-control @error('actions_demandees') is-invalid @enderror"
-                                  rows="3">{{ old('actions_demandees', $audience->actions_demandees) }}</textarea>
-
+                                class="form-control @error('actions_demandees') is-invalid @enderror"
+                                rows="3"
+                                placeholder="الإجراءات المطلوبة...">{{ old('actions_demandees', $audience->actions_demandees) }}</textarea>
                         @error('actions_demandees')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- الأزرار --}}
-                    <div class="d-flex gap-2 justify-content-end">
-
-                        <button type="submit" class="btn btn-warning">
-                            <i class="bi bi-check-lg ms-1"></i>
-                            حفظ التعديلات
-                        </button>
-
-                        <a href="{{ route('audiences.show', $audience) }}"
-                           class="btn btn-outline-secondary">
-
-                            <i class="bi bi-x-lg ms-1"></i>
-                            إلغاء
-                        </a>
-
-                    </div>
-
-                </form>
-
+                </div>
             </div>
         </div>
+    </div>
 
+    {{-- Colonne latérale --}}
+    <div class="col-lg-4">
+
+        {{-- ─────────────────────────────────────────────────────────────────
+            بطاقة التواريخ والحضور
+        ───────────────────────────────────────────────────────────────── --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-calendar3 me-2 text-success"></i>
+                    التواريخ والحضور
+                </h6>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-3">
+
+                    {{-- تاريخ الجلسة --}}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-dark">
+                            تاريخ الجلسة
+                            <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="date"
+                                name="date_audience"
+                                id="date_audience"
+                                class="form-control border-start-0 @error('date_audience') is-invalid @enderror"
+                                value="{{ old('date_audience', $audience->date_audience->format('Y-m-d')) }}"
+                                required>
+                            @error('date_audience')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- الجلسة القادمة --}}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small text-dark">
+                            الجلسة القادمة
+                        </label>
+                        <div class="input-group">
+                            <input type="date"
+                                name="date_prochaine_audience"
+                                id="date_prochaine_audience"
+                                class="form-control border-start-0 @error('date_prochaine_audience') is-invalid @enderror"
+                                value="{{ old('date_prochaine_audience', $audience->date_prochaine_audience?->format('Y-m-d')) }}">
+                            @error('date_prochaine_audience')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- الحضور --}}
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input"
+                                type="checkbox"
+                                name="presence_demandeur"
+                                value="1"
+                                id="presence_demandeur"
+                                @checked(old('presence_demandeur', $audience->presence_demandeur))>
+                            <label class="form-check-label small fw-semibold" for="presence_demandeur">
+                                حضور المدعي
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input"
+                                type="checkbox"
+                                name="presence_defendeur"
+                                value="1"
+                                id="presence_defendeur"
+                                @checked(old('presence_defendeur', $audience->presence_defendeur))>
+                            <label class="form-check-label small fw-semibold" for="presence_defendeur">
+                                حضور المدعى عليه
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input"
+                                type="checkbox"
+                                name="presence_avocat_entraide"
+                                value="1"
+                                id="presence_avocat_entraide"
+                                @checked(old('presence_avocat_entraide', $audience->presence_avocat_entraide))>
+                            <label class="form-check-label small fw-semibold" for="presence_avocat_entraide">
+                                حضور محامي المؤسسة
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- ─────────────────────────────────────────────────────────────────
+            أزرار الإرسال والإلغاء
+        ───────────────────────────────────────────────────────────────── --}}
+       <div class="d-grid gap-2 mt-3">
+            <button type="submit" class="btn btn-warning w-100">
+                <i class="bi bi-check-lg me-2"></i>
+                حفظ التعديلات
+            </button>
+
+            <a href="{{ route('audiences.show', $audience) }}"
+            class="btn btn-outline-secondary w-100">
+                <i class="bi bi-x-lg me-2"></i>
+                إلغاء
+            </a>
+        </div>
     </div>
 </div>
 
+</form>
+
 @endsection
+
+@push('styles')
+<style>
+    .form-control,
+    .form-select {
+        text-align: right;
+    }
+
+    .input-group > .form-control,
+    .input-group > .form-select {
+        border-radius: 0.375rem 0 0 0.375rem !important;
+    }
+
+    .input-group > .input-group-text:first-child {
+        border-radius: 0 0.375rem 0.375rem 0 !important;
+    }
+
+    .card {
+        border-radius: 0.5rem;
+        transition: box-shadow 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .bi {
+        vertical-align: -0.125em;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.getElementById('id_dossier_tribunal')
+    ?.addEventListener('change', async function () {
+        const tribunalId = this.options[this.selectedIndex]?.dataset?.tribunalId;
+        await chargerJuges(tribunalId);
+    });
+
+async function chargerJuges(tribunalId, preselectedJugeId = null) {
+    const jugeSelect = document.getElementById('id_juge');
+    const hint       = document.getElementById('juge_hint');
+    const aucun      = document.getElementById('juge_aucun');
+
+    if (!tribunalId) {
+        jugeSelect.innerHTML = '<option value="">— اختر المحكمة أولاً —</option>';
+        hint.classList.add('d-none');
+        aucun.classList.add('d-none');
+        return;
+    }
+
+    jugeSelect.innerHTML = '<option value="">— جار التحميل… —</option>';
+    jugeSelect.disabled  = true;
+
+    try {
+        const res   = await fetch(`/api/tribunaux/${tribunalId}/juges`);
+        const juges = await res.json();
+
+        jugeSelect.innerHTML = '<option value="">— اختر قاضيًا —</option>';
+
+        if (juges.length === 0) {
+            aucun.classList.remove('d-none');
+            hint.classList.add('d-none');
+        } else {
+            juges.forEach(j => {
+                const opt   = document.createElement('option');
+                opt.value   = j.id;
+                opt.textContent = (j.grade ? j.grade + ' ' : '') + j.nom_complet;
+                if (preselectedJugeId && String(j.id) === String(preselectedJugeId)) {
+                    opt.selected = true;
+                }
+                jugeSelect.appendChild(opt);
+            });
+            hint.classList.remove('d-none');
+            aucun.classList.add('d-none');
+        }
+
+        jugeSelect.disabled = false;
+
+    } catch (e) {
+        jugeSelect.innerHTML = '<option value="">— خطأ في التحميل —</option>';
+        jugeSelect.disabled  = false;
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('id_dossier_tribunal');
+    const jugeSelect = document.getElementById('id_juge');
+    const preselectedJugeId = jugeSelect?.dataset?.selectedId || null;
+
+    const tribunalId = sel?.options[sel.selectedIndex]?.dataset?.tribunalId;
+    if (tribunalId) {
+        chargerJuges(tribunalId, preselectedJugeId);
+    }
+});
+</script>
+@endpush

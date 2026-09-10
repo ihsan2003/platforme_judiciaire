@@ -222,9 +222,6 @@
                             <span class="text-danger">*</span>
                         </label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-calendar-event text-muted"></i>
-                            </span>
                             <input type="date"
                                 name="date_audience"
                                 id="date_audience"
@@ -243,9 +240,6 @@
                             الجلسة القادمة
                         </label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-calendar-check text-muted"></i>
-                            </span>
                             <input type="date"
                                 name="date_prochaine_audience"
                                 id="date_prochaine_audience"

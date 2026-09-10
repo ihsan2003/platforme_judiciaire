@@ -399,24 +399,39 @@ class RapportStatistiqueService
 
     // ─────────────────────────────────────────────────────────────
     // 6) توزيع الملفات حسب سنة تسجيل الدعوى
+    //
+    // Les 3 dernières années sont calculées dynamiquement par rapport à
+    // l'année de fin du rapport ($this->fin), pas codées en dur : un
+    // rapport généré en 2027 affichera donc 2025/2026/2027, etc., sans
+    // qu'il faille modifier ce fichier chaque année. Le template utilise
+    // en conséquence des placeholders génériques (annee_label_1..3,
+    // nb_annee_1..3) plutôt que des années fixes.
     // ─────────────────────────────────────────────────────────────
     protected function statistiquesParAnnee(): array
     {
+        $anneeFin = (int) $this->fin->format('Y');
+        $annees = [$anneeFin - 2, $anneeFin - 1, $anneeFin];
+
         $counts = $this->dossiersDansPeriode()
             ->select(DB::raw('YEAR(date_ouverture) as annee'), DB::raw('count(*) as nombre'))
             ->groupBy('annee')
             ->pluck('nombre', 'annee');
 
-        $c2024 = (int) ($counts[2024] ?? 0);
-        $c2025 = (int) ($counts[2025] ?? 0);
-        $c2026 = (int) ($counts[2026] ?? 0);
+        $resultat = [];
+        $total = 0;
 
-        return [
-            'nb_annee_2024' => (string) $c2024,
-            'nb_annee_2025' => (string) $c2025,
-            'nb_annee_2026' => (string) $c2026,
-            'nb_annee_total' => (string) ($c2024 + $c2025 + $c2026),
-        ];
+        foreach ($annees as $i => $annee) {
+            $nombre = (int) ($counts[$annee] ?? 0);
+            $total += $nombre;
+            $rang = $i + 1; // 1, 2, 3 (de la plus ancienne à la plus récente)
+
+            $resultat["annee_label_{$rang}"] = (string) $annee;
+            $resultat["nb_annee_{$rang}"] = (string) $nombre;
+        }
+
+        $resultat['nb_annee_total'] = (string) $total;
+
+        return $resultat;
     }
 
     // ─────────────────────────────────────────────────────────────
