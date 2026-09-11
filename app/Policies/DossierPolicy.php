@@ -48,7 +48,7 @@ class DossierPolicy
     public function update(User $user, DossierJudiciaire $dossier): bool
     {
         // Un dossier clôturé ne peut être modifié que par un responsable
-        if ($dossier->statutDossier?->statut_dossier === 'Clôturé') {
+        if ($dossier->statutDossier?->statut_dossier === 'حفظ') {
             return $user->hasRole(['admin']);
         }
 

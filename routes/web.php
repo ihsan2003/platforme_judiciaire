@@ -98,6 +98,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('dossiers', DossierJudiciaireController::class);
     Route::get('dossiers/{dossier}/cycle-vie', [DossierJudiciaireController::class, 'cycleVie'])
      ->name('dossiers.cycle-vie');
+    Route::post('dossiers/{dossier}/cloturer', [DossierJudiciaireController::class, 'cloturer'])
+     ->name('dossiers.cloturer');
  
 
     // ── Parties d'un dossier ──────────────────────────────────────────────

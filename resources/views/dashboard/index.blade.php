@@ -191,12 +191,12 @@
         $upTotal    = $dossiers['croissance_pct'] > 0 ? true : ($dossiers['croissance_pct'] < 0 ? false : null);
     @endphp
     @foreach([
-        ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>$trendTotal,                                     'up'=>$upTotal],
-        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['actifs_ce_mois'].' هذا الشهر',   'up'=>null],
-        ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>$dossiers['en_cours_ce_mois'].' هذا الشهر',       'up'=>null],
-        ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>$dossiers['jugements_semaine'].' هذا الأسبوع',    'up'=>$dossiers['jugements_semaine'] > 0 ? true : null],
-        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['en_cours'].' قيد المعالجة',       'up'=>$reclamations['en_cours'] > 0 ? false : null],
-        ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executions'],    'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['executions_ce_mois'].' هذا الشهر',     'up'=>null],
+        ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>$trendTotal,                                     'up'=>$upTotal,                    'arrow'=>$upTotal],
+        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['actifs_ce_mois'].' هذا الشهر',   'up'=>$dossiers['up_actifs'],      'arrow'=>$dossiers['up_actifs']],
+        ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>$dossiers['en_cours_ce_mois'].' هذا الشهر',       'up'=>$dossiers['up_en_cours'],    'arrow'=>$dossiers['up_en_cours']],
+        ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>$dossiers['jugements_semaine'].' هذا الأسبوع',    'up'=>$dossiers['up_jugements'],   'arrow'=>$dossiers['up_jugements']],
+        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['ce_mois'].' هذا الشهر', 'up'=>$reclamations['up_pct'],     'arrow'=>$reclamations['arrow_pct']],
+        ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executions'],    'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['executions_ce_mois'].' هذا الشهر',     'up'=>$dossiers['up_executions'],  'arrow'=>$dossiers['up_executions']],
     ] as $s)
     <div class="col-6 col-md-4 col-xl-2">
         <div class="stat-card-new text-start">
@@ -209,8 +209,8 @@
             <div class="stat-lbl" style="text-align: right;">{{ $s['label'] }}</div>
             <div class="stat-trend justify-content-end {{ $s['up'] === true ? 'trend-up' : ($s['up'] === false ? 'trend-dn' : 'trend-n') }}">
                 {{ $s['trend'] }}
-                @if($s['up'] === true)<i class="bi bi-arrow-up-short" style="font-size:14px"></i>
-                @elseif($s['up'] === false)<i class="bi bi-arrow-down-short" style="font-size:14px"></i>
+                @if($s['arrow'] === true)<i class="bi bi-arrow-up-short" style="font-size:14px"></i>
+                @elseif($s['arrow'] === false)<i class="bi bi-arrow-down-short" style="font-size:14px"></i>
                 @else<i class="bi bi-dash" style="font-size:14px"></i>@endif
             </div>
         </div>

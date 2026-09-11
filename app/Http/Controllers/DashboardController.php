@@ -55,6 +55,59 @@ class DashboardController extends Controller
 
         $jugementsCetteSemaine = Jugement::whereBetween('date_jugement', [now()->startOfWeek(), now()->endOfWeek()])->count();
 
+        // Comparaison réelle à la semaine précédente : avant on affichait "up=true"
+        // dès qu'il y avait ≥1 jugement cette semaine (toujours vert dès qu'il y a
+        // de l'activité, jamais de flèche rouge, sans aucune comparaison).
+        $jugementsSemainePrecedente = Jugement::whereBetween('date_jugement', [
+                now()->subWeek()->startOfWeek(),
+                now()->subWeek()->endOfWeek(),
+            ])->count();
+
+        $upJugements = $jugementsCetteSemaine > $jugementsSemainePrecedente
+            ? true
+            : ($jugementsCetteSemaine < $jugementsSemainePrecedente ? false : null);
+
+        // ─── Comparaisons mois actuel / mois précédent pour les autres cartes ──
+        // Même principe que $dossiersMoisPrecedent / $croissanceTotal ci-dessus,
+        // appliqué à "actifs", "en_cours" (réexamen) et "exécutions" pour que
+        // toutes les cartes aient une vraie flèche de tendance, comme la carte "jugés".
+        $moisPrecedentAnnee = now()->subMonthNoOverflow()->year;
+        $moisPrecedentMois  = now()->subMonthNoOverflow()->month;
+
+        $actifsCeMois = DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))
+            ->whereYear('date_ouverture', now()->year)
+            ->whereMonth('date_ouverture', now()->month)
+            ->count();
+        $actifsMoisPrecedent = DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))
+            ->whereYear('date_ouverture', $moisPrecedentAnnee)
+            ->whereMonth('date_ouverture', $moisPrecedentMois)
+            ->count();
+        $upActifs = $actifsCeMois > $actifsMoisPrecedent
+            ? true
+            : ($actifsCeMois < $actifsMoisPrecedent ? false : null);
+
+        $enCoursCeMois = DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))
+            ->whereYear('date_ouverture', now()->year)
+            ->whereMonth('date_ouverture', now()->month)
+            ->count();
+        $enCoursMoisPrecedent = DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))
+            ->whereYear('date_ouverture', $moisPrecedentAnnee)
+            ->whereMonth('date_ouverture', $moisPrecedentMois)
+            ->count();
+        $upEnCours = $enCoursCeMois > $enCoursMoisPrecedent
+            ? true
+            : ($enCoursCeMois < $enCoursMoisPrecedent ? false : null);
+
+        $executionsCeMois = Execution::whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+        $executionsMoisPrecedent = Execution::whereYear('created_at', $moisPrecedentAnnee)
+            ->whereMonth('created_at', $moisPrecedentMois)
+            ->count();
+        $upExecutions = $executionsCeMois > $executionsMoisPrecedent
+            ? true
+            : ($executionsCeMois < $executionsMoisPrecedent ? false : null);
+
         $dossiers = [
             'total'              => DossierJudiciaire::count(),
             'actifs'             => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))->count(),
@@ -63,18 +116,14 @@ class DashboardController extends Controller
             'executions'         => Execution::count(),
             'ce_mois'            => $dossiersMoisActuel,
             'croissance_pct'     => $croissanceTotal,
-            'actifs_ce_mois'     => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsActifs))
-                                        ->whereYear('date_ouverture', now()->year)
-                                        ->whereMonth('date_ouverture', now()->month)
-                                        ->count(),
-            'en_cours_ce_mois'   => DossierJudiciaire::whereHas('statut', fn ($q) => $q->whereIn('statut_dossier', $statutsEnReexamen))
-                                        ->whereYear('date_ouverture', now()->year)
-                                        ->whereMonth('date_ouverture', now()->month)
-                                        ->count(),
+            'actifs_ce_mois'     => $actifsCeMois,
+            'up_actifs'          => $upActifs,
+            'en_cours_ce_mois'   => $enCoursCeMois,
+            'up_en_cours'        => $upEnCours,
             'jugements_semaine'  => $jugementsCetteSemaine,
-            'executions_ce_mois' => Execution::whereYear('created_at', now()->year)
-                                        ->whereMonth('created_at', now()->month)
-                                        ->count(),
+            'up_jugements'       => $upJugements,
+            'executions_ce_mois' => $executionsCeMois,
+            'up_executions'      => $upExecutions,
         ];
 
         // ─── RÉCLAMATIONS ────────────────────────────────────────────
@@ -85,11 +134,45 @@ class DashboardController extends Controller
             ->groupBy('statut_reclamations.statut_reclamation')
             ->pluck('total', 'statut_reclamation');
 
+        $reclamationsEnCoursActuel = $statsReclamations->get('En cours', 0);
+
+        // Le trend affichait le nombre de réclamations "en cours" (un statut,
+        // pas une évolution). Ici on compare le total des réclamations reçues
+        // ce mois-ci au total reçu le mois précédent (basé sur date_reception),
+        // exactement comme pour la carte "إجمالي الملفات".
+        $reclamationsMoisActuel = Reclamation::whereYear('date_reception', now()->year)
+            ->whereMonth('date_reception', now()->month)
+            ->count();
+
+        $reclamationsMoisPrecedent = Reclamation::whereYear('date_reception', $moisPrecedentAnnee)
+            ->whereMonth('date_reception', $moisPrecedentMois)
+            ->count();
+
+        $croissanceReclamations = $reclamationsMoisPrecedent > 0
+            ? round((($reclamationsMoisActuel - $reclamationsMoisPrecedent) / $reclamationsMoisPrecedent) * 100, 1)
+            : ($reclamationsMoisActuel > 0 ? 100.0 : 0.0);
+
+        // Pour les réclamations, une baisse est une bonne nouvelle (vert) et une
+        // hausse une mauvaise nouvelle (rouge) — inverse du sens habituel. On
+        // garde toutefois une flèche qui reflète le sens réel du nombre (↑ si
+        // ça augmente, ↓ si ça diminue), seule la couleur est inversée.
+        $arrowReclamations = $croissanceReclamations > 0
+            ? true
+            : ($croissanceReclamations < 0 ? false : null);
+
+        $upReclamations = $croissanceReclamations < 0
+            ? true
+            : ($croissanceReclamations > 0 ? false : null);
+
         $reclamations = [
-            'total'     => Reclamation::count(),
-            'recues'    => $statsReclamations->get('Reçue', 0),
-            'en_cours'  => $statsReclamations->get('En cours', 0),
-            'cloturees' => $statsReclamations->get('Clôturée', 0),
+            'total'          => Reclamation::count(),
+            'recues'         => $statsReclamations->get('Reçue', 0),
+            'en_cours'       => $reclamationsEnCoursActuel,
+            'cloturees'      => $statsReclamations->get('Clôturée', 0),
+            'ce_mois'        => $reclamationsMoisActuel,
+            'croissance_pct' => $croissanceReclamations,
+            'up_pct'         => $upReclamations,
+            'arrow_pct'      => $arrowReclamations,
         ];
 
         // ─── ALERTES / AGENDA ─────────────────────────────────────────
@@ -182,64 +265,91 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('position');
         
-        // مع = pour, ضد = contre, جزئي = partiel
+        // مع = pour, ضد = contre
         $pour    = (int) ($positionStats->get('مع')->total ?? 0);
         $contre  = (int) ($positionStats->get('ضد')->total ?? 0);
-        $partiel = (int) ($positionStats->get('جزئي')->total ?? 0);
         
-        $totalResultats = $pour + $contre + $partiel;
+        $totalResultats = $pour + $contre;
         
         $resultatsJugements = [
             'pour'            => $pour,
             'contre'          => $contre,
-            'partiel'         => $partiel,
             'total'           => $totalResultats,
             'pct_pour'        => $totalResultats > 0 ? round($pour / $totalResultats * 100, 1) : 0,
             'pct_contre'      => $totalResultats > 0 ? round($contre / $totalResultats * 100, 1) : 0,
-            'pct_partiel'     => $totalResultats > 0 ? round($partiel / $totalResultats * 100, 1) : 0,
         ];
         
         // ─── 3. MONTANTS FINANCIERS PAR POSITION (POUR / CONTRE / PARTIEL) ───────────
-        // Même logique que ci-dessus, mais sur le montant_condamne de la ligne
-        // jugement_parties de l'établissement (et non plus une simple soustraction).
-        
-        $statsFinances = \App\Models\Finance::query()
-            ->join('jugements', 'finances.id_jugement', '=', 'jugements.id')
-            ->join('dossier_tribunaux', 'jugements.id_dossier_tribunal', '=', 'dossier_tribunaux.id')
-            ->join('dossier_judiciaires', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
-            ->selectRaw('
-                SUM(finances.montant_condamne) as total_condamne,
-                SUM(finances.montant_paye)     as total_paye,
-                COUNT(finances.id)             as nb_dossiers
-            ')
-            ->whereNotNull('finances.montant_condamne')
-            ->first();
-        
-        $montantPour    = (float) ($positionStats->get('مع')->montant ?? 0);
-        $montantContre  = (float) ($positionStats->get('ضد')->montant ?? 0);
-        $montantPartiel = (float) ($positionStats->get('جزئي')->montant ?? 0);
-        
-        $montantTotal   = (float) ($statsFinances->total_condamne ?? 0);
-        $montantPaye    = (float) ($statsFinances->total_paye ?? 0);
+        // On ne prend en compte, par dossier, que le DERNIER jugement valide —
+        // même règle que DossierJudiciaire::jugementValid / financeValide (plus
+        // haut degré de juridiction, puis date la plus récente) — au lieu de
+        // sommer tous les jugements/finances du dossier : un dossier peut avoir
+        // plusieurs jugements (appel, cassation, réexamen...) et seul le
+        // dernier montant jugé doit compter dans la khilasa financière.
+
+        $positionsInstitutionFinance = \App\Models\PositionInstitution::pluck('position', 'id');
+
+        $dossiersAvecJugements = DossierJudiciaire::query()
+            ->whereHas('dossierTribunaux.jugements.finance', fn ($q) => $q->whereNotNull('montant_condamne'))
+            ->with([
+                'dossierTribunaux.degre',
+                'dossierTribunaux.jugements.finance',
+                'dossierTribunaux.jugements.parties',
+            ])
+            ->get();
+
+        $montantTotal   = 0.0;
+        $montantPaye    = 0.0;
+        $montantPour    = 0.0;
+        $montantContre  = 0.0;
+        $nbDossiersFin  = 0;
+        $mensuel        = [];
+
+        foreach ($dossiersAvecJugements as $dossierFin) {
+            $jugementValide = $dossierFin->jugementValid;
+            $finance        = $jugementValide?->finance;
+
+            if (! $finance || $finance->montant_condamne === null) {
+                continue; // le dernier jugement valide n'a pas (encore) de finance chiffrée
+            }
+
+            $montantTotal += (float) $finance->montant_condamne;
+            $montantPaye  += (float) ($finance->montant_paye ?? 0);
+            $nbDossiersFin++;
+
+            if ($jugementValide->date_jugement) {
+                $mois = $jugementValide->date_jugement->format('Y-m');
+                $mensuel[$mois] = ($mensuel[$mois] ?? 0) + (float) $finance->montant_condamne;
+            }
+
+            foreach ($jugementValide->parties as $partie) {
+                if (! $partie->est_entraide) {
+                    continue;
+                }
+
+                $montantPartie = (float) ($partie->pivot->montant_condamne ?? 0);
+                $position      = $positionsInstitutionFinance->get($partie->pivot->id_position_institution);
+
+                match ($position) {
+                    'مع'    => $montantPour    += $montantPartie,
+                    'ضد'    => $montantContre  += $montantPartie,
+                    default => null,
+                };
+            }
+        }
+
         $montantRestant = max(0, $montantTotal - $montantPaye);
-        
+
         $statsFinancesGraphe = [
             'montant_total'   => $montantTotal,
             'montant_pour'    => $montantPour,
             'montant_contre'  => $montantContre,
-            'montant_partiel' => $montantPartiel,
             'montant_paye'    => $montantPaye,
             'montant_restant' => $montantRestant,
-            'nb_dossiers'     => (int) ($statsFinances->nb_dossiers ?? 0),
-            // Ventilation mensuelle des condamnations (12 derniers mois)
-            'mensuel'         => \App\Models\Finance::query()
-                ->join('jugements', 'finances.id_jugement', '=', 'jugements.id')
-                ->selectRaw("DATE_FORMAT(jugements.date_jugement, '%Y-%m') as mois, SUM(finances.montant_condamne) as total")
-                ->where('jugements.date_jugement', '>=', now()->subMonths(11)->startOfMonth())
-                ->whereNotNull('finances.montant_condamne')
-                ->groupBy('mois')
-                ->orderBy('mois')
-                ->pluck('total', 'mois'),
+            'nb_dossiers'     => $nbDossiersFin,
+            // Ventilation mensuelle des condamnations (12 derniers mois), basée
+            // uniquement sur le dernier jugement valide de chaque dossier.
+            'mensuel'         => collect($mensuel),
         ];
         
         // Construire les labels/values pour le graphe mensuel

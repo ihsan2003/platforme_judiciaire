@@ -334,6 +334,18 @@
                 </a>
             @endcan
 
+            @can('update', $dossier)
+                @if($dossier->statut?->statut_dossier === 'تم التنفيذ')
+                <form action="{{ route('dossiers.cloturer', $dossier) }}" method="POST"
+                      onsubmit="return confirm('هل تريد إغلاق هذا الملف نهائيًا ؟ سيتم تغيير حالته إلى «حفظ».')">
+                    @csrf
+                    <button class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-lock me-1"></i>إغلاق الملف
+                    </button>
+                </form>
+                @endif
+            @endcan
+
             @can('delete', $dossier)
                 <form action="{{ route('dossiers.destroy', $dossier) }}" method="POST"
                       onsubmit="return confirm('هل تريد أرشفة هذا الملف ؟')">

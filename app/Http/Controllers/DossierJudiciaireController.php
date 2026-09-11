@@ -243,6 +243,24 @@ class DossierJudiciaireController extends Controller
         return redirect()->route('dossiers.show', $dossier)->with('success', 'تم تحديث الملف بنجاح.');
     }
 
+    // ================= CLÔTURER =================
+    public function cloturer(DossierJudiciaire $dossier): RedirectResponse
+    {
+        $this->authorize('update', $dossier);
+
+        if ($dossier->statut?->statut_dossier !== 'تم التنفيذ') {
+            return redirect()
+                ->route('dossiers.show', $dossier)
+                ->with('error', 'لا يمكن إغلاق هذا الملف إلا بعد اكتمال التنفيذ (حالة "تم التنفيذ").');
+        }
+
+        $dossier->cloturer();
+
+        return redirect()
+            ->route('dossiers.show', $dossier)
+            ->with('success', 'تم إغلاق الملف وتحديث حالته إلى "حفظ" بنجاح.');
+    }
+
     // ================= DESTROY =================
     public function destroy(DossierJudiciaire $dossier): RedirectResponse
     {
@@ -268,31 +286,5 @@ class DossierJudiciaireController extends Controller
             ->with('success', "تم أرشفة الملف « {$numero} » بنجاح.");
     }
 
-    // ================= EXPORT PDF =================
-    public function exportPdf(DossierJudiciaire $dossier): Response
-    {
-        $this->authorize('view', $dossier);
-
-        $dossier->load([
-            'typeAffaire',
-            'statut',
-            'createdBy:id,name',
-            'dossierTribunaux.tribunal',
-            'dossierTribunaux.degre',
-            'dossierTribunaux.jugements.juge',
-            'dossierTribunaux.jugements.finance',
-            'dossierTribunaux.jugements.parties',
-            'documents.typeDocument',
-            'documents.partie',
-        ]);
-
-        $dossier->dossierParties = DossierPartie::with(['partie', 'typePartie', 'avocat'])
-            ->where('id_dossier', $dossier->id)
-            ->get();
-
-        $pdf = Pdf::loadView('dossiers.pdf', compact('dossier'))
-            ->setPaper('A4', 'portrait');
-
-        return $pdf->download("dossier-{$dossier->numero_dossier_interne}.pdf");
-    }
+    
 }

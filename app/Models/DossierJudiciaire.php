@@ -315,6 +315,26 @@ class DossierJudiciaire extends Model
         }
     }
 
+    /**
+     * Clôture le dossier : passe son statut à "حفظ" et fixe sa date de
+     * clôture (si elle n'était pas déjà renseignée). Réutilise
+     * changerStatut() donc déclenche l'historique via booted::updated().
+     */
+    public function cloturer(): void
+    {
+        $statut = StatutDossier::where('statut_dossier', 'حفظ')->first();
+
+        if (! $statut) {
+            \Log::warning("❌ Statut 'حفظ' introuvable — clôture annulée pour le dossier #{$this->id}");
+            return;
+        }
+
+        $this->update([
+            'id_statut_dossier' => $statut->id,
+            'date_cloture'      => $this->date_cloture ?? now(),
+        ]);
+    }
+
     public function recalculerStatut(): void
     {
         // Récupérer tous les jugements du dossier
