@@ -85,7 +85,7 @@
 <div class="row g-4">
 
     {{-- ══ PARTIES ══ --}}
-    <div class="col-lg-8">
+    <div class="col-lg-9">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
@@ -133,10 +133,89 @@
 
             </div>
         </div>
+         <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-folder2 me-2 text-primary"></i>
+                    الملفات القضائية المرتبطة
+                    <span class="badge bg-primary ms-1">{{ $dossiers->count() }}</span>
+                </h6>
+            </div>
+
+            <div class="card-body p-0">
+
+                @if($dossiers->isEmpty())
+                    <div class="text-center p-5 text-muted">
+                        لا توجد ملفات قضائية مرتبطة بهذا المحامي.
+                    </div>
+                @else
+
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">رقم الملف</th>
+                            <th>نوع القضية</th>
+                            <th>المحكمة</th>
+                            <th>تاريخ الفتح</th>
+                            <th>الحالة</th>
+                            <th class="text-end pe-3">الإجراءات</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach($dossiers as $dossier)
+
+                        @php
+                            $statutLabel = $dossier->statutDossier->statut_dossier ?? '—';
+                            $color       = $dossier->statutDossier?->couleur_bootstrap ?? 'primary';
+                            $textClass   = in_array($color, ['warning']) ? 'text-dark' : 'text-white';
+                        @endphp
+
+                        <tr>
+                            <td class="ps-3 fw-semibold">
+                                {{ $dossier->numero_dossier_tribunal ?? '—' }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
+                                    {{ $dossier->typeAffaire->affaire ?? '—' }}
+                                </span>
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ $dossier->dossierTribunaux->sortBy('date_debut')->first()?->tribunal?->nom_tribunal ?? '—' }}
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ $dossier->date_ouverture?->format('d/m/Y') ?? '—' }}
+                            </td>
+
+                            <td>
+                                <span class="badge bg-{{ $color }} {{ $textClass }}">
+                                    {{ $statutLabel }}
+                                </span>
+                            </td>
+
+                            <td class="text-end pe-3">
+                                <a href="{{ route('dossiers.show', $dossier) }}"
+                                   class="btn btn-sm btn-outline-primary" title="عرض">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        @endforeach
+                    </tbody>
+                </table>
+
+                @endif
+
+            </div>
+        </div>
     </div>
 
     {{-- ══ SIDE ══ --}}
-    <div class="col-lg-4">
+    <div class="col-lg-3">
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
@@ -180,5 +259,6 @@
     </div>
 
 </div>
+
 
 @endsection

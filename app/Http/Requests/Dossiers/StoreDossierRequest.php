@@ -20,7 +20,8 @@ class StoreDossierRequest extends FormRequest
             'numero_dossier_tribunal' => [
                 'nullable',
                 'string',
-                'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'
+                'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/',
+                'unique:dossier_judiciaires,numero_dossier_tribunal',
             ],
             'id_type_affaire'         => 'required|exists:type_affaires,id',
             'date_ouverture'          => 'required|date',
@@ -42,6 +43,7 @@ class StoreDossierRequest extends FormRequest
             'date_cloture.date'              => 'تاريخ الإغلاق غير صالح.',
             'date_cloture.after'             => 'يجب أن يكون تاريخ الإغلاق بعد تاريخ الفتح.',
             'numero_dossier_tribunal.regex'  => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
+            'numero_dossier_tribunal.unique' => 'رقم الملف بالمحكمة موجود بالفعل لملف آخر.',
         ];
     }
 

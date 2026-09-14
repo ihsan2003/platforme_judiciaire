@@ -98,10 +98,9 @@ class ReclamationController extends Controller
 
         $stats = [
             'total'      => Reclamation::count(),
-            'recues'     => $statsStatuts->get('Reçue', 0),
-            'en_cours'   => $statsStatuts->get('En cours', 0),
-            'cloturees'  => $statsStatuts->get('Clôturée', 0),
-            'en_attente' => Reclamation::enAttente()->count(),
+            'en_cours'   => $statsStatuts->get('قيد المعالجة', 0),
+            'cloturees'  => $statsStatuts->get('مغلقة', 0),
+            'traitees'   => $statsStatuts->get('تمت المعالجة', 0),
             'ce_mois'    => Reclamation::whereMonth('date_reception', now()->month)->count(),
         ];
 

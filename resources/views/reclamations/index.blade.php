@@ -15,35 +15,72 @@
 <div dir="rtl">
 
 {{-- ══ الإحصائيات ══ --}}
-
 <div class="row g-3 mb-4">
+
     @foreach([
-        ['label' => 'المجموع',        'value' => $stats['total'],      'icon' => 'chat-left-text',  'color' => 'primary'],
-        ['label' => 'المستلمة',       'value' => $stats['recues'],     'icon' => 'inbox',            'color' => 'info'],
-        ['label' => 'قيد المعالجة',   'value' => $stats['en_cours'],   'icon' => 'arrow-repeat',     'color' => 'warning'],
-        ['label' => 'المغلقة',        'value' => $stats['cloturees'],  'icon' => 'check-circle',     'color' => 'success'],
-        ['label' => 'في الانتظار',    'value' => $stats['en_attente'], 'icon' => 'hourglass-split',  'color' => 'danger'],
-        ['label' => 'هذا الشهر',      'value' => $stats['ce_mois'],    'icon' => 'calendar-plus',    'color' => 'secondary'],
+        [
+            'label' => 'المجموع',
+            'value' => $stats['total'],
+            'icon'  => 'chat-left-text',
+            'color' => 'primary'
+        ],
+        [
+            'label' => 'قيد المعالجة',
+            'value' => $stats['en_cours'],
+            'icon'  => 'arrow-repeat',
+            'color' => 'warning'
+        ],
+        [
+            'label' => 'المغلقة',
+            'value' => $stats['cloturees'],
+            'icon'  => 'check-circle',
+            'color' => 'success'
+        ],
+        [
+            'label' => 'تمت المعالجة',
+            'value' => $stats['traitees'],
+            'icon'  => 'check2-circle',
+            'color' => 'info'
+        ],
+        [
+            'label' => 'هذا الشهر',
+            'value' => $stats['ce_mois'],
+            'icon'  => 'calendar-plus',
+            'color' => 'secondary'
+        ],
     ] as $stat)
-    <div class="col-6 col-md-4 col-xl-2">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body text-center py-3">
-                <div class="rounded-circle bg-{{ $stat['color'] }} bg-opacity-10 p-2 d-inline-flex mb-2">
-                    <i class="bi bi-{{ $stat['icon'] }} fs-5 text-{{ $stat['color'] }}"></i>
+
+        <div class="col-12 col-sm-6 col-lg">
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body d-flex align-items-center gap-3">
+
+                    {{-- Icône --}}
+                    <div class="rounded-circle bg-{{ $stat['color'] }} bg-opacity-10 p-3">
+                        <i class="bi bi-{{ $stat['icon'] }} fs-4 text-{{ $stat['color'] }}"></i>
+                    </div>
+
+                    {{-- Chiffre + libellé --}}
+                    <div>
+                        <div class="fs-2 fw-bold lh-1">
+                            {{ $stat['value'] }}
+                        </div>
+
+                        <div class="text-muted small mt-1">
+                            {{ $stat['label'] }}
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="fs-3 fw-bold lh-1 mb-1">
-                    {{ $stat['value'] }}
-                </div>
-
-                <div class="text-muted small">
-                    {{ $stat['label'] }}
-                </div>
             </div>
         </div>
-    </div>
+
     @endforeach
+
 </div>
+
+
 
 {{-- ══ الفلاتر ══ --}}
 <div class="card border-0 shadow-sm mb-4">

@@ -192,12 +192,14 @@ class ExecutionController extends Controller
             'en_cours' => Execution::whereHas(
                 'statut',
                 fn($q) =>
-                    $q->where('statut_execution', 'En cours')
+                    $q->where('statut_execution', 'قيد التنفيذ')
             )->count(),
 
 
-            'terminees' => Execution::whereNotNull(
-                'date_execution'
+            'terminees' => Execution::whereHas(
+                'statut',
+                fn($q) =>
+                    $q->where('statut_execution', 'تنفيذ كامل')
             )->count(),
 
 

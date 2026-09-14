@@ -230,10 +230,10 @@
                     </dd>
 
                     <dt class="col-6 text-muted fw-normal">تاريخ الإنشاء</dt>
-                    <dd class="col-6">{{ $tribunal->created_at->format('d/m/Y') }}</dd>
+                    <dd class="col-6">{{ $tribunal->created_at?->format('d/m/Y') ?? '—' }}</dd>
 
                     <dt class="col-6 text-muted fw-normal">آخر تحديث</dt>
-                    <dd class="col-6">{{ $tribunal->updated_at->format('d/m/Y') }}</dd>
+                    <dd class="col-6">{{ $tribunal->updated_at?->format('d/m/Y') ?? '—' }}</dd>
 
                 </dl>
 

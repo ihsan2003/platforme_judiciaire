@@ -153,7 +153,7 @@
                         @php $nb = $avocat->dossiers()->count(); @endphp
                         @if($nb > 0)
                             <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
-                                <i class="bi bi-folder2 me-1"></i>{{ $nb }} ملف{{ $nb > 1 ? 'ات' : '' }}
+                                <i class="bi bi-folder2 me-1"></i>{{ $nb }} ملف
                             </span>
                         @else
                             <span class="badge bg-secondary bg-opacity-10 text-secondary">

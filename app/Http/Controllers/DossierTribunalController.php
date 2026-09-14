@@ -20,10 +20,12 @@ class DossierTribunalController extends Controller
         $this->authorize('update', $dossier);
 
         $request->validate([
-            'id_tribunal' => ['required', 'exists:tribunaux,id'],
-            'id_degre'    => ['required', 'exists:degre_juridictions,id'],
-            'date_debut'  => ['required', 'date'],
-            'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
+            'id_tribunal'   => ['required', 'exists:tribunaux,id'],
+            'id_degre'      => ['required', 'exists:degre_juridictions,id'],
+            'annee_mahakim' => ['required', 'integer', 'min:1900', 'max:2100'],
+            'ordre_mahakim' => ['required', 'integer', 'min:1'],
+            'date_debut'    => ['required', 'date'],
+            'date_fin'      => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
 
         // RG04 — vérification de l'ordre des degrés
@@ -35,12 +37,37 @@ class DossierTribunalController extends Controller
                 ->with('error', $erreurDegre);
         }
 
+        // Génération automatique du numéro de dossier propre à cette instance,
+        // à partir du code de la catégorie (ابتدائي/استئناف) — voir
+        // رموز الملفات بالمحاكم المغربية : https://mandili.net/law/25925
+        $degre = DegreeJuridiction::findOrFail($request->id_degre);
+        $typeAffaire = $dossier->typeAffaire;
+
+        $code = match ($degre->ordre) {
+            1       => $typeAffaire?->code,
+            2       => $typeAffaire?->code_appel,
+            default => null,
+        };
+
+        if (in_array($degre->ordre, [1, 2]) && ! $code) {
+            $champ = $degre->ordre === 2 ? 'رمز الاستئناف (code_appel)' : 'رمز الفئة';
+            return redirect()
+                ->route('dossiers.show', $dossier)
+                ->withFragment('tab-tribunaux')
+                ->with('error', "لا يمكن توليد رقم الملف تلقائيًا: {$champ} غير مضبوط لنوع القضية « {$typeAffaire?->affaire} ». يرجى ضبطه أولاً.");
+        }
+
+        $numero = $code
+            ? "{$request->annee_mahakim} / {$code} / {$request->ordre_mahakim}"
+            : null;
+
         DossierTribunal::create([
-            'id_dossier'  => $dossier->id,
-            'id_tribunal' => $request->id_tribunal,
-            'id_degre'    => $request->id_degre,
-            'date_debut'  => $request->date_debut,
-            'date_fin'    => $request->date_fin,
+            'id_dossier'              => $dossier->id,
+            'id_tribunal'             => $request->id_tribunal,
+            'id_degre'                => $request->id_degre,
+            'numero_dossier_tribunal' => $numero,
+            'date_debut'              => $request->date_debut,
+            'date_fin'                => $request->date_fin,
         ]);
 
         $tribunal = Tribunal::find($request->id_tribunal);

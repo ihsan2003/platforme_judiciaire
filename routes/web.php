@@ -63,7 +63,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
                 fn($q) => $q->where('id_province', $provinceId)
             )
             ->orderBy('degre_juridiction')
-            ->get(['id', 'degre_juridiction']);
+            ->get(['id', 'degre_juridiction', 'ordre']);
         return response()->json($degres);
     });
 

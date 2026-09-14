@@ -15,7 +15,7 @@ class AvocatController extends Controller
     
     public function index(Request $request)
     {
-        $query = Avocat::withCount('partiesAssociees');
+        $query = Avocat::withCount('parties');
 
         // ══ Recherche ══
         if ($request->filled('search')) {
@@ -89,7 +89,14 @@ class AvocatController extends Controller
         $avocat = Avocat::with(['parties' => function ($q) {
             $q->distinct('parties.id');
         }])->findOrFail($id);
-        return view('avocats.show', compact('avocat'));
+
+        $dossiers = $avocat->dossiers()
+            ->with(['typeAffaire', 'statutDossier', 'dossierTribunaux.tribunal'])
+            ->distinct()
+            ->latest('date_ouverture')
+            ->get();
+
+        return view('avocats.show', compact('avocat', 'dossiers'));
     }
 
     /**
@@ -148,7 +155,7 @@ class AvocatController extends Controller
     {
         $avocat = Avocat::findOrFail($id);
 
-        if($avocat->dossierParties()->count() > 0){
+        if($avocat->parties()->count() > 0){
             return redirect()
                 ->route('avocats.index')
                 ->with('error', 'لا يمكن حذف هذا المحامي لأنه مرتبط بملفات قضائية.');

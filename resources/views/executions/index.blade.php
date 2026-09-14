@@ -52,7 +52,7 @@
                 </div>
                 <div>
                     <div class="fs-2 fw-bold lh-1">{{ $stats['terminees'] }}</div>
-                    <div class="text-muted small">مكتملة</div>
+                    <div class="text-muted small">منفذة</div>
                 </div>
             </div>
         </div>

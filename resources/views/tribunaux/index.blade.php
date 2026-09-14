@@ -169,7 +169,7 @@
                         @if($nbJuges > 0)
                             <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                 <i class="bi bi-person-workspace me-1"></i>
-                                {{ $nbJuges }} قاض{{ $nbJuges > 1 ? 'ة' : '' }}
+                                {{ $nbJuges }} قضاة
                             </span>
                         @else
                             <span class="badge bg-secondary bg-opacity-10 text-secondary">

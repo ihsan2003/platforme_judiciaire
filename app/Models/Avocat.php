@@ -22,47 +22,44 @@ class Avocat extends Model
     
 
     /**
-     * Tous les dossiers judiciaires dans lesquels cet avocat intervient.
-     */
-    public function dossiers()
-    {
-        return $this->hasManyThrough(
-            DossierJudiciaire::class,
-            DossierPartie::class,
-            'id_avocat',   // FK sur dossier_parties
-            'id',          // PK sur dossier_judiciaires
-            'id',          // PK locale
-            'id_dossier'   // FK sur dossier_parties
-        );
-    }
-
-    /**
-     * Toutes les parties que cet avocat représente.
+     * Toutes les parties que cet avocat représente (lien direct via
+     * parties.id_avocat, colonne réellement utilisée par le formulaire
+     * d'affectation dans AvocatController).
      */
     public function parties()
     {
-        return $this->hasManyThrough(
-            Partie::class,
-            DossierPartie::class,
-            'id_avocat',
-            'id',
-            'id',
-            'id_partie'
-        );
+        return $this->hasMany(Partie::class, 'id_avocat');
+    }
+
+    /**
+     * Tous les dossiers judiciaires dans lesquels cet avocat intervient,
+     * via les parties qu'il représente (Avocat → Partie → dossier_parties).
+     */
+    public function dossiers()
+    {
+        return DossierJudiciaire::whereHas('parties', function ($q) {
+            $q->where('parties.id_avocat', $this->id);
+        });
+    }
+
+    /**
+     * Toutes les lignes dossier_parties où cet avocat est assigné
+     * (permet de savoir sur quels dossiers/parties il intervient).
+     */
+    public function dossierParties()
+    {
+        return $this->hasMany(DossierPartie::class, 'id_avocat');
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────────
     public function scopeActifs($query)
     {
-        return $query->whereHas('dossierParties.dossier', fn($q) => $q->actifs());
+        return $query->whereHas('parties.dossiers', fn($q) => $q->actifs());
     }
 
     // ─── Accesseurs ───────────────────────────────────────────────────────
     public function getNombresDossiersActifsAttribute(): int
     {
-        return $this->dossierParties()
-            ->whereHas('dossier', fn($q) => $q->actifs())
-            ->distinct('id_dossier')
-            ->count('id_dossier');
+        return $this->dossiers()->actifs()->distinct()->count();
     }
 }

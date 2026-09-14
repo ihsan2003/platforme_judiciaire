@@ -670,6 +670,11 @@
                         <div class="deg-sub">
                             <i class="bi bi-bank me-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
                         </div>
+                        @if($dt->numero_dossier_tribunal)
+                        <div class="deg-sub font-monospace" style="letter-spacing:1px">
+                            <i class="bi bi-hash me-1"></i>{{ $dt->numero_dossier_tribunal }}
+                        </div>
+                        @endif
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -1630,6 +1635,70 @@
                             <option value="">— اختر الدرجة أولاً —</option>
                         </select>
                     </div>
+
+                    {{-- Génération automatique du numéro de dossier propre à cette instance --}}
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded border">
+
+                            <div class="row g-2 align-items-end">
+
+                                <div class="col-lg-4 col-md-12">
+                                    <label class="small mb-1">السنة</label>
+                                    <input
+                                        type="number"
+                                        name="annee_mahakim"
+                                        id="modal_annee_mahakim"
+                                        class="form-control text-center fw-bold"
+                                        value="{{ date('Y') }}"
+                                        min="1900"
+                                        max="2100"
+                                        required>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6">
+                                    <label class="small mb-1">رمز الفئة</label>
+                                    <input
+                                        type="text"
+                                        id="modal_code_mahakim"
+                                        class="form-control text-center bg-white fw-bold"
+                                        readonly
+                                        placeholder="— اختر الدرجة —">
+                                </div>
+
+                                <div class="col-lg-5 col-md-6">
+                                    <label class="small mb-1">رقم الترتيب</label>
+                                    <input
+                                        type="number"
+                                        name="ordre_mahakim"
+                                        id="modal_ordre_mahakim"
+                                        class="form-control text-center fw-bold"
+                                        placeholder="مثال: 450"
+                                        min="1"
+                                        required>
+                                </div>
+
+                            </div>
+
+                            <div class="mt-3 text-center">
+                                <div class="small text-muted mb-1">
+                                    الرقم النهائي الذي سيتم تسجيله لهذه الدرجة
+                                </div>
+                                <div
+                                    id="modal_preview_mahakim"
+                                    class="h6 fw-bold text-dark border-bottom d-inline-block px-4 pb-1"
+                                    style="letter-spacing:2px;">
+                                    — / — / —
+                                </div>
+                            </div>
+
+                            <div id="modal_code_manquant" class="small text-danger mt-2 d-none">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                رمز هذه الدرجة غير مضبوط لنوع القضية « {{ $dossier->typeAffaire->affaire ?? '' }} ».
+                                يمكنك مع ذلك تسجيل المحكمة، لكن دون رقم ملف تلقائي.
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">تاريخ الإحالة <span class="text-danger">*</span></label>
                         <input type="date" name="date_debut" class="form-control" value="{{ date('Y-m-d') }}" required>
@@ -2020,6 +2089,46 @@
     showAvocatNouveau();
 })();
 
+/* ── Génération automatique du numéro de dossier par instance (degré) ── */
+(function () {
+    const codeParOrdre = {
+        1: @json($dossier->typeAffaire->code ?? null),        // ابتدائي
+        2: @json($dossier->typeAffaire->code_appel ?? null),  // استئناف
+    };
+
+    const selDegre    = document.getElementById('modal_degre');
+    const anneeInput  = document.getElementById('modal_annee_mahakim');
+    const codeInput   = document.getElementById('modal_code_mahakim');
+    const ordreInput  = document.getElementById('modal_ordre_mahakim');
+    const preview     = document.getElementById('modal_preview_mahakim');
+    const alerteVide  = document.getElementById('modal_code_manquant');
+
+    let ordreDegreCourant = null;
+
+    function updatePreview() {
+        const annee = anneeInput.value || '—';
+        const code  = codeInput.value || '—';
+        const ordre = ordreInput.value || '—';
+        preview.innerText = `${annee} / ${code} / ${ordre}`;
+    }
+
+    // Le select #modal_degre est repeuplé dynamiquement (cascade région >
+    // province) : on observe ses changements pour retrouver l'"ordre" du
+    // degré choisi (1=ابتدائي, 2=استئناف...) renvoyé par l'API.
+    selDegre?.addEventListener('change', async function () {
+        const selected = this.options[this.selectedIndex];
+        ordreDegreCourant = selected?.dataset?.ordre ? parseInt(selected.dataset.ordre) : null;
+
+        const code = codeParOrdre[ordreDegreCourant] ?? null;
+        codeInput.value = code ?? '';
+        alerteVide.classList.toggle('d-none', !!code || !ordreDegreCourant);
+        updatePreview();
+    });
+
+    anneeInput?.addEventListener('input', updatePreview);
+    ordreInput?.addEventListener('input', updatePreview);
+})();
+
 /* ── Cascade Région > Province > Degré > Tribunal (التسلسل الإداري) ─ */
 (function () {
     const selRegion   = document.getElementById('modal_region');
@@ -2049,7 +2158,7 @@
         try {
             const data = await (await fetch(`/api/provinces/${this.value}/degres`)).json();
             selDegre.innerHTML = '<option value="">— اختر درجة التقاضي —</option>';
-            data.forEach(d => selDegre.innerHTML += `<option value="${d.id}">${d.degre_juridiction}</option>`);
+            data.forEach(d => selDegre.innerHTML += `<option value="${d.id}" data-ordre="${d.ordre ?? ''}">${d.degre_juridiction}</option>`);
             selDegre.disabled = false;
         } catch { reset(selDegre, '— خطأ —'); }
     });
@@ -2071,6 +2180,15 @@
         reset(selProvince, '— اختر الجهة أولاً —');
         reset(selDegre, '— اختر الإقليم أولاً —');
         reset(selTribunal, '— اختر درجة التقاضي أولاً —');
+
+        const codeInput  = document.getElementById('modal_code_mahakim');
+        const ordreInput = document.getElementById('modal_ordre_mahakim');
+        const preview    = document.getElementById('modal_preview_mahakim');
+        const alerteVide = document.getElementById('modal_code_manquant');
+        if (codeInput)  codeInput.value = '';
+        if (ordreInput) ordreInput.value = '';
+        if (preview)    preview.innerText = '— / — / —';
+        if (alerteVide) alerteVide.classList.add('d-none');
     });
 })();
 </script>

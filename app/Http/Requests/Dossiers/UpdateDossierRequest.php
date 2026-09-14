@@ -21,7 +21,8 @@ class UpdateDossierRequest extends FormRequest
                 'nullable', 
                 'string', 
                 'max:255',
-                'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'
+                'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/',
+                Rule::unique('dossier_judiciaires', 'numero_dossier_tribunal')->ignore($dossierId),
             ],
             'id_type_affaire'         => ['required', 'exists:type_affaires,id'],
             'id_statut_dossier'       => ['required', 'exists:statut_dossiers,id'],
@@ -48,6 +49,7 @@ class UpdateDossierRequest extends FormRequest
             'date_cloture.date'               => 'تاريخ الإغلاق غير صالح.',
             'date_cloture.after_or_equal'     => 'يجب أن يكون تاريخ الإغلاق بعد أو يساوي تاريخ الفتح.',
             'numero_dossier_tribunal.regex'   => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
+            'numero_dossier_tribunal.unique'  => 'رقم الملف بالمحكمة موجود بالفعل لملف آخر.',
         ];
     }
 
