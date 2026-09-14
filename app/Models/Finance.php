@@ -45,6 +45,21 @@ class Finance extends Model
         return $this->montant_restant <= 0;
     }
 
+    /**
+     * Vrai si cette finance est bien celle du DERNIER jugement valide de son
+     * dossier (plus haut degré de juridiction, puis date la plus récente) —
+     * c-à-d celle prise en compte dans "الخلاصة المالية" du dashboard.
+     * Sert à avertir quand un paiement est saisi sur un jugement dépassé
+     * (remplacé par un appel/une cassation) : ce paiement ne sera alors pas
+     * compté.
+     */
+    public function getEstFinanceValideAttribute(): bool
+    {
+        $dossier = $this->jugement?->dossierTribunal?->dossier;
+
+        return $dossier && $dossier->financeValide?->id === $this->id;
+    }
+
     public function scopeNonSoldes($query)
     {
         return $query->whereRaw('montant_condamne > montant_paye');

@@ -134,7 +134,12 @@ class DashboardController extends Controller
             ->groupBy('statut_reclamations.statut_reclamation')
             ->pluck('total', 'statut_reclamation');
 
-        $reclamationsEnCoursActuel = $statsReclamations->get('En cours', 0);
+        // Les vrais statuts (seeder) sont en arabe : 'قيد المعالجة', 'تمت المعالجة',
+        // 'مغلقة' — le code cherchait des libellés français ('En cours', 'Reçue',
+        // 'Clôturée') qui n'existent dans aucune ligne de statut_reclamations,
+        // donc ces compteurs (dont l'alerte "شكايات قيد المعالجة") tombaient
+        // toujours à 0.
+        $reclamationsEnCoursActuel = $statsReclamations->get('قيد المعالجة', 0);
 
         // Le trend affichait le nombre de réclamations "en cours" (un statut,
         // pas une évolution). Ici on compare le total des réclamations reçues
@@ -166,9 +171,9 @@ class DashboardController extends Controller
 
         $reclamations = [
             'total'          => Reclamation::count(),
-            'recues'         => $statsReclamations->get('Reçue', 0),
+            'traitees'       => $statsReclamations->get('تمت المعالجة', 0),
             'en_cours'       => $reclamationsEnCoursActuel,
-            'cloturees'      => $statsReclamations->get('Clôturée', 0),
+            'cloturees'      => $statsReclamations->get('مغلقة', 0),
             'ce_mois'        => $reclamationsMoisActuel,
             'croissance_pct' => $croissanceReclamations,
             'up_pct'         => $upReclamations,
@@ -302,6 +307,7 @@ class DashboardController extends Controller
         $montantPaye    = 0.0;
         $montantPour    = 0.0;
         $montantContre  = 0.0;
+        $montantPartiel = 0.0;
         $nbDossiersFin  = 0;
         $mensuel        = [];
 
@@ -322,20 +328,23 @@ class DashboardController extends Controller
                 $mensuel[$mois] = ($mensuel[$mois] ?? 0) + (float) $finance->montant_condamne;
             }
 
-            foreach ($jugementValide->parties as $partie) {
-                if (! $partie->est_entraide) {
-                    continue;
-                }
+            // On répartit le MONTANT TOTAL de la finance (toujours renseigné)
+            // dans le panier pour/contre selon la position déclarée de
+            // l'établissement — et non le montant individuel de sa propre ligne
+            // dans jugement_parties, qui reste souvent vide (le montant est en
+            // général saisi sur la ligne de la partie adverse, pas sur la
+            // ligne de l'établissement), ce qui faisait toujours ressortir 0.
+            $partieEtab = $jugementValide->parties->first(fn ($p) => $p->est_entraide);
+            $position   = $partieEtab
+                ? $positionsInstitutionFinance->get($partieEtab->pivot->id_position_institution)
+                : null;
 
-                $montantPartie = (float) ($partie->pivot->montant_condamne ?? 0);
-                $position      = $positionsInstitutionFinance->get($partie->pivot->id_position_institution);
-
-                match ($position) {
-                    'مع'    => $montantPour    += $montantPartie,
-                    'ضد'    => $montantContre  += $montantPartie,
-                    default => null,
-                };
-            }
+            match ($position) {
+                'مع'    => $montantPour    += (float) $finance->montant_condamne,
+                'ضد'    => $montantContre  += (float) $finance->montant_condamne,
+                'جزئي'  => $montantPartiel += (float) $finance->montant_condamne,
+                default => null,
+            };
         }
 
         $montantRestant = max(0, $montantTotal - $montantPaye);

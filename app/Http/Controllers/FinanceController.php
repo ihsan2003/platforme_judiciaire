@@ -123,6 +123,17 @@ class FinanceController extends Controller
 
         $finance->update($request->all());
 
+        // Un paiement saisi sur un jugement qui n'est plus le dernier jugement
+        // valide du dossier (remplacé par un appel/une cassation) n'est pas
+        // comptabilisé dans "الخلاصة المالية" du dashboard — on prévient
+        // l'utilisateur pour éviter une confusion sur le montant réellement dû.
+        if ($request->filled('montant_paye') && (float) $request->montant_paye > 0 && ! $finance->fresh()->est_finance_valide) {
+            return redirect()->route('finances.index')->with(
+                'warning',
+                'تم تسجيل الدفع، لكن هذا الحكم لم يعد الحكم النهائي لهذا الملف (تم تجاوزه بحكم استئنافي أو نقض). لن يُحتسب هذا المبلغ في الخلاصة المالية للوحة التحكم.'
+            );
+        }
+
         return redirect()->route('finances.index')
             ->with('success', 'تم تحديث البيانات المالية بنجاح');
     }

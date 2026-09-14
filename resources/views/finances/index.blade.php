@@ -276,6 +276,14 @@
                                 نهائي
                             </span>
                         @endif
+
+                        @if(! $finance->est_finance_valide)
+                            <span class="badge bg-secondary bg-opacity-25 text-white ms-1"
+                                  style="font-size:.6rem"
+                                  title="هذا الحكم لم يعد الحكم النهائي لهذا الملف — أي دفع مسجل هنا لن يُحتسب في لوحة التحكم">
+                                تم تجاوزه
+                            </span>
+                        @endif
                     </td>
 
                     <td>
