@@ -193,11 +193,13 @@
 
         <div class="d-flex justify-content-end gap-2 mt-4">
             <button type="submit" class="btn btn-primary px-5">
+                <i class="bi bi-check-lg"></i>
                 إنشاء الملف
             </button>
 
             <a href="{{ route('dossiers.index') }}" class="btn btn-outline-secondary">
-                إلغاء
+                <i class="bi bi-x-lg"></i>    
+                 إلغاء
             </a>
         </div>
     </form>

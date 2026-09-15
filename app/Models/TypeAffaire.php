@@ -14,8 +14,7 @@ class TypeAffaire extends Model
     
     protected $fillable = [
         'affaire',
-        'code',
-        'code_appel'];
+        'code'];
 
     public function dossiers()
     {

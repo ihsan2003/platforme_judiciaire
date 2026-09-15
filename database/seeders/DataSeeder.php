@@ -20,57 +20,46 @@ class DataSeeder extends Seeder
             [
                 'affaire' => 'مدني',
                 'code' => '1201',
-                'code_appel' => '1251',
             ],
             [
                 'affaire' => 'إداري',
                 'code' => '1204',
-                'code_appel' => '1254',
             ],
             [
                 'affaire' => 'مدني اجتماعي',
                 'code' => '1501',
-                'code_appel' => '1551',
             ],
             [
                 'affaire' => 'تجاري',
                 'code' => '1203',
-                'code_appel' => '1253',
             ],
             [
                 'affaire' => 'حوادث الشغل',
                 'code' => '1502',
-                'code_appel' => '1552',
             ],
             [
                 'affaire' => 'نزاعات الشغل',
                 'code' => '1501',
-                'code_appel' => '1551',
             ],
             [
                 'affaire' => 'متنوع',
                 'code' => '1201',
-                'code_appel' => '1251',
             ],
             [
                 'affaire' => 'الصفقات العمومية',
                 'code' => '7102',
-                'code_appel' => null, // لم يتم العثور على مقابل مؤكد، يُستكمل يدويًا
             ],
             [
                 'affaire' => 'استعجالي',
                 'code' => '1101',
-                'code_appel' => '1221',
             ],
             [
                 'affaire' => 'عقاري',
                 'code' => '1401',
-                'code_appel' => '1451',
             ],
             [
                 'affaire' => 'جرائم الأموال',
                 'code' => '2105',
-                'code_appel' => null, // لم يتم العثور على مقابل مؤكد، يُستكمل يدويًا
             ],
         ];
 
@@ -78,7 +67,6 @@ class DataSeeder extends Seeder
             DB::table('type_affaires')->insert([
                 'affaire' => $type['affaire'],
                 'code' => $type['code'],
-                'code_appel' => $type['code_appel'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

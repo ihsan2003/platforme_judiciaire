@@ -36,10 +36,11 @@ class DossierPolicy
 
     /**
      * Créer un nouveau dossier.
+     * Ouvert à tout utilisateur connecté, quel que soit son rôle/permission.
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('create dossiers');
+        return true;
     }
 
     /**
