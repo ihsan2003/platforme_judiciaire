@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\DossierJudiciaire;
+use App\Http\Controllers\Concerns\AuthorizesViaDossier;
 use App\Models\Finance;
 use App\Models\Jugement;
 use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
+
+    use AuthorizesViaDossier;
+
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -17,13 +22,7 @@ class FinanceController extends Controller
 
     public function index()
     {
-        // Ne garder que les finances rattachées au DERNIER jugement valide de
-        // leur dossier (plus haut degré de juridiction, puis date la plus
-        // récente) — même règle et même accesseur (DossierJudiciaire::
-        // jugementValid) que "الخلاصة المالية" du dashboard
-        // (voir DashboardController::index()). Un dossier ayant plusieurs
-        // jugements (appel, cassation...) ne doit apparaître ici qu'une fois,
-        // via le montant du dernier jugement.
+
         $financeIdsValides = DossierJudiciaire::query()
             ->whereHas('dossierTribunaux.jugements.finance')
             ->with(['dossierTribunaux.degre', 'dossierTribunaux.jugements.finance'])
@@ -110,6 +109,9 @@ class FinanceController extends Controller
             'est_solde' => 'boolean',
         ]);
 
+        $jugement = \App\Models\Jugement::findOrFail($validated['id_jugement']);
+        $this->authorizeDossier('update', $jugement);
+
         $validated['montant_paye'] = $validated['montant_paye'] ?? 0;
 
         Finance::create($validated);
@@ -133,6 +135,8 @@ class FinanceController extends Controller
 
     public function update(Request $request, Finance $finance)
     {
+        $this->authorizeDossier('update', $finance);
+
         $request->validate([
             'id_jugement' => 'required|exists:jugements,id',
             'montant_reclame_demandeur' => 'nullable|numeric',
@@ -143,12 +147,9 @@ class FinanceController extends Controller
             'statut_paiement' => 'nullable|string',
         ]);
 
-        $finance->update($request->all());
+        $finance->update($validated);
 
-        // Un paiement saisi sur un jugement qui n'est plus le dernier jugement
-        // valide du dossier (remplacé par un appel/une cassation) n'est pas
-        // comptabilisé dans "الخلاصة المالية" du dashboard — on prévient
-        // l'utilisateur pour éviter une confusion sur le montant réellement dû.
+
         if ($request->filled('montant_paye') && (float) $request->montant_paye > 0 && ! $finance->fresh()->est_finance_valide) {
             return redirect()->route('finances.index')->with(
                 'warning',

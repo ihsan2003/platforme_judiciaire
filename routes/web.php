@@ -47,10 +47,7 @@ Route::get('/api/dashboard/dossiers-par-region', [DashboardController::class, 'd
     ->middleware('auth')
     ->name('dashboard.map.data');
 
-// web.php — Routes AJAX cascade (à placer AVANT le middleware auth si besoin, ou dedans)
 Route::middleware('auth')->prefix('api')->group(function () {
-
-
     // Provinces d'une région
     Route::get('/regions/{regionId}/provinces', function ($regionId) {
         $provinces = \App\Models\Province::where('id_region', $regionId)
@@ -97,8 +94,7 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::resource('dossiers', DossierJudiciaireController::class);
-    Route::get('dossiers/{dossier}/cycle-vie', [DossierJudiciaireController::class, 'cycleVie'])
-     ->name('dossiers.cycle-vie');
+
     Route::post('dossiers/{dossier}/cloturer', [DossierJudiciaireController::class, 'cloturer'])
      ->name('dossiers.cloturer');
  
@@ -154,40 +150,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('jugements/{jugement}/cloture-sans-recours', [RecoursController::class, 'cloturerSansRecours'])
         ->name('jugements.cloture-sans-recours');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Audiences
-    |--------------------------------------------------------------------------
-    
-    Route::prefix('audiences')->name('audiences.')->group(function () {
-        Route::get('/',                [AudienceController::class, 'index'])  ->name('index');
-        Route::get('/create',          [AudienceController::class, 'create']) ->name('create');
-        Route::post('/',               [AudienceController::class, 'store'])  ->name('store');
-        Route::get('/{audience}',      [AudienceController::class, 'show'])   ->name('show');
-        Route::get('/{audience}/edit', [AudienceController::class, 'edit'])   ->name('edit');
-        Route::put('/{audience}',      [AudienceController::class, 'update']) ->name('update');
-        Route::delete('/{audience}',   [AudienceController::class, 'destroy'])->name('destroy');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Jugements
-    |--------------------------------------------------------------------------
-    
-    Route::prefix('jugements')->name('jugements.')->group(function () {
-        Route::get('/',                [JugementController::class, 'index'])  ->name('index');
-        Route::get('/create',          [JugementController::class, 'create']) ->name('create');
-        Route::post('/',               [JugementController::class, 'store'])  ->name('store');
-        Route::get('/{jugement}',      [JugementController::class, 'show'])   ->name('show');
-        Route::get('/{jugement}/edit', [JugementController::class, 'edit'])   ->name('edit');
-        Route::put('/{jugement}',      [JugementController::class, 'update']) ->name('update');
-        Route::delete('/{jugement}',   [JugementController::class, 'destroy'])->name('destroy');
-
-        Route::post('/{jugement}/recours',          [RecoursController::class,  'store'])        ->name('recours.store');
-        Route::delete('/{jugement}/recours/{recours}', [RecoursController::class, 'destroy'])    ->name('recours.destroy');
-        Route::post('/{jugement}/finance',          [JugementController::class, 'storeFinance']) ->name('finance.store');
-        Route::put('/{jugement}/finance',           [JugementController::class, 'updateFinance'])->name('finance.update');
-    });
 
     /*
     |--------------------------------------------------------------------------
@@ -205,30 +167,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{reclamation}/actions', [ReclamationController::class, 'addAction'])->name('actions.store');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | Exécutions
-    |--------------------------------------------------------------------------
-    
-    Route::prefix('executions')->name('executions.')->group(function () {
-        Route::get('/',                  [ExecutionController::class, 'index'])  ->name('index');
-        Route::get('/create',            [ExecutionController::class, 'create']) ->name('create');
-        Route::post('/',                 [ExecutionController::class, 'store'])  ->name('store');
-        Route::get('/{execution}',       [ExecutionController::class, 'show'])   ->name('show');
-        Route::get('/{execution}/edit',  [ExecutionController::class, 'edit'])   ->name('edit');
-        Route::put('/{execution}',       [ExecutionController::class, 'update']) ->name('update');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | Documents
-    |--------------------------------------------------------------------------
-    
-    Route::prefix('documents')->name('documents.')->group(function () {
-        Route::post('/',                      [DocumentController::class, 'store'])   ->name('store');
-        Route::get('/{document}/download',    [DocumentController::class, 'download'])->name('download');
-        Route::delete('/{document}',          [DocumentController::class, 'destroy']) ->name('destroy');
-    });
 
     /*
     |--------------------------------------------------------------------------

@@ -62,6 +62,7 @@ class DossierTribunalController extends Controller
     public function update(Request $request, DossierJudiciaire $dossier, DossierTribunal $tribunal): RedirectResponse
     {
         $this->authorize('update', $dossier);
+        abort_unless($tribunal->id_dossier === $dossier->id, 403);
 
         $request->validate([
             'id_degre'   => ['required', 'exists:degre_juridictions,id'],
@@ -83,6 +84,7 @@ class DossierTribunalController extends Controller
     public function destroy(DossierJudiciaire $dossier, DossierTribunal $tribunal): RedirectResponse
     {
         $this->authorize('update', $dossier);
+        abort_unless($tribunal->id_dossier === $dossier->id, 403);
 
         if ($tribunal->audiences()->exists() || $tribunal->jugements()->exists()) {
             return redirect()

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Executions\StoreExecutionRequest;
 use App\Http\Requests\Executions\UpdateExecutionRequest;
+use App\Http\Controllers\Concerns\AuthorizesViaDossier;
 use App\Models\Execution;
 use App\Models\Jugement;
 use App\Models\Tribunal;
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Auth;
 
 class ExecutionController extends Controller
 {
+
+    use AuthorizesViaDossier; 
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -234,7 +238,7 @@ class ExecutionController extends Controller
     }
 
     // ─────────────────────────────────────────
-    // CREATE — seulement les jugements définitifs non encore exécutés
+    // CREATE 
     // ─────────────────────────────────────────
     public function create()
     {
@@ -268,6 +272,9 @@ class ExecutionController extends Controller
         $nextNumber = $last ? $last->id + 1 : 1;
 
         $numero = 'EXE-' . date('Y') . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+        $jugement = \App\Models\Jugement::findOrFail($request->id_jugement);
+        $this->authorizeDossier('update', $jugement);
 
         $execution = Execution::create([
             ...$request->validated(),
@@ -313,6 +320,8 @@ class ExecutionController extends Controller
     // ─────────────────────────────────────────
     public function edit(Execution $execution)
     {
+        $this->authorizeDossier('view', $execution);
+
         $jugements    = Jugement::with(['dossierTribunal.dossier', 'dossierTribunal.tribunal'])->get();
         $statuts      = StatutExecution::orderBy('statut_execution')->get();
         $responsables = User::orderBy('name')->get();
@@ -325,17 +334,16 @@ class ExecutionController extends Controller
     // ─────────────────────────────────────────
     public function update(UpdateExecutionRequest $request, Execution $execution)
     {
-        // ⛔ Bloquer si déjà terminée
+        $this->authorizeDossier('update', $execution);
+        
         if ($execution->date_execution) {
             abort(403, 'التنفيذ منتهي بالفعل.');
         }
 
         $data = $request->validated();
 
-        // 🔒 Empêcher toute modification du jugement (sécurité supplémentaire)
         unset($data['id_jugement']);
 
-        // ⛔ Empêcher retour en arrière du statut (ex: 3 = terminé)
         if (
             $execution->statut_execution == 3 &&
             isset($data['statut_execution']) &&
@@ -346,8 +354,7 @@ class ExecutionController extends Controller
             ]);
         }
 
-        // ⚡ Option intelligente (bonus)
-        // Si date_execution est remplie → forcer statut = terminé
+    
         if (!empty($data['date_execution'])) {
             $data['statut_execution'] = 3;
         }

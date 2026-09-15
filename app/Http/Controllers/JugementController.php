@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Jugements\StoreJugementRequest;
 use App\Http\Requests\Jugements\UpdateJugementRequest;
+use App\Http\Controllers\Concerns\AuthorizesViaDossier;
 use App\Models\Jugement;
 use App\Models\DossierTribunal;
 use App\Models\Juge;
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\DB;
 
 class JugementController extends Controller
 {
+
+
+    use AuthorizesViaDossier;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -181,7 +186,7 @@ class JugementController extends Controller
     }
 
     // ─────────────────────────────────────────
-    // CREATE (filtré correctement)
+    // CREATE 
     // ─────────────────────────────────────────
     public function create()
     {
@@ -225,7 +230,7 @@ class JugementController extends Controller
         ));
     }
     // ─────────────────────────────────────────
-    // STORE (sécurité obligatoire)
+    // STORE 
     // ─────────────────────────────────────────
     public function store(StoreJugementRequest $request)
     {
@@ -235,6 +240,8 @@ class JugementController extends Controller
             'dossier.dossierParties.partie',
             'jugements',
         ])->findOrFail($request->id_dossier_tribunal);
+
+        $this->authorizeDossier('update', $dossierTribunal);
 
         // ── RG01 : vérifier les parties ───────────────────────────
         if (! $dossierTribunal->dossier->peutAvoirAudience()) {
@@ -384,6 +391,8 @@ class JugementController extends Controller
     // ─────────────────────────────────────────
     public function edit(Jugement $jugement)
     {
+        $this->authorizeDossier('view', $jugement);
+
         $jugement->load('parties');
 
         $dossiers = DossierTribunal::with(['dossier', 'tribunal'])->get();
@@ -408,6 +417,8 @@ class JugementController extends Controller
     // ─────────────────────────────────────────
     public function update(UpdateJugementRequest $request, Jugement $jugement)
     {
+        $this->authorizeDossier('update', $jugement);
+        
         DB::transaction(function () use ($request, $jugement) {
 
             $jugement->update(

@@ -15,6 +15,7 @@ class NotificationController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        $this->middleware('permission:manage users')->only('generer'); 
     }
 
     // ─────────────────────────────────────────
@@ -144,8 +145,6 @@ class NotificationController extends Controller
     // ─────────────────────────────────────────
     public function generer(NotificationService $service): RedirectResponse
     {
-        $this->middleware('permission:manage users');
-
         $count = $service->genererPourUtilisateur(Auth::user());
 
         return redirect()->route('notifications.index')

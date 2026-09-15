@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Audiences\StoreAudienceRequest;
 use App\Http\Requests\Audiences\UpdateAudienceRequest;
+use App\Http\Controllers\Concerns\AuthorizesViaDossier;
 use App\Models\Audience;
 use App\Models\Tribunal;
 use App\Models\DossierTribunal;
@@ -13,6 +14,9 @@ use App\Models\Juge;
 
 class AudienceController extends Controller
 {
+    
+    use AuthorizesViaDossier;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -184,6 +188,8 @@ class AudienceController extends Controller
         $dossierTribunal = DossierTribunal::with(['dossier.parties', 'audiences.typeAudience', 'degre'])
             ->findOrFail($request->id_dossier_tribunal);
 
+        $this->authorizeDossier('update', $dossierTribunal);
+
         // RG1 — Sécurité backend : vérifier les parties
         if (! $dossierTribunal->dossier->peutAvoirAudience()) {
             $manquants = implode('" et "', $dossierTribunal->dossier->typesPartiesManquants());
@@ -258,6 +264,8 @@ class AudienceController extends Controller
     // ─────────────────────────────────────────
     public function edit(Audience $audience)
     {
+        $this->authorizeDossier('view', $audience);
+
         // En édition, on propose uniquement l'instance à laquelle appartient cette audience
         $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal', 'degre'])
             ->where('id', $audience->id_dossier_tribunal)
@@ -275,6 +283,7 @@ class AudienceController extends Controller
     public function update(UpdateAudienceRequest $request, Audience $audience)
     {
         $dossierTribunal = $audience->dossierTribunal;
+        $this->authorizeDossier('update', $audience);
 
         // RG — Si on change le type vers الحكم, vérifier qu'il n'y en a pas déjà une autre
         $typeAudience = TypeAudience::find($request->id_type_audience);

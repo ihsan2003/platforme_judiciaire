@@ -144,6 +144,7 @@ class DossierPartieController extends Controller
     public function update(Request $request, DossierJudiciaire $dossier, DossierPartie $partie): RedirectResponse
     {
         $this->authorize('update', $dossier);
+        abort_unless($partie->id_dossier === $dossier->id, 403); 
 
         $request->validate([
             'id_type_partie' => ['required', 'exists:type_parties,id'],
@@ -164,6 +165,7 @@ class DossierPartieController extends Controller
     public function destroy(DossierJudiciaire $dossier, DossierPartie $partie): RedirectResponse
     {
         $this->authorize('update', $dossier);
+        abort_unless($partie->id_dossier === $dossier->id, 403); 
 
         $nomPartie = $partie->partie->nom_partie;
         $partie->delete();
