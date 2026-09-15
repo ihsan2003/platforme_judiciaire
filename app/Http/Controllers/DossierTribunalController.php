@@ -12,6 +12,12 @@ use Illuminate\Http\RedirectResponse;
 
 class DossierTribunalController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->only('destroy');
+    }
+
     /**
      * Assigner un tribunal à un dossier.
      */

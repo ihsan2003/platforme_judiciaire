@@ -387,6 +387,7 @@ body{
 
                             </a>
 
+                            @role('admin')
                             <form action="{{ route('parties.destroy', $partie) }}"
                                   method="POST"
                                   onsubmit="return confirm('هل تريد حذف هذا الطرف؟')">
@@ -402,6 +403,7 @@ body{
                                 </button>
 
                             </form>
+                            @endrole
 
                         </div>
 

@@ -274,6 +274,7 @@ class DataSeeder extends Seeder
         
         $roleUser->givePermissionTo([
             'view dossiers',
+            'edit dossiers',
             'view reclamations',
             'view statistiques'
         ]);

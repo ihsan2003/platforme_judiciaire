@@ -12,6 +12,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->only('destroy');
+    }
+
     /**
      * Upload d'un document et rattachement au dossier.
      */

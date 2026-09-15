@@ -185,6 +185,7 @@
                                class="btn btn-sm btn-outline-warning" title="تعديل">
                                 <i class="bi bi-pencil"></i>
                             </a>
+                            @role('admin')
                             <x-modal-delete
                                 :action="route('audiences.destroy', $audience)"
                                 modal-id="deleteAudience{{ $audience->id }}"
@@ -192,6 +193,7 @@
                                 trigger-label=""
                                 :description="'جلسة بتاريخ ' . $audience->date_audience->format('Y/m/d')"
                             />
+                            @endrole
                         </div>
                     </td>
                 </tr>

@@ -23,7 +23,7 @@ class DossierPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('dossiers.view');
+        return $user->hasPermissionTo('view dossiers');
     }
 
     /**
@@ -31,7 +31,7 @@ class DossierPolicy
      */
     public function view(User $user, DossierJudiciaire $dossier): bool
     {
-        return $user->hasPermissionTo('dossiers.view');
+        return $user->hasPermissionTo('view dossiers');
     }
 
     /**
@@ -39,7 +39,7 @@ class DossierPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('dossiers.create');
+        return $user->hasPermissionTo('create dossiers');
     }
 
     /**
@@ -52,16 +52,16 @@ class DossierPolicy
             return $user->hasRole(['admin']);
         }
 
-        return $user->hasPermissionTo('dossiers.edit');
+        return $user->hasPermissionTo('edit dossiers');
     }
 
     /**
      * Archiver (soft delete) un dossier.
+     * Réservé au compte admin.
      */
     public function delete(User $user, DossierJudiciaire $dossier): bool
     {
-        return $user->hasPermissionTo('dossiers.delete')
-            && $user->hasRole(['admin']);
+        return $user->hasRole('admin');
     }
 
     /**

@@ -372,6 +372,7 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
 
+                            @role('admin')
                             <x-modal-delete
                                 :action="route('finances.destroy', $finance)"
                                 modal-id="deleteFinance{{ $finance->id }}"
@@ -379,6 +380,7 @@
                                 trigger-label=""
                                 :description="' الحالة مالية بتاريخ' . $finance->created_at->format('d/m/Y')"
                             />
+                            @endrole
 
                         </div>
 

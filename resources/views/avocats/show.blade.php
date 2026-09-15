@@ -37,19 +37,21 @@
                     <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
 
-                @if($avocat->parties->count() > 0)
-                    <button class="btn btn-outline-danger btn-sm" disabled title="غير ممكن: مرتبط بملفات">
-                        <i class="bi bi-trash me-1"></i>حذف
-                    </button>
-                @else
-                    <form action="{{ route('avocats.destroy', $avocat) }}" method="POST"
-                          onsubmit="return confirm('هل تريد حذف هذا المحامي؟')">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-outline-danger btn-sm">
+                @role('admin')
+                    @if($avocat->parties->count() > 0)
+                        <button class="btn btn-outline-danger btn-sm" disabled title="غير ممكن: مرتبط بملفات">
                             <i class="bi bi-trash me-1"></i>حذف
                         </button>
-                    </form>
-                @endif
+                    @else
+                        <form action="{{ route('avocats.destroy', $avocat) }}" method="POST"
+                              onsubmit="return confirm('هل تريد حذف هذا المحامي؟')">
+                            @csrf @method('DELETE')
+                            <button class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash me-1"></i>حذف
+                            </button>
+                        </form>
+                    @endif
+                @endrole
 
                 <a href="{{ route('avocats.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>رجوع

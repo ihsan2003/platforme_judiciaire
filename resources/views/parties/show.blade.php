@@ -83,6 +83,7 @@
                     <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
 
+                @role('admin')
                 <form action="{{ route('parties.destroy', $partie) }}" method="POST"
                       onsubmit="return confirm('هل تريد حذف هذا الطرف ؟')">
                     @csrf @method('DELETE')
@@ -91,6 +92,7 @@
                         <i class="bi bi-trash me-1"></i>حذف
                     </button>
                 </form>
+                @endrole
 
                 <a href="{{ route('parties.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>رجوع

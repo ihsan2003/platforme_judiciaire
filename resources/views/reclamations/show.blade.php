@@ -73,12 +73,14 @@
                 <a href="{{ route('reclamations.edit', $reclamation) }}" class="btn btn-warning btn-sm">
                     <i class="bi bi-pencil me-1"></i>تعديل
                 </a>
+                @role('admin')
                 <x-modal-delete
                     :action="route('reclamations.destroy', $reclamation)"
                     modal-id="deleteReclamation{{ $reclamation->id }}"
                     title="حذف الشكاية"
                     :description="'شكاية بتاريخ ' . $reclamation->date_reception->format('Y/m/d')"
                 />
+                @endrole
             </div>
         </div>
 

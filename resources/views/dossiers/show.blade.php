@@ -566,6 +566,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </button>
 
+                                @role('admin')
                                 <x-modal-delete
                                     :action="route('dossiers.parties.destroy', [$dossier, $dp])"
                                     modal-id="deletePartie{{ $dp->id }}"
@@ -576,6 +577,7 @@
                                     trigger-label=""
                                     trigger-icon="bi-person-dash"
                                 />
+                                @endrole
 
                             </div>
                             @endcan
@@ -1402,12 +1404,12 @@
                         <a href="{{ route('documents.download', [$dossier, $doc]) }}" class="btn btn-sm btn-outline-primary flex-fill">
                             <i class="bi bi-download"></i>
                         </a>
-                        @can('update', $dossier)
+                        @role('admin')
                         <form action="{{ route('documents.destroy', [$dossier, $doc]) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </form>
-                        @endcan
+                        @endrole
                     </div>
                 </div>
             </div>

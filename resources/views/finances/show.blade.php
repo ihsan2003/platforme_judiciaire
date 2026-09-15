@@ -67,12 +67,14 @@
 
             <div class="d-flex gap-2 flex-wrap">
     
+                @role('admin')
                 <x-modal-delete
                     :action="route('finances.destroy', $finance)"
                     modal-id="deleteFinance{{ $finance->id }}"
                     title="حذف العملية المالية"
                     :description="'مالية بتاريخ ' . $finance->created_at->format('d/m/Y')"
                 />
+                @endrole
 
                 <a href="{{ route('finances.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>رجوع

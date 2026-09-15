@@ -191,6 +191,7 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
 
+                            @role('admin')
                             <form action="{{ route('tribunaux.destroy', $tribunal) }}" method="POST"
                                   onsubmit="return confirm('هل تريد حذف هذه المحكمة؟')">
                                 @csrf @method('DELETE')
@@ -198,6 +199,7 @@
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
+                            @endrole
 
                         </div>
                     </td>

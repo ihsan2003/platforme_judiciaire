@@ -11,6 +11,12 @@ use Illuminate\Http\RedirectResponse;
 
 class DossierPartieController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->only('destroy');
+    }
+
     /**
      * Recherche de parties existantes par identifiant ou nom (AJAX).
      * Retourne aussi l'avocat lié à la partie pour affichage informatif.

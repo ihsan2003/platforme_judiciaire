@@ -345,6 +345,7 @@
 
                             </a>
 
+                            @role('admin')
                             <x-modal-delete
                                 :action="route('executions.destroy', $execution)"
                                 modal-id="deleteExecution{{ $execution->id }}"
@@ -352,6 +353,7 @@
                                 trigger-label=""
                                 :description="'تنفيذ بتاريخ ' . $execution->date_notification->format('d/m/Y')"
                             />
+                            @endrole
 
                         </div>
 

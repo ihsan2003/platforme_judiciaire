@@ -10,9 +10,12 @@ use App\Rules\Telephone;
 
 class AvocatController extends Controller
 {
- 
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->only('destroy');
+    }
 
-    
     public function index(Request $request)
     {
         $query = Avocat::withCount('parties');

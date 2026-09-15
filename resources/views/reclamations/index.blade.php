@@ -353,6 +353,7 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
 
+                            @role('admin')
                             <x-modal-delete
                                 :action="route('reclamations.destroy', $reclamation)"
                                 modal-id="deleteReclamation{{ $reclamation->id }}"
@@ -360,6 +361,7 @@
                                 trigger-label=""
                                 :description="'شكاية بتاريخ ' . $reclamation->date_reception->format('d/m/Y')"
                             />
+                            @endrole
 
                         </div>
 

@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class FinanceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->only('destroy');
+    }
+
     public function index()
     {
         $finances = Finance::query()

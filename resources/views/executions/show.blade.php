@@ -116,12 +116,14 @@
 
                 </a>
 
+                @role('admin')
                 <x-modal-delete
                     :action="route('executions.destroy', $execution)"
                     modal-id="deleteExecution{{ $execution->id }}"
                     title="حذف التنفيذ"
                     :description="'تنفيذ بتاريخ ' . $execution->date_notification->format('d/m/Y')"
                 />
+                @endrole
 
                 <a href="{{ route('executions.index') }}"
                    class="btn btn-outline-secondary btn-sm">

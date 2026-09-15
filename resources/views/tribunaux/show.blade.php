@@ -52,6 +52,7 @@
                     تعديل
                 </a>
 
+                @role('admin')
                 <form action="{{ route('tribunaux.destroy', $tribunal) }}" method="POST"
                       onsubmit="return confirm('هل أنت متأكد من حذف هذه المحكمة؟')">
                     @csrf @method('DELETE')
@@ -60,6 +61,7 @@
                         حذف
                     </button>
                 </form>
+                @endrole
 
                 <a href="{{ route('tribunaux.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>

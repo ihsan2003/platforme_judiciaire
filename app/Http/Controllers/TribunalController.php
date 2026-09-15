@@ -12,6 +12,12 @@ use App\Models\Province;
 
 class TribunalController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->only('destroy');
+    }
+
     public function index()
     {
         $tribunaux = Tribunal::with(['typeTribunal', 'province.region'])

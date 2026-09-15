@@ -70,14 +70,16 @@
                     <i class="bi bi-pencil ms-1"></i>تعديل
                 </a>
 
-                @if(!$isHoukm || !$dt->aUnJugement())
-                    <x-modal-delete
-                        :action="route('audiences.destroy', $audience)"
-                        modal-id="deleteAudience{{ $audience->id }}"
-                        title="حذف الجلسة"
-                        :description="'جلسة بتاريخ ' . $audience->date_audience->format('d/m/Y')"
-                    />
-                @endif
+                @role('admin')
+                    @if(!$isHoukm || !$dt->aUnJugement())
+                        <x-modal-delete
+                            :action="route('audiences.destroy', $audience)"
+                            modal-id="deleteAudience{{ $audience->id }}"
+                            title="حذف الجلسة"
+                            :description="'جلسة بتاريخ ' . $audience->date_audience->format('d/m/Y')"
+                        />
+                    @endif
+                @endrole
 
                 <a href="{{ route('audiences.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-right ms-1"></i>رجوع

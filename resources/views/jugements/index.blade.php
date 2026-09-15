@@ -418,6 +418,7 @@
 
                             </a>
 
+                            @role('admin')
                             <x-modal-delete
                                 :action="route('jugements.destroy', $jugement)"
                                 modal-id="deleteJugement{{ $jugement->id }}"
@@ -425,6 +426,7 @@
                                 trigger-label=""
                                 :description="'حكم بتاريخ ' . $jugement->date_jugement->format('d/m/Y')"
                             />
+                            @endrole
 
                         </div>
 
