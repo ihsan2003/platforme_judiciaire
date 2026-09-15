@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Juge extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'juges';
 
@@ -59,5 +62,19 @@ class Juge extends Model
     public function getLabelAttribute(): string
     {
         return trim(($this->grade ? $this->grade . ' ' : '') . $this->nom_complet);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'nom_complet',
+                'grade',
+                'specialisation',
+                'id_tribunal',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('juges');
     }
 }

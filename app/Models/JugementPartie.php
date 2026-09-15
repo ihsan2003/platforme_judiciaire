@@ -6,10 +6,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 
 class JugementPartie extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'jugement_parties';
     
@@ -37,5 +40,19 @@ class JugementPartie extends Model
     public function positionInstitution()
     {
         return $this->belongsTo(PositionInstitution::class, 'id_position_institution');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'id_jugement',
+                'id_partie',
+                'id_position_institution',
+                'montant_condamne',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('jugementParties'); 
     }
 }

@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Recours extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'recours';
     
@@ -49,5 +52,21 @@ class Recours extends Model
     {
         $dateLimite = $this->jugement->date_jugement->copy()->addDays($this->typeRecours->delai_legal_jours);
         return $this->date_recours <= $dateLimite;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'id_jugement',
+                'id_dossier_tribunal',
+                'id_dossier_recours',
+                'id_type_recours',
+                'date_recours',
+                'motifs',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('recours'); 
     }
 }

@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Tribunal extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'tribunaux';
     
@@ -53,6 +56,22 @@ class Tribunal extends Model
     public function dossierTribunaux()
     {
         return $this->hasMany(DossierTribunal::class, 'id_tribunal');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'nom_tribunal',
+                'id_type_tribunal',
+                'id_province',
+                'id_degre',
+                'id_parent',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('tribunaux');
+
     }
 
 }

@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Audience extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'audiences';
     
@@ -57,4 +60,23 @@ class Audience extends Model
     {
         return $this->date_audience->isToday();
     }
+
+    public function getActivitylogOptions(): LogOptions { 
+        return LogOptions::defaults() 
+            ->logOnly([ 
+                'id_dossier_tribunal', 
+                'id_type_audience', 
+                'id_juge', 
+                'presence_demandeur', 
+                'presence_defendeur', 
+                'presence_avocat_entraide', 
+                'date_audience', 
+                'date_prochaine_audience', 
+                'resultat_audience', 
+                'actions_demandees', 
+            ]) 
+            ->logOnlyDirty() 
+            ->dontSubmitEmptyLogs()
+            ->useLogName('audiences'); 
+        }
 }

@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Jugement extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'jugements';
     
@@ -195,5 +198,21 @@ class Jugement extends Model
         }
 
         return $dernierRecours->typeRecours->type_recours ?? 'تم تقديم الطعن';
+    }
+
+    public function getActivitylogOptions(): LogOptions { 
+        return LogOptions::defaults() 
+            ->logOnly([ 
+                'id_dossier_tribunal', 
+                'id_juge', 
+                'date_jugement', 
+                'contenu_dispositif', 
+                'est_definitif', 
+                'created_by', 
+            ]) 
+            ->logOnlyDirty() 
+            ->dontSubmitEmptyLogs()
+            ->useLogName('jugements');
+
     }
 }

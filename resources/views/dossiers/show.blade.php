@@ -265,9 +265,24 @@
             <div>
                 <h4 class="fw-bold mb-0 text-white">{{ $dossier->id }}</h4>
 
-                @if($dossier->numero_dossier_tribunal)
+                @php
+                    // Numéro de l'instance actuellement active (le plus haut degré),
+                    // avec repli sur le numéro d'origine si l'instance n'a pas encore
+                    // reçu son numéro de la juridiction.
+                    $instanceActive = $dossier->dossierTribunaux
+                        ->sortByDesc(fn($dt) => $dt->degre?->ordre ?? 0)
+                        ->first();
+
+                    $numeroAffiche = $instanceActive?->numero_dossier_tribunal
+                        ?? $dossier->numero_dossier_tribunal;
+                @endphp
+
+                @if($numeroAffiche)
                     <div class="small" style="opacity:.7">
-                        <i class="bi bi-bank me-1"></i>رقم المحكمة : {{ $dossier->numero_dossier_tribunal }}
+                        <i class="bi bi-bank me-1"></i>رقم المحكمة : {{ $numeroAffiche }}
+                        @if($instanceActive?->degre)
+                            <span class="ms-1">({{ $instanceActive->degre->degre_juridiction }})</span>
+                        @endif
                     </div>
                 @endif
 
@@ -1743,6 +1758,20 @@
                                 <option value="{{ $d->id }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">
+                            رقم الملف بهذه المحكمة
+                        </label>
+                        <input type="text"
+                               name="numero_dossier_tribunal"
+                               class="form-control @error('numero_dossier_tribunal') is-invalid @enderror"
+                               placeholder="2026 / 1101 / 894"
+                               value="{{ old('numero_dossier_tribunal', $dt->numero_dossier_tribunal) }}">
+                        @error('numero_dossier_tribunal')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">الصيغة : السنة / رمز الفئة / الرقم (مثال: 2026 / 1101 / 894). اتركه فارغاً إذا لم يُبلَّغ بعد.</div>
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">تاريخ الإحالة</label>

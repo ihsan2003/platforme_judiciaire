@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class DossierTribunal extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'dossier_tribunaux';
     
@@ -239,5 +242,21 @@ class DossierTribunal extends Model
         return $this->dossierTribunaux
             ->sortByDesc(fn($dt) => $dt->degre?->ordre ?? 0)
             ->first();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'id_dossier',
+                'id_tribunal',
+                'id_degre',
+                'numero_dossier_tribunal',
+                'date_debut',
+                'date_fin',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('dossierTribunaux'); 
     }
 }

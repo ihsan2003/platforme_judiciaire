@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Document extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'documents';
     
@@ -64,5 +67,21 @@ class Document extends Model
             return Storage::size($this->fichier_path);
         }
         return null;
+    }
+
+    public function getActivitylogOptions(): LogOptions { 
+        return LogOptions::defaults() 
+            ->logOnly([ 
+                'id_dossier', 
+                'id_reclamation', 
+                'id_type_document', 
+                'id_partie', 
+                'titre_document', 
+                'date_depot', 
+                'fichier_path', 
+            ]) 
+            ->logOnlyDirty() 
+            ->dontSubmitEmptyLogs()
+            ->useLogName('documents'); 
     }
 }

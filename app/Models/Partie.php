@@ -5,10 +5,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 
 class Partie extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'parties';
     
@@ -56,5 +59,13 @@ class Partie extends Model
     public function estInstitutionDansDossier($dossierId): bool
     {
         return (bool) $this->est_entraide;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logAll()
+        ->useLogName('parties');
+
     }
 }

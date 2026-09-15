@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Execution extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'executions';
     
@@ -52,4 +55,20 @@ class Execution extends Model
             'id'
         );
     }
+
+    public function getActivitylogOptions(): LogOptions { 
+        return LogOptions::defaults() 
+            ->logOnly([ 
+                'id_jugement', 
+                'numero_dossier_execution', 
+                'date_notification', 
+                'statut_execution', 
+                'date_execution', 
+                'responsable_id', 
+            ]) 
+            ->logOnlyDirty() 
+            ->dontSubmitEmptyLogs()
+            ->useLogName('executions');
+
+        }
 }

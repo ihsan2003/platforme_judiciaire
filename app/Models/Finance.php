@@ -6,9 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Finance extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $table = 'finances';
     
@@ -80,5 +83,22 @@ class Finance extends Model
                 $finance->statut_paiement = 'في الانتظار';
             }
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'id_jugement',
+                'montant_reclame_demandeur',
+                'montant_reclame_defendeur',
+                'montant_condamne',
+                'montant_paye',
+                'date_paiement',
+                'statut_paiement',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('finances');
     }
 }

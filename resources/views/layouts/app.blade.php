@@ -7,6 +7,7 @@
     <title>@yield('title', 'المنصة القانونية') — التعاون الوطني</title>
 
     {{-- Bootstrap 5 + Icons --}}
+    <link rel="website icon" type="image/png" sizes="512x512" href="{{ asset('images/icon.png') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/css/tom-select.css" rel="stylesheet">

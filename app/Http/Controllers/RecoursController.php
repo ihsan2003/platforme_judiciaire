@@ -32,9 +32,15 @@ class RecoursController extends Controller
         $this->authorize('update', $jugement->dossierTribunal->dossier);
 
         $request->validate([
-            'id_type_recours' => ['required', 'exists:type_recours,id'],
-            'date_recours'    => ['required', 'date', 'after_or_equal:' . $jugement->date_jugement->toDateString()],
-            'motifs'          => ['nullable', 'string', 'max:2000'],
+            'id_type_recours'         => ['required', 'exists:type_recours,id'],
+            'date_recours'            => ['required', 'date', 'after_or_equal:' . $jugement->date_jugement->toDateString()],
+            'motifs'                  => ['nullable', 'string', 'max:2000'],
+            // Numéro attribué par la nouvelle juridiction (appel/cassation) au dossier.
+            // Optionnel : peut être saisi plus tard depuis la fiche de l'instance si le
+            // greffe ne l'a pas encore communiqué au moment du recours.
+            'numero_dossier_tribunal' => ['nullable', 'string', 'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'],
+        ], [
+            'numero_dossier_tribunal.regex' => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2026 / 1101 / 894).',
         ]);
 
         // RG — Impossible si le jugement est déjà définitif
@@ -72,30 +78,34 @@ class RecoursController extends Controller
                 'motifs'              => $request->motifs,
             ]);
 
+            // Numéro que la nouvelle instance (appel/cassation) portera. Peut être
+            // null si non communiqué : il sera alors complété plus tard.
+            $numeroNouvelleInstance = $request->numero_dossier_tribunal;
+
             // ── Routage de la transition selon le type de recours ──────────
             $nomType = strtolower($typeRecours->type_recours);
 
             if ($this->estCassationRejet($nomType)) {
                 $this->traiterCassationRejet($dossier, $jugement, $dossierTribunal);
             } elseif ($this->estCassationRenvoi($nomType)) {
-                $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours);
+                $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours, $numeroNouvelleInstance);
             } elseif ($this->estUnPourvoi($nomType)) {
-                $this->traiterPourvoi($dossier, $dossierTribunal);
+                $this->traiterPourvoi($dossier, $dossierTribunal, $numeroNouvelleInstance);
             } elseif ($this->estUnAppel($nomType)) {
                 if ($dossierTribunal->degre?->ordre == 3) {
-                    $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours);
+                    $this->traiterCassationRenvoi($dossier, $dossierTribunal, $recours, $numeroNouvelleInstance);
                 } else {
-                    $this->traiterAppel($dossier, $dossierTribunal, $recours);
+                    $this->traiterAppel($dossier, $dossierTribunal, $recours, $numeroNouvelleInstance);
                 }
             } elseif ($this->estUneOpposition($nomType)) {
 
                 // Opposition : même degré
-                $this->traiterOpposition($dossier, $dossierTribunal, $recours);
+                $this->traiterOpposition($dossier, $dossierTribunal, $recours, $numeroNouvelleInstance);
 
             } elseif ($this->estUneRevision($nomType)) {
 
                 // Révision : même degré
-                $this->traiterRevision($dossier, $dossierTribunal, $recours);
+                $this->traiterRevision($dossier, $dossierTribunal, $recours, $numeroNouvelleInstance);
 
             } else {
 
@@ -164,7 +174,8 @@ class RecoursController extends Controller
     private function traiterAppel(
         DossierJudiciaire $dossier,
         DossierTribunal   $dtOrigine,
-        Recours           $recours
+        Recours           $recours,
+        ?string           $numeroDossierTribunal = null
     ): void {
         $degreAppel = $this->trouverDegre('استئناف');
 
@@ -177,11 +188,12 @@ class RecoursController extends Controller
             $idTribunal = $this->trouverTribunalSuivant($dtOrigine, $degreAppel);
 
             $nouvelleDt = DossierTribunal::create([
-                'id_dossier'  => $dossier->id,
-                'id_tribunal' => $idTribunal,
-                'id_degre'    => $degreAppel->id,
-                'date_debut'  => today()->toDateString(),
-                'date_fin'    => null,
+                'id_dossier'               => $dossier->id,
+                'id_tribunal'              => $idTribunal,
+                'id_degre'                 => $degreAppel->id,
+                'numero_dossier_tribunal'  => $numeroDossierTribunal,
+                'date_debut'               => today()->toDateString(),
+                'date_fin'                 => null,
             ]);
 
             // Rattacher le recours à la nouvelle instance
@@ -204,7 +216,8 @@ class RecoursController extends Controller
      */
     private function traiterPourvoi(
         DossierJudiciaire $dossier,
-        DossierTribunal   $dtOrigine
+        DossierTribunal   $dtOrigine,
+        ?string           $numeroDossierTribunal = null
     ): void {
         $degreCassation = $this->trouverDegre('نقض');
 
@@ -215,11 +228,12 @@ class RecoursController extends Controller
             $idTribunal = $this->trouverTribunalSuivant($dtOrigine, $degreCassation);
 
             $nouvelleDt = DossierTribunal::create([
-                'id_dossier'  => $dossier->id,
-                'id_tribunal' => $idTribunal,
-                'id_degre'    => $degreCassation->id,
-                'date_debut'  => today()->toDateString(),
-                'date_fin'    => null,
+                'id_dossier'               => $dossier->id,
+                'id_tribunal'              => $idTribunal,
+                'id_degre'                 => $degreCassation->id,
+                'numero_dossier_tribunal'  => $numeroDossierTribunal,
+                'date_debut'               => today()->toDateString(),
+                'date_fin'                 => null,
             ]);
 
             \Log::info("✅ Instance de cassation #{$nouvelleDt->id} créée pour le dossier #{$dossier->id} (tribunal #{$idTribunal}).");
@@ -243,7 +257,8 @@ class RecoursController extends Controller
     private function traiterCassationRenvoi(
         DossierJudiciaire $dossier,
         DossierTribunal   $dtOrigine,
-        Recours           $recours
+        Recours           $recours,
+        ?string           $numeroDossierTribunal = null
     ): void {
         $degreAppel = $this->trouverDegre('استئناف');
 
@@ -262,11 +277,12 @@ class RecoursController extends Controller
                 : $this->trouverTribunalSuivant($dtOrigine, $degreAppel);
 
             $nouvelleDt = DossierTribunal::create([
-                'id_dossier'  => $dossier->id,
-                'id_tribunal' => $idTribunal,
-                'id_degre'    => $degreAppel->id,
-                'date_debut'  => today()->toDateString(),
-                'date_fin'    => null,
+                'id_dossier'               => $dossier->id,
+                'id_tribunal'              => $idTribunal,
+                'id_degre'                 => $degreAppel->id,
+                'numero_dossier_tribunal'  => $numeroDossierTribunal,
+                'date_debut'               => today()->toDateString(),
+                'date_fin'                 => null,
             ]);
 
             $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
@@ -314,16 +330,18 @@ class RecoursController extends Controller
     private function traiterOpposition(
         DossierJudiciaire $dossier,
         DossierTribunal   $dtOrigine,
-        Recours           $recours
+        Recours           $recours,
+        ?string           $numeroDossierTribunal = null
     ): void {
         $dtOrigine->update(['date_fin' => today()->toDateString()]);
 
         $nouvelleDt = DossierTribunal::create([
-            'id_dossier'  => $dossier->id,
-            'id_tribunal' => $dtOrigine->id_tribunal,
-            'id_degre'    => $dtOrigine->id_degre,
-            'date_debut'  => today()->toDateString(),
-            'date_fin'    => null,
+            'id_dossier'               => $dossier->id,
+            'id_tribunal'              => $dtOrigine->id_tribunal,
+            'id_degre'                 => $dtOrigine->id_degre,
+            'numero_dossier_tribunal'  => $numeroDossierTribunal ?? $dtOrigine->numero_dossier_tribunal,
+            'date_debut'               => today()->toDateString(),
+            'date_fin'                 => null,
         ]);
 
         $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);
@@ -336,16 +354,18 @@ class RecoursController extends Controller
     private function traiterRevision(
         DossierJudiciaire $dossier,
         DossierTribunal   $dtOrigine,
-        Recours           $recours
+        Recours           $recours,
+        ?string           $numeroDossierTribunal = null
     ): void {
         $dtOrigine->update(['date_fin' => today()->toDateString()]);
 
         $nouvelleDt = DossierTribunal::create([
-            'id_dossier'  => $dossier->id,
-            'id_tribunal' => $dtOrigine->id_tribunal,
-            'id_degre'    => $dtOrigine->id_degre,
-            'date_debut'  => today()->toDateString(),
-            'date_fin'    => null,
+            'id_dossier'               => $dossier->id,
+            'id_tribunal'              => $dtOrigine->id_tribunal,
+            'id_degre'                 => $dtOrigine->id_degre,
+            'numero_dossier_tribunal'  => $numeroDossierTribunal ?? $dtOrigine->numero_dossier_tribunal,
+            'date_debut'               => today()->toDateString(),
+            'date_fin'                 => null,
         ]);
 
         $recours->update(['id_dossier_tribunal' => $nouvelleDt->id]);

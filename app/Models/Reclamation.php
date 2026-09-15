@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Reclamation extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'reclamations';
     
@@ -121,5 +124,22 @@ class Reclamation extends Model
         return $query->whereHas('statut', function($q) {
             $q->whereIn('statut_reclamation', ['Reçue', 'En cours']);
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly([
+                'id_reclamant',
+                'id_type_reclamation',
+                'objet',
+                'date_reception',
+                'id_statut_reclamation',
+                'details',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->useLogName('reclamations');
+
     }
 }

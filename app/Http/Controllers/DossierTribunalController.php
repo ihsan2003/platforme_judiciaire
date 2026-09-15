@@ -86,12 +86,15 @@ class DossierTribunalController extends Controller
         $this->authorize('update', $dossier);
 
         $request->validate([
-            'id_degre'   => ['required', 'exists:degre_juridictions,id'],
-            'date_debut' => ['required', 'date'],
-            'date_fin'   => ['nullable', 'date', 'after_or_equal:date_debut'],
+            'id_degre'                => ['required', 'exists:degre_juridictions,id'],
+            'numero_dossier_tribunal' => ['nullable', 'string', 'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'],
+            'date_debut'              => ['required', 'date'],
+            'date_fin'                => ['nullable', 'date', 'after_or_equal:date_debut'],
+        ], [
+            'numero_dossier_tribunal.regex' => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2026 / 1101 / 894).',
         ]);
 
-        $tribunal->update($request->only(['id_degre', 'date_debut', 'date_fin']));
+        $tribunal->update($request->only(['id_degre', 'numero_dossier_tribunal', 'date_debut', 'date_fin']));
 
         return redirect()
             ->route('dossiers.show', $dossier)
