@@ -20,6 +20,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\StructureController;
 use App\Http\Controllers\DossierPartieController;
 use App\Http\Controllers\DossierTribunalController;
+use App\Http\Controllers\RapportController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +37,6 @@ require __DIR__.'/auth.php';
 |--------------------------------------------------------------------------
 */
 
-use App\Http\Controllers\RapportController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/rapports/statistiques', [RapportController::class, 'index'])->name('rapports.index');

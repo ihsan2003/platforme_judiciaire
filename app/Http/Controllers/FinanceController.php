@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DossierJudiciaire;
 use App\Models\Finance;
 use App\Models\Jugement;
 use Illuminate\Http\Request;
@@ -16,6 +17,21 @@ class FinanceController extends Controller
 
     public function index()
     {
+        // Ne garder que les finances rattachées au DERNIER jugement valide de
+        // leur dossier (plus haut degré de juridiction, puis date la plus
+        // récente) — même règle et même accesseur (DossierJudiciaire::
+        // jugementValid) que "الخلاصة المالية" du dashboard
+        // (voir DashboardController::index()). Un dossier ayant plusieurs
+        // jugements (appel, cassation...) ne doit apparaître ici qu'une fois,
+        // via le montant du dernier jugement.
+        $financeIdsValides = DossierJudiciaire::query()
+            ->whereHas('dossierTribunaux.jugements.finance')
+            ->with(['dossierTribunaux.degre', 'dossierTribunaux.jugements.finance'])
+            ->get()
+            ->map(fn ($dossier) => $dossier->jugementValid?->finance?->id)
+            ->filter()
+            ->values();
+
         $finances = Finance::query()
             ->leftJoin('jugements', 'finances.id_jugement', '=', 'jugements.id')
             ->leftJoin('dossier_tribunaux', 'jugements.id_dossier_tribunal', '=', 'dossier_tribunaux.id')
@@ -73,7 +89,7 @@ class FinanceController extends Controller
         // (même logique que JugementController::index()).
         $positionsParId = \App\Models\PositionInstitution::all()->keyBy('id');
 
-        return view('finances.index', compact('finances', 'positionsParId'));
+        return view('finances.index', compact('finances', 'positionsParId', 'financeIdsValides'));
     }
     
 

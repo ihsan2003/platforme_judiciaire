@@ -16,10 +16,17 @@
 
 {{-- ══ الإحصائيات ══ --}}
 @php
-    $totalCondamne = $finances->sum('montant_condamne');
-    $totalPaye     = $finances->sum('montant_paye');
-    $totalRestant  = $finances->sum(fn($f) => $f->montant_restant);
-    $totalSoldes   = $finances->filter(fn($f) => $f->est_solde)->count();
+    // La liste affiche TOUTES les finances, mais les totaux ("الخلاصة المالية")
+    // ne portent que sur celles du dernier jugement valide de chaque dossier —
+    // même règle que le dashboard (voir FinanceController::index()) — pour ne
+    // pas compter deux fois un dossier qui a plusieurs jugements (appel,
+    // cassation...).
+    $financesValides = $finances->whereIn('id', $financeIdsValides);
+
+    $totalCondamne = $financesValides->sum('montant_condamne');
+    $totalPaye     = $financesValides->sum('montant_paye');
+    $totalRestant  = $financesValides->sum(fn($f) => $f->montant_restant);
+    $totalSoldes   = $financesValides->filter(fn($f) => $f->est_solde)->count();
 @endphp
 
 <div class="row g-3 mb-4">
