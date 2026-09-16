@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/partie-create.css', 
                 'resources/css/audience.css', 
                 'resources/css/login.css', 
+                'resources/css/dossier-show.css', 
 
 
 
@@ -21,7 +22,10 @@ export default defineConfig({
                 'resources/js/partie-avocat-select.js',    
                 'resources/js/tribunaux-edit.js',    
                 'resources/js/audience-create.js',    
-                'resources/js/audience-edit.js',    
+                'resources/js/dossier-mahakim.js',    
+                'resources/js/dossier-show.js',    
+ 
+
         
 
 
