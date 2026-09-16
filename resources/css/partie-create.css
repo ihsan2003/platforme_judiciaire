@@ -1,0 +1,23 @@
+    body{
+        direction: rtl;
+        text-align: right;
+        font-family: "Tajawal", sans-serif;
+    }
+
+    .input-group .form-control{
+        border-right: 0 !important;
+    }
+
+    .input-group-text{
+        border-left: 0 !important;
+    }
+
+    .form-control,
+    .form-select{
+        text-align: right;
+    }
+
+    .font-ltr{
+        direction: ltr;
+        text-align: left;
+    }

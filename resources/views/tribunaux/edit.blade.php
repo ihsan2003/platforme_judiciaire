@@ -197,64 +197,7 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    let regionSelect = document.getElementById('region');
-    let provinceSelect = document.getElementById('province');
-
-    // 👇 الإقليم الحالي المخزن في قاعدة البيانات
-    let selectedProvinceId = "{{ old('id_province', $tribunal->id_province) }}";
-
-    function loadProvinces(regionId, selectedProvince = null) {
-
-        provinceSelect.innerHTML = '<option value="">جاري التحميل...</option>';
-
-        if (!regionId) {
-            provinceSelect.innerHTML = '<option value="">— اختر الإقليم —</option>';
-            return;
-        }
-
-        fetch(`/api/regions/${regionId}/provinces`, {
-            headers: {
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Error loading provinces");
-            return res.json();
-        })
-        .then(data => {
-
-            provinceSelect.innerHTML = '<option value="">— اختر الإقليم —</option>';
-
-            data.forEach(province => {
-
-                let selected = (province.id == selectedProvince) ? 'selected' : '';
-
-                provinceSelect.innerHTML += `
-                    <option value="${province.id}" ${selected}>
-                        ${province.province}
-                    </option>
-                `;
-            });
-        })
-        .catch(err => {
-            console.error(err);
-            provinceSelect.innerHTML = '<option value="">تعذر تحميل الأقاليم</option>';
-        });
-    }
-
-    // 👇 عند تغيير الجهة
-    regionSelect.addEventListener('change', function () {
-        loadProvinces(this.value);
-    });
-
-    // 👇 عند فتح الصفحة (مهم جداً)
-    if (regionSelect.value) {
-        loadProvinces(regionSelect.value, selectedProvinceId);
-    }
-
-});
+    window.pageData = { selectedProvinceId: "{{ old('id_province', $tribunal->id_province) }}" };
 </script>
+@vite('resources/js/tribunaux-edit.js')
 @endpush

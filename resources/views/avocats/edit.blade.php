@@ -190,27 +190,7 @@
 
 @push('scripts')
 <script>
-new TomSelect('#parties-select', {
-    plugins: ['remove_button'],
-
-    create: function(input) {
-        window.location.href = "{{ route('parties.create') }}?nom_partie=" + encodeURIComponent(input);
-        return false;
-    },
-
-    placeholder: 'ابحث عن طرف ...',
-
-    loadingText: 'جاري البحث...',
-
-    render: {
-        no_results: function(data, escape) {
-            return `<div class="no-results">لا توجد نتائج</div>`;
-        },
-
-        option_create: function(data, escape) {
-            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
-        }
-    }
-});
+    window.pageData = { partiesCreateUrl: "{{ route('parties.create') }}" };
 </script>
+@vite('resources/js/avocat-partie-select.js')
 @endpush

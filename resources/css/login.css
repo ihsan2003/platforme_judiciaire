@@ -1,0 +1,266 @@
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --navy:   #1a3a5c;
+            --navy-d: #112944;
+            --navy-l: #234d77;
+            --gold:   #c8a84b;
+            --gold-l: #e0c26e;
+            --gold-d: #a8882e;
+            --cream:  #faf8f3;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Cairo', sans-serif;
+            background: #f0f2f5;
+            overflow: hidden;
+        }
+
+        .page {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* LEFT PANEL */
+        .panel-left {
+            flex: 1.1;
+            background: var(--navy);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 3rem;
+        }
+
+        .panel-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(
+                    -55deg,
+                    transparent,
+                    transparent 60px,
+                    rgba(200,168,75,.04) 60px,
+                    rgba(200,168,75,.04) 61px
+                );
+        }
+
+        .deco-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(200,168,75,.12);
+        }
+
+        .deco-ring-1 {
+            width: 600px;
+            height: 600px;
+        }
+
+        .deco-ring-2 {
+            width: 420px;
+            height: 420px;
+        }
+
+        .deco-ring-3 {
+            width: 240px;
+            height: 240px;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+
+        .brand-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            background: rgba(200,168,75,.15);
+            border: 1px solid rgba(200,168,75,.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+        }
+
+        .brand-icon i {
+            font-size: 2rem;
+            color: var(--gold);
+        }
+
+        .brand-title {
+            font-size: 2.3rem;
+            font-weight: 700;
+            margin-bottom: .8rem;
+            line-height: 1.5;
+        }
+
+        .brand-sub {
+            font-size: .9rem;
+            color: rgba(255,255,255,.6);
+            letter-spacing: .1em;
+            margin-bottom: 2rem;
+        }
+
+        .divider-gold {
+            width: 50px;
+            height: 2px;
+            background: var(--gold);
+            margin: 0 auto 2rem;
+        }
+
+        .brand-quote {
+            font-size: 1rem;
+            color: rgba(255,255,255,.6);
+            line-height: 1.8;
+        }
+
+        /* RIGHT PANEL */
+        .panel-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem;
+            background: #f0f2f5;
+        }
+
+        .form-card {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .top-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 4rem;
+        }
+
+        .top-logo img {
+            height: 140px;
+        }
+
+        .alert-session {
+            padding: .8rem 1rem;
+            background: rgba(200,168,75,.12);
+            border-right: 3px solid var(--gold);
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            color: var(--navy);
+            font-size: .9rem;
+        }
+
+        .field {
+            margin-bottom: 1.5rem;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: .5rem;
+            color: var(--navy-l);
+            font-size: .8rem;
+            font-weight: 600;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aab4c0;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            padding: .85rem 2.8rem .85rem 1rem;
+            border: 1.5px solid #dde3eb;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: .9rem;
+            outline: none;
+            transition: .2s;
+        }
+
+        .input-wrap input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(200,168,75,.12);
+        }
+
+        .field-error {
+            margin-top: .4rem;
+            font-size: .75rem;
+            color: #c0392b;
+        }
+
+        .row-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.8rem;
+            font-size: .85rem;
+        }
+
+        .check-label {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            color: #6b7a8d;
+        }
+
+        .forgot-link {
+            color: var(--gold-d);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: .95rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--navy);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: .25s;
+        }
+
+        .btn-submit:hover {
+            background: var(--navy-d);
+        }
+
+        .form-footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #95a0ac;
+            font-size: .8rem;
+        }
+
+        .form-footer strong {
+            color: var(--navy);
+        }
+
+        @media (max-width: 768px) {
+            .panel-left {
+                display: none;
+            }
+
+            .panel-right {
+                background: var(--cream);
+            }
+        }

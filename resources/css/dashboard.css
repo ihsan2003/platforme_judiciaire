@@ -1,0 +1,144 @@
+    :root {
+        --accent: #c8a84b;
+        --primary: #1a3a5c;
+        --bg: #f4f6fa;
+        --border: #e8ecf4;
+    }
+
+    /* ── Hero banner ───────────────────────────────── */
+    .hero-banner {
+        background-size: cover;
+        background-position: center;
+        height: 220px;
+        border-radius: 16px;
+        padding: 28px 32px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        left: -40px; top: -40px; /* Adapté pour RTL */
+        width: 280px; height: 280px;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        left: 60px; bottom: -80px; /* Adapté pour RTL */
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    /* ── Stat cards ──────────────────────────────── */
+    .stat-card-new {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+    }
+    .stat-icon-box {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+    }
+    .stat-val-big { font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; letter-spacing: -.5px; }
+    .stat-lbl { font-size: .78rem; color: #64748b; font-weight: 700; }
+    .stat-trend { font-size: .69rem; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+    .trend-up { color: #16a34a; }
+    .trend-dn { color: #dc2626; }
+    .trend-n  { color: #64748b; }
+
+    /* ── Card boxes ──────────────────────────────── */
+    .card-modern {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .card-modern-hd {
+        padding: 14px 18px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border);
+    }
+    .card-modern-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: .88rem;
+        color: #1e293b;
+    }
+    .card-icon-sm {
+        width: 28px; height: 28px;
+        border-radius: 7px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px;
+    }
+    .card-modern-body { padding: 14px 18px; }
+
+    /* ── Agenda ──────────────────────────────────── */
+    .agenda-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .agenda-item:last-child { border-bottom: none; }
+    .agenda-date { width: 44px; text-align: center; flex-shrink: 0; }
+    .agenda-day { font-size: 1.3rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .agenda-mon { font-size: .65rem; font-weight: 700; color: var(--accent); }
+    .agenda-body { flex: 1; min-width: 0; text-align: right; }
+    .agenda-title { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .agenda-sub { font-size: .75rem; color: #64748b; margin-top: 2px; }
+
+    /* ── Alert rows ──────────────────────────────── */
+    .alert-row-item {
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .alert-row-item:last-child { border-bottom: none; }
+    .alert-dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Finance summary ─────────────────────────── */
+    .fin-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .fin-label-sm { font-size: .82rem; color: #64748b; display: flex; align-items: center; gap: 6px; }
+    .fin-val-sm { font-size: .88rem; font-weight: 700; direction: ltr; }
+    .fin-bar { height: 6px; border-radius: 3px; background: #e8ecf4; overflow: hidden; margin-bottom: 14px; }
+    .fin-bar-inner { height: 100%; border-radius: 3px; }
+
+    /* ── Mini table ──────────────────────────────── */
+    .mini-tbl th { font-size: .72rem; color: #64748b; font-weight: 700; padding: 8px 14px; background: #f8fafd; text-align: right; }
+    .mini-tbl td { padding: 9px 14px; font-size: .81rem; text-align: right; }
+
+    /* ── Donut center overlay ─────────────────────  */
+    .donut-wrap { position: relative; }
+    .donut-center {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+    }
+    .donut-center .dc-val { font-size: 1.2rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .donut-center .dc-lab { font-size: .68rem; color: #64748b; font-weight: bold; }
+    .legend-dot-sm { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Progress bar paiement ───────────────────── */
+    .pct-bar { height: 6px; border-radius: 3px; background: #e8ecf4; overflow: hidden; margin-top: 4px; }
+    .pct-fill { height: 100%; border-radius: 3px; }

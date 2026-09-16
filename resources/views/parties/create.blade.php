@@ -17,31 +17,7 @@
 @endsection
 
 @push('styles')
-<style>
-    body{
-        direction: rtl;
-        text-align: right;
-        font-family: "Tajawal", sans-serif;
-    }
-
-    .input-group .form-control{
-        border-right: 0 !important;
-    }
-
-    .input-group-text{
-        border-left: 0 !important;
-    }
-
-    .form-control,
-    .form-select{
-        text-align: right;
-    }
-
-    .font-ltr{
-        direction: ltr;
-        text-align: left;
-    }
-</style>
+    @vite('resources/css/partie-create.css')
 @endpush
 
 @section('content')
@@ -352,30 +328,31 @@
 
         </div>
 
+        {{-- ── الإجراءات ── --}}
+        <div class="d-flex gap-2 justify-content-end mt-4">
+
+            <a href="{{ route('parties.index') }}"
+            class="btn btn-outline-secondary">
+
+                <i class="bi bi-x-lg ms-1"></i>
+                إلغاء
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary px-4">
+
+                <i class="bi bi-check-lg ms-1"></i>
+                حفظ
+
+            </button>
+
+        </div>
+
     </div>
 
 </div>
 
-{{-- ── الإجراءات ── --}}
-<div class="d-flex gap-2 justify-content-start mt-4">
-
-    <a href="{{ route('parties.index') }}"
-       class="btn btn-outline-secondary">
-
-        <i class="bi bi-x-lg ms-1"></i>
-        إلغاء
-
-    </a>
-
-    <button type="submit"
-            class="btn btn-primary px-4">
-
-        <i class="bi bi-check-lg ms-1"></i>
-        حفظ
-
-    </button>
-
-</div>
 
 </form>
 
@@ -383,25 +360,7 @@
 
 @push('scripts')
 <script>
-new TomSelect('#avocat-select', {
-    create: function(input) {
-        window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
-        return false;
-    },
-
-    placeholder: 'ابحث عن محامٍ ...',
-
-    loadingText: 'جاري البحث...',
-
-    render: {
-        no_results: function(data, escape) {
-            return `<div class="no-results">لا توجد نتائج</div>`;
-        },
-
-        option_create: function(data, escape) {
-            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
-        }
-    }
-});
+    window.pageData = { avocatsCreateUrl: "{{ route('avocats.create') }}" };
 </script>
+@vite('resources/js/partie-avocat-select.js')
 @endpush

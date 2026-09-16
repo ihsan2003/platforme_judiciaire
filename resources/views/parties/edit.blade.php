@@ -315,25 +315,7 @@
 
 @push('scripts')
 <script>
-new TomSelect('#avocat-select', {
-    create: function(input) {
-        window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
-        return false;
-    },
-
-    placeholder: 'ابحث عن محامٍ ...',
-
-    loadingText: 'جاري البحث...',
-
-    render: {
-        no_results: function(data, escape) {
-            return `<div class="no-results">لا توجد نتائج</div>`;
-        },
-
-        option_create: function(data, escape) {
-            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
-        }
-    }
-});
+    window.pageData = { avocatsCreateUrl: "{{ route('avocats.create') }}" };
 </script>
+@vite('resources/js/partie-avocat-select.js')
 @endpush
