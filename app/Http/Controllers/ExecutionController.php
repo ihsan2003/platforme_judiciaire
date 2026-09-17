@@ -34,6 +34,7 @@ class ExecutionController extends Controller
         $executions = Execution::with([
                 'jugement.dossierTribunal.tribunal',
                 'jugement.juge',
+                'jugement.parties',
                 'statut',
                 'responsable',
             ])
@@ -243,7 +244,7 @@ class ExecutionController extends Controller
     public function create()
     {
         // Jugements définitifs sans exécution en cours ou terminée
-        $jugements = Jugement::with(['dossierTribunal.dossier', 'dossierTribunal.tribunal', 'juge'])
+        $jugements = Jugement::with(['dossierTribunal.dossier', 'dossierTribunal.tribunal', 'juge', 'parties'])
             ->where('est_definitif', true)
             ->doesntHave('executions')
             ->orderBy('date_jugement', 'desc')
@@ -254,7 +255,7 @@ class ExecutionController extends Controller
         $selectedJugement = null;
 
         if (request('jugement_id')) {
-            $selectedJugement = Jugement::with(['dossierTribunal.tribunal'])
+            $selectedJugement = Jugement::with(['dossierTribunal.tribunal', 'parties'])
                 ->find(request('jugement_id'));
         }
 

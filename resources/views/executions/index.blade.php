@@ -207,7 +207,16 @@
                     <x-sortable-th column="tribunal" class="text-muted small fw-semibold">
                         المحكمة
                     </x-sortable-th>
- 
+
+                    {{--
+                        RG : la ou les parties concernées par l'exécution dépendent
+                        de la position de l'institution dans le jugement (voir
+                        Jugement::partiesConcerneesParExecution()).
+                    --}}
+                    <th class="text-muted small fw-semibold">
+                        الطرف المعني
+                    </th>
+
                     <x-sortable-th column="statut" class="text-muted small fw-semibold">
                         الحالة
                     </x-sortable-th>
@@ -274,6 +283,39 @@
 
                     <td class="text-muted small">
                         {{ $execution->jugement?->dossierTribunal?->tribunal?->nom_tribunal ?? '—' }}
+                    </td>
+
+                    <td>
+
+                        @php
+                            $estContreInstitutionRow = $execution->jugement?->estContreInstitution() ?? false;
+                            $partiesConcerneesRow    = $execution->jugement?->partiesConcerneesParExecution() ?? collect();
+                        @endphp
+
+                        @if($partiesConcerneesRow->isEmpty())
+
+                            <span class="text-muted">—</span>
+
+                        @elseif($estContreInstitutionRow)
+
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle"
+                                  title="{{ $partiesConcerneesRow->pluck('nom_partie')->join('، ') }}">
+                                <i class="bi bi-building ms-1"></i>
+                                {{ $partiesConcerneesRow->first()->nom_partie }}
+                            </span>
+
+                        @else
+
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"
+                                  title="{{ $partiesConcerneesRow->pluck('nom_partie')->join('، ') }}">
+                                <i class="bi bi-people ms-1"></i>
+                                {{ $partiesConcerneesRow->count() > 1
+                                        ? $partiesConcerneesRow->count() . ' أطراف'
+                                        : $partiesConcerneesRow->first()->nom_partie }}
+                            </span>
+
+                        @endif
+
                     </td>
 
                     <td>
@@ -364,7 +406,7 @@
                 @empty
 
                 <tr>
-                    <td colspan="9" class="text-center py-5 text-muted">
+                    <td colspan="10" class="text-center py-5 text-muted">
 
                         <i class="bi bi-shield-x fs-1 d-block mb-2 opacity-25"></i>
 

@@ -168,7 +168,16 @@
                                 <option value="">— اختر الحكم —</option>
 
                                 @foreach($jugements as $jug)
-                                    <option value="{{ $jug->id }}" @selected(old('id_jugement') == $jug->id)>
+                                    @php
+                                        // ── RG : partie(s) concernée(s) par l'exécution ──
+                                        // (voir Jugement::partiesConcerneesParExecution())
+                                        $estContreJug    = $jug->estContreInstitution();
+                                        $partiesConcJug  = $jug->partiesConcerneesParExecution();
+                                    @endphp
+                                    <option value="{{ $jug->id }}"
+                                        @selected(old('id_jugement') == $jug->id)
+                                        data-est-contre="{{ $estContreJug ? '1' : '0' }}"
+                                        data-parties="{{ $partiesConcJug->pluck('nom_partie')->join('، ') }}">
                                         #{{ $jug->id }}
                                         — {{ $jug->date_jugement->format('d/m/Y') }}
                                         — {{ $jug->dossierTribunal->tribunal->nom_tribunal ?? '' }}
@@ -201,6 +210,40 @@
                             @endif
 
                         @endif
+
+                    </div>
+
+                    {{-- ── Partie(s) concernée(s) par l'exécution (RG) ──
+                         Même règle que la page d'affichage de l'exécution :
+                         si l'institution est condamnée ("ضد"), c'est elle la
+                         partie concernée ; si elle est gagnante ("مع"), ce
+                         sont les autres parties cochées lors de la création
+                         du jugement. Affiché ici pour vérification avant
+                         l'enregistrement du dossier d'exécution. --}}
+                    @php
+                        $estContreSel   = $selectedJugement?->estContreInstitution() ?? false;
+                        $partiesConcSel = $selectedJugement?->partiesConcerneesParExecution();
+                    @endphp
+
+                    <div id="parties-concernees-box"
+                         class="mb-4 p-3 rounded-3 border {{ !$selectedJugement ? 'd-none' : '' }}"
+                         style="background:#f8f9fb;">
+
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i id="parties-concernees-icon"
+                               class="bi {{ $estContreSel ? 'bi-building-fill text-primary' : 'bi-people-fill text-success' }}"></i>
+                            <span class="fw-semibold small" id="parties-concernees-title">
+                                {{ $estContreSel ? 'المؤسسة المعنية' : 'الأطراف المعنية بالتنفيذ' }}
+                            </span>
+                        </div>
+
+                        <div class="text-muted small" id="parties-concernees-content">
+                            @if($partiesConcSel)
+                                {{ $partiesConcSel->isNotEmpty()
+                                        ? $partiesConcSel->pluck('nom_partie')->join('، ')
+                                        : 'لم يتم تحديد أي طرف معني بهذا الحكم.' }}
+                            @endif
+                        </div>
 
                     </div>
 
@@ -332,16 +375,52 @@
 (function () {
     // ── Sélecteur de jugement (si aucun jugement présélectionné) ──
     var jugementSelectEl = document.getElementById('jugement-select');
+
+    // ── RG : partie(s) concernée(s) par l'exécution, mise à jour dès
+    // qu'un jugement est choisi (data-est-contre / data-parties portés
+    // par chaque <option>, voir la boucle Blade ci-dessus). ──
+    var partiesBox     = document.getElementById('parties-concernees-box');
+    var partiesIcon    = document.getElementById('parties-concernees-icon');
+    var partiesTitle   = document.getElementById('parties-concernees-title');
+    var partiesContent = document.getElementById('parties-concernees-content');
+
+    function updatePartiesConcernees(option) {
+        if (!partiesBox) return;
+
+        if (!option || !option.value) {
+            partiesBox.classList.add('d-none');
+            return;
+        }
+
+        var estContre = option.getAttribute('data-est-contre') === '1';
+        var parties   = option.getAttribute('data-parties') || '';
+
+        partiesIcon.className  = estContre ? 'bi bi-building-fill text-primary' : 'bi bi-people-fill text-success';
+        partiesTitle.textContent = estContre ? 'المؤسسة المعنية' : 'الأطراف المعنية بالتنفيذ';
+        partiesContent.textContent = parties || 'لم يتم تحديد أي طرف معني بهذا الحكم.';
+
+        partiesBox.classList.remove('d-none');
+    }
+
     if (jugementSelectEl) {
-        new TomSelect('#jugement-select', {
+        var tomSelectInstance = new TomSelect('#jugement-select', {
             placeholder: 'ابحث عن حكم برقمه أو المحكمة أو رقم الملف...',
             loadingText: 'جاري البحث...',
             render: {
                 no_results: function () {
                     return '<div class="no-results">لا توجد نتائج</div>';
                 }
+            },
+            onChange: function (value) {
+                var opt = value ? jugementSelectEl.querySelector('option[value="' + value + '"]') : null;
+                updatePartiesConcernees(opt);
             }
         });
+
+        // Pré-remplissage si une valeur est déjà sélectionnée (old())
+        if (jugementSelectEl.value) {
+            updatePartiesConcernees(jugementSelectEl.querySelector('option[value="' + jugementSelectEl.value + '"]'));
+        }
     }
 
     // ── Validation de la date d'exécution par rapport à la notification ──

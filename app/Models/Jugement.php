@@ -106,6 +106,20 @@ class Jugement extends Model
             ->pluck('id');
     }
 
+    /**
+     * Même RG que partiesIdsConcerneesParExecution(), mais retourne
+     * directement les modèles Partie concernés (pratique pour l'affichage
+     * dans l'index et le formulaire de création des exécutions).
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Partie>
+     */
+    public function partiesConcerneesParExecution()
+    {
+        $ids = $this->partiesIdsConcerneesParExecution();
+
+        return $this->parties->filter(fn($p) => $ids->contains($p->id))->values();
+    }
+
     public function finance()
     {
         return $this->hasOne(Finance::class, 'id_jugement');
