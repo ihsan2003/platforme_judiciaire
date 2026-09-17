@@ -301,6 +301,7 @@ class ExecutionController extends Controller
             'jugement.dossierTribunal.tribunal',
             'jugement.juge',
             'jugement.finance',
+            'jugement.parties',
             'statut',
             'responsable',
         ]);
@@ -312,7 +313,21 @@ class ExecutionController extends Controller
         $institution = $dossierParties->first(fn($dp) => $dp->partie?->est_entraide);
         $autresParties = $dossierParties->filter(fn($dp) => !$dp->partie?->est_entraide);
 
-        return view('executions.show', compact('execution', 'dossierParties', 'institution', 'autresParties'));
+        // ── RG : partie(s) concernée(s) par l'exécution ─────────────────
+        // Si l'institution est condamnée ("ضد"), c'est elle qui est concernée.
+        // Si elle est gagnante ("مع"), ce sont les autres parties — cochées
+        // lors de la création du jugement — qui sont concernées.
+        $estContreInstitution = $execution->jugement->estContreInstitution();
+        $idsPartiesConcernees = $execution->jugement->partiesIdsConcerneesParExecution();
+
+        $partiesConcernees = $dossierParties->filter(
+            fn($dp) => $idsPartiesConcernees->contains($dp->partie?->id)
+        );
+
+        return view('executions.show', compact(
+            'execution', 'dossierParties', 'institution', 'autresParties',
+            'partiesConcernees', 'estContreInstitution'
+        ));
     }
 
     // ─────────────────────────────────────────

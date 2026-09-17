@@ -749,7 +749,8 @@ function onPositionChange(radio) {
     // toujours avoir une ligne dans jugement_parties, quelle que soit sa
     // position (مع / ضد). Seul le montant dépend de la position.
     if (montantEtab) {
-        montantEtab.required = etabCondamne;
+        // Le montant n'est jamais obligatoire (مع أو ضد) : il vaudra
+        // 0 par défaut côté serveur si aucune valeur n'est saisie.
         if (!etabCondamne) montantEtab.value = '';
     }
 
@@ -817,8 +818,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (montantEtab) {
 
-        montantEtab.required = etabCondamne;
-
+        // Le montant n'est jamais obligatoire, quelle que soit la
+        // position (مع / ضد) : il sera enregistré à 0 par défaut
+        // côté serveur si aucune valeur n'est saisie.
         if (!etabCondamne) {
             montantEtab.value = '';
         }

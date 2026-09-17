@@ -913,8 +913,9 @@
 
     if (montantEtab) {
 
-        montantEtab.required = etabCondamne;
-
+        // Le montant n'est jamais obligatoire : qu'il s'agisse d'une
+        // position "مع" (pour) ou "ضد" (contre), l'utilisateur peut
+        // laisser le champ vide (il sera enregistré à 0 par défaut).
         if (!etabCondamne) {
             montantEtab.value = '';
         }

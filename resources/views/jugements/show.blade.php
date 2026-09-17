@@ -427,37 +427,6 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold small">
-                                رقم الملف بالمحكمة الجديدة
-                                <span class="text-muted fw-normal">(إن كان معروفاً)</span>
-                            </label>
-
-                            <div class="d-flex align-items-center gap-1">
-                                <input type="text" inputmode="numeric" maxlength="4"
-                                       class="form-control form-control-sm text-center"
-                                       id="annee_recours" placeholder="السنة" style="width:70px">
-                                <span>/</span>
-                                <input type="text" inputmode="numeric" maxlength="4"
-                                       class="form-control form-control-sm text-center"
-                                       id="code_recours" placeholder="الفئة" style="width:70px">
-                                <span>/</span>
-                                <input type="text" inputmode="numeric" maxlength="6"
-                                       class="form-control form-control-sm text-center"
-                                       id="ordre_recours" placeholder="الرقم" style="width:80px">
-                            </div>
-
-                            <input type="hidden" name="numero_dossier_tribunal" id="numero_dossier_tribunal_recours">
-
-                            @error('numero_dossier_tribunal')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-
-                            <div class="form-text">
-                                يُترك فارغاً إذا لم يُبلَّغ رقم الملف بعد؛ يمكن إدخاله لاحقاً من صفحة الملف.
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">
                                 أسباب الطعن
                             </label>
 
@@ -476,24 +445,6 @@
 
                     </form>
 
-                    <script>
-                        (function () {
-                            const annee  = document.getElementById('annee_recours');
-                            const code   = document.getElementById('code_recours');
-                            const ordre  = document.getElementById('ordre_recours');
-                            const hidden = document.getElementById('numero_dossier_tribunal_recours');
-
-                            function syncHidden() {
-                                if (annee.value && code.value && ordre.value) {
-                                    hidden.value = `${annee.value} / ${code.value} / ${ordre.value}`;
-                                } else {
-                                    hidden.value = '';
-                                }
-                            }
-
-                            [annee, code, ordre].forEach(el => el.addEventListener('input', syncHidden));
-                        })();
-                    </script>
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
                           method="POST"
                           data-confirm="تأكيد إغلاق الحكم نهائياً بدون طعن؟" data-confirm-variant="warning" data-confirm-label="نعم، إغلاق">

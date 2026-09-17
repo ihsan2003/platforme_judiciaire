@@ -207,102 +207,108 @@
     {{-- LEFT COLUMN --}}
     <div class="col-lg-8">
 
-        {{-- Institution --}}
+        {{-- Partie(s) concernée(s) par l'exécution --}}
+        {{--
+            RG : si l'institution est condamnée ("ضد") dans le jugement,
+            c'est elle la partie concernée par l'exécution. Si elle est
+            gagnante ("مع"), ce sont les autres parties — cochées lors de
+            la création du jugement — qui sont concernées.
+        --}}
         <div class="card border-0 shadow-sm mb-4"
-             style="border-right: 4px solid #0d6efd !important;">
+             style="border-right: 4px solid {{ $estContreInstitution ? '#0d6efd' : '#198754' }} !important;">
 
             <div class="card-header bg-white py-3 d-flex align-items-center gap-2">
 
-                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
+                <div class="rounded-circle {{ $estContreInstitution ? 'bg-primary' : 'bg-success' }} bg-opacity-10 d-flex align-items-center justify-content-center"
                      style="width:32px;height:32px;flex-shrink:0">
 
-                    <i class="bi bi-building-fill text-primary"
+                    <i class="bi {{ $estContreInstitution ? 'bi-building-fill text-primary' : 'bi-people-fill text-success' }}"
                        style="font-size:.85rem"></i>
 
                 </div>
 
                 <h6 class="mb-0 fw-semibold">
-                    المؤسسة المعنية
+                    {{ $estContreInstitution ? 'المؤسسة المعنية' : 'الأطراف المعنية بالتنفيذ' }}
                 </h6>
 
-                <span class="badge bg-primary me-auto">
-                    مؤسسة
+                <span class="badge {{ $estContreInstitution ? 'bg-primary' : 'bg-success' }} me-auto">
+                    {{ $estContreInstitution ? 'مؤسسة' : $partiesConcernees->count() . ' طرف' }}
                 </span>
 
             </div>
 
             <div class="card-body">
 
-                @if($institution)
+                @forelse($partiesConcernees as $partieConcernee)
 
-                    <div class="d-flex align-items-start gap-3">
+                    <div class="d-flex align-items-start gap-3 {{ !$loop->last ? 'mb-3 pb-3 border-bottom' : '' }}">
 
-                        <div class="rounded-3 bg-primary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
+                        <div class="rounded-3 {{ $estContreInstitution ? 'bg-primary' : 'bg-success' }} bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0"
                              style="width:48px;height:48px">
 
-                            <i class="bi bi-bank text-primary fs-5"></i>
+                            <i class="bi {{ $estContreInstitution ? 'bi-bank text-primary' : 'bi-person text-success' }} fs-5"></i>
 
                         </div>
 
                         <div class="flex-grow-1">
 
                             <div class="fw-bold fs-6">
-                                {{ $institution->partie?->nom_partie ?? '—' }}
+                                {{ $partieConcernee->partie?->nom_partie ?? '—' }}
                             </div>
 
                             <div class="text-muted small mt-1 d-flex flex-wrap gap-3">
 
-                                @if($institution->partie?->identifiant_unique)
+                                @if($partieConcernee->partie?->identifiant_unique)
                                     <span>
                                         <i class="bi bi-fingerprint ms-1"></i>
 
                                         <span class="font-monospace">
-                                            {{ $institution->partie->identifiant_unique }}
+                                            {{ $partieConcernee->partie->identifiant_unique }}
                                         </span>
                                     </span>
                                 @endif
 
-                                @if($institution->typePartie)
+                                @if($partieConcernee->typePartie)
                                     <span>
                                         <i class="bi bi-tag ms-1"></i>
 
-                                        {{ $institution->typePartie->type_partie }}
+                                        {{ $partieConcernee->typePartie->type_partie }}
                                     </span>
                                 @endif
 
-                                @if($institution->partie?->telephone)
+                                @if($partieConcernee->partie?->telephone)
                                     <span>
                                         <i class="bi bi-telephone ms-1"></i>
 
-                                        {{ $institution->partie->telephone }}
+                                        {{ $partieConcernee->partie->telephone }}
                                     </span>
                                 @endif
 
-                                @if($institution->partie?->email)
+                                @if($partieConcernee->partie?->email)
                                     <span>
                                         <i class="bi bi-envelope ms-1"></i>
 
-                                        {{ $institution->partie->email }}
+                                        {{ $partieConcernee->partie->email }}
                                     </span>
                                 @endif
 
-                                @if($institution->avocat)
+                                @if($partieConcernee->avocat)
                                     <span>
                                         <i class="bi bi-briefcase ms-1"></i>
 
-                                        الأستاذ {{ $institution->avocat->nom_avocat }}
+                                        الأستاذ {{ $partieConcernee->avocat->nom_avocat }}
                                     </span>
                                 @endif
 
                             </div>
 
-                            @if($institution->partie?->adresse)
+                            @if($partieConcernee->partie?->adresse)
 
                                 <div class="text-muted small mt-1">
 
                                     <i class="bi bi-geo-alt ms-1"></i>
 
-                                    {{ $institution->partie->adresse }}
+                                    {{ $partieConcernee->partie->adresse }}
 
                                 </div>
 
@@ -312,17 +318,17 @@
 
                     </div>
 
-                @else
+                @empty
 
                     <div class="text-center py-3 text-muted small">
 
                         <i class="bi bi-building fs-2 d-block mb-2 opacity-25"></i>
 
-                        لا توجد أي مؤسسة محددة في هذا الملف.
+                        لم يتم تحديد أي طرف معني بهذا التنفيذ.
 
                     </div>
 
-                @endif
+                @endforelse
 
             </div>
 

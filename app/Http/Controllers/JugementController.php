@@ -308,7 +308,9 @@ class JugementController extends Controller
 
                         return [$id => [
                             'id_position_institution' => $positionId,
-                            'montant_condamne'        => $request->montants[$id] ?? null,
+                            // Le montant n'est jamais obligatoire (مع أو ضد) :
+                            // 0 par défaut si aucune valeur n'a été saisie.
+                            'montant_condamne'        => $request->montants[$id] ?? 0,
                         ]];
                     })->all();
 
@@ -434,7 +436,9 @@ class JugementController extends Controller
 
                     return [$partieId => [
                         'id_position_institution' => $positionId,
-                        'montant_condamne' => $request->montants[$partieId] ?? null,
+                        // Le montant n'est jamais obligatoire (مع أو ضد) :
+                        // 0 par défaut si aucune valeur n'a été saisie.
+                        'montant_condamne' => $request->montants[$partieId] ?? 0,
                     ]];
                 })->all();
 

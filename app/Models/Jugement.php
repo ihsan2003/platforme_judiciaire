@@ -55,6 +55,57 @@ class Jugement extends Model
                     ->withTimestamps();
     }
 
+    // ─────────────────────────────────────────
+    // EXÉCUTION — partie(s) concernée(s)
+    // ─────────────────────────────────────────
+
+    /**
+     * Libellé de la position de l'institution (مع / ضد) pour ce jugement,
+     * déduit de la ligne pivot jugement_parties de la partie est_entraide.
+     */
+    public function positionInstitutionLabel(): ?string
+    {
+        $ligneInstitution = $this->parties->first(fn($p) => $p->est_entraide);
+
+        if (! $ligneInstitution || ! $ligneInstitution->pivot->id_position_institution) {
+            return null;
+        }
+
+        return PositionInstitution::find($ligneInstitution->pivot->id_position_institution)
+            ?->position;
+    }
+
+    /**
+     * true si l'institution est condamnée ("ضد") dans ce jugement.
+     */
+    public function estContreInstitution(): bool
+    {
+        return str_contains($this->positionInstitutionLabel() ?? '', 'ضد');
+    }
+
+    /**
+     * RG — Détermine la ou les parties concernées par l'exécution de ce
+     * jugement :
+     *  - si l'institution est condamnée ("ضد"), c'est elle qui est
+     *    concernée par l'exécution ;
+     *  - si l'institution est gagnante ("مع"), ce sont les autres parties
+     *    — cochées lors de la création du jugement — qui sont concernées.
+     *
+     * @return \Illuminate\Support\Collection<int> IDs des parties concernées
+     */
+    public function partiesIdsConcerneesParExecution()
+    {
+        if ($this->estContreInstitution()) {
+            return $this->parties
+                ->filter(fn($p) => $p->est_entraide)
+                ->pluck('id');
+        }
+
+        return $this->parties
+            ->filter(fn($p) => ! $p->est_entraide)
+            ->pluck('id');
+    }
+
     public function finance()
     {
         return $this->hasOne(Finance::class, 'id_jugement');
