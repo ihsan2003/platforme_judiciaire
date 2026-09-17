@@ -137,7 +137,7 @@ class FinanceController extends Controller
     {
         $this->authorizeDossier('update', $finance);
 
-        $request->validate([
+        $validated = $request->validate([
             'id_jugement' => 'required|exists:jugements,id',
             'montant_reclame_demandeur' => 'nullable|numeric',
             'montant_reclame_defendeur' => 'nullable|numeric',

@@ -207,13 +207,6 @@
     {{-- LEFT COLUMN --}}
     <div class="col-lg-8">
 
-        {{-- Partie(s) concernée(s) par l'exécution --}}
-        {{--
-            RG : si l'institution est condamnée ("ضد") dans le jugement,
-            c'est elle la partie concernée par l'exécution. Si elle est
-            gagnante ("مع"), ce sont les autres parties — cochées lors de
-            la création du jugement — qui sont concernées.
-        --}}
         <div class="card border-0 shadow-sm mb-4"
              style="border-right: 4px solid {{ $estContreInstitution ? '#0d6efd' : '#198754' }} !important;">
 
@@ -333,6 +326,128 @@
             </div>
 
         </div>
+
+    @if($finance)
+        {{-- الوضعية المالية --}}
+        @php
+            $spLabel = $finance->statut_paiement ?? '—';
+
+            $spColor = match($spLabel) {
+                'مكتمل' => 'success',
+                'جزئي'  => 'warning',
+                default => 'secondary',
+            };
+
+            // Couleur du texte selon la couleur du badge
+            $spTextColor = $spColor === 'warning' ? 'dark' : 'white';
+
+            $pct = $finance->montant_condamne > 0
+                ? min(100, round(($finance->montant_paye / $finance->montant_condamne) * 100))
+                : 0;
+
+            $pctColor = $pct >= 100
+                ? 'success'
+                : ($pct > 0 ? 'warning' : 'danger');
+        @endphp
+
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-cash-stack ms-2 text-success"></i>
+                    الوضعية المالية
+                </h6>
+
+                <span class="badge bg-{{ $spColor }} bg-opacity-15 text-{{ $spTextColor }} border border-{{ $spColor }} border-opacity-25">
+                    {{ $spLabel }}
+                </span>
+
+            </div>
+
+            <div class="card-body small">
+
+                <dl class="row mb-0">
+
+                    <dt class="col-7 text-muted fw-normal">
+                        المبلغ المحكوم به
+                    </dt>
+
+                    <dd class="col-5 text-end fw-semibold" dir="ltr">
+                        {{ number_format($finance->montant_condamne, 2, '.', ',') }} DH
+                    </dd>
+
+                    <dt class="col-7 text-muted fw-normal">
+                        المبلغ المؤدى
+                    </dt>
+
+                    <dd class="col-5 text-end fw-semibold text-success" dir="ltr">
+                        {{ number_format($finance->montant_paye, 2, '.', ',') }} DH
+                    </dd>
+
+                    <dt class="col-7 text-muted fw-normal">
+                        المبلغ المتبقي
+                    </dt>
+
+                    <dd class="col-5 text-end fw-semibold {{ $finance->montant_restant > 0 ? 'text-danger' : 'text-success' }}" dir="ltr">
+                        {{ number_format($finance->montant_restant, 2, '.', ',') }} DH
+                    </dd>
+
+                    @if($finance->date_paiement)
+
+                        <dt class="col-7 text-muted fw-normal">
+                            تاريخ آخر أداء
+                        </dt>
+
+                        <dd class="col-5 text-end">
+                            {{ $finance->date_paiement->format('d/m/Y') }}
+                        </dd>
+
+                    @endif
+
+                </dl>
+
+                <div class="progress mt-3" style="height:8px">
+                    <div class="progress-bar bg-{{ $pctColor }}" style="width: {{ $pct }}%"></div>
+                </div>
+
+                <div class="text-muted small mt-1 text-start">
+                    {{ $pct }}% من المبلغ المحكوم به تم أداؤه
+                </div>
+
+                @if($finance->est_solde)
+
+                    <div class="alert alert-success py-2 px-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i>
+                        تم تسديد كامل المبلغ المحكوم به.
+                    </div>
+
+                @elseif(!$finance->est_finance_valide)
+
+                    <div class="alert alert-warning py-2 px-3 small mt-3 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        هذا الحكم لم يعد هو الحكم المعتمد في الخلاصة المالية للملف.
+                    </div>
+
+                @endif
+
+                <div class="text-end mt-3">
+
+                    <a href="{{ route('finances.show', $finance) }}" class="btn btn-outline-success">
+                        <i class="bi bi-eye ms-1"></i>
+                        عرض التفاصيل المالية
+                    </a>
+                    <a href="{{ route('finances.edit', $finance) }}" class="btn btn-outline-warning">
+                        <i class="bi bi-pen ms-1"></i>
+                        تعديل
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+        @endif
 
     </div>
 

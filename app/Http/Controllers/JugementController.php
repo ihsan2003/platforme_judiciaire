@@ -92,7 +92,7 @@ class JugementController extends Controller
                 'date' => 'date_jugement',
 
                 'dossier' => fn($q, $dir) => $q->orderBy(
-                    \App\Models\DossierJudiciaire::select('numero_dossier_tribunal')
+                    \App\Models\DossierJudiciaire::select('dossier_judiciaires.numero_dossier_tribunal')
                         ->join('dossier_tribunaux', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
                         ->whereColumn('dossier_tribunaux.id', 'jugements.id_dossier_tribunal')
                         ->limit(1),
