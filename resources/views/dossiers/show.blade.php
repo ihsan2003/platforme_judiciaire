@@ -9,7 +9,213 @@
 @endsection
 
 @push('styles')
-    @vite('resources/css/dossier-show.css')
+<style>
+    /* ── Palette dossier ─────────────────────────────── */
+    :root {
+        --deg1 : #1a6b3a;  --deg1-light : #e8f5ee;  --deg1-muted : #a7d9b8;
+        --deg2 : #1a3a6b;  --deg2-light : #e8eef5;  --deg2-muted : #a7bfd9;
+        --deg3 : #6b1a1a;  --deg3-light : #f5e8e8;  --deg3-muted : #d9a7a7;
+        --houkm : #7c3aed;
+        --jug   : #0f766e;
+        --rec   : #c2410c;
+        --exec  : #0369a1;
+        --tl-w  : 2px;
+    }
+
+    /* ── En-tête dossier ─────────────────────────────── */
+    .dossier-header {
+        background: #1a3a5c;
+        border-radius: 16px;
+        padding: 28px 32px;
+        color: #fff;
+        margin-bottom: 24px;
+    }
+    .dossier-header-kpi {
+        display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-end;
+    }
+    .kpi-item { text-align: center; }
+    .kpi-val  { font-size: 1.5rem; font-weight: 800; color: #c8a84b; line-height: 1; }
+    .kpi-lab  { font-size: .68rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ── Onglets ─────────────────────────────────────── */
+    .dossier-tabs .nav-link {
+        font-weight: 600; font-size: .85rem;
+        color: #64748b; border: none;
+        padding: .6rem 1.1rem;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        transition: all .15s;
+    }
+    .dossier-tabs .nav-link.active {
+        color: #1a3a6b; border-bottom-color: #1a3a6b; background: none;
+    }
+    .dossier-tabs .nav-link:hover:not(.active) {
+        color: #1a3a6b; border-bottom-color: #e2e8f0; background: none;
+    }
+
+    /* ── Cartes de degré ─────────────────────────────── */
+    .deg-card { border-radius: 14px; overflow: hidden; border: 2px solid transparent; margin: 0px 30px; }
+    .deg-card.deg-1 { border-color: var(--deg1); }
+    .deg-card.deg-2 { border-color: var(--deg2); }
+    .deg-card.deg-3 { border-color: var(--deg3); }
+    .deg-card.deg-closed { opacity: .82; }
+
+    .deg-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .deg-header.deg-1 { background: var(--deg1); color: #fff; }
+    .deg-header.deg-2 { background: var(--deg2); color: #fff; }
+    .deg-header.deg-3 { background: var(--deg3); color: #fff; }
+
+    .deg-num {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: .85rem; flex-shrink: 0;
+    }
+    .deg-title { font-weight: 700; font-size: 1rem; }
+    .deg-sub   { font-size: .78rem; opacity: .8; }
+
+    .deg-body  { background: #fff; }
+
+    /* ── Timeline audiences ──────────────────────────── */
+    .aud-timeline { padding: 20px 20px 8px 52px; position: relative; }
+    .aud-timeline::before {
+        content: '';
+        position: absolute; left: 28px; top: 24px; bottom: 12px;
+        width: var(--tl-w); background: #e2e8f0; border-radius: 2px;
+    }
+
+    .aud-item { position: relative; margin-bottom: 12px; }
+    .aud-dot {
+        position: absolute; left: -39px; 
+        width: 32px; height: 32px; border-radius: 50%;
+        border: 2.5px solid #fff; box-shadow: 0 0 0 2px #e2e8f0;
+        background: #b45309;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .9rem; color: #fff; flex-shrink: 0;
+    }
+    .aud-dot.houkm  { background: var(--houkm); box-shadow: 0 0 0 3px rgba(124,58,237,.3); width: 32px; height: 32px; left: -39px; top: 8px; }
+    .aud-dot.future { background: #3b82f6; }
+
+    .aud-card {
+        border: 1px solid #e2e8f0; border-radius: 10px;
+        padding: 10px 14px; background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .aud-card:hover { border-color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .aud-card.houkm { border-color: rgba(124,58,237,.4); background: #fdf4ff; }
+    .aud-card.future{ border-color: rgba(59,130,246,.35); background: #eff6ff; }
+
+    .aud-card-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .aud-date { font-weight: 700; font-size: .88rem; }
+    .aud-type-badge {
+        font-size: .9rem; font-weight: 700; padding: 2px 10px; border-radius: 8px;
+    }
+    .aud-type-badge.normal { background: #fef3c7; color: #92400e; }
+    .aud-type-badge.houkm  { background: #f3e8ff; color: #6b21a8; }
+    .aud-type-badge.future { background: #dbeafe; color: #1d4ed8; }
+
+    .aud-meta { font-size: .86rem; color: #64748b; display: flex; flex-direction: column; gap: 4px;}
+    .aud-renvoi { font-size: .82rem; color: #64748b; margin-top: 10px; padding-top: 10px; padding-right: 15px; border-top: 1px dashed #e2e8f0; }
+
+    /* ── Jugement bloc ───────────────────────────────── */
+    .jug-block {
+        margin: 20px 70px 20px 100px;
+        border: 2px solid var(--jug); border-radius: 12px;
+        background: #f0fdfa; padding: 16px 18px;
+    }
+    .jug-block-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .jug-title { font-weight: 800; font-size: .95rem; color: var(--jug); display: flex; align-items: center; gap: 6px; }
+    .jug-meta  { font-size: .86rem; color: #475569; display: flex; flex-direction: column; gap: 4px;}
+    .jug-dispositif {
+        font-size: .82rem; color: #334155; background: #fff;
+        border: 1px solid #ccfbf1; border-left: 3px solid var(--jug);
+        padding: 8px 12px; border-radius: 6px; max-height: 70px; overflow: hidden;
+        position: relative; line-height: 1.6;
+    }
+    .jug-dispositif.open { max-height: none; }
+
+    /* Finance mini ─────────────────────────────────── */
+    .fin-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; margin-top: 4px; }
+    .fin-bar-fill { height: 100%; border-radius: 3px; transition: width .5s; }
+
+    /* Recours ──────────────────────────────────────── */
+    .rec-block {
+        margin: 8px 20px 16px;
+        border: 2px dashed var(--rec); border-radius: 10px;
+        background: #fff7ed; padding: 12px 16px;
+    }
+
+    /* Exécution ─────────────────────────────────────  */
+    .exec-block {
+        margin: 8px 70px 20px 100px;
+        border: 2px solid var(--exec); border-radius: 10px;
+        background: #f0f9ff; padding: 20px 16px;
+    }
+
+    /* Connecteur entre degrés ──────────────────────── */
+    .deg-connector {
+        display: flex; flex-direction: column; align-items: center;
+        position: relative; z-index: 1;
+    }
+    .deg-connector-line { width: 2px; height: 32px; background: #cbd5e1; }
+    .deg-connector-tag {
+        background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 20px;
+        padding: 3px 12px; font-size: .7rem; font-weight: 600; color: #64748b;
+        
+    }
+
+    /* Aucun contenu ────────────────────────────────── */
+    .empty-state {
+        padding: 20px; border-radius: 10px; background: #f8fafc;
+        border: 1px dashed #cbd5e1; text-align: center;
+        color: #94a3b8; font-size: .85rem; margin: 30px 70px 30px 100px;
+    }
+
+    /* Formulaire recours inline ─────────────────────  */
+    .recours-form-wrap {
+        margin: 0 70px 20px 100px;
+        border: 1px solid #e2e8f0; border-radius: 10px;
+        background: #fffbeb; padding: 14px;
+    }
+
+    /* Alerte RG ─────────────────────────────────────  */
+    .rg-alert { padding: 8px 12px; border-radius: 8px; font-size: .79rem; margin: 8px 20px; display: flex; gap: 8px; }
+    .rg-alert.warn { background: #fef9c3; border-left: 3px solid #eab308; color: #713f12; }
+    .rg-alert.info { background: #e0f2fe; border-left: 3px solid #0284c7; color: #075985; }
+
+    /* Badges génériques ─────────────────────────────  */
+    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 8px; font-size: .9rem; font-weight: 700; }
+    .pill-white   { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+    .pill-success { background: #dcfce7; color: #166534; }
+    .pill-warning { background: #fef3c7; color: #92400e; }
+    .pill-danger  { background: #fee2e2; color: #991b1b; }
+    .pill-muted   { background: #f1f5f9; color: #64748b; }
+    .pill-info    { background: #e0f2fe; color: #075985; }
+    .pill-purple  { background: #f3e8ff; color: #6b21a8; }
+
+    /* Barre de progression dossier ─────────────────── */
+    .progress-steps {
+        display: flex; gap: 4px; background: #f1f5f9;
+        border-radius: 10px; padding: 4px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .progress-step {
+        flex: 1; min-width: 110px; padding: 8px 14px;
+        border-radius: 7px; display: flex;: align-items: center; gap: 8px;
+        font-size: .76rem; font-weight: 600; color: #94a3b8;
+    }
+    .progress-step.s-deg1 { background: var(--deg1); color: #fff; }
+    .progress-step.s-deg2 { background: var(--deg2); color: #fff; }
+    .progress-step.s-deg3 { background: var(--deg3); color: #fff; }
+    .progress-step-num {
+        width: 22px; height: 22px; border-radius: 50%;
+        background: rgba(255,255,255,.2);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .73rem; font-weight: 800; flex-shrink: 0;
+    }
+
+    /* Finances & Exécutions sections ────────────────── */
+    .section-card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-radius: 12px; }
+</style>
 @endpush
 
 @section('content')
@@ -1610,11 +1816,266 @@
 @endsection
 
 @push('scripts')
+
 <script>
-    window.pageData = {
-        avocatsCreateUrl: "{{ route('avocats.create') }}",
-        dossierPartiesSearchUrl: "{{ route('dossiers.parties.search', $dossier) }}",
-    };
+    document.addEventListener("DOMContentLoaded", function () {
+    // 1. Initialisation du premier Select (Nouveau)
+    const selectNouveau = new TomSelect("#field_avocat_nouveau_select", {
+        create: function(input) {
+            window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
+            return false;
+        },
+        sortField: { field: "text", direction: "asc" },
+        placeholder: "— بدون محامي —",
+        render: {
+            no_results: function(data, escape) {
+                return `<div class="no-results">لا توجد نتائج</div>`;
+            },
+
+            option_create: function(data, escape) {
+                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+            }
+        }
+    });
+
+    // 2. Initialisation du deuxième Select (Modification)
+    const selectModif = new TomSelect("#field_avocat_modif_select", {
+        create: function(input) {
+            window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
+            return false;
+        },
+        sortField: { field: "text", direction: "asc" },
+        placeholder: "— بدون محامي —",
+        render: {
+            no_results: function(data, escape) {
+                return `<div class="no-results">لا توجد نتائج</div>`;
+            },
+
+            option_create: function(data, escape) {
+                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+            }
+        }
+    });
+
+    // Exemple si vous gérez le clic sur #btnModifierAvocat :
+    document.getElementById('btnModifierAvocat').addEventListener('click', function() {
+        // Votre code existant pour afficher le bloc...
+        
+        // Activer Tom Select proprement :
+        selectModif.enable(); 
+    });
+});
 </script>
-    @vite('resources/js/dossier-show.js')
+
+
+<script>
+/* ── Réactiver l'onglet depuis l'URL (fragment) ─── */
+(function () {
+    const hash = window.location.hash;
+    if (hash) {
+        const tab = document.querySelector(`[data-bs-target="${hash}"]`);
+        if (tab) new bootstrap.Tab(tab).show();
+    }
+})();
+
+/* ── Recherche AJAX parties (البحث عن الأطراف) ───────────────────── */
+(function () {
+    const input       = document.getElementById('recherchePartie');
+    const dropdown    = document.getElementById('resultatRecherche');
+    const bandeauOK   = document.getElementById('partieSelectionnee');
+    const nomOK       = document.getElementById('partieSelectionneeNom');
+    const btnDesel    = document.getElementById('btnDeselectionner');
+    const btnNouvelle = document.getElementById('btnNouvellePartie');
+    const btnModifier = document.getElementById('btnModifierAvocat');
+
+    const blocExistant  = document.getElementById('bloc_avocat_existant');
+    const blocNouveau   = document.getElementById('bloc_avocat_nouveau');
+    const blocModif     = document.getElementById('bloc_avocat_modif');
+    const avocatDisplay = document.getElementById('field_avocat_display');
+    const avocatModif   = document.getElementById('field_avocat_modif_select');
+    const avocatNvx     = document.getElementById('field_avocat_nouveau_select');
+
+    const F = {
+        id: document.getElementById('hidden_partie_id'),
+        identifiant: document.getElementById('field_identifiant'),
+        nom: document.getElementById('field_nom'),
+        type_personne: document.getElementById('field_type_personne'),
+        telephone: document.getElementById('field_telephone'),
+        email: document.getElementById('field_email'),
+        adresse: document.getElementById('field_adresse'),
+    };
+
+    let timer = null;
+
+    function lockFields(lock) {
+        ['identifiant','nom','email','adresse','telephone'].forEach(k => {
+            if (!F[k]) return;
+            F[k].readOnly = lock;
+            F[k].classList.toggle('bg-light', lock);
+        });
+        if (F.type_personne) { F.type_personne.disabled = lock; F.type_personne.classList.toggle('bg-light', lock); }
+    }
+
+    function showAvocatExistant(nom, id) {
+        blocExistant?.classList.remove('d-none');
+        blocNouveau?.classList.add('d-none');
+        if (avocatDisplay) avocatDisplay.value = nom || 'بدون محامي';
+        if (avocatNvx) { avocatNvx.disabled = true; avocatNvx.name = ''; }
+        if (avocatModif) { avocatModif.disabled = true; avocatModif.name = ''; }
+        if (id && avocatModif) Array.from(avocatModif.options).forEach(o => o.selected = (o.value == id));
+    }
+
+    function showAvocatNouveau() {
+        blocExistant?.classList.add('d-none');
+        blocNouveau?.classList.remove('d-none');
+        if (avocatNvx) { avocatNvx.disabled = false; avocatNvx.name = 'id_avocat'; }
+        if (avocatModif) { avocatModif.disabled = true; avocatModif.name = ''; }
+    }
+
+    function selectPartie(p) {
+        if (F.id) F.id.value = p.id;
+        if (F.identifiant) F.identifiant.value = p.identifiant_unique ?? '';
+        if (F.nom) F.nom.value = p.nom_partie ?? '';
+        if (F.email) F.email.value = p.email ?? '';
+        if (F.telephone) F.telephone.value = p.telephone ?? '';
+        if (F.adresse) F.adresse.value = p.adresse ?? '';
+        if (F.type_personne) Array.from(F.type_personne.options).forEach(o => o.selected = (o.value === p.type_personne));
+        lockFields(true);
+        if (nomOK) nomOK.textContent = `${p.nom_partie} (${p.identifiant_unique})`;
+        bandeauOK?.classList.remove('d-none');
+        closeDropdown();
+        if (input) input.value = '';
+        showAvocatExistant(p.avocat_nom, p.id_avocat);
+    }
+
+    function deselect() {
+        if (F.id) F.id.value = '';
+        lockFields(false);
+        bandeauOK?.classList.add('d-none');
+        ['identifiant','nom','email','telephone','adresse'].forEach(k => { if(F[k]) F[k].value = ''; });
+        if (F.type_personne) { F.type_personne.selectedIndex = 0; F.type_personne.disabled = false; F.type_personne.classList.remove('bg-light'); }
+        showAvocatNouveau();
+    }
+
+    function closeDropdown() { if(dropdown) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; } }
+
+    function renderResults(parties, query) {
+        if (!dropdown) return;
+        dropdown.innerHTML = '';
+        parties.forEach(p => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'list-group-item list-group-item-action py-2 px-3 text-end'; // text-end pour RTL
+            btn.innerHTML = `<div class="fw-semibold small">${p.nom_partie ?? ''}</div>
+                <div class="text-muted" style="font-size:.75rem"><span class="font-monospace">${p.identifiant_unique ?? ''}</span>${p.avocat_nom ? ' · ' + p.avocat_nom : ''}</div>`;
+            btn.addEventListener('click', () => selectPartie(p));
+            dropdown.appendChild(btn);
+        });
+        const creer = document.createElement('button');
+        creer.type = 'button';
+        creer.className = 'list-group-item list-group-item-action py-2 px-3 text-primary text-end';
+        creer.innerHTML = `<i class="bi bi-plus-circle me-1"></i>إنشاء « ${query} »`;
+        creer.addEventListener('click', () => { deselect(); if(F.nom) F.nom.value = query; closeDropdown(); if(input) input.value = ''; });
+        
+        if (!parties.length) {
+            const info = document.createElement('div');
+            info.className = 'list-group-item py-2 px-3 text-muted small text-end';
+            info.textContent = 'لم يتم العثور على أي طرف.';
+            dropdown.appendChild(info);
+        }
+        dropdown.appendChild(creer);
+        dropdown.style.display = 'block';
+    }
+
+    input?.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 2) { closeDropdown(); return; }
+        timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`{{ route('dossiers.parties.search', $dossier) }}?q=${encodeURIComponent(q)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error();
+                renderResults(await res.json(), q);
+            } catch {}
+        }, 280);
+    });
+
+    document.addEventListener('click', e => {
+        if (!input?.contains(e.target) && !dropdown?.contains(e.target)) closeDropdown();
+    });
+
+    btnNouvelle?.addEventListener('click', () => { deselect(); closeDropdown(); if(input) input.value = ''; F.identifiant?.focus(); });
+    btnDesel?.addEventListener('click', e => { e.preventDefault(); deselect(); input?.focus(); });
+
+    btnModifier?.addEventListener('click', () => {
+        blocModif?.classList.toggle('d-none');
+        const visible = !blocModif?.classList.contains('d-none');
+        if (avocatModif) { avocatModif.disabled = !visible; avocatModif.name = visible ? 'id_avocat' : ''; }
+        if (btnModifier) btnModifier.innerHTML = visible ? '<i class="bi bi-x me-1"></i>إلغاء' : '<i class="bi bi-pencil me-1"></i>تعديل';
+    });
+
+    document.getElementById('modalAjouterPartie')?.addEventListener('show.bs.modal', () => {
+        deselect(); closeDropdown(); if(input) input.value = '';
+    });
+
+    showAvocatNouveau();
+})();
+
+/* ── Cascade Région > Province > Degré > Tribunal (التسلسل الإداري) ─ */
+(function () {
+    const selRegion   = document.getElementById('modal_region');
+    const selProvince = document.getElementById('modal_province');
+    const selDegre    = document.getElementById('modal_degre');
+    const selTribunal = document.getElementById('modal_tribunal');
+
+    function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; }
+
+    selRegion?.addEventListener('change', async function () {
+        reset(selProvince, '— جاري التحميل... —');
+        reset(selDegre, '— اختر الإقليم أولاً —');
+        reset(selTribunal, '— اختر الدرجة أولاً —');
+        if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
+        try {
+            const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
+            selProvince.innerHTML = '<option value="">— اختر الإقليم —</option>';
+            data.forEach(p => selProvince.innerHTML += `<option value="${p.id}">${p.province}</option>`);
+            selProvince.disabled = false;
+        } catch { reset(selProvince, '— خطأ —'); }
+    });
+
+    selProvince?.addEventListener('change', async function () {
+        reset(selDegre, '— جاري التحميل... —');
+        reset(selTribunal, '— اختر الدرجة أولاً —');
+        if (!this.value) { reset(selDegre, '— اختر الإقليم أولاً —'); return; }
+        try {
+            const data = await (await fetch(`/api/provinces/${this.value}/degres`)).json();
+            selDegre.innerHTML = '<option value="">— اختر درجة التقاضي —</option>';
+            data.forEach(d => selDegre.innerHTML += `<option value="${d.id}">${d.degre_juridiction}</option>`);
+            selDegre.disabled = false;
+        } catch { reset(selDegre, '— خطأ —'); }
+    });
+
+    selDegre?.addEventListener('change', async function () {
+        reset(selTribunal, '— جاري التحميل... —');
+        if (!this.value) { reset(selTribunal, '— اختر درجة التقاضي أولاً —'); return; }
+        try {
+            const data = await (await fetch(`/api/provinces/${selProvince.value}/degres/${this.value}/tribunaux`)).json();
+            selTribunal.innerHTML = '<option value="">— اختر المحكمة —</option>';
+            if (!data.length) { selTribunal.innerHTML = '<option value="">— لا توجد محاكم متاحة —</option>'; return; }
+            data.forEach(t => selTribunal.innerHTML += `<option value="${t.id}">${t.nom_tribunal}</option>`);
+            selTribunal.disabled = false;
+        } catch { reset(selTribunal, '— خطأ —'); }
+    });
+
+    document.getElementById('modalAjouterTribunal')?.addEventListener('show.bs.modal', () => {
+        if(selRegion) selRegion.value = '';
+        reset(selProvince, '— اختر الجهة أولاً —');
+        reset(selDegre, '— اختر الإقليم أولاً —');
+        reset(selTribunal, '— اختر درجة التقاضي أولاً —');
+    });
+})();
+</script>
+
 @endpush
