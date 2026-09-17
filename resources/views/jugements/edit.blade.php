@@ -119,6 +119,7 @@
                             القاضي <span class="text-danger">*</span>
                         </label>
                         <select name="id_juge"
+                                id="id_juge"
                                 class="form-select @error('id_juge') is-invalid @enderror"
                                 required>
                             <option value="">— اختر —</option>
@@ -702,6 +703,26 @@
 
 @push('scripts')
 <script>
+// ══════════════════════════════════════════════════════════════════
+// القاضي — حقل بحث TomSelect
+// ══════════════════════════════════════════════════════════════════
+new TomSelect("#id_juge", {
+    create: function(input) {
+        window.location.href = "{{ route('juges.create') }}?nom=" + encodeURIComponent(input);
+        return false;
+    },
+    sortField: { field: "text", direction: "asc" },
+    placeholder: "— اختر القاضي —",
+    render: {
+        no_results: function(data, escape) {
+            return `<div class="no-results">لا توجد نتائج</div>`;
+        },
+        option_create: function(data, escape) {
+            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+        }
+    }
+});
+
 // ══════════════════════════════════════════════════════════════════
 // الوضعية المبدئية (للـ edit : lire depuis les radios pré-cochés)
 // ══════════════════════════════════════════════════════════════════

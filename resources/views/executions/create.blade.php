@@ -73,7 +73,10 @@
     </a>
 </div>
 
-<form action="{{ route('executions.store') }}" method="POST" id="execution-form">
+<form action="{{ route('executions.store') }}" method="POST" id="execution-form"
+      data-confirm="هل تؤكد إنشاء التنفيذ؟"
+      data-confirm-variant="warning"
+      data-confirm-label="نعم، إنشاء">
     @csrf
 
     <div class="row g-4">
@@ -381,11 +384,9 @@
     var submitText = document.getElementById('submit-text');
 
     form.addEventListener('submit', function (e) {
-        if (!confirm('هل تؤكد إنشاء التنفيذ؟')) {
-            e.preventDefault();
-            return;
-        }
-
+        // ملاحظة: التأكيد أصبح يُدار عبر نافذة data-confirm العامة
+        // (resources/views/components/confirm-modal.blade.php)، والتي
+        // تعترض هذا الحدث قبل وصوله إلى هذا المعالج وتُعيد الإرسال بعد الموافقة.
         submitBtn.disabled = true;
         submitIcon.classList.add('d-none');
         submitSpinner.classList.remove('d-none');

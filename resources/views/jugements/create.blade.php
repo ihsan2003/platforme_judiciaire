@@ -778,9 +778,29 @@
     const oldJugeId = "{{ old('id_juge') }}";
 
     const selectDt    = document.getElementById('id_dossier_tribunal');
-    const selectJuge  = document.getElementById('id_juge');
     const dateInput   = document.getElementById('date_jugement');
     const dateHint    = document.getElementById('date_houkm_hint');
+
+    // ══════════════════════════════════════════════════════════════════
+    // القاضي — حقل بحث TomSelect (يُعبَّأ ديناميكياً حسب المحكمة)
+    // ══════════════════════════════════════════════════════════════════
+    const tsJuge = new TomSelect("#id_juge", {
+        create: function(input) {
+            window.location.href = "{{ route('juges.create') }}?nom=" + encodeURIComponent(input);
+            return false;
+        },
+        sortField: { field: "text", direction: "asc" },
+        placeholder: "— اختر الملف أولاً —",
+        render: {
+            no_results: function(data, escape) {
+                return `<div class="no-results">لا توجد نتائج</div>`;
+            },
+            option_create: function(data, escape) {
+                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
+            }
+        }
+    });
+    tsJuge.disable();
 
     // ══════════════════════════════════════════════════════════════════
     // تغيير الملف → تحديث التاريخ + القضاة
@@ -803,22 +823,21 @@
         }
 
         // القضاة حسب المحكمة
-        if (!selectJuge) return;
+        if (!tsJuge) return;
+
+        tsJuge.clear(true);
+        tsJuge.clearOptions();
 
         if (!dtId || !info) {
 
-            selectJuge.innerHTML =
-                '<option value="">— اختر الملف أولاً —</option>';
-
-            selectJuge.disabled = true;
+            tsJuge.control_input.placeholder = '— اختر الملف أولاً —';
+            tsJuge.disable();
 
             return;
         }
 
-        selectJuge.innerHTML =
-            '<option value="">— جاري التحميل... —</option>';
-
-        selectJuge.disabled = true;
+        tsJuge.control_input.placeholder = '— جاري التحميل... —';
+        tsJuge.disable();
 
         try {
 
@@ -827,42 +846,34 @@
 
             const juges = await res.json();
 
-            selectJuge.innerHTML =
-                '<option value="">— اختر القاضي —</option>';
-
             if (juges.length === 0) {
 
-                selectJuge.innerHTML =
-                    '<option value="">— لا يوجد قضاة —</option>';
+                tsJuge.control_input.placeholder = '— لا يوجد قضاة —';
 
             } else {
 
                 juges.forEach(j => {
 
-                    const opt = document.createElement('option');
-
-                    opt.value =
-                        j.id;
-
-                    opt.textContent =
-                        (j.grade ? j.grade + ' ' : '') + j.nom_complet;
-
-                    if (oldJugeId && j.id == oldJugeId)
-                        opt.selected = true;
-
-                    selectJuge.appendChild(opt);
+                    tsJuge.addOption({
+                        value: j.id,
+                        text: (j.grade ? j.grade + ' ' : '') + j.nom_complet
+                    });
 
                 });
 
-                selectJuge.disabled = false;
+                tsJuge.control_input.placeholder = '— اختر القاضي —';
+                tsJuge.refreshOptions(false);
+                tsJuge.enable();
+
+                if (oldJugeId && juges.some(j => String(j.id) === String(oldJugeId))) {
+                    tsJuge.setValue(oldJugeId, true);
+                }
             }
 
         } catch (e) {
 
-            selectJuge.innerHTML =
-                '<option value="">— خطأ في التحميل —</option>';
-
-            selectJuge.disabled = false;
+            tsJuge.control_input.placeholder = '— خطأ في التحميل —';
+            tsJuge.disable();
 
         }
     }

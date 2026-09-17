@@ -337,7 +337,7 @@
             @can('update', $dossier)
                 @if($dossier->statut?->statut_dossier === 'تم التنفيذ')
                 <form action="{{ route('dossiers.cloturer', $dossier) }}" method="POST"
-                      onsubmit="return confirm('هل تريد إغلاق هذا الملف نهائيًا ؟ سيتم تغيير حالته إلى «حفظ».')">
+                      data-confirm="هل تريد إغلاق هذا الملف نهائيًا ؟ سيتم تغيير حالته إلى «حفظ»." data-confirm-variant="warning" data-confirm-label="نعم، إغلاق">
                     @csrf
                     <button class="btn btn-outline-light btn-sm">
                         <i class="bi bi-lock me-1"></i>إغلاق الملف
@@ -348,7 +348,7 @@
 
             @can('delete', $dossier)
                 <form action="{{ route('dossiers.destroy', $dossier) }}" method="POST"
-                      onsubmit="return confirm('هل تريد أرشفة هذا الملف ؟')">
+                      data-confirm="هل تريد أرشفة هذا الملف ؟" data-confirm-variant="warning" data-confirm-label="نعم، أرشفة">
                     @csrf @method('DELETE')
                     <button class="btn btn-outline-light btn-sm">
                         <i class="bi bi-archive me-1"></i>أرشفة
@@ -926,7 +926,10 @@
                             @endif
                         </div>
 
-                        <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST">
+                        <form action="{{ route('jugements.recours.store', $jugement) }}" method="POST"
+                              data-confirm="هل أنت متأكد من تسجيل الطعن؟"
+                              data-confirm-variant="warning"
+                              data-confirm-label="نعم، تسجيل">
                             @csrf
 
                             {{-- Ligne 1 : Type + Date --}}
@@ -964,8 +967,7 @@
                             {{-- Ligne 3 : Boutons centrés --}}
                             <div class="d-flex justify-content-center gap-2">
                                 <button type="submit"
-                                        class="btn btn-warning btn-sm px-4"
-                                        onclick="return confirm('هل أنت متأكد من تسجيل الطعن؟')">
+                                        class="btn btn-warning btn-sm px-4">
                                     <i class="bi bi-send me-1"></i>
                                     تسجيل
                                 </button>
@@ -973,7 +975,7 @@
 
                                 <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
                                     method="POST"
-                                    onsubmit="return confirm('إغلاق المرحلة بدون طعن؟')">
+                                    data-confirm="إغلاق المرحلة بدون طعن؟" data-confirm-variant="warning" data-confirm-label="نعم، إغلاق">
                                     @csrf
 
                                     <button type="submit" class="btn btn-outline-secondary btn-sm px-4">
@@ -987,7 +989,7 @@
                 @elseif(!$jugement->est_definitif && !$jugement->peutFaireObjetRecours() && $jugement->recours->isEmpty())
                     {{-- Délai expiré sans recours --}}
                     <div class="mx-4 mb-4">
-                        <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" onsubmit="return confirm('إغلاق المرحلة؟')">
+                        <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}" method="POST" data-confirm="إغلاق المرحلة؟" data-confirm-variant="warning" data-confirm-label="نعم، إغلاق">
                             @csrf
                             <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-lock me-1"></i>انقضاء الآجال — إغلاق بدون طعن</button>
                         </form>
@@ -1385,7 +1387,7 @@
                             <i class="bi bi-download"></i>
                         </a>
                         @role('admin')
-                        <form action="{{ route('documents.destroy', [$dossier, $doc]) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوثيقة؟')">
+                        <form action="{{ route('documents.destroy', [$dossier, $doc]) }}" method="POST" data-confirm="هل أنت متأكد من حذف هذه الوثيقة؟" data-confirm-label="نعم، حذف">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </form>

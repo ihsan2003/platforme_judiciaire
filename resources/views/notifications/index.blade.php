@@ -267,7 +267,9 @@
 
                         {{-- Delete --}}
                         <form method="POST"
-                            action="{{ route('notifications.destroy', $notif) }}">
+                            action="{{ route('notifications.destroy', $notif) }}"
+                            data-confirm="هل تريد حذف هذا الإشعار؟"
+                            data-confirm-label="نعم، حذف">
 
                             @csrf
                             @method('DELETE')
@@ -275,8 +277,7 @@
                             <button type="submit"
                                     class="btn btn-sm btn-outline-danger px-2"
                                     style="font-size:.78rem;"
-                                    title="حذف"
-                                    onclick="return confirm('هل تريد حذف هذا الإشعار؟')">
+                                    title="حذف">
 
                                 <i class="bi bi-trash3"></i>
 

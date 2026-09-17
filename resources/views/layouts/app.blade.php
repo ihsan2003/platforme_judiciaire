@@ -618,8 +618,11 @@
     </div>
 </div>
 
+{{-- ── نافذة التأكيد العامة (تحل محل confirm() الأصلية للمتصفح) ───────── --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.6.1/dist/js/tom-select.complete.min.js"></script>
+
+<x-confirm-modal />
 
 <script>
     // تبديل القائمة الجانبية على الهواتف المحمولة

@@ -105,6 +105,7 @@
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
                                 <select name="id_juge" id="id_juge"
+                                        data-create-url="{{ route('juges.create') }}"
                                         class="form-select border-start-0 @error('id_juge') is-invalid @enderror"
                                         required>
                                     <option value="">— اختر المحكمة أولاً —</option>

@@ -328,7 +328,7 @@
 
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
                           method="POST"
-                          onsubmit="return confirm('تأكيد جعل الحكم نهائياً وإغلاق الملف؟')">
+                          data-confirm="تأكيد جعل الحكم نهائياً وإغلاق الملف؟" data-confirm-variant="warning" data-confirm-label="نعم، تأكيد">
 
                         @csrf
 
@@ -364,7 +364,11 @@
                     @endif
 
                     <form action="{{ route('jugements.recours.store', $jugement) }}"
-                          method="POST">
+                          method="POST"
+                          data-confirm="تأكيد إيداع الطعن؟"
+                          data-confirm-warning="سيتم تحديث حالة الملف."
+                          data-confirm-variant="warning"
+                          data-confirm-label="نعم، إيداع">
 
                         @csrf
 
@@ -464,8 +468,7 @@
                         </div>
 
                         <button type="submit"
-                                class="btn btn-warning btn-sm w-100"
-                                onclick="return confirm('تأكيد إيداع الطعن؟ سيتم تحديث حالة الملف.')">
+                                class="btn btn-warning btn-sm w-100">
 
                             <i class="bi bi-arrow-repeat ms-1"></i>
                             إيداع الطعن
@@ -493,7 +496,7 @@
                     </script>
                     <form action="{{ route('jugements.cloture-sans-recours', $jugement) }}"
                           method="POST"
-                          onsubmit="return confirm('تأكيد إغلاق الحكم نهائياً بدون طعن؟')">
+                          data-confirm="تأكيد إغلاق الحكم نهائياً بدون طعن؟" data-confirm-variant="warning" data-confirm-label="نعم، إغلاق">
 
                         @csrf
 

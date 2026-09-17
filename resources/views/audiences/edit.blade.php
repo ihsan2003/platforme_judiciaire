@@ -110,6 +110,7 @@
                                     <i class="bi bi-person text-muted"></i>
                                 </span>
                                 <select name="id_juge" id="id_juge"
+                                        data-create-url="{{ route('juges.create') }}"
                                         data-selected-id="{{ old('id_juge', $audience->id_juge) }}"
                                         class="form-select border-start-0 @error('id_juge') is-invalid @enderror"
                                         required>
@@ -327,9 +328,9 @@
 @endsection
 
 @push('styles')
-    @vite("ressources/css/audience.css")
+    @vite("resources/css/audience.css")
 @endpush
 
 @push('scripts')
-    @vite('ressources/js/audience-edit.js')
+    @vite('resources/js/audience-edit.js')
 @endpush

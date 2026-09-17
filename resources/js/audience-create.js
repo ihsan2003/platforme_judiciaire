@@ -1,13 +1,35 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const dossierTribunalSelect = document.getElementById('id_dossier_tribunal');
-    const jugeSelect = document.getElementById('id_juge');
+    const jugeSelectEl = document.getElementById('id_juge');
     const hint = document.getElementById('juge_hint');
     const aucun = document.getElementById('juge_aucun');
 
-    if (!dossierTribunalSelect || !jugeSelect) {
+    if (!dossierTribunalSelect || !jugeSelectEl) {
         return;
     }
+
+    // ── تهيئة حقل البحث (TomSelect) للقاضي ──
+    const jugeSelect = new TomSelect(jugeSelectEl, {
+        create: function (input) {
+            const createUrl = jugeSelectEl.dataset.createUrl;
+            if (createUrl) {
+                window.location.href = createUrl + '?nom=' + encodeURIComponent(input);
+            }
+            return false;
+        },
+        sortField: { field: 'text', direction: 'asc' },
+        placeholder: '— اختر المحكمة أولاً —',
+        render: {
+            no_results: function (data, escape) {
+                return '<div class="no-results">لا توجد نتائج</div>';
+            },
+            option_create: function (data, escape) {
+                return '<div class="create">➕ إضافة "' + escape(data.input) + '"</div>';
+            }
+        }
+    });
+    jugeSelect.disable();
 
     async function chargerJuges() {
 
@@ -16,9 +38,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const tribunalId = selectedOption?.dataset?.tribunalId;
 
+        jugeSelect.clear(true);
+        jugeSelect.clearOptions();
+
         if (!tribunalId) {
-            jugeSelect.innerHTML =
-                '<option value="">— اختر المحكمة أولاً —</option>';
+            jugeSelect.control_input.placeholder = '— اختر المحكمة أولاً —';
+            jugeSelect.disable();
 
             hint?.classList.add('d-none');
             aucun?.classList.add('d-none');
@@ -26,10 +51,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        jugeSelect.innerHTML =
-            '<option value="">— جار التحميل… —</option>';
-
-        jugeSelect.disabled = true;
+        jugeSelect.control_input.placeholder = '— جار التحميل… —';
+        jugeSelect.disable();
 
         try {
 
@@ -42,43 +65,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const juges = await response.json();
 
-            jugeSelect.innerHTML =
-                '<option value="">— اختر قاضيًا —</option>';
-
             if (juges.length === 0) {
 
+                jugeSelect.control_input.placeholder = '— لا يوجد قضاة —';
                 aucun?.classList.remove('d-none');
                 hint?.classList.add('d-none');
 
             } else {
 
                 juges.forEach(function (juge) {
-
-                    const option = document.createElement('option');
-
-                    option.value = juge.id;
-
-                    option.textContent =
-                        (juge.grade ? juge.grade + ' ' : '') +
-                        juge.nom_complet;
-
-                    jugeSelect.appendChild(option);
+                    jugeSelect.addOption({
+                        value: juge.id,
+                        text: (juge.grade ? juge.grade + ' ' : '') + juge.nom_complet
+                    });
                 });
+
+                jugeSelect.control_input.placeholder = '— اختر قاضيًا —';
+                jugeSelect.refreshOptions(false);
+                jugeSelect.enable();
 
                 hint?.classList.remove('d-none');
                 aucun?.classList.add('d-none');
             }
 
-            jugeSelect.disabled = false;
-
         } catch (error) {
 
             console.error(error);
 
-            jugeSelect.innerHTML =
-                '<option value="">— خطأ في التحميل —</option>';
-
-            jugeSelect.disabled = false;
+            jugeSelect.control_input.placeholder = '— خطأ في التحميل —';
+            jugeSelect.disable();
         }
     }
 

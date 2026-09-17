@@ -55,7 +55,7 @@
                         <input type="text"
                                name="nom_complet"
                                class="form-control @error('nom_complet') is-invalid @enderror"
-                               value="{{ old('nom_complet') }}"
+                               value="{{ old('nom_complet', request('nom')) }}"
                                placeholder="مثال: محمد العلوي"
                                required>
 

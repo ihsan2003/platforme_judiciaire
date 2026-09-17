@@ -1,0 +1,459 @@
+diff --git a/resources/js/audience-create.js b/resources/js/audience-create.js
+index 23a87e4..bc92adf 100644
+--- a/resources/js/audience-create.js
++++ b/resources/js/audience-create.js
+@@ -1,14 +1,27 @@
+ document.addEventListener('DOMContentLoaded', function () {
+ 
+     const dossierTribunalSelect = document.getElementById('id_dossier_tribunal');
+-    const jugeSelect = document.getElementById('id_juge');
++    const jugeSelectEl = document.getElementById('id_juge');
+     const hint = document.getElementById('juge_hint');
+     const aucun = document.getElementById('juge_aucun');
+ 
+-    if (!dossierTribunalSelect || !jugeSelect) {
++    if (!dossierTribunalSelect || !jugeSelectEl) {
+         return;
+     }
+ 
++    // ── تهيئة حقل البحث (TomSelect) للقاضي ──
++    const jugeSelect = new TomSelect(jugeSelectEl, {
++        create: false,
++        sortField: { field: 'text', direction: 'asc' },
++        placeholder: '— اختر المحكمة أولاً —',
++        render: {
++            no_results: function (data, escape) {
++                return '<div class="no-results">لا توجد نتائج</div>';
++            }
++        }
++    });
++    jugeSelect.disable();
++
+     async function chargerJuges() {
+ 
+         const selectedOption =
+@@ -16,9 +29,12 @@ document.addEventListener('DOMContentLoaded', function () {
+ 
+         const tribunalId = selectedOption?.dataset?.tribunalId;
+ 
++        jugeSelect.clear(true);
++        jugeSelect.clearOptions();
++
+         if (!tribunalId) {
+-            jugeSelect.innerHTML =
+-                '<option value="">— اختر المحكمة أولاً —</option>';
++            jugeSelect.control_input.placeholder = '— اختر المحكمة أولاً —';
++            jugeSelect.disable();
+ 
+             hint?.classList.add('d-none');
+             aucun?.classList.add('d-none');
+@@ -26,10 +42,8 @@ document.addEventListener('DOMContentLoaded', function () {
+             return;
+         }
+ 
+-        jugeSelect.innerHTML =
+-            '<option value="">— جار التحميل… —</option>';
+-
+-        jugeSelect.disabled = true;
++        jugeSelect.control_input.placeholder = '— جار التحميل… —';
++        jugeSelect.disable();
+ 
+         try {
+ 
+@@ -42,43 +56,35 @@ document.addEventListener('DOMContentLoaded', function () {
+ 
+             const juges = await response.json();
+ 
+-            jugeSelect.innerHTML =
+-                '<option value="">— اختر قاضيًا —</option>';
+-
+             if (juges.length === 0) {
+ 
++                jugeSelect.control_input.placeholder = '— لا يوجد قضاة —';
+                 aucun?.classList.remove('d-none');
+                 hint?.classList.add('d-none');
+ 
+             } else {
+ 
+                 juges.forEach(function (juge) {
+-
+-                    const option = document.createElement('option');
+-
+-                    option.value = juge.id;
+-
+-                    option.textContent =
+-                        (juge.grade ? juge.grade + ' ' : '') +
+-                        juge.nom_complet;
+-
+-                    jugeSelect.appendChild(option);
++                    jugeSelect.addOption({
++                        value: juge.id,
++                        text: (juge.grade ? juge.grade + ' ' : '') + juge.nom_complet
++                    });
+                 });
+ 
++                jugeSelect.control_input.placeholder = '— اختر قاضيًا —';
++                jugeSelect.refreshOptions(false);
++                jugeSelect.enable();
++
+                 hint?.classList.remove('d-none');
+                 aucun?.classList.add('d-none');
+             }
+ 
+-            jugeSelect.disabled = false;
+-
+         } catch (error) {
+ 
+             console.error(error);
+ 
+-            jugeSelect.innerHTML =
+-                '<option value="">— خطأ في التحميل —</option>';
+-
+-            jugeSelect.disabled = false;
++            jugeSelect.control_input.placeholder = '— خطأ في التحميل —';
++            jugeSelect.disable();
+         }
+     }
+ 
+@@ -92,4 +98,4 @@ document.addEventListener('DOMContentLoaded', function () {
+     if (dossierTribunalSelect.value) {
+         chargerJuges();
+     }
+-});
+\ No newline at end of file
++});
+diff --git a/resources/js/audience-edit.js b/resources/js/audience-edit.js
+index 12a3219..a75ede3 100644
+--- a/resources/js/audience-edit.js
++++ b/resources/js/audience-edit.js
+@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
+     const dossierTribunalSelect =
+         document.getElementById('id_dossier_tribunal');
+ 
+-    const jugeSelect =
++    const jugeSelectEl =
+         document.getElementById('id_juge');
+ 
+     const hint =
+@@ -12,16 +12,37 @@ document.addEventListener('DOMContentLoaded', function () {
+     const aucun =
+         document.getElementById('juge_aucun');
+ 
+-    if (!dossierTribunalSelect || !jugeSelect) {
++    if (!dossierTribunalSelect || !jugeSelectEl) {
+         return;
+     }
+ 
++    // Garder l'id du juge déjà enregistré avant que TomSelect
++    // ne remplace le <select> par ses propres éléments.
++    const initialPreselectedJugeId =
++        jugeSelectEl.dataset.selectedId || null;
++
++    // ── تهيئة حقل البحث (TomSelect) للقاضي ──
++    const jugeSelect = new TomSelect(jugeSelectEl, {
++        create: false,
++        sortField: { field: 'text', direction: 'asc' },
++        placeholder: '— اختر المحكمة أولاً —',
++        render: {
++            no_results: function (data, escape) {
++                return '<div class="no-results">لا توجد نتائج</div>';
++            }
++        }
++    });
++    jugeSelect.disable();
++
+     async function chargerJuges(tribunalId, preselectedJugeId = null) {
+ 
++        jugeSelect.clear(true);
++        jugeSelect.clearOptions();
++
+         if (!tribunalId) {
+ 
+-            jugeSelect.innerHTML =
+-                '<option value="">— اختر المحكمة أولاً —</option>';
++            jugeSelect.control_input.placeholder = '— اختر المحكمة أولاً —';
++            jugeSelect.disable();
+ 
+             hint?.classList.add('d-none');
+             aucun?.classList.add('d-none');
+@@ -29,10 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
+             return;
+         }
+ 
+-        jugeSelect.innerHTML =
+-            '<option value="">— جار التحميل… —</option>';
+-
+-        jugeSelect.disabled = true;
++        jugeSelect.control_input.placeholder = '— جار التحميل… —';
++        jugeSelect.disable();
+ 
+         try {
+ 
+@@ -45,52 +64,43 @@ document.addEventListener('DOMContentLoaded', function () {
+ 
+             const juges = await response.json();
+ 
+-            jugeSelect.innerHTML =
+-                '<option value="">— اختر قاضيًا —</option>';
+-
+             if (juges.length === 0) {
+ 
++                jugeSelect.control_input.placeholder = '— لا يوجد قضاة —';
+                 aucun?.classList.remove('d-none');
+                 hint?.classList.add('d-none');
+ 
+             } else {
+ 
+                 juges.forEach(function (juge) {
++                    jugeSelect.addOption({
++                        value: juge.id,
++                        text: (juge.grade ? juge.grade + ' ' : '') + juge.nom_complet
++                    });
++                });
+ 
+-                    const option =
+-                        document.createElement('option');
+-
+-                    option.value = juge.id;
+-
+-                    option.textContent =
+-                        (juge.grade ? juge.grade + ' ' : '') +
+-                        juge.nom_complet;
+-
+-                    // Garder le juge déjà sélectionné
+-                    if (
+-                        preselectedJugeId &&
+-                        String(juge.id) === String(preselectedJugeId)
+-                    ) {
+-                        option.selected = true;
+-                    }
++                jugeSelect.control_input.placeholder = '— اختر قاضيًا —';
++                jugeSelect.refreshOptions(false);
++                jugeSelect.enable();
+ 
+-                    jugeSelect.appendChild(option);
+-                });
++                // Garder le juge déjà sélectionné
++                if (
++                    preselectedJugeId &&
++                    juges.some(j => String(j.id) === String(preselectedJugeId))
++                ) {
++                    jugeSelect.setValue(preselectedJugeId, true);
++                }
+ 
+                 hint?.classList.remove('d-none');
+                 aucun?.classList.add('d-none');
+             }
+ 
+-            jugeSelect.disabled = false;
+-
+         } catch (error) {
+ 
+             console.error(error);
+ 
+-            jugeSelect.innerHTML =
+-                '<option value="">— خطأ في التحميل —</option>';
+-
+-            jugeSelect.disabled = false;
++            jugeSelect.control_input.placeholder = '— خطأ في التحميل —';
++            jugeSelect.disable();
+         }
+     }
+ 
+@@ -112,9 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
+ 
+     // Chargement initial de la page
+     // avec le juge actuellement enregistré
+-    const preselectedJugeId =
+-        jugeSelect.dataset.selectedId || null;
+-
+     const tribunalId =
+         dossierTribunalSelect
+             .options[dossierTribunalSelect.selectedIndex]
+@@ -124,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
+     if (tribunalId) {
+         chargerJuges(
+             tribunalId,
+-            preselectedJugeId
++            initialPreselectedJugeId
+         );
+     }
+-});
+\ No newline at end of file
++});
+diff --git a/resources/views/jugements/create.blade.php b/resources/views/jugements/create.blade.php
+index a129778..759ad59 100644
+--- a/resources/views/jugements/create.blade.php
++++ b/resources/views/jugements/create.blade.php
+@@ -778,10 +778,30 @@ class="btn btn-outline-secondary">
+     const oldJugeId = "{{ old('id_juge') }}";
+ 
+     const selectDt    = document.getElementById('id_dossier_tribunal');
+-    const selectJuge  = document.getElementById('id_juge');
+     const dateInput   = document.getElementById('date_jugement');
+     const dateHint    = document.getElementById('date_houkm_hint');
+ 
++    // ══════════════════════════════════════════════════════════════════
++    // القاضي — حقل بحث TomSelect (يُعبَّأ ديناميكياً حسب المحكمة)
++    // ══════════════════════════════════════════════════════════════════
++    const tsJuge = new TomSelect("#id_juge", {
++        create: function(input) {
++            window.location.href = "{{ route('juges.create') }}?nom=" + encodeURIComponent(input);
++            return false;
++        },
++        sortField: { field: "text", direction: "asc" },
++        placeholder: "— اختر الملف أولاً —",
++        render: {
++            no_results: function(data, escape) {
++                return `<div class="no-results">لا توجد نتائج</div>`;
++            },
++            option_create: function(data, escape) {
++                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
++            }
++        }
++    });
++    tsJuge.disable();
++
+     // ══════════════════════════════════════════════════════════════════
+     // تغيير الملف → تحديث التاريخ + القضاة
+     // ══════════════════════════════════════════════════════════════════
+@@ -803,22 +823,21 @@ class="btn btn-outline-secondary">
+         }
+ 
+         // القضاة حسب المحكمة
+-        if (!selectJuge) return;
++        if (!tsJuge) return;
+ 
+-        if (!dtId || !info) {
++        tsJuge.clear(true);
++        tsJuge.clearOptions();
+ 
+-            selectJuge.innerHTML =
+-                '<option value="">— اختر الملف أولاً —</option>';
++        if (!dtId || !info) {
+ 
+-            selectJuge.disabled = true;
++            tsJuge.control_input.placeholder = '— اختر الملف أولاً —';
++            tsJuge.disable();
+ 
+             return;
+         }
+ 
+-        selectJuge.innerHTML =
+-            '<option value="">— جاري التحميل... —</option>';
+-
+-        selectJuge.disabled = true;
++        tsJuge.control_input.placeholder = '— جاري التحميل... —';
++        tsJuge.disable();
+ 
+         try {
+ 
+@@ -827,42 +846,34 @@ class="btn btn-outline-secondary">
+ 
+             const juges = await res.json();
+ 
+-            selectJuge.innerHTML =
+-                '<option value="">— اختر القاضي —</option>';
+-
+             if (juges.length === 0) {
+ 
+-                selectJuge.innerHTML =
+-                    '<option value="">— لا يوجد قضاة —</option>';
++                tsJuge.control_input.placeholder = '— لا يوجد قضاة —';
+ 
+             } else {
+ 
+                 juges.forEach(j => {
+ 
+-                    const opt = document.createElement('option');
+-
+-                    opt.value =
+-                        j.id;
+-
+-                    opt.textContent =
+-                        (j.grade ? j.grade + ' ' : '') + j.nom_complet;
+-
+-                    if (oldJugeId && j.id == oldJugeId)
+-                        opt.selected = true;
+-
+-                    selectJuge.appendChild(opt);
++                    tsJuge.addOption({
++                        value: j.id,
++                        text: (j.grade ? j.grade + ' ' : '') + j.nom_complet
++                    });
+ 
+                 });
+ 
+-                selectJuge.disabled = false;
++                tsJuge.control_input.placeholder = '— اختر القاضي —';
++                tsJuge.refreshOptions(false);
++                tsJuge.enable();
++
++                if (oldJugeId && juges.some(j => String(j.id) === String(oldJugeId))) {
++                    tsJuge.setValue(oldJugeId, true);
++                }
+             }
+ 
+         } catch (e) {
+ 
+-            selectJuge.innerHTML =
+-                '<option value="">— خطأ في التحميل —</option>';
+-
+-            selectJuge.disabled = false;
++            tsJuge.control_input.placeholder = '— خطأ في التحميل —';
++            tsJuge.disable();
+ 
+         }
+     }
+diff --git a/resources/views/jugements/edit.blade.php b/resources/views/jugements/edit.blade.php
+index 592fc71..ab42199 100644
+--- a/resources/views/jugements/edit.blade.php
++++ b/resources/views/jugements/edit.blade.php
+@@ -119,6 +119,7 @@ class="btn btn-outline-secondary btn-sm">
+                             القاضي <span class="text-danger">*</span>
+                         </label>
+                         <select name="id_juge"
++                                id="id_juge"
+                                 class="form-select @error('id_juge') is-invalid @enderror"
+                                 required>
+                             <option value="">— اختر —</option>
+@@ -702,6 +703,26 @@ class="btn btn-outline-secondary">
+ 
+ @push('scripts')
+ <script>
++// ══════════════════════════════════════════════════════════════════
++// القاضي — حقل بحث TomSelect
++// ══════════════════════════════════════════════════════════════════
++new TomSelect("#id_juge", {
++    create: function(input) {
++        window.location.href = "{{ route('juges.create') }}?nom=" + encodeURIComponent(input);
++        return false;
++    },
++    sortField: { field: "text", direction: "asc" },
++    placeholder: "— اختر القاضي —",
++    render: {
++        no_results: function(data, escape) {
++            return `<div class="no-results">لا توجد نتائج</div>`;
++        },
++        option_create: function(data, escape) {
++            return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
++        }
++    }
++});
++
+ // ══════════════════════════════════════════════════════════════════
+ // الوضعية المبدئية (للـ edit : lire depuis les radios pré-cochés)
+ // ══════════════════════════════════════════════════════════════════
+diff --git a/resources/views/juges/create.blade.php b/resources/views/juges/create.blade.php
+index 884cbd9..81d2211 100644
+--- a/resources/views/juges/create.blade.php
++++ b/resources/views/juges/create.blade.php
+@@ -55,7 +55,7 @@
+                         <input type="text"
+                                name="nom_complet"
+                                class="form-control @error('nom_complet') is-invalid @enderror"
+-                               value="{{ old('nom_complet') }}"
++                               value="{{ old('nom_complet', request('nom')) }}"
+                                placeholder="مثال: محمد العلوي"
+                                required>
+ 
