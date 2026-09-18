@@ -240,4 +240,24 @@
 
 </form>
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const montantPaye = document.querySelector('input[name="montant_paye"]');
+        const datePaiement = document.querySelector('input[name="date_paiement"]');
+
+        if (montantPaye && datePaiement) {
+            montantPaye.addEventListener('input', function () {
+                // On ne remplit automatiquement que si l'utilisateur n'a pas
+                // déjà saisi une date lui-même.
+                if (parseFloat(montantPaye.value) > 0 && !datePaiement.value) {
+                    const today = new Date().toISOString().slice(0, 10);
+                    datePaiement.value = today;
+                }
+            });
+        }
+    });
+</script>
+@endpush
+
 @endsection

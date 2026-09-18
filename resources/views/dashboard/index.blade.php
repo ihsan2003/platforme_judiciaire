@@ -224,6 +224,96 @@
 
 </div>
 
+{{-- ══ AVOCAT & RÉCLAMATIONS ROW ══ --}}
+<div class="row g-3 mb-4" style="direction: rtl;">
+
+    {{-- حضور المحامي في الجلسات --}}
+    <div class="col-md-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm ms-2" style="background:#dcfce7;color:#15803d"><i class="bi bi-person-check"></i></div>
+                    حضور محامي المؤسسة في الجلسات                
+                    </div>
+            </div>
+            <div class="card-modern-body">
+                <div class="donut-wrap" style="height:170px">
+                    <canvas id="chartAvocatPresence"></canvas>
+                    <div class="donut-center">
+                        <div class="dc-val" style="color:#15803d">{{ $statsPresenceAvocat['pct_present'] }}%</div>
+                        <div class="dc-lab">نسبة الحضور</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2 mt-3">
+                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
+                        <div class="legend-dot-sm" style="background:#639922"></div>
+                        <span class="text-muted" style="flex:1; text-align: right;">حاضر</span>
+                        <span class="fw-bold text-success">{{ $statsPresenceAvocat['present'] }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
+                        <div class="legend-dot-sm" style="background:#E24B4A"></div>
+                        <span class="text-muted" style="flex:1; text-align: right;">غائب</span>
+                        <span class="fw-bold text-danger">{{ $statsPresenceAvocat['absent'] }}</span>
+                    </div>
+                </div>
+                <div class="text-muted mt-2" style="font-size:.68rem">
+                    (الجلسات المنعقدة فقط — {{ $statsPresenceAvocat['total'] }} جلسة)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- الشكايات حسب الحالة --}}
+    <div class="col-md-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm ms-2" style="background:#fce7f3;color:#9d174d"><i class="bi bi-chat-left-text"></i></div>
+                    الشكايات حسب الحالة
+                </div>
+            </div>
+            <div class="card-modern-body">
+                <div class="donut-wrap" style="height:170px">
+                    <canvas id="chartReclamationsStatut"></canvas>
+                    <div class="donut-center">
+                        <div class="dc-val">{{ $reclamations['total'] }}</div>
+                        <div class="dc-lab">الإجمالي</div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2 mt-3">
+                    @foreach([
+                        ['قيد المعالجة',$reclamations['en_cours'],'#BA7517'],
+                        ['تمت المعالجة',$reclamations['traitees'],'#639922'],
+                        ['مغلقة',$reclamations['cloturees'],'#888780'],
+                    ] as [$lbl,$val,$col])
+                    <div class="d-flex align-items-center gap-2" style="font-size:.78rem">
+                        <div class="legend-dot-sm" style="background:{{ $col }}"></div>
+                        <span class="text-muted" style="flex:1; text-align: right;">{{ $lbl }}</span>
+                        <span class="fw-bold">{{ $val }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- الشكايات حسب النوع --}}
+    <div class="col-md-4">
+        <div class="card-modern h-100">
+            <div class="card-modern-hd">
+                <div class="card-modern-title">
+                    <div class="card-icon-sm ms-2" style="background:#e0f2fe;color:#0369a1"><i class="bi bi-tags"></i></div>
+                    الشكايات حسب النوع
+                </div>
+            </div>
+            <div class="card-modern-body">
+                <div style="position:relative;height:220px"><canvas id="chartReclamationsType"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 {{-- ══ BOTTOM ROW : AGENDA + ALERTES + DOSSIERS ══ --}}
 <div class="row g-3 mb-4" style="direction: rtl;">
 
@@ -460,6 +550,13 @@
         dossTotal:  {{ $dossiers['total'] }},
         pourVal:    {{ $resultatsJugements['pour'] }},
         contreVal:  {{ $resultatsJugements['contre'] }},
+        avocatPresentVal: {{ $statsPresenceAvocat['present'] }},
+        avocatAbsentVal:  {{ $statsPresenceAvocat['absent'] }},
+        reclamEnCoursVal:  {{ $reclamations['en_cours'] }},
+        reclamTraiteesVal: {{ $reclamations['traitees'] }},
+        reclamClotureesVal:{{ $reclamations['cloturees'] }},
+        reclamTypeLabels: {!! json_encode($reclamationsParType['labels']) !!},
+        reclamTypeVals:   {!! json_encode($reclamationsParType['values']) !!},
     };
 </script>
 @vite('resources/js/dashboard.js')

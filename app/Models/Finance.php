@@ -82,6 +82,13 @@ class Finance extends Model
             } else {
                 $finance->statut_paiement = 'في الانتظار';
             }
+
+            // Remplissage automatique de la date de paiement : dès qu'un
+            // montant payé est saisi et qu'aucune date n'a été précisée par
+            // l'utilisateur, on prend la date du jour.
+            if ($finance->montant_paye > 0 && empty($finance->date_paiement)) {
+                $finance->date_paiement = now()->toDateString();
+            }
         });
     }
 

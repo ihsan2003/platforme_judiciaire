@@ -9,7 +9,10 @@
     const RED   = '#E24B4A';
 
     const { evoLabels, evoVals, affLabels, affVals, finLabels, finVals,
-            dossActifs, dossJuges, dossTotal, pourVal, contreVal } = data;
+            dossActifs, dossJuges, dossTotal, pourVal, contreVal,
+            avocatPresentVal, avocatAbsentVal,
+            reclamEnCoursVal, reclamTraiteesVal, reclamClotureesVal,
+            reclamTypeLabels, reclamTypeVals } = data;
 
     const dossHifd = Math.max(0, dossTotal - dossActifs - dossJuges);
 
@@ -103,6 +106,66 @@
             cutout: '72%',
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
+        }
+    });
+
+    /* Donut présence de l'avocat dans les audiences */
+    new Chart(document.getElementById('chartAvocatPresence'), {
+        type: 'doughnut',
+        data: {
+            labels: ['حاضر', 'غائب'],
+            datasets: [{
+                data: [avocatPresentVal, avocatAbsentVal],
+                backgroundColor: [GREEN, RED],
+                borderWidth: 0,
+                hoverOffset: 5,
+            }]
+        },
+        options: {
+            cutout: '72%',
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+        }
+    });
+
+    /* Donut réclamations par statut */
+    new Chart(document.getElementById('chartReclamationsStatut'), {
+        type: 'doughnut',
+        data: {
+            labels: ['قيد المعالجة', 'تمت المعالجة', 'مغلقة'],
+            datasets: [{
+                data: [reclamEnCoursVal, reclamTraiteesVal, reclamClotureesVal],
+                backgroundColor: [AMBER, GREEN, GRAY],
+                borderWidth: 0,
+                hoverOffset: 5,
+            }]
+        },
+        options: {
+            cutout: '72%',
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+        }
+    });
+
+    /* Réclamations par type */
+    new Chart(document.getElementById('chartReclamationsType'), {
+        type: 'bar',
+        data: {
+            labels: reclamTypeLabels,
+            datasets: [{
+                data: reclamTypeVals,
+                backgroundColor: BLUE,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            ...defaults,
+            indexAxis: 'y',
+            scales: {
+                x: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+            }
         }
     });
 

@@ -374,6 +374,41 @@ class DashboardController extends Controller
         $statsFinancesGraphe['mensuel_values'] = $financesMensuelValues;
         unset($statsFinancesGraphe['mensuel']); // on garde seulement les arrays sérialisables
 
+        // ─── 4. PRÉSENCE DE L'AVOCAT DANS LES AUDIENCES ──────────────────────
+        // On ne compte que les audiences déjà tenues (date_audience passée) :
+        // les audiences à venir ont "presence_avocat_entraide" à false par
+        // défaut (valeur non encore renseignée), ce qui fausserait le taux
+        // si on les incluait.
+        $audiencesPassees = Audience::where('date_audience', '<=', now())->count();
+
+        $avocatPresent = Audience::where('date_audience', '<=', now())
+            ->where('presence_avocat_entraide', true)
+            ->count();
+
+        $avocatAbsent = max(0, $audiencesPassees - $avocatPresent);
+
+        $statsPresenceAvocat = [
+            'labels'      => ['حاضر', 'غائب'],
+            'values'      => [$avocatPresent, $avocatAbsent],
+            'total'       => $audiencesPassees,
+            'present'     => $avocatPresent,
+            'absent'      => $avocatAbsent,
+            'pct_present' => $audiencesPassees > 0 ? round($avocatPresent / $audiencesPassees * 100, 1) : 0,
+        ];
+
+        // ─── 5. RÉCLAMATIONS PAR TYPE ─────────────────────────────────────────
+        $statsReclamationsParType = Reclamation::query()
+            ->join('type_reclamations', 'reclamations.id_type_reclamation', '=', 'type_reclamations.id')
+            ->selectRaw('type_reclamations.type_reclamation, COUNT(*) as total')
+            ->groupBy('type_reclamations.type_reclamation')
+            ->orderByDesc('total')
+            ->get();
+
+        $reclamationsParType = [
+            'labels' => $statsReclamationsParType->pluck('type_reclamation')->toArray(),
+            'values' => $statsReclamationsParType->pluck('total')->map(fn ($v) => (int) $v)->toArray(),
+        ];
+
         return view('dashboard.index', compact(
             'dossiers',
             'reclamations',
@@ -381,9 +416,11 @@ class DashboardController extends Controller
             'audiencesAVenir',
             'derniersDossiers',
             'evolutionMois',
-            'dossiersParAffaire',     // ← nouveau
-            'resultatsJugements',     // ← nouveau
+            'dossiersParAffaire',     
+            'resultatsJugements',     
             'statsFinancesGraphe',
+            'statsPresenceAvocat',    
+            'reclamationsParType',    
         ));
 
     }
