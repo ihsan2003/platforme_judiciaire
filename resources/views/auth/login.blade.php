@@ -87,7 +87,7 @@
                 <div class="field">
                     <label for="password">كلمة المرور</label>
 
-                    <div class="input-wrap">
+                    <div class="input-wrap has-toggle">
                         <input
                             id="password"
                             type="password"
@@ -96,6 +96,9 @@
                             required
                         >
                         <i class="bi bi-lock"></i>
+                        <button type="button" class="toggle-password" id="togglePassword" aria-label="إظهار/إخفاء كلمة المرور" tabindex="-1">
+                            <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+                        </button>
                     </div>
 
                     @error('password')
@@ -127,6 +130,24 @@
     </div>
 
 </div>
+
+<script>
+    (function () {
+        const toggleBtn  = document.getElementById('togglePassword');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+        const passwordInput = document.getElementById('password');
+
+        if (!toggleBtn || !passwordInput) return;
+
+        toggleBtn.addEventListener('click', function () {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+
+            toggleIcon.classList.toggle('bi-eye-slash', !isHidden);
+            toggleIcon.classList.toggle('bi-eye', isHidden);
+        });
+    })();
+</script>
 
 </body>
 </html>

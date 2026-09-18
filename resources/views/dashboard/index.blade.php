@@ -60,7 +60,10 @@
                     <i class="bi {{ $s['icon'] }}"></i>
                 </div>
             </div>
-            <div class="stat-val-big mt-2" style="text-align: right;">{{ $s['value'] }}</div>
+            <div class="stat-val-big js-counter mt-2" style="text-align: right;" data-count-to="{{ $s['value'] }}">
+                <span class="counter-num fade-val">0</span>
+                <span class="flip-num" style="display:none"></span>
+            </div>
             <div class="stat-lbl" style="text-align: right;">{{ $s['label'] }}</div>
             <div class="stat-trend justify-content-end {{ $s['up'] === true ? 'trend-up' : ($s['up'] === false ? 'trend-dn' : 'trend-n') }}">
                 {{ $s['trend'] }}

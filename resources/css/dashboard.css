@@ -1,4 +1,4 @@
-    :root {
+:root {
         --accent: #c8a84b;
         --primary: #1a3a5c;
         --bg: #f4f6fa;
@@ -54,6 +54,42 @@
         font-size: 16px;
     }
     .stat-val-big { font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; letter-spacing: -.5px; }
+
+    /* ── Animation des chiffres : fondu + comptage (1er affichage) ── */
+    .counter-num.fade-val {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity .5s ease, transform .5s ease;
+    }
+    .counter-num.fade-val.in { opacity: 1; transform: translateY(0); }
+
+    /* ── Animation des chiffres : ساعة قلاّبة (affichages suivants) ── */
+    .flip-num {
+        direction: ltr;
+        justify-content: flex-end;
+        gap: 3px;
+        unicode-bidi: isolate;
+    }
+    .stat-val-big.is-flipping .flip-num { display: inline-flex !important; }
+    .stat-val-big.is-flipping .counter-num { display: none !important; }
+    .flip-digit {
+        position: relative;
+        width: 20px; height: 28px;
+        background: #1e293b; color: #fff;
+        border-radius: 4px;
+        font-size: 1.05rem; font-weight: 800;
+        line-height: 28px; text-align: center;
+        overflow: hidden; perspective: 100px;
+    }
+    .flip-digit .old, .flip-digit .new { position: absolute; inset: 0; backface-visibility: hidden; }
+    .flip-digit .old { transform-origin: bottom; }
+    .flip-digit .new { transform: rotateX(90deg); transform-origin: top; }
+    .flip-digit.flipping .old { animation: statFlipOut .45s ease forwards; }
+    .flip-digit.flipping .new { animation: statFlipIn .45s ease forwards; }
+    @keyframes statFlipOut { to { transform: rotateX(-90deg); } }
+    @keyframes statFlipIn  { to { transform: rotateX(0deg); } }
+
     .stat-lbl { font-size: .78rem; color: #64748b; font-weight: 700; }
     .stat-trend { font-size: .69rem; display: flex; align-items: center; gap: 3px; margin-top: 2px; }
     .trend-up { color: #16a34a; }

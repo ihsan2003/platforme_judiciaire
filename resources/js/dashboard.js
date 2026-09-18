@@ -205,3 +205,107 @@
         }
     });
 })();
+
+/* Animation des chiffres dans les cartes statistiques.
+   - 1er affichage de la carte : fondu + comptage progressif (opacité/translation + odomètre).
+   - Affichages suivants (la carte redevient visible : scroll, retour d'onglet...) :
+     effet "ساعة قلاّبة" (flip clock), rejoué à chaque fois. */
+(function () {
+    const COUNT_DURATION = 1200; // ms
+    const els = document.querySelectorAll('.js-counter[data-count-to]');
+    if (!els.length) return;
+
+    /* ---- 1) Fondu + comptage ---- */
+    function playFadeCount(wrapper) {
+        const target = Number(wrapper.dataset.countTo) || 0;
+        const numEl = wrapper.querySelector('.counter-num');
+        wrapper.classList.remove('is-flipping');
+        numEl.classList.remove('in');
+        numEl.textContent = '0';
+        void numEl.offsetWidth; // force reflow pour rejouer la transition CSS
+
+        const start = performance.now();
+        function frame(now) {
+            const progress = Math.min((now - start) / COUNT_DURATION, 1);
+            const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+            numEl.textContent = Math.round(target * eased);
+            if (progress < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                numEl.textContent = target;
+            }
+        }
+        numEl.classList.add('in');
+        requestAnimationFrame(frame);
+    }
+
+    /* ---- 2) ساعة قلاّبة (flip clock) ---- */
+    function playFlip(wrapper) {
+        const target = String(Number(wrapper.dataset.countTo) || 0);
+        const flipEl = wrapper.querySelector('.flip-num');
+        wrapper.classList.add('is-flipping');
+
+        // Construit les digits, tous partant de "0"
+        flipEl.innerHTML = '';
+        for (let i = 0; i < target.length; i++) {
+            const box = document.createElement('span');
+            box.className = 'flip-digit';
+            box.innerHTML = '<span class="old">0</span><span class="new">0</span>';
+            flipEl.appendChild(box);
+        }
+
+        const boxes = flipEl.querySelectorAll('.flip-digit');
+        const steps = 6;
+        let step = 0;
+        const iv = setInterval(() => {
+            step++;
+            const progress = step / steps;
+            const shown = Math.round(Number(target) * progress)
+                .toString()
+                .padStart(target.length, '0');
+
+            shown.split('').forEach((d, i) => {
+                const box = boxes[i];
+                const oldEl = box.querySelector('.old');
+                const newEl = box.querySelector('.new');
+                if (oldEl.textContent !== d) {
+                    newEl.textContent = d;
+                    box.classList.remove('flipping');
+                    void box.offsetWidth;
+                    box.classList.add('flipping');
+                    setTimeout(() => {
+                        oldEl.textContent = d;
+                        box.classList.remove('flipping');
+                    }, 430);
+                }
+            });
+
+            if (step >= steps) clearInterval(iv);
+        }, 230);
+    }
+
+    function playAnimation(wrapper) {
+        if (wrapper.dataset.played === '1') {
+            playFlip(wrapper);
+        } else {
+            wrapper.dataset.played = '1';
+            playFadeCount(wrapper);
+        }
+    }
+
+    if (!('IntersectionObserver' in window)) {
+        // Repli : anime une seule fois (fondu + comptage) au chargement si l'API n'est pas dispo
+        els.forEach(playFadeCount);
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                playAnimation(entry.target);
+            }
+        });
+    }, { threshold: 0.4 });
+
+    els.forEach((el) => observer.observe(el));
+})();
