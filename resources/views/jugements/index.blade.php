@@ -15,7 +15,7 @@
 {{-- ══ الإحصائيات ══ --}}
 <div class="row g-3 mb-4" dir="rtl">
 
-    <div class="col-sm-3">
+    <div class="col-md-4 col-lg-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -36,7 +36,7 @@
         </div>
     </div>
 
-    <div class="col-sm-3">
+    <div class="col-md-4 col-lg-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <div class="col-sm-3">
+    <div class="col-md-4 col-lg-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <div class="col-sm-3">
+    <div class="col-md-4 col-lg-3">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -109,7 +109,7 @@
 
         <form method="GET" class="row g-2 align-items-end">
  
-            <div class="col-md-3">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     بحث 
                 </label>
@@ -119,7 +119,7 @@
             </div>
 
  
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     الصفة
                 </label>
@@ -141,7 +141,7 @@
                 </select>
             </div>
  
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     الدرجة
                 </label>
@@ -160,7 +160,7 @@
                 </select>
             </div>
  
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     وضعية المؤسسة
                 </label>
@@ -182,7 +182,7 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     تاريخ الحكم
                 </label>

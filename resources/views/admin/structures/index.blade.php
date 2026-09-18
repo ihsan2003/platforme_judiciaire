@@ -17,7 +17,7 @@
 @endphp
 
 <div class="row g-3 mb-4">
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-primary bg-opacity-10 p-3">
@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-warning bg-opacity-10 p-3">
@@ -45,7 +45,7 @@
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-success bg-opacity-10 p-3">

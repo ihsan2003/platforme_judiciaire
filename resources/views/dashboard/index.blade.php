@@ -42,16 +42,15 @@
 {{-- ══ STAT CARDS ══ --}}
 <div class="row g-3 mb-4" style="direction: rtl;">
     @php
-        $trendTotal = ($dossiers['croissance_pct'] >= 0 ? '+' : '').$dossiers['croissance_pct'].'% هذا الشهر';
-        $upTotal    = $dossiers['croissance_pct'] > 0 ? true : ($dossiers['croissance_pct'] < 0 ? false : null);
+        $upTotal = $dossiers['croissance_pct'] > 0 ? true : ($dossiers['croissance_pct'] < 0 ? false : null);
     @endphp
     @foreach([
-        ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend'=>$trendTotal,                                     'up'=>$upTotal,                    'arrow'=>$upTotal],
-        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['actifs_ce_mois'].' هذا الشهر',   'up'=>$dossiers['up_actifs'],      'arrow'=>$dossiers['up_actifs']],
-        ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend'=>$dossiers['en_cours_ce_mois'].' هذا الشهر',       'up'=>$dossiers['up_en_cours'],    'arrow'=>$dossiers['up_en_cours']],
-        ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend'=>$dossiers['jugements_semaine'].' هذا الأسبوع',    'up'=>$dossiers['up_jugements'],   'arrow'=>$dossiers['up_jugements']],
-        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend'=>$reclamations['ce_mois'].' هذا الشهر', 'up'=>$reclamations['up_pct'],     'arrow'=>$reclamations['arrow_pct']],
-        ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executions'],    'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend'=>$dossiers['executions_ce_mois'].' هذا الشهر',     'up'=>$dossiers['up_executions'],  'arrow'=>$dossiers['up_executions']],
+        ['label'=>'إجمالي الملفات',    'value'=>$dossiers['total'],         'icon'=>'bi-folder2-open',     'bg'=>'#e0f2fe','ic'=>'#0369a1', 'trend_sign'=>($dossiers['croissance_pct'] >= 0 ? '+' : '-'), 'trend_num'=>abs($dossiers['croissance_pct']),     'trend_suffix'=>'% هذا الشهر',   'up'=>$upTotal,                    'arrow'=>$upTotal],
+        ['label'=>'الملفات النشطة',   'value'=>$dossiers['actifs'],        'icon'=>'bi-activity',         'bg'=>'#dcfce7','ic'=>'#15803d', 'trend_sign'=>null, 'trend_num'=>$dossiers['actifs_ce_mois'],       'trend_suffix'=>' هذا الشهر',    'up'=>$dossiers['up_actifs'],      'arrow'=>$dossiers['up_actifs']],
+        ['label'=>'قيد النظر',          'value'=>$dossiers['en_cours'],      'icon'=>'bi-hourglass-split',  'bg'=>'#fef3c7','ic'=>'#b45309', 'trend_sign'=>null, 'trend_num'=>$dossiers['en_cours_ce_mois'],     'trend_suffix'=>' هذا الشهر',    'up'=>$dossiers['up_en_cours'],    'arrow'=>$dossiers['up_en_cours']],
+        ['label'=>'المحكومة',             'value'=>$dossiers['juges'],         'icon'=>'bi-journal-text',     'bg'=>'#ede9fe','ic'=>'#7e22ce', 'trend_sign'=>null, 'trend_num'=>$dossiers['jugements_semaine'],    'trend_suffix'=>' هذا الأسبوع',  'up'=>$dossiers['up_jugements'],   'arrow'=>$dossiers['up_jugements']],
+        ['label'=>'الشكايات',      'value'=>$reclamations['total'],     'icon'=>'bi-chat-left-text',   'bg'=>'#fce7f3','ic'=>'#9d174d', 'trend_sign'=>null, 'trend_num'=>$reclamations['ce_mois'],          'trend_suffix'=>' هذا الشهر',    'up'=>$reclamations['up_pct'],     'arrow'=>$reclamations['arrow_pct']],
+        ['label'=>'ملفات التنفيذ',        'value'=>$dossiers['executions'],    'icon'=>'bi-shield-check',     'bg'=>'#dcfce7','ic'=>'#15803d', 'trend_sign'=>null, 'trend_num'=>$dossiers['executions_ce_mois'],   'trend_suffix'=>' هذا الشهر',    'up'=>$dossiers['up_executions'],  'arrow'=>$dossiers['up_executions']],
     ] as $s)
     <div class="col-6 col-md-4 col-xl-2">
         <div class="stat-card-new text-start">
@@ -66,7 +65,11 @@
             </div>
             <div class="stat-lbl" style="text-align: right;">{{ $s['label'] }}</div>
             <div class="stat-trend justify-content-end {{ $s['up'] === true ? 'trend-up' : ($s['up'] === false ? 'trend-dn' : 'trend-n') }}">
-                {{ $s['trend'] }}
+                @if(!is_null($s['trend_sign']))<span class="trend-sign">{{ $s['trend_sign'] }}</span>@endif
+                <span class="js-counter trend-counter" data-count-to="{{ $s['trend_num'] }}">
+                    <span class="counter-num fade-val">0</span>
+                    <span class="flip-num" style="display:none"></span>
+                </span>{{ $s['trend_suffix'] }}
                 @if($s['arrow'] === true)<i class="bi bi-arrow-up-short" style="font-size:14px"></i>
                 @elseif($s['arrow'] === false)<i class="bi bi-arrow-down-short" style="font-size:14px"></i>
                 @else<i class="bi bi-dash" style="font-size:14px"></i>@endif
@@ -115,7 +118,7 @@
 <div class="row g-3 mb-4" style="direction: rtl;">
 
     {{-- الحالات --}}
-    <div class="col-md-4">
+    <div class="col-md-6 col-lg-4">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
@@ -149,7 +152,7 @@
     </div>
 
     {{-- نتائج الأحكام --}}
-    <div class="col-md-4">
+    <div class="col-md-6 col-lg-4">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
@@ -186,7 +189,7 @@
     </div>
 
     {{-- الخلاصة المالية --}}
-    <div class="col-md-4">
+    <div class="col-md-6 col-lg-4">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
@@ -231,7 +234,7 @@
 <div class="row g-3 mb-4" style="direction: rtl;">
 
     {{-- حضور المحامي في الجلسات --}}
-    <div class="col-md-4">
+    <div class="col-md-6 col-lg-4">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
@@ -267,7 +270,7 @@
     </div>
 
     {{-- الشكايات حسب الحالة --}}
-    <div class="col-md-4">
+    <div class="col-md-6 col-lg-4">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
@@ -301,7 +304,7 @@
     </div>
 
     {{-- الشكايات حسب النوع --}}
-    <div class="col-md-4">
+    <div class="col-md-6 col-lg-4">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">

@@ -42,7 +42,7 @@ body{
 {{-- ══ الإحصائيات ══ --}}
 <div class="row g-3 mb-4">
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -64,7 +64,7 @@ body{
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -86,7 +86,7 @@ body{
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
 
@@ -118,7 +118,7 @@ body{
               action="{{ route('parties.index') }}"
               class="row g-2 align-items-end">
 
-            <div class="col-md-3">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     بحث
                 </label>
@@ -134,7 +134,7 @@ body{
                 </div>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     نوع الشخص
                 </label>

@@ -1,4 +1,4 @@
-    :root {
+:root {
         --accent: #c8a84b;
         --primary: #1a3a5c;
         --bg: #f4f6fa;
@@ -59,6 +59,48 @@
     .trend-up { color: #16a34a; }
     .trend-dn { color: #dc2626; }
     .trend-n  { color: #64748b; }
+
+    /* ── Animation des chiffres (compteur + effet "ساعة قلاّبة") ───
+       Utilisée à la fois par les grandes valeurs (.stat-val-big)
+       et par les compteurs de tendance (.trend-counter). ── */
+    .js-counter { display: inline-flex; align-items: baseline; vertical-align: baseline; }
+
+    /* 1) Fondu + comptage progressif */
+    .counter-num.fade-val {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity .35s ease, transform .35s ease;
+    }
+    .counter-num.fade-val.in { opacity: 1; transform: translateY(0); }
+
+    /* 2) Bascule vers l'effet "flip clock" une fois le comptage terminé */
+    .js-counter .flip-num { display: none; }
+    .js-counter.is-flipping .counter-num { display: none; }
+    .js-counter.is-flipping .flip-num { display: inline-flex !important; }
+
+    .flip-digit {
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        height: 1em;
+        line-height: 1em;
+        min-width: .58em;
+        text-align: center;
+    }
+    .flip-digit .old,
+    .flip-digit .new {
+        display: block;
+        transition: transform .43s cubic-bezier(.4, 0, .2, 1);
+    }
+    .flip-digit .old { transform: translateY(0); }
+    .flip-digit .new { position: absolute; top: 0; left: 0; right: 0; transform: translateY(100%); }
+    .flip-digit.flipping .old { transform: translateY(-100%); }
+    .flip-digit.flipping .new { transform: translateY(0); }
+
+    /* Variante compacte, à la taille du texte de tendance */
+    .trend-counter { font-weight: 700; }
+    .trend-counter .flip-digit { min-width: .5em; }
 
     /* ── Card boxes ──────────────────────────────── */
     .card-modern {

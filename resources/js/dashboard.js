@@ -213,7 +213,7 @@
      chiffre par chiffre, tant qu'elle est visible à l'écran et que l'onglet est actif. */
 (function () {
     const COUNT_DURATION = 1200; // ms
-    const FLIP_INTERVAL = 5000; // ms 
+    const FLIP_INTERVAL = 10000; // ms 
     const els = document.querySelectorAll('.js-counter[data-count-to]');
     if (!els.length) return;
 

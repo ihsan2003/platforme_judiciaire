@@ -50,7 +50,7 @@
         ],
     ] as $stat)
 
-        <div class="col-12 col-sm-6 col-lg">
+        <div class="col-md-4 col-lg-3">
             <div class="card border-0 shadow-sm h-100">
 
                 <div class="card-body d-flex align-items-center gap-3">
@@ -87,7 +87,7 @@
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-3">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     بحث
                 </label>
@@ -105,7 +105,7 @@
                 </div>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     الحالة
                 </label>
@@ -122,7 +122,7 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     نوع المشتكي
                 </label>
@@ -139,7 +139,7 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     نوع الشكاية
                 </label>
@@ -156,7 +156,7 @@
                 </select>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
                     من تاريخ
                 </label>

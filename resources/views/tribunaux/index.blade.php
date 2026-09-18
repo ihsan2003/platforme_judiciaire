@@ -11,7 +11,7 @@
 
 {{-- ══ STATS ══ --}}
 <div class="row g-3 mb-4">
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-primary bg-opacity-10 p-3">
@@ -25,7 +25,7 @@
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-success bg-opacity-10 p-3">
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-md-4 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-circle bg-warning bg-opacity-10 p-3">
@@ -63,7 +63,7 @@
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">بحث</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white">
@@ -77,7 +77,7 @@
                 </div>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">النوع</label>
                 <select name="type" class="form-select">
                     <option value="">جميع الأنواع</option>
