@@ -208,15 +208,17 @@
 
 /* Animation des chiffres dans les cartes statistiques.
    - 1er affichage de la carte : fondu + comptage progressif (opacité/translation + odomètre).
-   - Affichages suivants (la carte redevient visible : scroll, retour d'onglet...) :
-     effet "ساعة قلاّبة" (flip clock), rejoué à chaque fois. */
+   - Une fois le comptage terminé : la carte rejoue automatiquement, toutes les
+     FLIP_INTERVAL ms, l'effet "ساعة قلاّبة" (flip clock / panneau d'aéroport),
+     chiffre par chiffre, tant qu'elle est visible à l'écran et que l'onglet est actif. */
 (function () {
     const COUNT_DURATION = 1200; // ms
+    const FLIP_INTERVAL = 5000; // ms 
     const els = document.querySelectorAll('.js-counter[data-count-to]');
     if (!els.length) return;
 
     /* ---- 1) Fondu + comptage ---- */
-    function playFadeCount(wrapper) {
+    function playFadeCount(wrapper, onDone) {
         const target = Number(wrapper.dataset.countTo) || 0;
         const numEl = wrapper.querySelector('.counter-num');
         wrapper.classList.remove('is-flipping');
@@ -233,6 +235,7 @@
                 requestAnimationFrame(frame);
             } else {
                 numEl.textContent = target;
+                if (typeof onDone === 'function') onDone();
             }
         }
         numEl.classList.add('in');
@@ -284,25 +287,38 @@
         }, 230);
     }
 
-    function playAnimation(wrapper) {
-        if (wrapper.dataset.played === '1') {
-            playFlip(wrapper);
-        } else {
-            wrapper.dataset.played = '1';
-            playFadeCount(wrapper);
-        }
+    /* ---- 3) Boucle automatique : rejoue le flip toutes les FLIP_INTERVAL ms ---- */
+    function startAutoFlip(wrapper) {
+        if (wrapper._flipTimer) return; // déjà démarrée pour cette carte
+
+        wrapper._flipTimer = setInterval(() => {
+            if (document.hidden) return; // onglet en arrière-plan : on économise le CPU
+
+            const rect = wrapper.getBoundingClientRect();
+            const viewportH = window.innerHeight || document.documentElement.clientHeight;
+            const inView = rect.bottom > 0 && rect.top < viewportH;
+            if (inView) playFlip(wrapper);
+        }, FLIP_INTERVAL);
+    }
+
+    function playInitialAnimation(wrapper) {
+        if (wrapper.dataset.played === '1') return;
+        wrapper.dataset.played = '1';
+        // Une fois le comptage terminé, on lance la boucle de rejeu automatique.
+        playFadeCount(wrapper, () => startAutoFlip(wrapper));
     }
 
     if (!('IntersectionObserver' in window)) {
-        // Repli : anime une seule fois (fondu + comptage) au chargement si l'API n'est pas dispo
-        els.forEach(playFadeCount);
+        // Repli : anime au chargement si l'API n'est pas dispo
+        els.forEach((el) => playInitialAnimation(el));
         return;
     }
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
-                playAnimation(entry.target);
+                playInitialAnimation(entry.target);
+                observer.unobserve(entry.target); // le setInterval prend le relais
             }
         });
     }, { threshold: 0.4 });
