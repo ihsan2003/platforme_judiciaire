@@ -365,54 +365,70 @@
 
             </div>
 
-            <div class="card-body small">
+            <div class="card-body">
 
-                <dl class="row mb-0">
+                {{-- نسبة التحصيل --}}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold small">نسبة التحصيل</span>
+                        <span class="fw-bold text-{{ $pctColor }}">{{ $pct }}%</span>
+                    </div>
 
-                    <dt class="col-7 text-muted fw-normal">
-                        المبلغ المحكوم به
-                    </dt>
-
-                    <dd class="col-5 text-end fw-semibold" dir="ltr">
-                        {{ number_format($finance->montant_condamne, 2, '.', ',') }} DH
-                    </dd>
-
-                    <dt class="col-7 text-muted fw-normal">
-                        المبلغ المؤدى
-                    </dt>
-
-                    <dd class="col-5 text-end fw-semibold text-success" dir="ltr">
-                        {{ number_format($finance->montant_paye, 2, '.', ',') }} DH
-                    </dd>
-
-                    <dt class="col-7 text-muted fw-normal">
-                        المبلغ المتبقي
-                    </dt>
-
-                    <dd class="col-5 text-end fw-semibold {{ $finance->montant_restant > 0 ? 'text-danger' : 'text-success' }}" dir="ltr">
-                        {{ number_format($finance->montant_restant, 2, '.', ',') }} DH
-                    </dd>
-
-                    @if($finance->date_paiement)
-
-                        <dt class="col-7 text-muted fw-normal">
-                            تاريخ آخر أداء
-                        </dt>
-
-                        <dd class="col-5 text-end">
-                            {{ $finance->date_paiement->format('d/m/Y') }}
-                        </dd>
-
-                    @endif
-
-                </dl>
-
-                <div class="progress mt-3" style="height:8px">
-                    <div class="progress-bar bg-{{ $pctColor }}" style="width: {{ $pct }}%"></div>
+                    <div style="height:12px;background:#e2e8f0;border-radius:6px;overflow:hidden;">
+                        <div style="width:{{ $pct }}%;height:100%;border-radius:6px;
+                            background:{{ $pct >= 100 ? '#16a34a' : ($pct > 50 ? '#d97706' : '#ef4444') }}">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="text-muted small mt-1 text-start">
-                    {{ $pct }}% من المبلغ المحكوم به تم أداؤه
+                <div class="row g-3">
+
+                    {{-- المحكوم به --}}
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded border text-center h-100">
+                            <div class="text-muted small fw-semibold mb-1">المحكوم به</div>
+                            <div class="fw-bold fs-5">{{ number_format($finance->montant_condamne, 2, '.', ',') }}</div>
+                            <div class="text-muted small">درهم</div>
+                        </div>
+                    </div>
+
+                    {{-- المدفوع --}}
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded border text-center h-100"
+                             style="border-color:#a7f3d0!important;background:#f0fdf4">
+                            <div class="text-success small fw-semibold mb-1">المبلغ المدفوع</div>
+                            <div class="fw-bold fs-5 text-success">{{ number_format($finance->montant_paye, 2, '.', ',') }}</div>
+                            <div class="text-muted small">درهم</div>
+                        </div>
+                    </div>
+
+                    {{-- المتبقي --}}
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded border text-center h-100"
+                             style="{{ $finance->montant_restant > 0 ? 'border-color:#fca5a5!important;background:#fff5f5' : 'border-color:#a7f3d0!important;background:#f0fdf4' }}">
+                            <div class="{{ $finance->montant_restant > 0 ? 'text-danger' : 'text-success' }} small fw-semibold mb-1">
+                                المبلغ المتبقي
+                            </div>
+                            <div class="fw-bold fs-5 {{ $finance->montant_restant > 0 ? 'text-danger' : 'text-success' }}">
+                                {{ number_format($finance->montant_restant, 2, '.', ',') }}
+                            </div>
+                            <div class="text-muted small">درهم</div>
+                        </div>
+                    </div>
+
+                    {{-- تاريخ الدفع --}}
+                    @if($finance->date_paiement)
+                    <div class="col-12">
+                        <div class="p-3 rounded border">
+                            <div class="text-muted small fw-semibold mb-1">تاريخ آخر أداء</div>
+                            <span class="fw-semibold text-success">
+                                <i class="bi bi-calendar-check ms-1"></i>
+                                {{ $finance->date_paiement->format('d/m/Y') }}
+                            </span>
+                        </div>
+                    </div>
+                    @endif
+
                 </div>
 
                 @if($finance->est_solde)
