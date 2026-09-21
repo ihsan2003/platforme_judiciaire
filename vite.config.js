@@ -16,14 +16,16 @@ export default defineConfig({
 
 
                 'resources/js/app.js',
-                'resources/js/dashboard.js',    
+                'resources/js/dashboard.js',
+                'resources/js/dashboard-map.js',        
                 'resources/js/notification-bell.js',    
                 'resources/js/avocat-partie-select.js',    
                 'resources/js/partie-avocat-select.js',    
                 'resources/js/tribunaux-edit.js',    
-                'resources/js/audience-create.js',    
+                'resources/js/audience-create.js', 
+                'resources/js/audience-edit.js',       
                 'resources/js/dossier-mahakim.js',    
-                'resources/js/dossier-show.js',    
+                   
  
 
         
