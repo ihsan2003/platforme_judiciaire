@@ -33,4 +33,7 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    esbuild: {
+        drop: ['console', 'debugger'],
+    },
 });
