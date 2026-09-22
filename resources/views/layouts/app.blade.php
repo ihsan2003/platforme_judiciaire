@@ -161,7 +161,7 @@
         .table td { vertical-align: middle; font-size: .9rem; }
         .table-hover tbody tr:hover { background: #f0f4ff; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 991.98px) {
             #sidebar { width: 0; }
             #main-content { margin-right: 0; }
         }
@@ -357,12 +357,18 @@
 
 {{-- القائمة الجانبية (Sidebar) --}}
 <nav id="sidebar">
-    <div class="sidebar-brand">
-        <div class="sidebar-brand-icon"><i class="bi bi-bank2"></i></div>
-        <div>
-            <div class="sidebar-brand-text">المنصة القانونية</div>
-            <div class="sidebar-brand-sub">التعاون الوطني</div>
+    <div class="sidebar-brand d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <div class="sidebar-brand-icon"><i class="bi bi-bank2"></i></div>
+            <div>
+                <div class="sidebar-brand-text">المنصة القانونية</div>
+                <div class="sidebar-brand-sub">التعاون الوطني</div>
+            </div>
         </div>
+
+        <button class="btn btn-sm btn-link text-white-50 p-0 d-lg-none" id="sidebarClose" aria-label="إغلاق القائمة">
+            <i class="bi bi-x-lg fs-5"></i>
+        </button>
     </div>
     
     <div class="sidebar-content">
@@ -496,7 +502,7 @@
 
         {{-- اليمين : زر الهاتف المحمول + مسار التنقل (Breadcrumb) --}}
         <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-light d-md-none" id="sidebarToggle">
+            <button class="btn btn-sm btn-light d-lg-none" id="sidebarToggle">
                 <i class="bi bi-list fs-5"></i>
             </button>
 
@@ -625,10 +631,15 @@
 <x-confirm-modal />
 
 <script>
-    // تبديل القائمة الجانبية على الهواتف المحمولة
+    // تبديل القائمة الجانبية على الشاشات الصغيرة والمتوسطة
+    const sidebarEl = document.getElementById('sidebar');
+
     document.getElementById('sidebarToggle')?.addEventListener('click', function () {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.style.width = sidebar.style.width === '260px' ? '0' : '260px';
+        sidebarEl.style.width = sidebarEl.style.width === '260px' ? '0' : '260px';
+    });
+
+    document.getElementById('sidebarClose')?.addEventListener('click', function () {
+        sidebarEl.style.width = '0';
     });
 </script>
 @stack('scripts')
