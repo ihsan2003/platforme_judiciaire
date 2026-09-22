@@ -670,7 +670,7 @@
                         <div class="text-muted mt-1" style="font-size:.7rem">{{ $doc->date_depot?->format('Y/m/d') ?? '—' }}</div>
                     </div>
                     <div class="card-footer bg-white py-2">
-                        <a href="{{ Storage::url($doc->fichier_path) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                        <a href="{{ route('reclamations.documents.download', [$reclamation, $doc]) }}" class="btn btn-sm btn-outline-primary w-100">
                             <i class="bi bi-download me-1"></i>تحميل
                         </a>
                     </div>

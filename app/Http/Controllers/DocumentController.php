@@ -31,6 +31,10 @@ class DocumentController extends Controller
             'id_type_document' => ['required', 'exists:type_documents,id'],
             'id_partie'        => ['nullable', 'exists:parties,id'],
             'date_depot'       => ['required', 'date'],
+        ], [
+            'fichier.required' => 'يرجى اختيار ملف.',
+            'fichier.mimes'    => 'يجب أن يكون الملف من نوع: pdf, doc, docx, xls, xlsx, jpg, jpeg, png.',
+            'fichier.max'      => 'يجب ألا يتجاوز حجم الملف 10 ميغابايت.',
         ]);
 
         $file = $request->file('fichier');

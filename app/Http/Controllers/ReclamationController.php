@@ -237,6 +237,26 @@ class ReclamationController extends Controller
     }
 
     // ─────────────────────────────────────────
+    // DOWNLOAD DOCUMENT
+    // ─────────────────────────────────────────
+    public function downloadDocument(Reclamation $reclamation, Document $document)
+    {
+        // Sécurité : le document doit bien appartenir à cette réclamation
+        abort_unless($document->id_reclamation === $reclamation->id, 404);
+
+        abort_unless(
+            Storage::disk('local')->exists($document->fichier_path),
+            404,
+            'Fichier introuvable.'
+        );
+
+        return Storage::disk('local')->download(
+            $document->fichier_path,
+            $document->titre_document
+        );
+    }
+
+    // ─────────────────────────────────────────
     // EDIT
     // ─────────────────────────────────────────
     public function edit(Reclamation $reclamation)

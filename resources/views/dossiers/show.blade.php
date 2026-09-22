@@ -1794,15 +1794,6 @@
                     <label class="form-label fw-semibold small">تاريخ الإيداع <span class="text-danger">*</span></label>
                     <input type="date" name="date_depot" class="form-control" value="{{ date('Y-m-d') }}" required>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold small">الطرف المعني (اختياري)</label>
-                    <select name="id_partie" class="form-select">
-                        <option value="">— غير محدد —</option>
-                        @foreach($parties as $partie)
-                            <option value="{{ $partie->id }}">{{ $partie->nom_partie }}</option>
-                        @endforeach
-                    </select>
-                </div>
                 </form>
             </div>
             <div class="modal-footer">

@@ -165,6 +165,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{reclamation}',       [ReclamationController::class, 'update']) ->name('update');
         Route::delete('/{reclamation}',    [ReclamationController::class, 'destroy'])->name('destroy');
         Route::post('/{reclamation}/actions', [ReclamationController::class, 'addAction'])->name('actions.store');
+        Route::get('/{reclamation}/documents/{document}/download', [ReclamationController::class, 'downloadDocument'])->name('documents.download');
     });
 
 
