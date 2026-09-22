@@ -213,6 +213,14 @@
                     <x-sortable-th column="type" class="text-muted small fw-semibold">
                         نوع القضية
                     </x-sortable-th>
+
+                    <x-sortable-th column="date_ouverture" class="text-muted small fw-semibold">
+                        تاريخ الفتح
+                    </x-sortable-th>
+
+                    <x-sortable-th column="date_recours" class="text-muted small fw-semibold">
+                        تاريخ الطعن
+                    </x-sortable-th>
  
                     <th class="text-muted small fw-semibold">
                         المحكمة
@@ -260,6 +268,14 @@
                         <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $dossier->typeAffaire->affaire ?? '—' }}
                         </span>
+                    </td>
+
+                    <td class="text-muted small">
+                        {{ $dossier->date_ouverture?->format('Y-m-d') ?? '—' }}
+                    </td>
+
+                    <td class="text-muted small">
+                        {{ $dossier->recours->first()?->date_recours?->format('Y-m-d') ?? '—' }}
                     </td>
 
                     <td>
@@ -341,7 +357,7 @@
                 @empty
 
                 <tr>
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="10" class="text-center py-5 text-muted">
 
                         <i class="bi bi-folder-x fs-1 d-block mb-2 opacity-25"></i>
 

@@ -40,6 +40,7 @@ class DossierJudiciaireController extends Controller
                 'typeAffaire',
                 'statut',
                 'dossierTribunaux.tribunal.province.region',
+                'recours' => fn($q) => $q->latest('date_recours'),
             ])
             ->when($request->type, fn($q, $v) => $q->parType($v))
             ->when($request->statut, fn($q, $v) => $q->whereHas(
@@ -67,6 +68,12 @@ class DossierJudiciaireController extends Controller
                     $dir
                 ),
                 'date' => 'date_ouverture',
+                'date_ouverture' => 'date_ouverture',
+                'date_recours' => fn($q, $dir) => $q->orderBy(
+                    \App\Models\Recours::selectRaw('MAX(date_recours)')
+                        ->whereColumn('recours.id_dossier_recours', 'dossier_judiciaires.id'),
+                    $dir
+                ),
                 'region' => fn($q, $dir) => $q->orderBy(
                     Region::select('region')
                         ->join('provinces', 'provinces.id_region', '=', 'regions.id')
