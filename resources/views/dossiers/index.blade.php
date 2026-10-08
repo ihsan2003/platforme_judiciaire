@@ -93,7 +93,7 @@
 
             <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
-                    نوع القضية
+                    الشعبة
                 </label>
 
                 <select name="type" class="form-select">
@@ -211,7 +211,7 @@
  
  
                     <x-sortable-th column="type" class="text-muted small fw-semibold">
-                        نوع القضية
+                        الشعبة
                     </x-sortable-th>
 
                     <x-sortable-th column="date_ouverture" class="text-muted small fw-semibold">

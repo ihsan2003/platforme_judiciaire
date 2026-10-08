@@ -118,6 +118,8 @@ class DossierJudiciaireController extends Controller
         DB::transaction(function () use ($request, $numero_mahakim) {
             $dossier = DossierJudiciaire::create([
                 'numero_dossier_tribunal' => $numero_mahakim,
+                'objet_litige'            => $request->objet_litige,
+                'action_service'          => $request->action_service,
                 'id_type_affaire'         => $request->id_type_affaire,
                 'date_ouverture'          => $request->date_ouverture,
                 'date_cloture'            => $request->date_cloture,
@@ -241,6 +243,8 @@ class DossierJudiciaireController extends Controller
 
         $dossier->update([
             'numero_dossier_tribunal' => $numero_mahakim,
+            'objet_litige'            => $request->objet_litige,
+            'action_service'          => $request->action_service,
             'id_type_affaire'         => $request->id_type_affaire,
             'id_statut_dossier'       => $request->id_statut_dossier,
             'date_ouverture'          => $request->date_ouverture,

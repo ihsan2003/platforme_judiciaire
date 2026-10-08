@@ -156,7 +156,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-3">رقم الملف</th>
-                            <th>نوع القضية</th>
+                            <th>الشعبة</th>
                             <th>المحكمة</th>
                             <th>تاريخ الفتح</th>
                             <th>الحالة</th>

@@ -18,6 +18,8 @@ class DossierJudiciaire extends Model
 
     protected $fillable = [
         'numero_dossier_tribunal',
+        'objet_litige',
+        'action_service',
         'id_type_affaire',
         'id_statut_dossier',
         'date_ouverture',

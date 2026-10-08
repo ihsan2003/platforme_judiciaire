@@ -41,10 +41,10 @@
                     <div class="card-body p-4">
                         <div class="row g-3">
 
-                            {{-- نوع القضية --}}
+                            {{-- الشعبة --}}
                             <div class="col-12 mb-3">
                                 <label class="form-label fw-semibold small">
-                                    نوع القضية
+                                    الشعبة
                                     <span class="text-danger">*</span>
                                 </label>
 
@@ -54,7 +54,7 @@
                                     class="form-select @error('id_type_affaire') is-invalid @enderror"
                                     required
                                 >
-                                    <option value="" data-code="">— اختر نوع القضية —</option>
+                                    <option value="" data-code="">— اختر الشعبة —</option>
 
                                     @foreach($typesAffaire as $type)
                                         <option
@@ -62,7 +62,7 @@
                                             data-code="{{ $type->code }}"
                                             @selected(old('id_type_affaire') == $type->id)
                                         >
-                                            {{ $type->affaire }} (رمز: {{ $type->code }})
+                                            {{ $type->affaire }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -98,7 +98,9 @@
                                                 name="code_mahakim"
                                                 id="code_mahakim"
                                                 class="form-control text-center bg-white fw-bold"
-                                                readonly
+                                                maxlength="4"
+                                                inputmode="numeric"
+                                                placeholder="مثال: 1201"
                                                 value="{{ old('code_mahakim') }}">
                                         </div>
 
@@ -137,6 +139,32 @@
 
                             </div>
 
+                            {{-- موضوع النزاع --}}
+                            <div class="col-12 mb-3">
+                                <label for="objet_litige" class="form-label fw-semibold small">موضوع النزاع</label>
+                                <textarea
+                                    name="objet_litige"
+                                    id="objet_litige"
+                                    rows="3"
+                                    class="form-control @error('objet_litige') is-invalid @enderror">{{ old('objet_litige') }}</textarea>
+                                @error('objet_litige')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- الإجراء المتخذ من طرف المصلحة --}}
+                            <div class="col-12 mb-3">
+                                <label for="action_service" class="form-label fw-semibold small">الإجراء المتخذ من طرف المصلحة</label>
+                                <textarea
+                                    name="action_service"
+                                    id="action_service"
+                                    rows="3"
+                                    class="form-control @error('action_service') is-invalid @enderror">{{ old('action_service') }}</textarea>
+                                @error('action_service')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -146,7 +174,7 @@
             {{-- Dates --}}
             <div class="col-12 col-md-4">
 
-                <div class="card border-0 shadow-sm h-100">
+                <div class="card border-0 shadow-sm mb-4">
 
                     <div class="card-header bg-white border-bottom py-3">
                         <h6 class="mb-0 fw-semibold">
@@ -187,21 +215,26 @@
 
                 </div>
 
+                <div class="d-grid gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>
+                        إنشاء الملف
+                    </button>
+
+                    <a href="{{ route('dossiers.index') }}"
+                    class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg me-2"></i>
+                        إلغاء
+                    </a>
+
+                </div>
+
             </div>
 
         </div>
 
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary px-5">
-                <i class="bi bi-check-lg"></i>
-                إنشاء الملف
-            </button>
-
-            <a href="{{ route('dossiers.index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-x-lg"></i>    
-                 إلغاء
-            </a>
-        </div>
     </form>
 
 @endsection

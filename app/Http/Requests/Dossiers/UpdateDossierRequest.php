@@ -28,6 +28,8 @@ class UpdateDossierRequest extends FormRequest
             'id_statut_dossier'       => ['required', 'exists:statut_dossiers,id'],
             'date_ouverture'          => ['required', 'date'],
             'date_cloture'            => ['nullable', 'date', 'after_or_equal:date_ouverture'],
+            'objet_litige'            => ['nullable', 'string', 'max:5000'],
+            'action_service'          => ['nullable', 'string', 'max:5000'],
         ];
     }
 
@@ -35,8 +37,8 @@ class UpdateDossierRequest extends FormRequest
     {
         return [
             // type affaire
-            'id_type_affaire.required'        => 'يرجى اختيار نوع القضية.',
-            'id_type_affaire.exists'          => 'نوع القضية غير صالح.',
+            'id_type_affaire.required'        => 'يرجى اختيار الشعبة.',
+            'id_type_affaire.exists'          => 'الشعبة غير صالحة.',
 
             // statut
             'id_statut_dossier.required'      => 'يرجى اختيار حالة الملف.',
@@ -57,7 +59,9 @@ class UpdateDossierRequest extends FormRequest
     {
         return [
             'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
-            'id_type_affaire' => 'نوع القضية',
+            'id_type_affaire' => 'الشعبة',
+            'objet_litige' => 'موضوع النزاع',
+            'action_service' => 'الإجراء المتخذ من طرف المصلحة',
             'id_statut_dossier' => 'حالة الملف',
             'date_ouverture' => 'تاريخ فتح الملف',
             'date_cloture' => 'تاريخ الإغلاق',

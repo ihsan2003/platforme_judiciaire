@@ -176,7 +176,7 @@
                         <thead class="table-light">
                         <tr>
                             <th>رقم الملف</th>
-                            <th>نوع القضية</th>
+                            <th>الشعبة</th>
                             <th>الدور</th>
                             <th>الحالة</th>
                             <th class="text-end">عرض</th>

@@ -383,6 +383,31 @@
         </div>
 
     </div>
+
+    {{-- موضوع النزاع + الإجراء المتخذ من طرف المصلحة --}}
+    @if($dossier->objet_litige || $dossier->action_service)
+        <div class="row g-3 small mt-1 text-white">
+
+            @if($dossier->objet_litige)
+                <div class="col-md-6">
+                    <div style="opacity:.75" class="mb-1">
+                        <i class="bi bi-chat-square-text me-1"></i><strong>موضوع النزاع :</strong>
+                    </div>
+                    <div>{!! nl2br(e($dossier->objet_litige)) !!}</div>
+                </div>
+            @endif
+
+            @if($dossier->action_service)
+                <div class="col-md-6">
+                    <div style="opacity:.75" class="mb-1">
+                        <i class="bi bi-clipboard-check me-1"></i><strong>الإجراء المتخذ من طرف المصلحة :</strong>
+                    </div>
+                    <div>{!! nl2br(e($dossier->action_service)) !!}</div>
+                </div>
+            @endif
+
+        </div>
+    @endif
 </div>
 
 {{-- ══════════════════════════════════════════════

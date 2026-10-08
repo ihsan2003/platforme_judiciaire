@@ -20,20 +20,19 @@ document.addEventListener('DOMContentLoaded', function () {
         hiddenInput.value = final;
     }
 
-    typeSelect.addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
-        codeInput.value = selectedOption.getAttribute('data-code') || '';
-        updatePreview();
-    });
+    // Remplissage automatique du code désactivé : le code (رمز الفئة) est saisi à la main.
+    // typeSelect.addEventListener('change', function () {
+    //     const selectedOption = this.options[this.selectedIndex];
+    //     codeInput.value = selectedOption.getAttribute('data-code') || '';
+    //     updatePreview();
+    // });
 
-    [anneeInput, ordreInput].forEach(el => {
+    [anneeInput, codeInput, ordreInput].forEach(el => {
         el.addEventListener('input', updatePreview);
     });
 
-    // Initialiser si retour de validation
-    if (typeSelect.value) {
-        const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-        codeInput.value = selectedOption.getAttribute('data-code') || '';
+    // Initialiser l'aperçu (retour de validation / page edit)
+    if (codeInput.value || ordreInput.value) {
         updatePreview();
     }
 });

@@ -45,15 +45,15 @@
             <div class="card-body p-4">
                 <div class="row g-3">
 
-                    {{-- نوع القضية --}}
+                    {{-- الشعبة --}}
                     <div class="col-md-12 mb-3">
-                        <label class="form-label fw-semibold small">نوع القضية <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">الشعبة <span class="text-danger">*</span></label>
                         <select name="id_type_affaire" id="id_type_affaire" class="form-select @error('id_type_affaire') is-invalid @enderror" required>
-                            <option value="" data-code="">— اختر نوع القضية —</option>
+                            <option value="" data-code="">— اختر الشعبة —</option>
                             @foreach($typesAffaire as $type)
                                 <option value="{{ $type->id }}" data-code="{{ $type->code }}" 
                                     @selected(old('id_type_affaire', $dossier->id_type_affaire) == $type->id)>
-                                    {{ $type->affaire }} (رمز: {{ $type->code }})
+                                    {{ $type->affaire }} 
                                 </option>
                             @endforeach
                         </select>
@@ -78,7 +78,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="small mb-1">رمز الفئة</label>
-                                    <input type="text" name="code_mahakim" id="code_mahakim" class="form-control text-center bg-white fw-bold" readonly value="{{ old('code_mahakim', $code) }}">
+                                    <input type="text" name="code_mahakim" id="code_mahakim" class="form-control text-center bg-white fw-bold" maxlength="4" inputmode="numeric" placeholder="مثال: 1201" value="{{ old('code_mahakim', $code) }}">
                                 </div>
                                 <div class="col-md-5">
                                     <label class="small mb-1">رقم الترتيب</label>
@@ -93,20 +93,20 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-6 mt-4">
-                        <label class="form-label fw-semibold small">حالة الملف <span class="text-danger">*</span></label>
-                        <select name="id_statut_dossier" class="form-select @error('id_statut_dossier') is-invalid @enderror">
-                            @foreach($statutDossiers as $statut)
-                                <option value="{{ $statut->id }}" @selected(old('id_statut_dossier', $dossier->id_statut_dossier) == $statut->id)>
-                                    {{ $statut->statut_dossier }}
-                                </option>
-                            @endforeach
-                        </select>
+                    {{-- موضوع النزاع --}}
+                    <div class="col-12 mt-4">
+                        <label for="objet_litige" class="form-label fw-semibold small">موضوع النزاع</label>
+                        <textarea name="objet_litige" id="objet_litige" rows="3"
+                                  class="form-control @error('objet_litige') is-invalid @enderror">{{ old('objet_litige', $dossier->objet_litige) }}</textarea>
+                        @error('objet_litige')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="col-sm-6 mt-4">
-                        <label class="form-label fw-semibold small">تاريخ الافتتاح <span class="text-danger">*</span></label>
-                        <input type="date" name="date_ouverture" class="form-control" value="{{ old('date_ouverture', $dossier->date_ouverture?->format('Y-m-d')) }}">
+                    {{-- الإجراء المتخذ من طرف المصلحة --}}
+                    <div class="col-12">
+                        <label for="action_service" class="form-label fw-semibold small">الإجراء المتخذ من طرف المصلحة</label>
+                        <textarea name="action_service" id="action_service" rows="3"
+                                  class="form-control @error('action_service') is-invalid @enderror">{{ old('action_service', $dossier->action_service) }}</textarea>
+                        @error('action_service')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                 </div>
@@ -130,6 +130,26 @@
 
                     <dt class="col-5 text-muted">بواسطة</dt>
                     <dd class="col-7">{{ $dossier->createdBy->name ?? '—' }}</dd>
+
+                    <dt class="col-5 text-muted">
+                        حالة الملف <span class="text-danger">*</span>
+                    </dt>
+                    <dd>
+                        <select name="id_statut_dossier" class="form-select @error('id_statut_dossier') is-invalid @enderror">
+                            @foreach($statutDossiers as $statut)
+                                <option value="{{ $statut->id }}" @selected(old('id_statut_dossier', $dossier->id_statut_dossier) == $statut->id)>
+                                    {{ $statut->statut_dossier }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </dd>
+
+                    <dt class="col-5 text-muted">
+                        تاريخ الافتتاح <span class="text-danger">*</span>
+                    </dt>
+                    <dd>
+                        <input type="date" name="date_ouverture" class="form-control" value="{{ old('date_ouverture', $dossier->date_ouverture?->format('Y-m-d')) }}">
+                    </dd>
                 </dl>
             </div>
         </div>

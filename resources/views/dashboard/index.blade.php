@@ -97,13 +97,13 @@
         </div>
     </div>
 
-    {{-- الملفات حسب نوع القضية --}}
+    {{-- الملفات حسب الشعبة --}}
     <div class="col-lg-6">
         <div class="card-modern h-100">
             <div class="card-modern-hd">
                 <div class="card-modern-title">
                     <div class="card-icon-sm ms-2" style="background:#ede9fe;color:#7e22ce"><i class="bi bi-diagram-3"></i></div>
-                    الملفات حسب نوع القضية
+                    الملفات حسب الشعبة
                 </div>
             </div>
             <div class="card-modern-body">
