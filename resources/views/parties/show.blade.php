@@ -56,12 +56,12 @@
                         </span>
 
                         {{-- avocat --}}
-                        @if($partie->avocat)
+                        @foreach($partie->affectationsAvocats->pluck('avocat')->unique('id') as $av)
                         <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             <i class="bi bi-briefcase me-1"></i>
-                            Me. {{ $partie->avocat->nom_avocat }}
+                            Me. {{ $av->nom_avocat }}
                         </span>
-                        @endif
+                        @endforeach
 
                         {{-- date naissance + age --}}
                         @if($partie->date_naissance)
@@ -267,13 +267,17 @@
 
                     <dt class="col-6 text-muted">المحامي</dt>
                     <dd class="col-6">
-                        @if($partie->avocat)
-                            <a href="{{ route('avocats.show', $partie->avocat) }}">
-                                {{ $partie->avocat->nom_avocat }}
-                            </a>
-                        @else
+                        @forelse($partie->affectationsAvocats as $aff)
+                            <div class="mb-1">
+                                <a href="{{ route('avocats.show', $aff->id_avocat) }}">{{ $aff->avocat->nom_avocat }}</a>
+                                <div class="text-muted" style="font-size:.75rem">
+                                    {{ $aff->libelle_degre }}
+                                    @if($aff->dossier) · {{ $aff->dossier->numero_dossier_tribunal ?? ('#'.$aff->dossier->id) }} @else · جميع الملفات @endif
+                                </div>
+                            </div>
+                        @empty
                             —
-                        @endif
+                        @endforelse
                     </dd>
 
                     {{-- date naissance --}}

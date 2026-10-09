@@ -18,7 +18,7 @@ class StoreExecutionRequest extends FormRequest
             'id_jugement' => ['required', 'exists:jugements,id'],
             'date_notification' => ['required', 'date'],
             'date_execution' => ['nullable', 'date'],
-            'observations' => ['nullable', 'string'],
+            'procedure_execution' => ['nullable', 'string', 'max:1000'],
         ];
     }
 

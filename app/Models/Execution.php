@@ -21,6 +21,7 @@ class Execution extends Model
         'date_notification',
         'statut_execution',
         'date_execution',
+        'procedure_execution',
         'responsable_id'
     ];
 
@@ -63,8 +64,9 @@ class Execution extends Model
                 'numero_dossier_execution', 
                 'date_notification', 
                 'statut_execution', 
-                'date_execution', 
-                'responsable_id', 
+                'date_execution',
+                'procedure_execution',
+                'responsable_id',
             ]) 
             ->logOnlyDirty() 
             ->dontSubmitEmptyLogs()

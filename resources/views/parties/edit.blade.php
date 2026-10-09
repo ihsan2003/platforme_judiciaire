@@ -208,27 +208,26 @@
         <div class="card-header bg-white border-bottom py-3">
             <h6 class="mb-0 fw-semibold">
                 <i class="bi bi-person-badge me-2 text-primary"></i>
-                المحامي
+                المحامون (جميع الملفات)
             </h6>
         </div>
 
         <div class="card-body">
 
             <label class="form-label fw-semibold small">
-                اختيار المحامي
+                اختيار المحامين
             </label>
 
             <div class="input-group">
 
                 <select id="avocat-select"
-                        name="id_avocat"
-                        class="form-select @error('id_avocat') is-invalid @enderror">
-
-                    <option value="">— بدون محامٍ —</option>
+                        name="avocats[]"
+                        multiple
+                        class="form-select @error('avocats') is-invalid @enderror">
 
                     @foreach($avocats as $av)
                         <option value="{{ $av->id }}"
-                            @selected(old('id_avocat', $partie->id_avocat) == $av->id)>
+                            @selected(in_array($av->id, old('avocats', $avocatsGeneraux)))>
 
                             {{ $av->nom_avocat }}
 
@@ -239,14 +238,14 @@
 
             </div>
 
-            @error('id_avocat')
+            @error('avocats')
                 <div class="invalid-feedback d-block">
                     {{ $message }}
                 </div>
             @enderror
 
             <div class="form-text mt-2">
-                يمكنك البحث أو اختيار محامٍ من القائمة.
+                يمكنك اختيار أكثر من محامٍ. المحامون المعيّنون لملف أو درجة معيّنة يُدارون من صفحة الملف.
             </div>
 
         </div>

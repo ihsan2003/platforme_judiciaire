@@ -190,17 +190,25 @@
 
                     </div>
 
-                    {{-- Observations --}}
+                    {{-- مسطرة التنفيذ --}}
                     <div class="col-12">
 
-                        <label class="form-label fw-semibold small">
-                            ملاحظات
+                        <label class="form-label fw-semibold small" for="procedure_execution">
+                            مسطرة التنفيذ
                         </label>
 
-                        <textarea name="observations"
+                        <textarea name="procedure_execution"
+                                  id="procedure_execution"
                                   rows="4"
-                                  class="form-control"
-                                  placeholder="ملاحظات داخلية...">{{ old('observations', $execution->observations) }}</textarea>
+                                  maxlength="1000"
+                                  class="form-control @error('procedure_execution') is-invalid @enderror"
+                                  placeholder="مسطرة التنفيذ المتبعة...">{{ old('procedure_execution', $execution->procedure_execution) }}</textarea>
+
+                        @error('procedure_execution')
+                            <div class="invalid-feedback d-block">
+                                {{ $message }}
+                            </div>
+                        @enderror
 
                     </div>
 

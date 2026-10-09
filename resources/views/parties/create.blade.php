@@ -289,22 +289,19 @@
             <div class="card-body">
 
                 <label class="form-label fw-semibold small">
-                    المحامي المسؤول
+                    المحامون
                 </label>
 
                 <div class="input-group">
 
                     <select id="avocat-select"
-                        name="id_avocat"
-                        class="form-select @error('id_avocat') is-invalid @enderror">
-
-                        <option value="">
-                            — بدون محامٍ —
-                        </option>
+                        name="avocats[]"
+                        multiple
+                        class="form-select @error('avocats') is-invalid @enderror">
 
                         @foreach($avocats as $av)
                             <option value="{{ $av->id }}"
-                                @selected(old('id_avocat') == $av->id)>
+                                @selected(in_array($av->id, old('avocats', [])))>
 
                                 {{ $av->nom_avocat }}
 
@@ -314,14 +311,14 @@
                     </select>
                 </div>
 
-                @error('id_avocat')
+                @error('avocats')
                     <div class="invalid-feedback d-block">
                         {{ $message }}
                     </div>
                 @enderror
 
                 <div class="form-text mt-2">
-                    يمكنك ربط هذا الطرف بمحامٍ مسؤول عنه.
+                    يمكنك ربط هذا الطرف بمحامٍ أو أكثر (لجميع ملفاته). ولتعيين محامٍ حسب الملف أو درجة التقاضي، استعمل صفحة الملف.
                 </div>
 
             </div>

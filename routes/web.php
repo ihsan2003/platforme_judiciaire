@@ -106,6 +106,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/',           [DossierPartieController::class, 'store'])  ->name('store');
         Route::put('/{partie}',    [DossierPartieController::class, 'update']) ->name('update');
         Route::delete('/{partie}', [DossierPartieController::class, 'destroy'])->name('destroy');
+        Route::post('/{partie}/avocats', [DossierPartieController::class, 'storeAvocat'])->name('avocats.store');
+        Route::delete('/{partie}/avocats/{affectation}', [DossierPartieController::class, 'destroyAvocat'])->name('avocats.destroy');
     });
 
     // ── Tribunaux d'un dossier ────────────────────────────────────────────

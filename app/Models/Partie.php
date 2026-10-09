@@ -24,7 +24,6 @@ class Partie extends Model
         'email',
         'adresse',
         'est_entraide',
-        'id_avocat',
     ];
 
     protected $casts = [
@@ -51,9 +50,60 @@ class Partie extends Model
         return $this->hasMany(Document::class, 'id_partie');
     }
 
-    public function avocat()
+    /**
+     * Toutes les affectations d'avocats de cette partie (tous dossiers/degrés confondus).
+     */
+    public function affectationsAvocats()
     {
-        return $this->belongsTo(Avocat::class, 'id_avocat');
+        return $this->hasMany(PartieAvocat::class, 'id_partie');
+    }
+
+    /**
+     * Les avocats distincts de cette partie, quel que soit le dossier ou le degré.
+     */
+    public function avocats()
+    {
+        return $this->belongsToMany(Avocat::class, 'partie_avocats', 'id_partie', 'id_avocat')
+                    ->distinct();
+    }
+
+    /**
+     * Affectations applicables à un dossier : celles propres à ce dossier
+     * + les affectations générales (valables pour tous les dossiers de la partie).
+     * Travaille sur la relation chargée (pas de requête supplémentaire si eager loadée).
+     */
+    public function affectationsPourDossier(int $dossierId)
+    {
+        return $this->affectationsAvocats
+            ->filter(fn (PartieAvocat $a) => $a->id_dossier === null || $a->id_dossier == $dossierId)
+            ->sortBy(fn (PartieAvocat $a) => [$a->degre?->ordre ?? 0, $a->id])
+            ->values();
+    }
+
+    /**
+     * Remplace les avocats « généraux » (tous dossiers, tous degrés) de la partie.
+     * Les affectations propres à un dossier ou à un degré ne sont pas touchées.
+     */
+    public function syncAvocatsGeneraux(array $avocatIds): void
+    {
+        $avocatIds = array_values(array_unique(array_filter($avocatIds)));
+
+        $this->affectationsAvocats()
+            ->whereNull('id_dossier')
+            ->whereNull('id_degre')
+            ->whereNotIn('id_avocat', $avocatIds)
+            ->get()
+            ->each->delete();
+
+        $deja = $this->affectationsAvocats()
+            ->whereNull('id_dossier')
+            ->whereNull('id_degre')
+            ->pluck('id_avocat')
+            ->all();
+
+        foreach (array_diff($avocatIds, $deja) as $idAvocat) {
+            $this->affectationsAvocats()->create(['id_avocat' => $idAvocat]);
+        }
     }
 
     public function estInstitutionDansDossier($dossierId): bool

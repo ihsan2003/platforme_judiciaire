@@ -25,23 +25,68 @@ class Avocat extends Model
     
 
     /**
-     * Toutes les parties que cet avocat représente (lien direct via
-     * parties.id_avocat, colonne réellement utilisée par le formulaire
-     * d'affectation dans AvocatController).
+     * Toutes les affectations de cet avocat (partie × dossier × degré).
      */
-    public function parties()
+    public function affectations()
     {
-        return $this->hasMany(Partie::class, 'id_avocat');
+        return $this->hasMany(PartieAvocat::class, 'id_avocat');
     }
 
     /**
-     * Tous les dossiers judiciaires dans lesquels cet avocat intervient,
-     * via les parties qu'il représente (Avocat → Partie → dossier_parties).
+     * Toutes les parties que cet avocat représente, via partie_avocats
+     * (quel que soit le dossier ou le degré).
+     */
+    public function parties()
+    {
+        return $this->belongsToMany(Partie::class, 'partie_avocats', 'id_avocat', 'id_partie')
+                    ->distinct();
+    }
+
+    /**
+     * Remplace les parties « générales » de l'avocat (tous dossiers, tous degrés).
+     * Les affectations propres à un dossier ou à un degré ne sont pas touchées.
+     */
+    public function syncPartiesGenerales(array $partieIds): void
+    {
+        $partieIds = array_values(array_unique(array_filter($partieIds)));
+
+        $this->affectations()
+            ->whereNull('id_dossier')
+            ->whereNull('id_degre')
+            ->whereNotIn('id_partie', $partieIds)
+            ->get()
+            ->each->delete();
+
+        $deja = $this->affectations()
+            ->whereNull('id_dossier')
+            ->whereNull('id_degre')
+            ->pluck('id_partie')
+            ->all();
+
+        foreach (array_diff($partieIds, $deja) as $idPartie) {
+            $this->affectations()->create(['id_partie' => $idPartie]);
+        }
+    }
+
+    /**
+     * Tous les dossiers judiciaires dans lesquels cet avocat intervient :
+     *  - dossiers où il a une affectation propre, ou
+     *  - dossiers des parties pour lesquelles il a une affectation générale.
      */
     public function dossiers()
     {
-        return DossierJudiciaire::whereHas('parties', function ($q) {
-            $q->where('parties.id_avocat', $this->id);
+        $id = $this->id;
+
+        return DossierJudiciaire::where(function ($q) use ($id) {
+            $q->whereIn(
+                'dossier_judiciaires.id',
+                PartieAvocat::where('id_avocat', $id)->whereNotNull('id_dossier')->select('id_dossier')
+            )->orWhereHas('parties', function ($p) use ($id) {
+                $p->whereIn(
+                    'parties.id',
+                    PartieAvocat::where('id_avocat', $id)->whereNull('id_dossier')->select('id_partie')
+                );
+            });
         });
     }
 
