@@ -507,7 +507,7 @@
                         <th class="small text-muted fw-semibold">الاسم / التسمية</th>
                         <th class="small text-muted fw-semibold">النوع</th>
                         <th class="small text-muted fw-semibold">الدور</th>
-                        <th class="small text-muted fw-semibold">المحامي</th>
+                        <th class="small text-muted fw-semibold">المحامون</th>
                         <th class="small text-muted fw-semibold">تاريخ الانضمام</th>
                         <th class="small text-muted fw-semibold text-end">الإجراءات</th>
                     </tr>
@@ -552,13 +552,32 @@
                             </span>
                         </td>
 
-                        <td class="text-muted small">
-                            @if($dp->partie?->avocat)
-                                <i class="bi bi-briefcase me-1"></i>
-                                {{ $dp->partie->avocat->nom_avocat }}
-                            @else
+                        <td class="small" style="min-width: 220px;">
+                            @foreach($dp->affectations_avocats as $aff)
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    <i class="bi bi-briefcase text-muted"></i>
+                                    <a href="{{ route('avocats.show', $aff->id_avocat) }}" class="text-decoration-none">{{ $aff->avocat->nom_avocat }}</a>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $aff->libelle_degre }}</span>
+                                    @if($aff->id_dossier === null)
+                                        <span class="badge bg-info bg-opacity-10 text-info" title="معيّن لجميع ملفات هذه الجهة">عام</span>
+                                    @else
+                                        @can('update', $dossier)
+                                        <form action="{{ route('dossiers.parties.avocats.destroy', [$dossier, $dp, $aff]) }}" method="POST" class="d-inline"
+                                              onsubmit="return confirm('سحب المحامي من هذه الجهة؟');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-link btn-sm text-danger p-0 lh-1" title="سحب"><i class="bi bi-x-circle"></i></button>
+                                        </form>
+                                        @endcan
+                                    @endif
+                                </div>
+                            @endforeach
+                            @can('update', $dossier)
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0" data-bs-toggle="modal" data-bs-target="#modalAvocatPartie{{ $dp->id }}">
+                                    <i class="bi bi-plus-lg me-1"></i>محامٍ
+                                </button>
+                            @elseif($dp->affectations_avocats->isEmpty())
                                 —
-                            @endif
+                            @endcan
                         </td>
 
                         <td class="text-muted small">
@@ -1522,30 +1541,28 @@
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">المحامي</label>
-                        <div id="bloc_avocat_nouveau">
-                            <select name="id_avocat" id="field_avocat_nouveau_select" class="form-select" autocomplete="off">
-                                <option value="">— بدون محامي —</option>
-                                @foreach($avocats as $av)
-                                    <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div id="bloc_avocat_existant" class="d-none">
-                            <div class="input-group">
-                                <input type="text" id="field_avocat_display" class="form-control bg-light text-muted" readonly>
-                                <button type="button" class="btn btn-outline-secondary" id="btnModifierAvocat">
-                                    <i class="bi bi-pencil me-1"></i>تعديل
-                                </button>
-                            </div>
-                            <div id="bloc_avocat_modif" class="d-none mt-2">
-                                <select name="id_avocat" id="field_avocat_modif_select" class="form-select" autocomplete="off">
-                                    <option value="">— بدون محامي —</option>
-                                    @foreach($avocats as $av)
-                                        <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
-                                    @endforeach
-                                </select>
+                        <div id="bloc_avocat_existant" class="d-none mb-2">
+                            <div class="small text-muted">
+                                <i class="bi bi-briefcase me-1"></i>المحامون الحاليون:
+                                <span id="field_avocat_display" class="fw-semibold"></span>
                             </div>
                         </div>
+                        <select name="id_avocat" id="field_avocat_nouveau_select" class="form-select" autocomplete="off">
+                            <option value="">— بدون محامي —</option>
+                            @foreach($avocats as $av)
+                                <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label fw-semibold small">درجة التقاضي</label>
+                        <select name="id_degre" class="form-select">
+                            <option value="">— جميع الدرجات —</option>
+                            @foreach($degresAvocat as $dg)
+                                <option value="{{ $dg->id }}">{{ $dg->degre_juridiction }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">يمكن إضافة محامين آخرين لاحقاً من عمود «المحامون».</div>
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">الصفة في الملف <span class="text-danger">*</span></label>
@@ -1608,6 +1625,52 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="submit" form="formEditPartie{{ $dp->id }}" class="btn btn-warning">
                     <i class="bi bi-check-lg me-1"></i>حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
+
+{{-- Modals : affecter un avocat à une partie, par degré (تعيين محامٍ) ─── --}}
+@foreach($dossierParties as $dp)
+<div class="modal fade" id="modalAvocatPartie{{ $dp->id }}" tabindex="-1" dir="rtl">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold"><i class="bi bi-briefcase me-1 text-primary"></i>تعيين محامٍ: {{ $dp->partie->nom_partie ?? '—' }}</h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAvocatPartie{{ $dp->id }}" action="{{ route('dossiers.parties.avocats.store', [$dossier, $dp]) }}" method="POST">
+                @csrf
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">المحامي <span class="text-danger">*</span></label>
+                        <select name="id_avocat" class="form-select" required>
+                            <option value="">— اختر المحامي —</option>
+                            @foreach($avocats as $av)
+                                <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">درجة التقاضي</label>
+                        <select name="id_degre" class="form-select">
+                            <option value="">— جميع الدرجات (طيلة الملف) —</option>
+                            @foreach($degresAvocat as $dg)
+                                <option value="{{ $dg->id }}">{{ $dg->degre_juridiction }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">اختر درجة معيّنة (ابتدائي، استئناف، نقض…) أو اتركها لتعيين المحامي طيلة مراحل الملف.</div>
+                    </div>
+                </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" form="formAvocatPartie{{ $dp->id }}" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>تعيين
                 </button>
             </div>
         </div>
@@ -1855,33 +1918,6 @@
             }
         }
     });
-
-    // 2. Initialisation du deuxième Select (Modification)
-    const selectModif = new TomSelect("#field_avocat_modif_select", {
-        create: function(input) {
-            window.location.href = "{{ route('avocats.create') }}?nom=" + encodeURIComponent(input);
-            return false;
-        },
-        sortField: { field: "text", direction: "asc" },
-        placeholder: "— بدون محامي —",
-        render: {
-            no_results: function(data, escape) {
-                return `<div class="no-results">لا توجد نتائج</div>`;
-            },
-
-            option_create: function(data, escape) {
-                return `<div class="create">➕ إضافة "${escape(data.input)}"</div>`;
-            }
-        }
-    });
-
-    // Exemple si vous gérez le clic sur #btnModifierAvocat :
-    document.getElementById('btnModifierAvocat').addEventListener('click', function() {
-        // Votre code existant pour afficher le bloc...
-        
-        // Activer Tom Select proprement :
-        selectModif.enable(); 
-    });
 });
 </script>
 
@@ -1904,14 +1940,10 @@
     const nomOK       = document.getElementById('partieSelectionneeNom');
     const btnDesel    = document.getElementById('btnDeselectionner');
     const btnNouvelle = document.getElementById('btnNouvellePartie');
-    const btnModifier = document.getElementById('btnModifierAvocat');
 
     const blocExistant  = document.getElementById('bloc_avocat_existant');
     const blocNouveau   = document.getElementById('bloc_avocat_nouveau');
-    const blocModif     = document.getElementById('bloc_avocat_modif');
     const avocatDisplay = document.getElementById('field_avocat_display');
-    const avocatModif   = document.getElementById('field_avocat_modif_select');
-    const avocatNvx     = document.getElementById('field_avocat_nouveau_select');
 
     const F = {
         id: document.getElementById('hidden_partie_id'),
@@ -1934,20 +1966,13 @@
         if (F.type_personne) { F.type_personne.disabled = lock; F.type_personne.classList.toggle('bg-light', lock); }
     }
 
-    function showAvocatExistant(nom, id) {
+    function showAvocatExistant(noms) {
+        if (avocatDisplay) avocatDisplay.textContent = noms || 'بدون محامي';
         blocExistant?.classList.remove('d-none');
-        blocNouveau?.classList.add('d-none');
-        if (avocatDisplay) avocatDisplay.value = nom || 'بدون محامي';
-        if (avocatNvx) { avocatNvx.disabled = true; avocatNvx.name = ''; }
-        if (avocatModif) { avocatModif.disabled = true; avocatModif.name = ''; }
-        if (id && avocatModif) Array.from(avocatModif.options).forEach(o => o.selected = (o.value == id));
     }
 
     function showAvocatNouveau() {
         blocExistant?.classList.add('d-none');
-        blocNouveau?.classList.remove('d-none');
-        if (avocatNvx) { avocatNvx.disabled = false; avocatNvx.name = 'id_avocat'; }
-        if (avocatModif) { avocatModif.disabled = true; avocatModif.name = ''; }
     }
 
     function selectPartie(p) {
@@ -1963,7 +1988,7 @@
         bandeauOK?.classList.remove('d-none');
         closeDropdown();
         if (input) input.value = '';
-        showAvocatExistant(p.avocat_nom, p.id_avocat);
+        showAvocatExistant(p.avocats_noms);
     }
 
     function deselect() {
@@ -1985,7 +2010,7 @@
             btn.type = 'button';
             btn.className = 'list-group-item list-group-item-action py-2 px-3 text-end'; // text-end pour RTL
             btn.innerHTML = `<div class="fw-semibold small">${p.nom_partie ?? ''}</div>
-                <div class="text-muted" style="font-size:.75rem"><span class="font-monospace">${p.identifiant_unique ?? ''}</span>${p.avocat_nom ? ' · ' + p.avocat_nom : ''}</div>`;
+                <div class="text-muted" style="font-size:.75rem"><span class="font-monospace">${p.identifiant_unique ?? ''}</span>${p.avocats_noms ? ' · ' + p.avocats_noms : ''}</div>`;
             btn.addEventListener('click', () => selectPartie(p));
             dropdown.appendChild(btn);
         });
@@ -2026,13 +2051,6 @@
 
     btnNouvelle?.addEventListener('click', () => { deselect(); closeDropdown(); if(input) input.value = ''; F.identifiant?.focus(); });
     btnDesel?.addEventListener('click', e => { e.preventDefault(); deselect(); input?.focus(); });
-
-    btnModifier?.addEventListener('click', () => {
-        blocModif?.classList.toggle('d-none');
-        const visible = !blocModif?.classList.contains('d-none');
-        if (avocatModif) { avocatModif.disabled = !visible; avocatModif.name = visible ? 'id_avocat' : ''; }
-        if (btnModifier) btnModifier.innerHTML = visible ? '<i class="bi bi-x me-1"></i>إلغاء' : '<i class="bi bi-pencil me-1"></i>تعديل';
-    });
 
     document.getElementById('modalAjouterPartie')?.addEventListener('show.bs.modal', () => {
         deselect(); closeDropdown(); if(input) input.value = '';

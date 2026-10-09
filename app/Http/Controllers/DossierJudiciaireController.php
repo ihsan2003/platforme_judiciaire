@@ -174,7 +174,8 @@ class DossierJudiciaireController extends Controller
         ]);
 
         $dossierParties = DossierPartie::with([
-            'partie.avocat',
+            'partie.affectationsAvocats.avocat',
+            'partie.affectationsAvocats.degre',
             'typePartie',
         ])
         ->where('id_dossier', $dossier->id)
@@ -185,6 +186,8 @@ class DossierJudiciaireController extends Controller
         $typesPartie = TypePartie::orderBy('type_partie')->get();
         $avocats = Avocat::orderBy('nom_avocat')->get(); // 🔥 CORRIGÉ
         $degresJuridiction = DegreeJuridiction::orderBy('degre_juridiction')->get();
+        // Degrés dans l'ordre de la procédure (1ère instance → appel → cassation), pour l'affectation des avocats
+        $degresAvocat = DegreeJuridiction::orderBy('ordre')->get();
         $parties = Partie::orderBy('nom_partie')->get();
 
         $stats = [
@@ -210,6 +213,7 @@ class DossierJudiciaireController extends Controller
             'typesPartie',
             'avocats', 
             'degresJuridiction',
+            'degresAvocat',
             'parties',
             'stats',
             'typesDocuments',

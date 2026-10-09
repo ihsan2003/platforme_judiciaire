@@ -22,6 +22,8 @@ class StorePartieRequest extends FormRequest
             'telephone'          => ['nullable', new Telephone],
             'email'              => ['nullable', 'email', 'max:255'],
             'adresse'            => ['nullable', 'string'],
+            'avocats'            => ['nullable', 'array'],
+            'avocats.*'          => ['integer', 'exists:avocats,id'],
         ];
     }
 

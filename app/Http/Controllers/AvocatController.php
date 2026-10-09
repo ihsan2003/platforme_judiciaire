@@ -76,7 +76,7 @@ class AvocatController extends Controller
 
         // Associer les parties sélectionnées à ce nouveau محامٍ
         if (!empty($validated['parties'])) {
-            Partie::whereIn('id', $validated['parties'])->update(['id_avocat' => $avocat->id]);
+            $avocat->syncPartiesGenerales($validated['parties']);
         }
 
         return redirect()
@@ -109,7 +109,11 @@ class AvocatController extends Controller
     {
         $avocat = Avocat::findOrFail($id);
         $parties = Partie::orderBy('nom_partie')->get();
-        $selectedPartyIds = Partie::where('id_avocat', $avocat->id)->pluck('id')->toArray();
+        $selectedPartyIds = $avocat->affectations()
+            ->whereNull('id_dossier')
+            ->whereNull('id_degre')
+            ->pluck('id_partie')
+            ->toArray();
 
         return view('avocats.edit', compact('avocat', 'parties', 'selectedPartyIds'));
     }
@@ -136,15 +140,9 @@ class AvocatController extends Controller
 
         $selectedIds = $validated['parties'] ?? [];
 
-        // Détacher les parties qui ne sont plus sélectionnées
-        Partie::where('id_avocat', $avocat->id)
-            ->whereNotIn('id', $selectedIds)
-            ->update(['id_avocat' => null]);
-
-        // Associer les parties sélectionnées à ce محامٍ
-        if (!empty($selectedIds)) {
-            Partie::whereIn('id', $selectedIds)->update(['id_avocat' => $avocat->id]);
-        }
+        // Parties « générales » (tous dossiers, tous degrés) ; les affectations
+        // propres à un dossier ou à un degré ne sont pas touchées.
+        $avocat->syncPartiesGenerales($selectedIds);
 
         return redirect()
             ->route('avocats.index')

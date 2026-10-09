@@ -285,13 +285,14 @@
                                     </span>
                                 @endif
 
-                                @if($partieConcernee->avocat)
+                                @foreach($partieConcernee->affectations_avocats as $aff)
                                     <span>
                                         <i class="bi bi-briefcase ms-1"></i>
 
-                                        الأستاذ {{ $partieConcernee->avocat->nom_avocat }}
+                                        الأستاذ {{ $aff->avocat->nom_avocat }}
+                                        <small class="text-muted">({{ $aff->libelle_degre }})</small>
                                     </span>
-                                @endif
+                                @endforeach
 
                             </div>
 
@@ -322,6 +323,43 @@
                     </div>
 
                 @endforelse
+
+            </div>
+
+        </div>
+
+        {{-- مسطرة التنفيذ --}}
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header bg-white py-3">
+
+                <h6 class="mb-0 fw-semibold">
+
+                    <i class="bi bi-list-check ms-2 text-primary"></i>
+
+                    مسطرة التنفيذ
+
+                </h6>
+
+            </div>
+
+            <div class="card-body">
+
+                @if(filled($execution->procedure_execution))
+
+                    <p class="mb-0" style="white-space: pre-line;">{{ $execution->procedure_execution }}</p>
+
+                @else
+
+                    <div class="text-center py-3 text-muted small">
+
+                        <i class="bi bi-journal-text fs-2 d-block mb-2 opacity-25"></i>
+
+                        لم يتم تسجيل مسطرة التنفيذ بعد.
+
+                    </div>
+
+                @endif
 
             </div>
 

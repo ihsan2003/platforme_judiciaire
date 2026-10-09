@@ -18,7 +18,7 @@ class UpdateExecutionRequest extends FormRequest
             'statut_execution' => ['required', 'exists:statut_executions,id'],
             'date_notification' => ['required', 'date'],
             'date_execution' => ['nullable', 'date'],
-            'observations' => ['nullable', 'string'],
+            'procedure_execution' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

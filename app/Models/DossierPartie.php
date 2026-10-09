@@ -41,6 +41,18 @@ class DossierPartie extends Model
         return $this->belongsTo(TypePartie::class, 'id_type_partie');
     }
 
+    /**
+     * Avocats de cette partie dans ce dossier (affectations propres au dossier
+     * + affectations générales), triés par degré de juridiction.
+     * Eager-loader 'partie.affectationsAvocats.avocat' et '.degre' pour éviter le N+1.
+     */
+    public function getAffectationsAvocatsAttribute()
+    {
+        return $this->partie
+            ? $this->partie->affectationsPourDossier((int) $this->id_dossier)
+            : collect();
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DossierJudiciaire;
 use App\Models\DossierPartie;
 use App\Models\Partie;
+use App\Models\PartieAvocat;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 
@@ -19,7 +20,7 @@ class DossierPartieController extends Controller
 
     /**
      * Recherche de parties existantes par identifiant ou nom (AJAX).
-     * Retourne aussi l'avocat lié à la partie pour affichage informatif.
+     * Retourne aussi les avocats de la partie pour affichage informatif.
      */
     public function search(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -29,7 +30,7 @@ class DossierPartieController extends Controller
             return response()->json([]);
         }
 
-        $parties = Partie::with('avocat')
+        $parties = Partie::with('avocats')
             ->where(function ($query) use ($q) {
                 $query->where('identifiant_unique', 'like', "%{$q}%")
                       ->orWhere('nom_partie', 'like', "%{$q}%");
@@ -37,11 +38,11 @@ class DossierPartieController extends Controller
             ->orderBy('nom_partie')
             ->limit(10)
             ->get(['id', 'identifiant_unique', 'nom_partie', 'type_personne',
-                'telephone', 'email', 'adresse', 'id_avocat']);
+                'telephone', 'email', 'adresse']);
 
-        // Inclure le nom de l'avocat pour affichage (lecture seule)
+        // Inclure les noms des avocats pour affichage (lecture seule)
         $parties->transform(fn($p) => array_merge($p->toArray(), [
-            'avocat_nom' => $p->avocat?->nom_avocat,
+            'avocats_noms' => $p->avocats->pluck('nom_avocat')->implode('، '),
         ]));
 
         return response()->json($parties);
@@ -50,10 +51,9 @@ class DossierPartieController extends Controller
     /**
      * Ajouter une partie existante ou nouvelle au dossier.
      *
-     * RG : l'avocat est lié à la partie elle-même, pas au dossier.
-     * On ne demande l'avocat que lors de la création d'une nouvelle partie.
-     * Pour une partie existante, l'avocat peut être mis à jour sur la partie
-     * uniquement si l'utilisateur le change explicitement.
+     * RG : une partie peut avoir plusieurs avocats (partie_avocats). Ici on peut
+     * affecter un premier avocat, pour ce dossier, éventuellement limité à un degré
+     * de juridiction. D'autres avocats se gèrent ensuite depuis la colonne « المحامون ».
      */
     public function store(Request $request, DossierJudiciaire $dossier): RedirectResponse
     {
@@ -67,6 +67,7 @@ class DossierPartieController extends Controller
             'email'              => ['nullable', 'email', 'max:255'],
             'adresse'            => ['nullable', 'string'],
             'id_avocat'          => ['nullable', 'exists:avocats,id'],
+            'id_degre'           => ['nullable', 'exists:degre_juridictions,id'],
             'id_type_partie'     => ['required', 'exists:type_parties,id'],
             'date_entree'        => ['required', 'date'],
         ]);
@@ -74,14 +75,8 @@ class DossierPartieController extends Controller
         if ($request->filled('partie_id')) {
             // ── Partie existante ──────────────────────────────────────────
             $partie = Partie::findOrFail($request->partie_id);
-
-            // Si l'utilisateur a explicitement choisi un nouvel avocat, on met à jour la partie
-            if ($request->filled('id_avocat') && $partie->id_avocat != $request->id_avocat) {
-                $partie->update(['id_avocat' => $request->id_avocat]);
-            }
         } else {
             // ── Nouvelle partie ───────────────────────────────────────────
-            // L'avocat est stocké directement sur la partie (RG : lien permanent)
             // NB : le CIN est optionnel. On ne peut s'en servir comme clé de
             // dédoublonnage (firstOrCreate) que lorsqu'il est renseigné, sinon
             // toutes les parties sans CIN finiraient fusionnées entre elles.
@@ -94,7 +89,6 @@ class DossierPartieController extends Controller
                         'telephone'     => $request->telephone,
                         'email'         => $request->email,
                         'adresse'       => $request->adresse,
-                        'id_avocat'     => $request->id_avocat,
                     ]
                 );
             } else {
@@ -105,7 +99,6 @@ class DossierPartieController extends Controller
                     'telephone'     => $request->telephone,
                     'email'         => $request->email,
                     'adresse'       => $request->adresse,
-                    'id_avocat'     => $request->id_avocat,
                 ]);
             }
         }
@@ -123,13 +116,17 @@ class DossierPartieController extends Controller
                 ->with('error', 'هذه الجهة مسجلة مسبقاً في هذا الملف بنفس الصفة.');
         }
 
-        // La table pivot dossier_parties ne stocke PAS id_avocat (c'est sur la partie)
         DossierPartie::create([
             'id_dossier'     => $dossier->id,
             'id_partie'      => $partie->id,
             'id_type_partie' => $request->id_type_partie,
             'date_entree'    => $request->date_entree,
         ]);
+
+        // Premier avocat de la partie pour ce dossier (optionnel)
+        if ($request->filled('id_avocat')) {
+            $this->affecterAvocat($partie->id, (int) $request->id_avocat, $dossier->id, $request->input('id_degre'));
+        }
 
         return redirect()
             ->route('dossiers.show', $dossier)
@@ -174,5 +171,89 @@ class DossierPartieController extends Controller
             ->route('dossiers.show', $dossier)
             ->withFragment('tab-parties')
             ->with('success', "تم حذف الجهة « {$nomPartie} » من الملف بنجاح.");
+    }
+
+    /**
+     * Affecter un avocat à une partie pour ce dossier, pour tous les degrés
+     * ou pour un degré précis (1ère instance, appel, cassation…).
+     */
+    public function storeAvocat(Request $request, DossierJudiciaire $dossier, DossierPartie $partie): RedirectResponse
+    {
+        $this->authorize('update', $dossier);
+        abort_unless($partie->id_dossier === $dossier->id, 403);
+
+        $data = $request->validate([
+            'id_avocat' => ['required', 'exists:avocats,id'],
+            'id_degre'  => ['nullable', 'exists:degre_juridictions,id'],
+        ], [
+            'id_avocat.required' => 'يرجى اختيار المحامي.',
+        ]);
+
+        $cree = $this->affecterAvocat(
+            $partie->id_partie,
+            (int) $data['id_avocat'],
+            $dossier->id,
+            $data['id_degre'] ?? null
+        );
+
+        $redirect = redirect()->route('dossiers.show', $dossier)->withFragment('tab-parties');
+
+        return $cree
+            ? $redirect->with('success', 'تم تعيين المحامي بنجاح.')
+            : $redirect->with('error', 'هذا المحامي معيّن مسبقاً لهذه الجهة بنفس الدرجة.');
+    }
+
+    /**
+     * Retirer un avocat d'une partie dans ce dossier.
+     * Seules les affectations propres à ce dossier sont supprimables ici ;
+     * les affectations générales se gèrent depuis la fiche de la partie ou de l'avocat.
+     */
+    public function destroyAvocat(DossierJudiciaire $dossier, DossierPartie $partie, PartieAvocat $affectation): RedirectResponse
+    {
+        $this->authorize('update', $dossier);
+        abort_unless($partie->id_dossier === $dossier->id, 403);
+        abort_unless(
+            $affectation->id_partie === $partie->id_partie && $affectation->id_dossier === $dossier->id,
+            403
+        );
+
+        $affectation->delete();
+
+        return redirect()
+            ->route('dossiers.show', $dossier)
+            ->withFragment('tab-parties')
+            ->with('success', 'تم سحب المحامي من هذه الجهة.');
+    }
+
+    /**
+     * Crée l'affectation si elle n'existe pas déjà (même partie, avocat, dossier, degré).
+     * Retourne false si elle existait déjà.
+     */
+    private function affecterAvocat(int $idPartie, int $idAvocat, int $idDossier, $idDegre): bool
+    {
+        $idDegre = $idDegre ?: null;
+
+        $existe = PartieAvocat::where('id_partie', $idPartie)
+            ->where('id_avocat', $idAvocat)
+            ->where('id_dossier', $idDossier)
+            ->when(
+                $idDegre,
+                fn ($q) => $q->where('id_degre', $idDegre),
+                fn ($q) => $q->whereNull('id_degre')
+            )
+            ->exists();
+
+        if ($existe) {
+            return false;
+        }
+
+        PartieAvocat::create([
+            'id_partie'  => $idPartie,
+            'id_avocat'  => $idAvocat,
+            'id_dossier' => $idDossier,
+            'id_degre'   => $idDegre,
+        ]);
+
+        return true;
     }
 }

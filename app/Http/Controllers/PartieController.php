@@ -80,7 +80,12 @@ class PartieController extends Controller
     {
         // La validation est dans StorePartieRequest (voir section 4)
         // $request->validated() retourne uniquement les champs validés
-        $partie = Partie::create($request->validated());
+        $data = $request->validated();
+        $avocatIds = $data['avocats'] ?? [];
+        unset($data['avocats']);
+
+        $partie = Partie::create($data);
+        $partie->syncAvocatsGeneraux($avocatIds);
 
         return redirect()
             ->route('parties.show', $partie)
@@ -98,6 +103,9 @@ class PartieController extends Controller
             'dossiers.statutDossier',
             'documents',
             'jugements',
+            'affectationsAvocats.avocat',
+            'affectationsAvocats.degre',
+            'affectationsAvocats.dossier',
         ]);
 
         return view('parties.show', compact('partie'));
@@ -111,7 +119,13 @@ class PartieController extends Controller
         $typesPartie = TypePartie::orderBy('type_partie')->get();
         $avocats     = Avocat::orderBy('nom_avocat')->get();
 
-        return view('parties.edit', compact('partie', 'typesPartie', 'avocats'));
+        $avocatsGeneraux = $partie->affectationsAvocats()
+            ->whereNull('id_dossier')
+            ->whereNull('id_degre')
+            ->pluck('id_avocat')
+            ->all();
+
+        return view('parties.edit', compact('partie', 'typesPartie', 'avocats', 'avocatsGeneraux'));
     }
 
     // =========================================================
@@ -119,7 +133,12 @@ class PartieController extends Controller
     // =========================================================
     public function update(UpdatePartieRequest $request, Partie $partie)
     {
-        $partie->update($request->validated());
+        $data = $request->validated();
+        $avocatIds = $data['avocats'] ?? [];
+        unset($data['avocats']);
+
+        $partie->update($data);
+        $partie->syncAvocatsGeneraux($avocatIds);
 
         return redirect()
             ->route('parties.show', $partie)

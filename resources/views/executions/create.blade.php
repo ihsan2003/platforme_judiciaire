@@ -247,24 +247,24 @@
 
                     </div>
 
-                    {{-- Observations --}}
+                    {{-- مسطرة التنفيذ --}}
                     <div class="mt-3">
 
                         <div class="d-flex justify-content-between">
-                            <label class="form-label fw-semibold small">
-                                ملاحظات
+                            <label class="form-label fw-semibold small" for="procedure_execution">
+                                مسطرة التنفيذ
                             </label>
                             <span class="form-text" id="obs-count">0/1000</span>
                         </div>
 
-                        <textarea name="observations"
-                                  id="observations"
+                        <textarea name="procedure_execution"
+                                  id="procedure_execution"
                                   rows="4"
                                   maxlength="1000"
-                                  class="form-control @error('observations') is-invalid @enderror"
-                                  placeholder="ملاحظات داخلية حول ملف التنفيذ...">{{ old('observations') }}</textarea>
+                                  class="form-control @error('procedure_execution') is-invalid @enderror"
+                                  placeholder="مسطرة التنفيذ المتبعة...">{{ old('procedure_execution') }}</textarea>
 
-                        @error('observations')
+                        @error('procedure_execution')
                             <div class="invalid-feedback d-block">
                                 {{ $message }}
                             </div>
@@ -444,8 +444,8 @@
     execInput.addEventListener('change', validateDates);
     validateDates();
 
-    // ── Compteur de caractères pour les observations ──
-    var obsInput = document.getElementById('observations');
+    // ── Compteur de caractères pour مسطرة التنفيذ ──
+    var obsInput = document.getElementById('procedure_execution');
     var obsCount = document.getElementById('obs-count');
 
     function updateObsCount() {
