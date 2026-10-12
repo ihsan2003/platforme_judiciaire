@@ -19,6 +19,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\StructureController;
 use App\Http\Controllers\DossierPartieController;
+use App\Http\Controllers\DossierPartieAvocatController;
 use App\Http\Controllers\DossierTribunalController;
 use App\Http\Controllers\RapportController;
 
@@ -106,6 +107,10 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/',           [DossierPartieController::class, 'store'])  ->name('store');
         Route::put('/{partie}',    [DossierPartieController::class, 'update']) ->name('update');
         Route::delete('/{partie}', [DossierPartieController::class, 'destroy'])->name('destroy');
+
+        // Avocats d'une partie dans ce dossier (un ou plusieurs, par degré)
+        Route::post('/{partie}/avocats', [DossierPartieAvocatController::class, 'store'])->name('avocats.store');
+        Route::delete('/{partie}/avocats/{affectation}', [DossierPartieAvocatController::class, 'destroy'])->name('avocats.destroy');
     });
 
     // ── Tribunaux d'un dossier ────────────────────────────────────────────

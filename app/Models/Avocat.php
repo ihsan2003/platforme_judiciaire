@@ -22,42 +22,56 @@ class Avocat extends Model
     ];
 
     // ─── Relations ────────────────────────────────────────────────────────
-    
+    //
+    // RG : un avocat n'est concerné QUE par les dossiers (et degrés) où il a été
+    // explicitement affecté (table dossier_partie_avocats). Être lié à une partie
+    // ne le rend PAS concerné par tous les dossiers de cette partie.
 
-    /**
-     * Toutes les parties que cet avocat représente (lien direct via
-     * parties.id_avocat, colonne réellement utilisée par le formulaire
-     * d'affectation dans AvocatController).
-     */
-    public function parties()
+    /** Affectations de l'avocat : (partie dans un dossier) × degré éventuel. */
+    public function affectations()
     {
-        return $this->hasMany(Partie::class, 'id_avocat');
+        return $this->hasMany(DossierPartieAvocat::class, 'id_avocat');
     }
 
-    /**
-     * Tous les dossiers judiciaires dans lesquels cet avocat intervient,
-     * via les parties qu'il représente (Avocat → Partie → dossier_parties).
-     */
-    public function dossiers()
+    /** Lignes dossier_parties où l'avocat est affecté. */
+    public function dossierParties()
     {
-        return DossierJudiciaire::whereHas('parties', function ($q) {
-            $q->where('parties.id_avocat', $this->id);
+        return $this->hasManyThrough(
+            DossierPartie::class,
+            DossierPartieAvocat::class,
+            'id_avocat',          // FK sur dossier_partie_avocats
+            'id',                 // clé de dossier_parties
+            'id',                 // clé locale (avocats.id)
+            'id_dossier_partie'   // FK vers dossier_parties
+        );
+    }
+
+    /** Parties que l'avocat représente dans au moins un dossier (requête). */
+    public function parties()
+    {
+        return Partie::whereIn('parties.id', function ($sub) {
+            $sub->select('dp.id_partie')
+                ->from('dossier_parties as dp')
+                ->join('dossier_partie_avocats as dpa', 'dpa.id_dossier_partie', '=', 'dp.id')
+                ->where('dpa.id_avocat', $this->id);
         });
     }
 
-    /**
-     * Toutes les lignes dossier_parties où cet avocat est assigné
-     * (permet de savoir sur quels dossiers/parties il intervient).
-     */
-    public function dossierParties()
+    /** Dossiers dans lesquels l'avocat est explicitement affecté (requête). */
+    public function dossiers()
     {
-        return $this->hasMany(DossierPartie::class, 'id_avocat');
+        return DossierJudiciaire::whereIn('dossier_judiciaires.id', function ($sub) {
+            $sub->select('dp.id_dossier')
+                ->from('dossier_parties as dp')
+                ->join('dossier_partie_avocats as dpa', 'dpa.id_dossier_partie', '=', 'dp.id')
+                ->where('dpa.id_avocat', $this->id);
+        });
     }
 
     // ─── Scopes ───────────────────────────────────────────────────────────
     public function scopeActifs($query)
     {
-        return $query->whereHas('parties.dossiers', fn($q) => $q->actifs());
+        return $query->whereHas('affectations.dossierPartie.dossier', fn($q) => $q->actifs());
     }
 
     // ─── Accesseurs ───────────────────────────────────────────────────────

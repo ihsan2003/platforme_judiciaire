@@ -190,17 +190,17 @@
 
                     </div>
 
-                    {{-- Observations --}}
+                    {{-- مسطرة التنفيذ (champ observations) --}}
                     <div class="col-12">
 
                         <label class="form-label fw-semibold small">
-                            ملاحظات
+                            مسطرة التنفيذ
                         </label>
 
                         <textarea name="observations"
                                   rows="4"
                                   class="form-control"
-                                  placeholder="ملاحظات داخلية...">{{ old('observations', $execution->observations) }}</textarea>
+                                  placeholder="مسطرة التنفيذ...">{{ old('observations', $execution->observations) }}</textarea>
 
                     </div>
 

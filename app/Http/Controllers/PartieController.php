@@ -68,9 +68,8 @@ class PartieController extends Controller
     {
         // On passe les données nécessaires au formulaire
         $typesPartie = TypePartie::orderBy('type_partie')->get();
-        $avocats     = Avocat::orderBy('nom_avocat')->get();
 
-        return view('parties.create', compact('typesPartie', 'avocats'));
+        return view('parties.create', compact('typesPartie'));
     }
 
     // =========================================================
@@ -98,9 +97,16 @@ class PartieController extends Controller
             'dossiers.statutDossier',
             'documents',
             'jugements',
+            'dossierParties.affectations.avocat',
+            'dossierParties.affectations.degre',
         ]);
 
-        return view('parties.show', compact('partie'));
+        // Avocats de la partie, dossier par dossier
+        $affectationsParDossier = $partie->dossierParties
+            ->groupBy('id_dossier')
+            ->map(fn($g) => $g->flatMap->affectations);
+
+        return view('parties.show', compact('partie', 'affectationsParDossier'));
     }
 
     // =========================================================
@@ -109,9 +115,8 @@ class PartieController extends Controller
     public function edit(Partie $partie)
     {
         $typesPartie = TypePartie::orderBy('type_partie')->get();
-        $avocats     = Avocat::orderBy('nom_avocat')->get();
 
-        return view('parties.edit', compact('partie', 'typesPartie', 'avocats'));
+        return view('parties.edit', compact('partie', 'typesPartie'));
     }
 
     // =========================================================

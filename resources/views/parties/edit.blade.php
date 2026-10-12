@@ -202,120 +202,64 @@
     {{-- ── العمود الجانبي ── --}}
     <div class="col-lg-4">
 
-    {{-- ── AVOCAT ── --}}
-    <div class="card border-0 shadow-sm mb-3">
 
-        <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-person-badge me-2 text-primary"></i>
-                المحامي
-            </h6>
-        </div>
+        {{-- ── SUMMARY ── --}}
+        <div class="card border-0 shadow-sm mb-3">
 
-        <div class="card-body">
-
-            <label class="form-label fw-semibold small">
-                اختيار المحامي
-            </label>
-
-            <div class="input-group">
-
-                <select id="avocat-select"
-                        name="id_avocat"
-                        class="form-select @error('id_avocat') is-invalid @enderror">
-
-                    <option value="">— بدون محامٍ —</option>
-
-                    @foreach($avocats as $av)
-                        <option value="{{ $av->id }}"
-                            @selected(old('id_avocat', $partie->id_avocat) == $av->id)>
-
-                            {{ $av->nom_avocat }}
-
-                        </option>
-                    @endforeach
-
-                </select>
-
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-info-circle me-2 text-muted"></i>
+                    الملخص
+                </h6>
             </div>
 
-            @error('id_avocat')
-                <div class="invalid-feedback d-block">
-                    {{ $message }}
-                </div>
-            @enderror
+            <div class="card-body small">
+                <dl class="row mb-0">
 
-            <div class="form-text mt-2">
-                يمكنك البحث أو اختيار محامٍ من القائمة.
+                    <dt class="col-6 text-muted fw-normal">المعرف</dt>
+                    <dd class="col-6 font-monospace">{{ $partie->identifiant_unique ?? '—' }}</dd>
+
+                    <dt class="col-6 text-muted fw-normal">العمر</dt>
+                    <dd class="col-6">
+                        {{ $partie->date_naissance ? $partie->date_naissance->age . ' سنة' : '—' }}
+                    </dd>
+
+                    <dt class="col-6 text-muted fw-normal">تاريخ الإنشاء</dt>
+                    <dd class="col-6">{{ $partie->created_at->format('d/m/Y') }}</dd>
+
+                    <dt class="col-6 text-muted fw-normal">آخر تعديل</dt>
+                    <dd class="col-6">{{ $partie->updated_at->format('d/m/Y') }}</dd>
+
+                    <dt class="col-6 text-muted fw-normal">الملفات</dt>
+                    <dd class="col-6">
+                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
+                            {{ $partie->dossiers()->count() }} ملف(ات)
+                        </span>
+                    </dd>
+
+                </dl>
             </div>
-
-        </div>
-    </div>
-
-    {{-- ── SUMMARY ── --}}
-    <div class="card border-0 shadow-sm">
-
-        <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-semibold">
-                <i class="bi bi-info-circle me-2 text-muted"></i>
-                الملخص
-            </h6>
         </div>
 
-        <div class="card-body small">
-            <dl class="row mb-0">
+        <div class="d-grid gap-2">
 
-                <dt class="col-6 text-muted fw-normal">المعرف</dt>
-                <dd class="col-6 font-monospace">{{ $partie->identifiant_unique ?? '—' }}</dd>
+            <button type="submit"
+                        class="btn btn-warning">
+                <i class="bi bi-check-lg me-2"></i>
+                حفظ التعديلات
+            </button>
 
-                <dt class="col-6 text-muted fw-normal">العمر</dt>
-                <dd class="col-6">
-                    {{ $partie->date_naissance ? $partie->date_naissance->age . ' سنة' : '—' }}
-                </dd>
+            <a href="{{ route('parties.show', $partie) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+                    إلغاء
+            </a>
 
-                <dt class="col-6 text-muted fw-normal">تاريخ الإنشاء</dt>
-                <dd class="col-6">{{ $partie->created_at->format('d/m/Y') }}</dd>
-
-                <dt class="col-6 text-muted fw-normal">آخر تعديل</dt>
-                <dd class="col-6">{{ $partie->updated_at->format('d/m/Y') }}</dd>
-
-                <dt class="col-6 text-muted fw-normal">الملفات</dt>
-                <dd class="col-6">
-                    <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
-                        {{ $partie->dossiers()->count() }} ملف(ات)
-                    </span>
-                </dd>
-
-            </dl>
         </div>
-    </div>
 
 </div>
-
-</div>
-
-{{-- ── الإجراءات ── --}}
-<div class="d-flex gap-2 justify-content-end mt-4">
-
-    <a href="{{ route('parties.show', $partie) }}"
-       class="btn btn-outline-secondary">
-        <i class="bi bi-x-lg me-1"></i>
-        إلغاء
-    </a>
-
-    <button type="submit" class="btn btn-warning px-4">
-        <i class="bi bi-check-lg me-1"></i>
-        حفظ التعديلات
-    </button>
 
 </div>
 
 </form>
 @endsection
 
-@push('scripts')
-<script>
-    window.pageData = { avocatsCreateUrl: "{{ route('avocats.create') }}" };
-</script>
-@vite('resources/js/partie-avocat-select.js')
-@endpush

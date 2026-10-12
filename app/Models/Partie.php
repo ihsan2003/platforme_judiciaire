@@ -24,7 +24,6 @@ class Partie extends Model
         'email',
         'adresse',
         'est_entraide',
-        'id_avocat',
     ];
 
     protected $casts = [
@@ -51,9 +50,10 @@ class Partie extends Model
         return $this->hasMany(Document::class, 'id_partie');
     }
 
-    public function avocat()
+    /** Lignes dossier_parties de cette partie (une par dossier / rôle). */
+    public function dossierParties()
     {
-        return $this->belongsTo(Avocat::class, 'id_avocat');
+        return $this->hasMany(DossierPartie::class, 'id_partie');
     }
 
     public function estInstitutionDansDossier($dossierId): bool

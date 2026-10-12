@@ -247,12 +247,12 @@
 
                     </div>
 
-                    {{-- Observations --}}
+                    {{-- مسطرة التنفيذ (champ observations) --}}
                     <div class="mt-3">
 
                         <div class="d-flex justify-content-between">
                             <label class="form-label fw-semibold small">
-                                ملاحظات
+                                مسطرة التنفيذ
                             </label>
                             <span class="form-text" id="obs-count">0/1000</span>
                         </div>
@@ -262,7 +262,7 @@
                                   rows="4"
                                   maxlength="1000"
                                   class="form-control @error('observations') is-invalid @enderror"
-                                  placeholder="ملاحظات داخلية حول ملف التنفيذ...">{{ old('observations') }}</textarea>
+                                  placeholder="مسطرة التنفيذ...">{{ old('observations') }}</textarea>
 
                         @error('observations')
                             <div class="invalid-feedback d-block">

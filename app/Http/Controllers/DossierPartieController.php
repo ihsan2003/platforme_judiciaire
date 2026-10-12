@@ -29,20 +29,14 @@ class DossierPartieController extends Controller
             return response()->json([]);
         }
 
-        $parties = Partie::with('avocat')
-            ->where(function ($query) use ($q) {
+        $parties = Partie::where(function ($query) use ($q) {
                 $query->where('identifiant_unique', 'like', "%{$q}%")
                       ->orWhere('nom_partie', 'like', "%{$q}%");
             })
             ->orderBy('nom_partie')
             ->limit(10)
             ->get(['id', 'identifiant_unique', 'nom_partie', 'type_personne',
-                'telephone', 'email', 'adresse', 'id_avocat']);
-
-        // Inclure le nom de l'avocat pour affichage (lecture seule)
-        $parties->transform(fn($p) => array_merge($p->toArray(), [
-            'avocat_nom' => $p->avocat?->nom_avocat,
-        ]));
+                'telephone', 'email', 'adresse']);
 
         return response()->json($parties);
     }
@@ -50,10 +44,9 @@ class DossierPartieController extends Controller
     /**
      * Ajouter une partie existante ou nouvelle au dossier.
      *
-     * RG : l'avocat est lié à la partie elle-même, pas au dossier.
-     * On ne demande l'avocat que lors de la création d'une nouvelle partie.
-     * Pour une partie existante, l'avocat peut être mis à jour sur la partie
-     * uniquement si l'utilisateur le change explicitement.
+     * RG : l'avocat est lié à la partie DANS CE DOSSIER (table dossier_partie_avocats),
+     * jamais à la partie de façon globale : il n'est donc pas concerné par les
+     * autres dossiers de la même partie.
      */
     public function store(Request $request, DossierJudiciaire $dossier): RedirectResponse
     {
@@ -75,13 +68,8 @@ class DossierPartieController extends Controller
             // ── Partie existante ──────────────────────────────────────────
             $partie = Partie::findOrFail($request->partie_id);
 
-            // Si l'utilisateur a explicitement choisi un nouvel avocat, on met à jour la partie
-            if ($request->filled('id_avocat') && $partie->id_avocat != $request->id_avocat) {
-                $partie->update(['id_avocat' => $request->id_avocat]);
-            }
         } else {
             // ── Nouvelle partie ───────────────────────────────────────────
-            // L'avocat est stocké directement sur la partie (RG : lien permanent)
             // NB : le CIN est optionnel. On ne peut s'en servir comme clé de
             // dédoublonnage (firstOrCreate) que lorsqu'il est renseigné, sinon
             // toutes les parties sans CIN finiraient fusionnées entre elles.
@@ -94,7 +82,6 @@ class DossierPartieController extends Controller
                         'telephone'     => $request->telephone,
                         'email'         => $request->email,
                         'adresse'       => $request->adresse,
-                        'id_avocat'     => $request->id_avocat,
                     ]
                 );
             } else {
@@ -105,7 +92,6 @@ class DossierPartieController extends Controller
                     'telephone'     => $request->telephone,
                     'email'         => $request->email,
                     'adresse'       => $request->adresse,
-                    'id_avocat'     => $request->id_avocat,
                 ]);
             }
         }
@@ -124,12 +110,24 @@ class DossierPartieController extends Controller
         }
 
         // La table pivot dossier_parties ne stocke PAS id_avocat (c'est sur la partie)
-        DossierPartie::create([
+        $dossierPartie = DossierPartie::create([
             'id_dossier'     => $dossier->id,
             'id_partie'      => $partie->id,
             'id_type_partie' => $request->id_type_partie,
             'date_entree'    => $request->date_entree,
         ]);
+
+        // L'avocat choisi devient l'avocat de la partie dans CE dossier, pour tout
+        // le processus. D'autres avocats / degrés
+        // se gèrent ensuite depuis l'onglet des parties.
+        $idAvocat = $request->id_avocat;
+        if ($idAvocat) {
+            $dossierPartie->affectations()->create([
+                'id_avocat'  => $idAvocat,
+                'id_degre'   => null,
+                'date_debut' => $request->date_entree,
+            ]);
+        }
 
         return redirect()
             ->route('dossiers.show', $dossier)

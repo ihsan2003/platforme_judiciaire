@@ -174,8 +174,10 @@ class DossierJudiciaireController extends Controller
         ]);
 
         $dossierParties = DossierPartie::with([
-            'partie.avocat',
+            'partie',
             'typePartie',
+            'affectations.avocat',
+            'affectations.degre',
         ])
         ->where('id_dossier', $dossier->id)
         ->get();

@@ -105,62 +105,40 @@
 
     {{-- ── Colonne latérale ── --}}
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100 mb-3">
+        <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>ربط بأطراف
+                    <i class="bi bi-person-lines-fill me-2 text-primary"></i>الأطراف والملفات
                 </h6>
             </div>
             <div class="card-body">
-                <label class="form-label fw-semibold small">
-                    الأطراف الممثَّلة
-                </label>
-
-                <div class="input-group">
-                    <select id="parties-select"
-                        name="parties[]"
-                        class="form-select @error('parties') is-invalid @enderror"
-                        multiple>
-
-                        @foreach($parties as $p)
-                            <option value="{{ $p->id }}"
-                                @selected(in_array($p->id, old('parties', [])))>
-                                {{ $p->nom_partie }}
-                            </option>
-                        @endforeach
-
-                    </select>
-                </div>
-
-                @error('parties')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-
-                <div class="form-text mt-2">
-                    يمكنك ربط هذا المحامي بطرف أو أكثر يمثلهم.
-                </div>
+                <p class="small text-muted mb-0">
+                    لا يُربط المحامي بطرف بشكل عام. تتم إضافته إلى جهة معيّنة من داخل
+                    <strong>كل ملف على حدة</strong> (وعند الحاجة بحسب درجة التقاضي)،
+                </p>
             </div>
+        </div>
+
+        <div class="d-grid gap-2">
+
+            <button type="submit"
+                        class="btn btn-primary">
+                <i class="bi bi-check-lg me-2"></i>
+                حفظ 
+            </button>
+
+            <a href="{{ route('avocats.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+                    إلغاء
+            </a>
+
         </div>
     </div>
 
-</div>
-
-{{-- ── Actions ── --}}
-<div class="d-flex gap-2 justify-content-end mt-4">
-    <a href="{{ route('avocats.index') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-x-lg me-1"></i>إلغاء
-    </a>
-    <button type="submit" class="btn btn-primary px-4">
-        <i class="bi bi-check-lg me-1"></i>حفظ
-    </button>
 </div>
 
 </form>
 @endsection
 
 @push('scripts')
-<script>
-    window.pageData = { partiesCreateUrl: "{{ route('parties.create') }}" };
-</script>
-@vite('resources/js/avocat-partie-select.js')
 @endpush

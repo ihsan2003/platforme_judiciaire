@@ -134,6 +134,7 @@ class DataSeeder extends Seeder
             'الخبرة',
             'المداولة',
             'الإخراج من المداولة',
+            'آخر',
         ];
         foreach ($typesAudience as $type) {
             DB::table('type_audiences')->insert(['type_audience' => $type]);

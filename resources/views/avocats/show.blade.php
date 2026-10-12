@@ -38,7 +38,7 @@
                 </a>
 
                 @role('admin')
-                    @if($avocat->parties->count() > 0)
+                    @if($affectations->isNotEmpty())
                         <button class="btn btn-outline-danger btn-sm" disabled title="غير ممكن: مرتبط بملفات">
                             <i class="bi bi-trash me-1"></i>حذف
                         </button>
@@ -92,14 +92,14 @@
             <div class="card-header bg-white py-3">
                 <h6 class="mb-0 fw-semibold">
                     <i class="bi bi-people me-2 text-primary"></i>
-                    الأطراف المرتبطة
-                    <span class="badge bg-primary ms-1">{{ $avocat->parties->count() }}</span>
+                    الأطراف الممثَّلة (حسب الملف)
+                    <span class="badge bg-primary ms-1">{{ $affectations->count() }}</span>
                 </h6>
             </div>
 
             <div class="card-body p-0">
 
-                @if($avocat->parties->isEmpty())
+                @if($affectations->isEmpty())
                     <div class="text-center p-5 text-muted">
                         لا توجد أطراف مرتبطة بهذا المحامي.
                     </div>
@@ -109,23 +109,27 @@
                     <thead class="table-light">
                         <tr>
                             <th>الطرف</th>
-                            <th>الهاتف</th>
-                            <th>البريد</th>
-                            <th>عدد القضايا</th>
+                            <th>الملف</th>
+                            <th>المرحلة</th>
+                            <th>من</th>
+                            <th>إلى</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @foreach($avocat->parties as $partie)
+                        @foreach($affectations as $aff)
                         <tr>
-                            <td class="fw-semibold">{{ $partie->nom_partie }}</td>
-                            <td>{{ $partie->telephone ?? '—' }}</td>
-                            <td>{{ $partie->email ?? '—' }}</td>
+                            <td class="fw-semibold">{{ $aff->dossierPartie?->partie?->nom_partie ?? '—' }}</td>
                             <td>
-                                <span class="badge bg-info">
-                                    {{ $partie->dossiers->count() }}
-                                </span>
+                                @if($aff->dossierPartie?->dossier)
+                                    <a href="{{ route('dossiers.show', $aff->dossierPartie->dossier) }}" class="text-decoration-none">
+                                        {{ $aff->dossierPartie->dossier->numero_dossier_tribunal }}
+                                    </a>
+                                @else — @endif
                             </td>
+                            <td>{{ $aff->degre?->degre_juridiction ?? 'كل مراحل الملف' }}</td>
+                            <td>{{ $aff->date_debut?->format('d/m/Y') ?? '—' }}</td>
+                            <td>{{ $aff->date_fin?->format('d/m/Y') ?? '—' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -237,13 +241,13 @@
 
                 <div class="d-flex justify-content-between mt-2">
                     <span class="text-muted">عدد الأطراف</span>
-                    <span class="badge bg-primary">{{ $avocat->parties->count() }}</span>
+                    <span class="badge bg-primary">{{ $nbParties }}</span>
                 </div>
             </div>
         </div>
 
         {{-- WARNING --}}
-        @if($avocat->parties->count() > 0)
+        @if($affectations->isNotEmpty())
         <div class="card border-0 shadow-sm mt-3 border-start border-warning border-3">
             <div class="card-body small">
                 <div class="fw-semibold mb-1 text-warning">
@@ -251,7 +255,7 @@
                 </div>
                 <div class="text-muted">
                     هذا المحامي مرتبط بـ
-                    <strong>{{ $avocat->parties->count() }}</strong>
+                    <strong>{{ $nbParties }}</strong>
                     طرف/أطراف.
                 </div>
             </div>

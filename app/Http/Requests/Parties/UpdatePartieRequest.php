@@ -23,7 +23,6 @@ class UpdatePartieRequest extends FormRequest
             'telephone'          => ['nullable', new Telephone],
             'email'             => ['nullable', 'email', 'max:255'],
             'adresse'           => ['nullable', 'string'],
-            'id_avocat' => ['nullable', 'exists:avocats,id'],
 
         ];
     }

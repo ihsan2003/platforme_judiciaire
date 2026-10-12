@@ -21,6 +21,7 @@ class Execution extends Model
         'date_notification',
         'statut_execution',
         'date_execution',
+        'observations',
         'responsable_id'
     ];
 

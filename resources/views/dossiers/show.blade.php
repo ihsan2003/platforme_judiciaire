@@ -552,13 +552,18 @@
                             </span>
                         </td>
 
-                        <td class="text-muted small">
-                            @if($dp->partie?->avocat)
-                                <i class="bi bi-briefcase me-1"></i>
-                                {{ $dp->partie->avocat->nom_avocat }}
-                            @else
-                                —
-                            @endif
+                        <td class="small">
+                            @forelse($dp->affectations as $aff)
+                                <div class="mb-1">
+                                    <i class="bi bi-briefcase me-1 text-muted"></i>
+                                    {{ $aff->avocat?->nom_avocat }}
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        {{ $aff->degre?->degre_juridiction ?? 'كل مراحل الملف' }}
+                                    </span>
+                                </div>
+                            @empty
+                                <span class="text-muted">—</span>
+                            @endforelse
                         </td>
 
                         <td class="text-muted small">
@@ -569,6 +574,13 @@
 
                             @can('update', $dossier)
                             <div class="d-flex gap-1 justify-content-end">
+
+                                <button class="btn btn-sm btn-outline-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalAvocatsPartie{{ $dp->id }}"
+                                        title="محامو الجهة">
+                                    <i class="bi bi-briefcase"></i>
+                                </button>
 
                                 <button class="btn btn-sm btn-outline-warning"
                                         data-bs-toggle="modal"
@@ -604,6 +616,111 @@
         </div>
 
         @endif
+
+        {{-- ── Modales : محامو كل جهة (plusieurs avocats, par degré de juridiction) ── --}}
+        @can('update', $dossier)
+        @foreach($dossierParties as $dp)
+        <div class="modal fade" id="modalAvocatsPartie{{ $dp->id }}" tabindex="-1" dir="rtl">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h6 class="modal-title">
+                            <i class="bi bi-briefcase me-1"></i>
+                            محامو الجهة : {{ $dp->partie->nom_partie }}
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        {{-- Avocats déjà affectés --}}
+                        @if($dp->affectations->isEmpty())
+                            <p class="text-muted small mb-3">لا يوجد محامٍ مسجل لهذه الجهة في هذا الملف.</p>
+                        @else
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>المحامي</th>
+                                            <th>المرحلة</th>
+                                            <th>من</th>
+                                            <th>إلى</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($dp->affectations as $aff)
+                                        <tr>
+                                            <td>{{ $aff->avocat?->nom_avocat }}</td>
+                                            <td>{{ $aff->degre?->degre_juridiction ?? 'كل مراحل الملف' }}</td>
+                                            <td>{{ $aff->date_debut?->format('d/m/Y') ?? '—' }}</td>
+                                            <td>{{ $aff->date_fin?->format('d/m/Y') ?? '—' }}</td>
+                                            <td class="text-end">
+                                                <form method="POST"
+                                                      action="{{ route('dossiers.parties.avocats.destroy', [$dossier, $dp, $aff]) }}"
+                                                      onsubmit="return confirm('حذف هذا المحامي من الجهة؟')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                        {{-- Ajout d'un avocat --}}
+                        <form method="POST" action="{{ route('dossiers.parties.avocats.store', [$dossier, $dp]) }}">
+                            @csrf
+                            <div class="border rounded-3 p-3 bg-light">
+                                <div class="fw-semibold small mb-2">إضافة محامٍ</div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small mb-1">المحامي</label>
+                                        <select name="id_avocat" class="form-select form-select-sm" required>
+                                            <option value="">— اختر المحامي —</option>
+                                            @foreach($avocats as $av)
+                                                <option value="{{ $av->id }}">{{ $av->nom_avocat }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small mb-1">المرحلة</label>
+                                        <select name="id_degre" class="form-select form-select-sm">
+                                            <option value="">كل مراحل الملف</option>
+                                            @foreach($degresJuridiction as $dg)
+                                                <option value="{{ $dg->id }}">{{ $dg->degre_juridiction }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small mb-1">من تاريخ (اختياري)</label>
+                                        <input type="date" name="date_debut" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small mb-1">إلى تاريخ (اختياري)</label>
+                                        <input type="date" name="date_fin" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus-lg me-1"></i>إضافة
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+        @endcan
 
     </div>{{-- /tab-parties --}}
 
@@ -1564,7 +1681,9 @@
                 </form>
             </div>
             <div class="modal-footer border-top">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i> إلغاء
+                </button>
                 <button type="submit" form="formAjouterPartie" class="btn btn-primary">
                     <i class="bi bi-check-lg me-1"></i>إضافة إلى الملف
                 </button>
@@ -1963,7 +2082,7 @@
         bandeauOK?.classList.remove('d-none');
         closeDropdown();
         if (input) input.value = '';
-        showAvocatExistant(p.avocat_nom, p.id_avocat);
+        showAvocatNouveau(); // l'avocat se choisit pour CE dossier uniquement
     }
 
     function deselect() {
@@ -1985,7 +2104,7 @@
             btn.type = 'button';
             btn.className = 'list-group-item list-group-item-action py-2 px-3 text-end'; // text-end pour RTL
             btn.innerHTML = `<div class="fw-semibold small">${p.nom_partie ?? ''}</div>
-                <div class="text-muted" style="font-size:.75rem"><span class="font-monospace">${p.identifiant_unique ?? ''}</span>${p.avocat_nom ? ' · ' + p.avocat_nom : ''}</div>`;
+                <div class="text-muted" style="font-size:.75rem"><span class="font-monospace">${p.identifiant_unique ?? ''}</span></div>`;
             btn.addEventListener('click', () => selectPartie(p));
             dropdown.appendChild(btn);
         });

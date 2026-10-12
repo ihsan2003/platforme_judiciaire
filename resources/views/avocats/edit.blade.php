@@ -102,46 +102,36 @@
                 </div>
             </div>
         </div>
+
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-person-lines-fill me-2 text-warning"></i>الملفات المسندة
+                </h6>
+            </div>
+            <div class="card-body">
+
+                @forelse($affectations as $aff)
+                    <div class="border rounded-3 p-2 mb-2 small">
+                        <div class="fw-semibold">{{ $aff->dossierPartie?->partie?->nom_partie }}</div>
+                        <div class="text-muted">
+                            @if($aff->dossierPartie?->dossier)
+                                <a href="{{ route('dossiers.show', $aff->dossierPartie->dossier) }}" class="text-decoration-none">
+                                    {{ $aff->dossierPartie->dossier->numero_dossier_tribunal }}
+                                </a>
+                            @endif
+                            · {{ $aff->degre?->degre_juridiction ?? 'كل مراحل الملف' }}
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-muted small">لا توجد أي إسنادات بعد.</div>
+                @endforelse
+            </div>
+        </div>
     </div>
 
     {{-- ── Colonne latérale ── --}}
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-person-lines-fill me-2 text-warning"></i>ربط بأطراف
-                </h6>
-            </div>
-            <div class="card-body">
-                <label class="form-label fw-semibold small">
-                    الأطراف الممثَّلة
-                </label>
-
-                <div class="input-group">
-                    <select id="parties-select"
-                        name="parties[]"
-                        class="form-select @error('parties') is-invalid @enderror"
-                        multiple>
-
-                        @foreach($parties as $p)
-                            <option value="{{ $p->id }}"
-                                @selected(in_array($p->id, old('parties', $selectedPartyIds)))>
-                                {{ $p->nom_partie }}
-                            </option>
-                        @endforeach
-
-                    </select>
-                </div>
-
-                @error('parties')
-                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-
-                <div class="form-text mt-2">
-                    يمكنك ربط هذا المحامي بطرف أو أكثر يمثلهم.
-                </div>
-            </div>
-        </div>
 
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white border-bottom py-3">
@@ -171,26 +161,28 @@
                 </dl>
             </div>
         </div>
+
+        <div class="d-grid gap-2">
+
+            <button type="submit"
+                        class="btn btn-warning">
+                <i class="bi bi-check-lg me-2"></i>
+                حفظ التعديلات
+            </button>
+
+            <a href="{{ route('avocats.show', $avocat) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+                    إلغاء
+            </a>
+
+        </div>
     </div>
 
 </div>
 
-{{-- ── Actions ── --}}
-<div class="d-flex gap-2 justify-content-end mt-4">
-    <a href="{{ route('avocats.show', $avocat) }}" class="btn btn-outline-secondary">
-        <i class="bi bi-x-lg me-1"></i>إلغاء
-    </a>
-    <button type="submit" class="btn btn-warning px-4">
-        <i class="bi bi-check-lg me-1"></i>حفظ التعديلات
-    </button>
-</div>
 
 </form>
 @endsection
 
 @push('scripts')
-<script>
-    window.pageData = { partiesCreateUrl: "{{ route('parties.create') }}" };
-</script>
-@vite('resources/js/avocat-partie-select.js')
 @endpush

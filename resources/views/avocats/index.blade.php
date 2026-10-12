@@ -33,7 +33,7 @@
                 </div>
                 <div>
                     <div class="fs-2 fw-bold lh-1">
-                        {{ \App\Models\Avocat::has('Parties')->count() }}
+                        {{ \App\Models\Avocat::has('affectations')->count() }}
                     </div>
                     <div class="text-muted small">مع ملفات نشطة</div>
                 </div>
@@ -150,7 +150,7 @@
                     </td>
 
                     <td>
-                        @php $nb = $avocat->dossiers()->count(); @endphp
+                        @php $nb = (int) $avocat->nb_dossiers; @endphp
                         @if($nb > 0)
                             <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                                 <i class="bi bi-folder2 me-1"></i>{{ $nb }} ملف

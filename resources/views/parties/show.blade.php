@@ -55,13 +55,6 @@
                             {{ $partie->identifiant_unique }}
                         </span>
 
-                        {{-- avocat --}}
-                        @if($partie->avocat)
-                        <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
-                            <i class="bi bi-briefcase me-1"></i>
-                            Me. {{ $partie->avocat->nom_avocat }}
-                        </span>
-                        @endif
 
                         {{-- date naissance + age --}}
                         @if($partie->date_naissance)
@@ -178,6 +171,7 @@
                             <th>رقم الملف</th>
                             <th>الشعبة</th>
                             <th>الدور</th>
+                            <th>المحامون في هذا الملف</th>
                             <th>الحالة</th>
                             <th class="text-end">عرض</th>
                         </tr>
@@ -214,6 +208,22 @@
                                     <span class="badge bg-primary bg-opacity-10 text-primary">
                                         {{ $role }}
                                     </span>
+                                </td>
+
+                                <td class="small">
+                                    @forelse(($affectationsParDossier[$dossier->id] ?? collect()) as $aff)
+                                        <div>
+                                            <i class="bi bi-briefcase me-1 text-muted"></i>
+                                            <a href="{{ route('avocats.show', $aff->id_avocat) }}" class="text-decoration-none">
+                                                {{ $aff->avocat?->nom_avocat }}
+                                            </a>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                {{ $aff->degre?->degre_juridiction ?? 'كل مراحل الملف' }}
+                                            </span>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted">—</span>
+                                    @endforelse
                                 </td>
 
                                 <td>
@@ -265,16 +275,6 @@
                     <dt class="col-6 text-muted">النوع</dt>
                     <dd class="col-6">{{ $partie->type_personne ?? '—' }}</dd>
 
-                    <dt class="col-6 text-muted">المحامي</dt>
-                    <dd class="col-6">
-                        @if($partie->avocat)
-                            <a href="{{ route('avocats.show', $partie->avocat) }}">
-                                {{ $partie->avocat->nom_avocat }}
-                            </a>
-                        @else
-                            —
-                        @endif
-                    </dd>
 
                     {{-- date naissance --}}
                     @if($partie->date_naissance)

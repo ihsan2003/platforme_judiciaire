@@ -285,13 +285,13 @@
                                     </span>
                                 @endif
 
-                                @if($partieConcernee->avocat)
+                                @foreach($partieConcernee->affectations as $aff)
                                     <span>
                                         <i class="bi bi-briefcase ms-1"></i>
 
-                                        الأستاذ {{ $partieConcernee->avocat->nom_avocat }}
+                                        الأستاذ {{ $aff->avocat?->nom_avocat }}
                                     </span>
-                                @endif
+                                @endforeach
 
                             </div>
 
@@ -326,6 +326,28 @@
             </div>
 
         </div>
+
+        {{-- مسطرة التنفيذ --}} 
+        @if($execution->observations) 
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header bg-white py-3 d-flex align-items-center gap-2">
+
+                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width:32px;height:32px;flex-shrink:0">
+                <i class="bi bi-journal-text text-primary"></i>
+                </div>
+                <h6 class="mb-0 fw-semibold"> مسطرة التنفيذ </h6>
+
+            </div>
+
+            <div class="card-body"> 
+                <div class="text-muted"> 
+                    {{ $execution->observations }} 
+                </div> 
+            </div>
+
+        </div> 
+        @endif
 
     @if($finance)
         {{-- الوضعية المالية --}}

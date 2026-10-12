@@ -120,10 +120,6 @@
                             </div>
                         @enderror
 
-                        <div class="form-text">
-                            CIN للأشخاص الذاتيين، و RC للأشخاص الاعتباريين. (اختياري)
-                        </div>
-
                     </div>
 
                     {{-- النوع --}}
@@ -287,67 +283,30 @@
             </div>
 
             <div class="card-body">
-
-                <label class="form-label fw-semibold small">
-                    المحامي المسؤول
-                </label>
-
-                <div class="input-group">
-
-                    <select id="avocat-select"
-                        name="id_avocat"
-                        class="form-select @error('id_avocat') is-invalid @enderror">
-
-                        <option value="">
-                            — بدون محامٍ —
-                        </option>
-
-                        @foreach($avocats as $av)
-                            <option value="{{ $av->id }}"
-                                @selected(old('id_avocat') == $av->id)>
-
-                                {{ $av->nom_avocat }}
-
-                            </option>
-                        @endforeach
-
-                    </select>
-                </div>
-
-                @error('id_avocat')
-                    <div class="invalid-feedback d-block">
-                        {{ $message }}
-                    </div>
-                @enderror
-
-                <div class="form-text mt-2">
-                    يمكنك ربط هذا الطرف بمحامٍ مسؤول عنه.
-                </div>
-
+                <p class="small text-muted mb-0">
+                    لا يُسند المحامي إلى الطرف بشكل عام، بل داخل كل ملف على حدة
+                    (من صفحة الملف، وعند الحاجة بحسب درجة التقاضي).
+                </p>
             </div>
 
         </div>
 
         {{-- ── الإجراءات ── --}}
-        <div class="d-flex gap-2 justify-content-end mt-4">
-
-            <a href="{{ route('parties.index') }}"
-            class="btn btn-outline-secondary">
-
-                <i class="bi bi-x-lg ms-1"></i>
-                إلغاء
-
-            </a>
+        <div class="d-grid gap-2">
 
             <button type="submit"
-                    class="btn btn-primary px-4">
-
-                <i class="bi bi-check-lg ms-1"></i>
-                حفظ
-
+                        class="btn btn-primary">
+                <i class="bi bi-check-lg me-2"></i>
+                حفظ 
             </button>
 
+            <a href="{{ route('parties.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+                    إلغاء
+            </a>
+
         </div>
+
 
     </div>
 
@@ -358,9 +317,3 @@
 
 @endsection
 
-@push('scripts')
-<script>
-    window.pageData = { avocatsCreateUrl: "{{ route('avocats.create') }}" };
-</script>
-@vite('resources/js/partie-avocat-select.js')
-@endpush
