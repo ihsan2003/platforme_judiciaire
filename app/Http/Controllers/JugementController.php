@@ -202,7 +202,7 @@ class JugementController extends Controller
     {
         $dossierId = request('dossier_id');
 
-        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal', 'audiences.typeAudience'])
+        $dossierTribunaux = DossierTribunal::with(['dossier', 'tribunal', 'degre', 'audiences.typeAudience', 'jugements'])
             ->when($dossierId, fn($q) => $q->where('id_dossier', $dossierId))
             ->whereHas('dossier', fn($q) => $q->actifs())
             ->get()

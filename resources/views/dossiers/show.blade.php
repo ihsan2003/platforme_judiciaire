@@ -1362,7 +1362,7 @@
                     <i class="bi bi-hammer d-block mb-1 fs-4 opacity-30"></i>
                     يرجى تسجيل تفاصيل الحكم.
                     <div class="mt-2">
-                        <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id]) }}" class="btn btn-sm btn-primary">
+                        <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id, 'type' => 'fond']) }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-lg me-1"></i>تسجيل الحكم
                         </a>
                     </div>

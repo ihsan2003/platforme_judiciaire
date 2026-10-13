@@ -62,7 +62,11 @@
                             $idPrep  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::PREPARATOIRE)?->id;
                             $idFond  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::AU_FOND)?->id;
                             // ?type=preparatoire (boutons de la fiche dossier / audience) présélectionne le حكم تمهيدي
-                            $typeSel = old('id_type_jugement', request('type') === 'preparatoire' ? $idPrep : $idFond);
+                            $typeSel = old('id_type_jugement', match (request('type')) {
+                                'preparatoire' => $idPrep,
+                                'fond'         => $idFond,
+                                default        => $idFond,
+                            });
                         @endphp
 
                         <div class="row g-3">
@@ -72,21 +76,13 @@
                                 <label class="form-label fw-semibold small text-dark">
                                     نوع الحكم <span class="text-danger">*</span>
                                 </label>
-                                <div class="d-flex flex-wrap gap-2">
-                                    @foreach($typesJugement as $tj)
-                                        <div>
-                                            <input type="radio" class="btn-check"
-                                                   name="id_type_jugement"
-                                                   id="type_jugement_{{ $tj->id }}"
-                                                   value="{{ $tj->id }}"
-                                                   autocomplete="off"
-                                                   @checked((string) $typeSel === (string) $tj->id)>
-                                            <label class="btn btn-sm {{ $tj->id === $idPrep ? 'btn-outline-warning' : 'btn-outline-primary' }}"
-                                                   for="type_jugement_{{ $tj->id }}">
-                                                {{ $tj->type_jugement }}
-                                            </label>
-                                        </div>
-                                    @endforeach
+                                {{-- Type imposé par le bouton d'origine : affiché en texte, non modifiable --}}
+                                @php $typeObj = $typesJugement->firstWhere('id', $typeSel); @endphp
+                                <input type="hidden" name="id_type_jugement" id="id_type_jugement" value="{{ $typeSel }}">
+                                <div>
+                                    <span class="badge fs-6 fw-semibold px-3 py-2 {{ (string) $typeSel === (string) $idPrep ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' : 'bg-primary-subtle text-primary-emphasis border border-primary-subtle' }}">
+                                        {{ $typeObj?->type_jugement ?? '—' }}
+                                    </span>
                                 </div>
                                 @error('id_type_jugement')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -473,6 +469,49 @@
                 </div>{{-- /#bloc-fond --}}
 
                 {{-- ─────────────────────────────────────────────────────────────────
+                    ملخص الملف
+                ───────────────────────────────────────────────────────────────── --}}
+                <div id="bloc-resume-prep" class="card border-0 shadow-sm mb-4 d-none">
+                    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-text text-warning"></i>
+                        <h6 class="mb-0 fw-semibold">ملخص الملف</h6>
+                    </div>
+                    <div class="card-body p-4">
+
+                        <div id="resume-vide" class="text-muted small">
+                            اختر الملف لعرض ملخصه.
+                        </div>
+
+                        <dl id="resume-contenu" class="row mb-0 small d-none">
+                            <dt class="col-5 text-muted fw-normal">رقم الملف</dt>
+                            <dd class="col-7 fw-semibold" id="resume-numero"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">المحكمة</dt>
+                            <dd class="col-7" id="resume-tribunal"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">الدرجة</dt>
+                            <dd class="col-7" id="resume-degre"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">تاريخ فتح الدرجة</dt>
+                            <dd class="col-7" id="resume-debut"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">عدد الجلسات</dt>
+                            <dd class="col-7" id="resume-nbaud"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">آخر جلسة</dt>
+                            <dd class="col-7" id="resume-deraud"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">الجلسة القادمة</dt>
+                            <dd class="col-7" id="resume-prochaine"></dd>
+
+                            <dt class="col-5 text-muted fw-normal">أحكام تمهيدية سابقة</dt>
+                            <dd class="col-7" id="resume-prep"></dd>
+                        </dl>
+
+                    </div>
+                </div>
+
+                {{-- ─────────────────────────────────────────────────────────────────
                     أزرار الإرسال والإلغاء
                 ───────────────────────────────────────────────────────────────── --}}
                 <div class="d-grid gap-2">
@@ -490,6 +529,7 @@
                     </a>
 
                 </div>
+
             </div>
         </div>
 
@@ -808,11 +848,26 @@
     // ══════════════════════════════════════════════════════════════════
     const dtMap = {
         @foreach($dossierTribunaux as $dt)
-            @php $ah = $dt->audienceHoukmPourJugementAuFond(); @endphp
+            @php
+                $ah      = $dt->audienceHoukmPourJugementAuFond();
+                $derAud  = $dt->audiences->sortByDesc('date_audience')->first();
+                $prepDt  = $dt->jugements->where('id_type_jugement', $idPrep);
+                $derPrep = $prepDt->sortByDesc('date_jugement')->first();
+            @endphp
             {{ $dt->id }}: {
                 date      : "{{ $ah?->date_audience?->format('Y-m-d') ?? '' }}",
                 dates     : @json($dt->audiences->map(fn($a) => $a->date_audience->format('Y-m-d'))->unique()->sort()->values()),
-                tribunalId: {{ $dt->id_tribunal }}
+                tribunalId: {{ $dt->id_tribunal }},
+                // ملخص الملف (حكم تمهيدي)
+                numero    : @json($dt->dossier->numero_dossier_tribunal ?? '—'),
+                tribunal  : @json($dt->tribunal->nom_tribunal ?? '—'),
+                degre     : @json($dt->degre->degre_juridiction ?? '—'),
+                debut     : @json($dt->date_debut?->format('d/m/Y') ?? '—'),
+                nbAud     : {{ $dt->audiences->count() }},
+                derAud    : @json($derAud ? $derAud->date_audience->format('d/m/Y') . ' - جلسة ' . ($derAud->typeAudience->type_audience ?? '—') : '—'),
+                prochaine : @json($derAud?->date_prochaine_audience?->format('d/m/Y') ?? '—'),
+                nbPrep    : {{ $prepDt->count() }},
+                derPrep   : @json($derPrep?->date_jugement?->format('d/m/Y') ?? '—')
             },
         @endforeach
     };
@@ -828,14 +883,36 @@
 
     // نوع الحكم : تمهيدي / فاصل في الموضوع
     const ID_PREPARATOIRE = "{{ $idPrep }}";
-    const typeRadios      = document.querySelectorAll('input[name="id_type_jugement"]');
+    const typeInput       = document.getElementById('id_type_jugement');
     const blocFond        = document.getElementById('bloc-fond');
     const blocDefinitif   = document.getElementById('bloc-definitif');
     const hintPrep        = document.getElementById('hint-preparatoire');
     const submitLabel     = document.getElementById('submit-label');
+    const blocResume      = document.getElementById('bloc-resume-prep');
+
+    // ملخص الملف (حكم تمهيدي) : يُحدَّث عند تغيير الملف
+    function renderResume(info) {
+        const vide    = document.getElementById('resume-vide');
+        const contenu = document.getElementById('resume-contenu');
+        if (!vide || !contenu) return;
+
+        vide.classList.toggle('d-none', !!info);
+        contenu.classList.toggle('d-none', !info);
+        if (!info) return;
+
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('resume-numero',   info.numero);
+        set('resume-tribunal', info.tribunal);
+        set('resume-degre',    info.degre);
+        set('resume-debut',    info.debut);
+        set('resume-nbaud',    info.nbAud);
+        set('resume-deraud',   info.derAud);
+        set('resume-prochaine',info.prochaine);
+        set('resume-prep',     info.nbPrep > 0 ? `${info.nbPrep} (آخرها: ${info.derPrep})` : 'لا يوجد');
+    }
 
     function estPreparatoire() {
-        return document.querySelector('input[name="id_type_jugement"]:checked')?.value === ID_PREPARATOIRE;
+        return typeInput?.value === ID_PREPARATOIRE;
     }
 
     // ══════════════════════════════════════════════════════════════════
@@ -866,6 +943,7 @@
 
         const dtId = selectDt?.value;
         const info = dtMap[dtId];
+        renderResume(info);
 
         // تاريخ الحكم
         // - حكم فاصل : يُفرض تاريخ جلسة "الحكم" (للقراءة فقط)
@@ -957,6 +1035,7 @@
         blocFond?.classList.toggle('d-none', prep);
         blocDefinitif?.classList.toggle('d-none', prep);
         hintPrep?.classList.toggle('d-none', !prep);
+        blocResume?.classList.toggle('d-none', !prep);
 
         // Les champs "fond" ne sont pas envoyés pour un حكم تمهيدي
         blocFond?.querySelectorAll('input, select, textarea').forEach(el => el.disabled = prep);
@@ -972,7 +1051,7 @@
         if (selectDt?.value) onDtChange();
     }
 
-    typeRadios.forEach(r => r.addEventListener('change', onTypeChange));
+    // Le type est fixe (champ caché) : onTypeChange() est appelé une seule fois à l'initialisation (voir plus bas)
 
     // ══════════════════════════════════════════════════════════════════
     // وضعية المؤسسة → إظهار/إخفاء البلوكات

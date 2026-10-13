@@ -380,7 +380,7 @@
 
                 {{-- حكم فاصل : seulement s'il existe une audience "الحكم" disponible --}}
                 @if($dt && $dt->audienceHoukmPourJugementAuFond() && ! $dt->aUnJugementAuFond())
-                    <a href="{{ route('jugements.create', ['dossier_id' => $dossier?->id]) }}"
+                    <a href="{{ route('jugements.create', ['dossier_id' => $dossier?->id, 'type' => 'fond']) }}"
                        class="btn btn-outline-success w-100 btn-sm">
                         <i class="bi bi-hammer ms-1"></i>
                         تسجيل الحكم
