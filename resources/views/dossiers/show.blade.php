@@ -861,116 +861,298 @@
             </div>
             
             @else
-            <div class="aud-timeline">
-                @foreach($audiences as $aud)
-                @php
-                    $isHoukm = $aud->typeAudience?->type_audience === 'الحكم' || $aud->typeAudience?->type_audience === 'النطق بالحكم';
-                    $isFuture = $aud->date_audience?->isFuture();
-                    $typeLabel = $aud->typeAudience?->type_audience ?? '—';
-                    $dotCls  = $isHoukm ? 'houkm' : ($isFuture ? 'future' : '');
-                    $cardCls = $isHoukm ? 'houkm' : ($isFuture ? 'future' : '');
-                    $badgeCls= $isHoukm ? 'houkm' : ($isFuture ? 'future' : 'normal');
-                @endphp
-                <div class="aud-item">
-                    <div class="aud-dot {{ $dotCls }}">
-                        <i class="bi {{ $isHoukm ? 'bi-hammer' : 'bi-calendar-event' }}"></i>
-                    </div>
-                    <div class="aud-card {{ $cardCls }} mt-3 mx-5">
-                        <div class="aud-card-head px-2 pt-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="aud-date"> جلسة بتاريخ {{ $aud->date_audience?->format('d/m/Y') ?? '—' }}</span>
-                                @if($aud->date_audience?->isToday())
-                                    <span class="pill pill-danger" style="font-size:.65rem;padding:1px 6px">اليوم</span>
-                                @endif
+                <div class="aud-timeline">
+
+                    @php
+                        // Fusionner les audiences et les jugements préparatoires
+                        $timelineItems = $audiences
+                            ->map(fn($item) => [
+                                'type' => 'audience',
+                                'data' => $item,
+                                'created_at' => $item->created_at,
+                            ])
+                            ->concat(
+                                $preparatoires->map(fn($item) => [
+                                    'type' => 'preparatoire',
+                                    'data' => $item,
+                                    'created_at' => $item->created_at,
+                                ])
+                            )
+                            // Trier selon l'ordre d'enregistrement
+                            ->sortBy('created_at')
+                            ->values();
+
+                        // Dernière audience passée, pour conserver les règles existantes
+                        $derniereAudiencePasse = $audiences
+                            ->filter(fn($a) => $a->date_audience
+                                && $a->date_audience->copy()->startOfDay()->lte(today()))
+                            ->sortByDesc('date_audience')
+                            ->first();
+                    @endphp
+
+                    @foreach($timelineItems as $timelineItem)
+
+                    {{-- ============================================ --}}
+                    {{-- JUGEMENT PRÉPARATOIRE                         --}}
+                    {{-- ============================================ --}}
+                    @if($timelineItem['type'] === 'preparatoire')
+
+                        @php
+                            $prep = $timelineItem['data'];
+                        @endphp
+
+                        <div class="aud-item">
+
+                            {{-- Point de la timeline --}}
+                            <div class="aud-dot">
+                                <i class="bi bi-hourglass-split"></i>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="aud-type-badge {{ $badgeCls }}">
-                                    {{ $typeLabel }}
-                                    @if($isHoukm) <strong class="mr-1">← نهائية</strong>@endif
-                                </span>
-                                <div class="d-flex gap-2">
-                                    <a href="{{ route('audiences.show', $aud) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.9rem"><i class="bi bi-eye"></i></a>
-                                    @can('update', $dossier)
-                                    <a href="{{ route('audiences.edit', $aud) }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size:.9rem"><i class="bi bi-pencil"></i></a>
-                                    @endcan
+
+                            {{-- Carte du jugement préparatoire --}}
+                            <div class="jug-block mx-5 mt-3">
+
+                                {{-- En-tête --}}
+                                <div class="jug-block-header">
+
+                                    <div class="jug-title">
+                                        <i class="bi bi-hourglass-split me-1"></i>
+                                        حكم تمهيدي بتاريخ
+                                        {{ $prep->date_jugement?->format('d/m/Y') ?? '—' }}
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+
+                                        <span class="pill pill-warning">
+                                            <i class="bi bi-hourglass-split"></i>
+                                            حكم تمهيدي
+                                        </span>
+
+                                        <a href="{{ route('jugements.show', $prep) }}"
+                                        class="btn btn-outline-secondary py-0 px-2"
+                                        style="font-size:.9rem; border-radius:5px;">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                    </div>
+
                                 </div>
+
+                                {{-- Métadonnées --}}
+                                <div class="jug-meta">
+
+                                    @if($prep->juge)
+                                        <span>
+                                            <i class="bi bi-person-workspace me-1"></i>
+                                            القاضي: {{ $prep->juge->nom_complet }}
+                                        </span>
+                                    @endif
+
+                                    <span>
+                                        <i class="bi bi-file-text me-1"></i>
+                                        نوع الحكم: حكم تمهيدي
+                                    </span>
+
+                                </div>
+
+                                {{-- منطوق الحكم --}}
+                                @if($prep->contenu_dispositif)
+                                    <div class="jug-dispositif"
+                                        id="disp-prep-{{ $prep->id }}">
+
+                                        {{ $prep->contenu_dispositif }}
+
+                                        <div style="position:absolute;bottom:0;left:0;right:0;height:25px;background:linear-gradient(transparent,#f0fdfa)"
+                                            id="disp-prep-fade-{{ $prep->id }}">
+                                        </div>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="btn btn-link btn-sm p-0 mt-1"
+                                            style="font-size:.73rem;color:var(--jug)"
+                                            onclick="
+                                                document.getElementById('disp-prep-{{ $prep->id }}').classList.toggle('open');
+                                                document.getElementById('disp-prep-fade-{{ $prep->id }}').style.display =
+                                                    document.getElementById('disp-prep-{{ $prep->id }}').classList.contains('open')
+                                                        ? 'none'
+                                                        : '';
+                                            ">
+                                        <i class="bi bi-chevron-down me-1"></i>
+                                        عرض منطوق الحكم كاملاً
+                                    </button>
+                                @endif
+
                             </div>
-                        </div>
-                        <div class="aud-meta p-3">
-                            @if($aud->juge)
-                                <span class="d-block">
-                                    <i class="bi bi-person me-1"></i> القاضي {{ $aud->juge->nom_complet }}
-                                </span>
-                            @endif
 
-                            <span class="d-block">
-                                <i class="bi bi-person-check me-1"></i>
-                                المدعي: {{ $aud->presence_demandeur ? '✓' : '✗' }} |
-                                المدعى عليه: {{ $aud->presence_defendeur ? '✓' : '✗' }} |
-                                محامي المؤسسة: {{ $aud->presence_avocat_entraide ? '✓' : '✗' }}
-                            </span>
+                        </div>
 
-                            @if($aud->resultat_audience)
-                                <span class="d-block">
-                                    <i class="bi bi-chat-left-text me-1"></i>
-                                    {{ Str::limit($aud->resultat_audience, 55) }}
-                                </span>
-                            @endif
+                        @continue
+                    @endif
+
+
+
+                        {{-- ============================================ --}}
+                        {{-- AUDIENCE                                     --}}
+                        {{-- ============================================ --}}
+
+                        @php
+                            $aud = $timelineItem['data'];
+
+                            $isHoukm = in_array(
+                                $aud->typeAudience?->type_audience,
+                                ['الحكم', 'النطق بالحكم']
+                            );
+
+                            $isFuture = $aud->date_audience?->isFuture();
+
+                            $typeLabel = $aud->typeAudience?->type_audience ?? '—';
+
+                            $dotCls = $isHoukm
+                                ? 'houkm'
+                                : ($isFuture ? 'future' : '');
+
+                            $cardCls = $isHoukm
+                                ? 'houkm'
+                                : ($isFuture ? 'future' : '');
+
+                            $badgeCls = $isHoukm
+                                ? 'houkm'
+                                : ($isFuture ? 'future' : 'normal');
+                        @endphp
+
+                        <div class="aud-item">
+
+                            {{-- Point de la timeline --}}
+                            <div class="aud-dot {{ $dotCls }}">
+                                <i class="bi {{ $isHoukm ? 'bi-hammer' : 'bi-calendar-event' }}"></i>
+                            </div>
+
+                            {{-- Carte de l'audience --}}
+                            <div class="aud-card {{ $cardCls }} mt-3 mx-5">
+
+                                <div class="aud-card-head px-2 pt-2">
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="aud-date">
+                                            جلسة بتاريخ
+                                            {{ $aud->date_audience?->format('d/m/Y') ?? '—' }}
+                                        </span>
+
+                                        @if($aud->date_audience?->isToday())
+                                            <span class="pill pill-danger"
+                                                style="font-size:.65rem;padding:1px 6px">
+                                                اليوم
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2">
+
+                                        <span class="aud-type-badge {{ $badgeCls }}">
+                                            {{ $typeLabel }}
+
+                                            @if($isHoukm)
+                                                <strong class="mr-1">← نهائية</strong>
+                                            @endif
+                                        </span>
+
+                                        <div class="d-flex gap-2">
+
+                                            <a href="{{ route('audiences.show', $aud) }}"
+                                            class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                            style="font-size:.9rem">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+
+                                            @can('update', $dossier)
+                                                <a href="{{ route('audiences.edit', $aud) }}"
+                                                class="btn btn-sm btn-outline-warning py-0 px-2"
+                                                style="font-size:.9rem">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            @endcan
+
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                {{-- Informations de l'audience --}}
+                                <div class="aud-meta p-3">
+
+                                    @if($aud->juge)
+                                        <span class="d-block">
+                                            <i class="bi bi-person me-1"></i>
+                                            القاضي {{ $aud->juge->nom_complet }}
+                                        </span>
+                                    @endif
+
+                                    <span class="d-block">
+                                        <i class="bi bi-person-check me-1"></i>
+                                        المدعي: {{ $aud->presence_demandeur ? '✓' : '✗' }} |
+                                        المدعى عليه: {{ $aud->presence_defendeur ? '✓' : '✗' }} |
+                                        محامي المؤسسة: {{ $aud->presence_avocat_entraide ? '✓' : '✗' }}
+                                    </span>
+
+                                    @if($aud->resultat_audience)
+                                        <span class="d-block">
+                                            <i class="bi bi-chat-left-text me-1"></i>
+                                            {{ \Illuminate\Support\Str::limit($aud->resultat_audience, 55) }}
+                                        </span>
+                                    @endif
+
+                                </div>
+
+                                {{-- Date de renvoi --}}
+                                @if($aud->date_prochaine_audience && !$isHoukm)
+                                    <div class="aud-renvoi">
+                                        <i class="bi bi-calendar-check text-muted me-1"></i>
+                                        تأجيل إلى
+                                        <strong>
+                                            {{ $aud->date_prochaine_audience->format('d/m/Y') }}
+                                        </strong>
+                                    </div>
+                                @endif
+
+                            </div>
+
                         </div>
-                        @if($aud->date_prochaine_audience && !$isHoukm)
-                        <div class="aud-renvoi">
-                            <i class="bi bi-calendar-check text-muted me-1"></i>
-                            تأجيل إلى <strong>{{ $aud->date_prochaine_audience->format('d/m/Y') }}</strong>
-                        </div>
+
+                    @endforeach
+
+                    {{-- ============================================ --}}
+                    {{-- BOUTONS : JUGEMENT PRÉPARATOIRE ET AUDIENCE --}}
+                    {{-- ============================================ --}}
+
+                    <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 my-3">
+
+                        {{-- Bouton d'ajout d'un jugement préparatoire --}}
+                        @if(!$isClosed && !$jugement)
+                            <a href="{{ route('jugements.create', [
+                                'dossier_id' => $dossier->id,
+                                'type' => 'preparatoire'
+                            ]) }}"
+                            class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-hourglass-split me-1"></i>
+                                تسجيل حكم تمهيدي
+                            </a>
                         @endif
-                    </div>
-                </div>
-                @endforeach
 
-                {{-- Bouton ajout rapide si pas encore de الحكم --}}
-                @if(!$audienceHoukm && !$isClosed && $peutAudience)
-                <div class="aud-item" style="margin-top:6px">
-                    <div class="aud-dot" style="background:#e2e8f0;border:2px dashed #94a3b8">
-                        <i class="bi bi-plus" style="color:#94a3b8"></i>
-                    </div>
-                    <div style="padding:6px 0" class="text-center">
-                        <a href="{{ route('audiences.create', ['dossier_id' => $dossier->id, 'dossier_tribunal_id' => $dt->id]) }}"
-                        class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-calendar-plus me-1"></i>برمجة جلسة جديدة
-                        </a>
-                    </div>
-                </div>
-                @endif
-            </div>
-            @endif
+                        {{-- Bouton de programmation d'une nouvelle audience --}}
+                        @if(!$audienceHoukm && !$isClosed && $peutAudience)
+                            <a href="{{ route('audiences.create', [
+                                'dossier_id' => $dossier->id,
+                                'dossier_tribunal_id' => $dt->id
+                            ]) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-calendar-plus me-1"></i>
+                                برمجة جلسة جديدة
+                            </a>
+                        @endif
 
-            {{-- ── أحكام تمهيدية : possibles après n'importe quel type d'audience ── --}}
-            @if($preparatoires->isNotEmpty() || (!$isClosed && !$jugement && $audiences->isNotEmpty()))
-            <div class="mx-4 my-2">
-                @foreach($preparatoires as $prep)
-                <div class="d-flex align-items-center justify-content-between gap-2 p-2 mb-2 rounded border border-warning border-opacity-50"
-                     style="background:rgba(245,158,11,.07);font-size:.85rem">
-                    <div>
-                        <span class="badge bg-warning text-dark me-1"><i class="bi bi-hourglass-split me-1"></i>حكم تمهيدي</span>
-                        {{ $prep->date_jugement->format('d/m/Y') }}
-                        @if($prep->juge)<span class="text-muted"> — {{ $prep->juge->nom_complet }}</span>@endif
-                        <div class="text-muted small mt-1">{{ \Illuminate\Support\Str::limit($prep->contenu_dispositif, 140) }}</div>
                     </div>
-                    <a href="{{ route('jugements.show', $prep) }}" class="btn btn-outline-secondary py-0 px-2" style="font-size:.9rem">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                </div>
-                @endforeach
 
-                @if(!$isClosed && !$jugement && $audiences->isNotEmpty())
-                <div class="text-center">
-                    <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id, 'type' => 'preparatoire']) }}"
-                       class="btn btn-sm btn-outline-warning">
-                        <i class="bi bi-hourglass-split me-1"></i>تسجيل حكم تمهيدي
-                    </a>
                 </div>
-                @endif
-            </div>
             @endif
 
             {{-- ── SÉPARATEUR الحكم → Jugement ─ --}}
@@ -988,7 +1170,7 @@
                     <div class="jug-block-header">
                         <div class="jug-title">
                             <i class="bi bi-hammer me-1"></i>
-                            حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
+                            حكم ختامي بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             @if($jugement->est_definitif)

@@ -281,7 +281,7 @@ class JugementPreparatoireTest extends TestCase
 
         $this->audience($this->typeExpertise, '2026-04-01');
         $this->get(route('jugements.create', ['dossier_id' => 1]))
-            ->assertOk()->assertSee('نوع الحكم')->assertSee('حكم فاصل في الموضوع');
+            ->assertOk()->assertSee('نوع الحكم')->assertSee('حكم ختامي');
         $this->get(route('jugements.edit', $prep))
             ->assertOk()->assertSee('نوع الحكم غير قابل للتعديل');
     }

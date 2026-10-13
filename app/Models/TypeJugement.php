@@ -11,7 +11,7 @@ class TypeJugement extends Model
     use HasFactory;
 
     public const PREPARATOIRE = 'حكم تمهيدي';
-    public const AU_FOND      = 'حكم فاصل في الموضوع';
+    public const AU_FOND      = 'حكم ختامي';
 
     protected $table = 'type_jugements';
 

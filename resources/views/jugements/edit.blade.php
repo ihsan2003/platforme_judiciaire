@@ -75,14 +75,6 @@
     </a>
 </div>
 
-@if($estPrep)
-    <div class="alert alert-warning mb-4" dir="rtl">
-        <i class="bi bi-info-circle ms-2"></i>
-        هذا <strong>حكم تمهيدي</strong>: لا يترتب عنه أطراف محكوم عليها ولا مبالغ ولا تنفيذ، ولا يُطعن فيه استقلالاً.
-        نوع الحكم غير قابل للتعديل.
-    </div>
-@endif
-
 @if($jugement->est_definitif)
     <div class="alert alert-warning mb-4" dir="rtl">
         <i class="bi bi-exclamation-triangle ms-2"></i>
@@ -169,7 +161,7 @@
                         @enderror
                     </div>
 
-                    {{-- حكم نهائي (حكم فاصل في الموضوع فقط) --}}
+                    {{-- حكم نهائي (حكم ختامي فقط) --}}
                     @unless($estPrep)
                     <div class="col-12">
                         <div class="form-check form-switch">

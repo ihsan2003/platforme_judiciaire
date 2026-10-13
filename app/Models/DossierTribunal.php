@@ -101,7 +101,6 @@ class DossierTribunal extends Model
 
     /**
      * RG — Indique si cette instance possède un jugement sur le fond
-     * (حكم فاصل في الموضوع). Seul ce jugement verrouille l'instance :
      * un jugement préparatoire (حكم تمهيدي) laisse l'instruction se poursuivre.
      */
     public function aUnJugementAuFond(): bool
