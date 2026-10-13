@@ -779,8 +779,15 @@
             $colorCls     = $degColor($dt);
             $isClosed     = !is_null($dt->date_fin);
             $audiences    = $dt->audiences->sortBy('date_audience');
-            $audienceHoukm= $dt->audienceHoukm();
-            $jugement     = $dt->jugements->sortByDesc('date_jugement')->first();
+            // الحكم "disponible" : celle sur laquelle le jugement final doit être enregistré
+            // (une audience الحكم déjà consommée par un حكم تمهيدي ne compte plus)
+            $audienceHoukm= $dt->audienceHoukmPourJugementAuFond();
+            // $jugement = jugement sur le fond de l'instance (1ère instance, appel ou cassation) ;
+            // les أحكام تمهيدية sont listés à part et n'ouvrent ni recours ni exécution.
+            $jugement     = $dt->jugements->reject(fn($j) => $j->estPreparatoire())
+                                ->sortByDesc('date_jugement')->first();
+            $preparatoires= $dt->jugements->filter(fn($j) => $j->estPreparatoire())
+                                ->sortBy('date_jugement');
             $recours      = $jugement?->recours?->first();
         @endphp
 
@@ -932,6 +939,35 @@
                             <i class="bi bi-calendar-plus me-1"></i>برمجة جلسة جديدة
                         </a>
                     </div>
+                </div>
+                @endif
+            </div>
+            @endif
+
+            {{-- ── أحكام تمهيدية : possibles après n'importe quel type d'audience ── --}}
+            @if($preparatoires->isNotEmpty() || (!$isClosed && !$jugement && $audiences->isNotEmpty()))
+            <div class="mx-4 my-2">
+                @foreach($preparatoires as $prep)
+                <div class="d-flex align-items-center justify-content-between gap-2 p-2 mb-2 rounded border border-warning border-opacity-50"
+                     style="background:rgba(245,158,11,.07);font-size:.85rem">
+                    <div>
+                        <span class="badge bg-warning text-dark me-1"><i class="bi bi-hourglass-split me-1"></i>حكم تمهيدي</span>
+                        {{ $prep->date_jugement->format('d/m/Y') }}
+                        @if($prep->juge)<span class="text-muted"> — {{ $prep->juge->nom_complet }}</span>@endif
+                        <div class="text-muted small mt-1">{{ \Illuminate\Support\Str::limit($prep->contenu_dispositif, 140) }}</div>
+                    </div>
+                    <a href="{{ route('jugements.show', $prep) }}" class="btn btn-outline-secondary py-0 px-2" style="font-size:.9rem">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                </div>
+                @endforeach
+
+                @if(!$isClosed && !$jugement && $audiences->isNotEmpty())
+                <div class="text-center">
+                    <a href="{{ route('jugements.create', ['dossier_id' => $dossier->id, 'type' => 'preparatoire']) }}"
+                       class="btn btn-sm btn-outline-warning">
+                        <i class="bi bi-hourglass-split me-1"></i>تسجيل حكم تمهيدي
+                    </a>
                 </div>
                 @endif
             </div>
@@ -1200,7 +1236,9 @@
                     </span>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
-                    @if($jug->est_definitif)
+                    @if($jug->estPreparatoire())
+                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>حكم تمهيدي</span>
+                    @elseif($jug->est_definitif)
                         <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>حكم نهائي</span>
                     @elseif($peutR)
                         <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>متبقي {{ $dr }} يوم</span>

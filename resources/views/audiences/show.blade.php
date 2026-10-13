@@ -378,11 +378,21 @@
                     </a>
                 @endif
 
-                @if($dt?->peutAvoirJugement())
+                {{-- حكم فاصل : seulement s'il existe une audience "الحكم" disponible --}}
+                @if($dt && $dt->audienceHoukmPourJugementAuFond() && ! $dt->aUnJugementAuFond())
                     <a href="{{ route('jugements.create', ['dossier_id' => $dossier?->id]) }}"
                        class="btn btn-outline-success w-100 btn-sm">
                         <i class="bi bi-hammer ms-1"></i>
                         تسجيل الحكم
+                    </a>
+                @endif
+
+                {{-- حكم تمهيدي : possible après tout type d'audience (تحقيق، بحث، خبرة…) --}}
+                @if($dt && $dt->estOuverte() && ! $dt->aUnJugementAuFond())
+                    <a href="{{ route('jugements.create', ['dossier_id' => $dossier?->id, 'type' => 'preparatoire']) }}"
+                       class="btn btn-outline-warning w-100 btn-sm">
+                        <i class="bi bi-hourglass-split ms-1"></i>
+                        تسجيل حكم تمهيدي
                     </a>
                 @endif
 

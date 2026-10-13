@@ -72,6 +72,12 @@ class JugementPreparatoireTest extends TestCase
         // Parties requises (RG01) : المدعي + المدعى عليه
         $demandeur = DB::table('type_parties')->insertGetId(['type_partie' => 'المدعي']);
         $defendeur = DB::table('type_parties')->insertGetId(['type_partie' => 'المدعى عليه']);
+        foreach ([1 => 'المدعي', 2 => 'المدعى عليه'] as $idPartie => $nom) {
+            DB::table('parties')->insert([
+                'id' => $idPartie, 'nom_partie' => $nom, 'type_personne' => 'ذاتي',
+                'identifiant_unique' => 'CIN' . $idPartie, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+        }
         foreach ([[1, $demandeur], [2, $defendeur]] as [$idPartie, $idType]) {
             DB::table('dossier_parties')->insert([
                 'id_dossier' => 1, 'id_partie' => $idPartie, 'id_type_partie' => $idType,
@@ -278,5 +284,56 @@ class JugementPreparatoireTest extends TestCase
             ->assertOk()->assertSee('نوع الحكم')->assertSee('حكم فاصل في الموضوع');
         $this->get(route('jugements.edit', $prep))
             ->assertOk()->assertSee('نوع الحكم غير قابل للتعديل');
+    }
+
+    public function test_preparatoire_is_possible_after_a_non_houkm_audience_without_any_houkm_audience(): void
+    {
+        $this->withoutVite();
+        $this->actingAsUser();
+
+        // Seulement une audience de type "الخبرة" (aucune audience "الحكم" dans l'instance)
+        $aud = $this->audience($this->typeExpertise, '2026-03-01');
+        $dt  = DossierTribunal::find($this->dtId);
+        $this->assertNull($dt->audienceHoukm());
+
+        // Le bouton "حكم تمهيدي" est proposé sur la fiche de l'audience, pas "تسجيل الحكم"
+        $this->get(route('audiences.show', $aud))
+            ->assertOk()
+            ->assertSee('تسجيل حكم تمهيدي')
+            ->assertDontSee('>تسجيل الحكم<', false);
+
+        // La fiche du dossier propose aussi le bouton
+        $this->get(route('dossiers.show', 1))->assertOk()->assertSee('تسجيل حكم تمهيدي');
+
+        // Le formulaire présélectionne le type via ?type=preparatoire
+        $this->get(route('jugements.create', ['dossier_id' => 1, 'type' => 'preparatoire']))
+            ->assertOk()
+            ->assertSee('id="type_jugement_' . TypeJugement::idPreparatoire() . '"', false);
+
+        // Et l'enregistrement fonctionne sans audience "الحكم"
+        $this->post(route('jugements.store'), $this->payload(true, '2026-03-01'))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(1, Jugement::preparatoires()->count());
+
+        // Après le préparatoire : la fiche du dossier le liste, mais ne le traite pas comme jugement final
+        $this->get(route('dossiers.show', 1))->assertOk()->assertSee('حكم تمهيدي');
+    }
+
+    public function test_houkm_audience_page_offers_both_buttons_then_only_preparatoire_is_removed_after_merits(): void
+    {
+        $this->withoutVite();
+        $this->actingAsUser();
+
+        $houkm = $this->audience($this->typeHoukm, '2026-05-01');
+
+        $this->get(route('audiences.show', $houkm))
+            ->assertOk()->assertSee('تسجيل الحكم')->assertSee('تسجيل حكم تمهيدي');
+
+        $this->post(route('jugements.store'), $this->payload(false, '2026-05-01'))
+            ->assertSessionHasNoErrors();
+
+        // Jugement final rendu : plus aucun des deux boutons
+        $this->get(route('audiences.show', $houkm))
+            ->assertOk()->assertDontSee('تسجيل حكم تمهيدي');
     }
 }

@@ -61,7 +61,8 @@
                         @php
                             $idPrep  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::PREPARATOIRE)?->id;
                             $idFond  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::AU_FOND)?->id;
-                            $typeSel = old('id_type_jugement', $idFond);
+                            // ?type=preparatoire (boutons de la fiche dossier / audience) présélectionne le حكم تمهيدي
+                            $typeSel = old('id_type_jugement', request('type') === 'preparatoire' ? $idPrep : $idFond);
                         @endphp
 
                         <div class="row g-3">
