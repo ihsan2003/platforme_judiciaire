@@ -269,7 +269,6 @@ class JugementController extends Controller
             );
         }
 
-        // ── Type de jugement (حكم تمهيدي / حكم فاصل في الموضوع) ───
         $typeJugement    = TypeJugement::findOrFail($request->id_type_jugement);
         $estPreparatoire = $typeJugement->type_jugement === TypeJugement::PREPARATOIRE;
 

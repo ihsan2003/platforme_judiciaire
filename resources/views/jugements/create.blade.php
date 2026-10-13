@@ -61,7 +61,12 @@
                         @php
                             $idPrep  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::PREPARATOIRE)?->id;
                             $idFond  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::AU_FOND)?->id;
+<<<<<<< HEAD
                             $typeSel = old('id_type_jugement', $idFond);
+=======
+                            // ?type=preparatoire (boutons de la fiche dossier / audience) présélectionne le حكم تمهيدي
+                            $typeSel = old('id_type_jugement', request('type') === 'preparatoire' ? $idPrep : $idFond);
+>>>>>>> feature/jugement-preparatoire
                         @endphp
 
                         <div class="row g-3">
@@ -90,11 +95,6 @@
                                 @error('id_type_jugement')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
-                                <div id="hint-preparatoire" class="alert alert-warning small mt-2 mb-0 d-none">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    الحكم التمهيدي لا ينهي الدرجة القضائية: تستمر الجلسات إلى حين صدور الحكم الفاصل في الموضوع،
-                                    ولا يُطعن فيه استقلالاً ولا تترتب عنه مبالغ أو تنفيذ.
-                                </div>
                             </div>
 
                             {{-- الملف / المحكمة --}}

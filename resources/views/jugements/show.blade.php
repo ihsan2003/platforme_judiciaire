@@ -312,7 +312,7 @@
             <div class="card-body">
                 <div class="alert alert-warning py-2 small mb-3">
                     <i class="bi bi-info-circle ms-1"></i>
-                    حكم تمهيدي: لا يُطعن فيه استقلالاً، ولا يترتب عنه تنفيذ. تبدأ مهلة الطعن من تاريخ الحكم الفاصل في الموضوع.
+                    لا يمكن تسجيل أي إجراء يتعلق بالطعن أو التنفيذ إلا بعد صدور الحكم النهائي                
                 </div>
                 @if($jugement->dossierTribunal->estOuverte() && ! $jugement->dossierTribunal->aUnJugementAuFond())
                     <div class="d-grid gap-2">

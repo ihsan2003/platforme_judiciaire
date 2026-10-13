@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public const TYPE_PREPARATOIRE = 'حكم تمهيدي';
-    public const TYPE_AU_FOND      = 'حكم فاصل في الموضوع';
+    public const TYPE_AU_FOND      = 'حكم ختامي';
 
     public function up(): void
     {
