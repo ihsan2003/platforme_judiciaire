@@ -22,8 +22,10 @@
 
 @php
     $dt            = $jugement->dossierTribunal;
-    $audienceHoukm = $dt?->audienceHoukm();
-    $dateHoukm     = $audienceHoukm?->date_audience?->format('Y-m-d');
+    $estPrep       = $jugement->estPreparatoire();
+    $audienceHoukm = $dt?->audienceHoukmPourJugementAuFond();
+    // Date imposée (audience الحكم) uniquement pour un jugement sur le fond
+    $dateHoukm     = $estPrep ? null : $audienceHoukm?->date_audience?->format('Y-m-d');
 
     // Charger les parties du dossier (même logique que create)
     $partiesDossier = \App\Models\DossierPartie::with(['partie', 'typePartie'])
@@ -61,6 +63,9 @@
             بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
             — {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
             ({{ $dt?->degre?->degre_juridiction ?? '—' }})
+            <span class="badge {{ $estPrep ? 'bg-warning text-dark' : 'bg-primary' }} me-2">
+                {{ $jugement->typeJugement?->type_jugement ?? '—' }}
+            </span>
         </p>
     </div>
     <a href="{{ route('jugements.show', $jugement) }}"
@@ -69,6 +74,14 @@
         العودة إلى التفاصيل
     </a>
 </div>
+
+@if($estPrep)
+    <div class="alert alert-warning mb-4" dir="rtl">
+        <i class="bi bi-info-circle ms-2"></i>
+        هذا <strong>حكم تمهيدي</strong>: لا يترتب عنه أطراف محكوم عليها ولا مبالغ ولا تنفيذ، ولا يُطعن فيه استقلالاً.
+        نوع الحكم غير قابل للتعديل.
+    </div>
+@endif
 
 @if($jugement->est_definitif)
     <div class="alert alert-warning mb-4" dir="rtl">
@@ -156,7 +169,8 @@
                         @enderror
                     </div>
 
-                    {{-- حكم نهائي --}}
+                    {{-- حكم نهائي (حكم فاصل في الموضوع فقط) --}}
+                    @unless($estPrep)
                     <div class="col-12">
                         <div class="form-check form-switch">
                             <input class="form-check-input"
@@ -175,6 +189,7 @@
                             </div>
                         @endif
                     </div>
+                    @endunless
 
                     {{-- منطوق الحكم --}}
                     <div class="col-12">
@@ -191,6 +206,10 @@
                 </div>
             </div>
         </div>
+
+        {{-- Blocs "fond" (position de l'institution, parties, montants) : inutiles pour un حكم تمهيدي.
+             <fieldset disabled> empêche aussi l'envoi de ces champs. --}}
+        <fieldset @disabled($estPrep) @class(['border-0 p-0 m-0', 'd-none' => $estPrep]) style="min-width:0">
 
         {{-- ── بلوك المؤسسة ── --}}
         @if($institution)
@@ -405,6 +424,8 @@
         </div>
 
         @endif
+
+        </fieldset>
 
     </div>{{-- /col-lg-8 --}}
 

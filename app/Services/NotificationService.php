@@ -142,6 +142,7 @@ class NotificationService
                 'dossierTribunal.dossier',
                 'dossierTribunal.tribunal',
             ])
+            ->auFond()
             ->where('est_definitif', false)
             ->doesntHave('recours')
             ->get();
@@ -209,6 +210,7 @@ class NotificationService
         $jugements = Jugement::with([
                 'dossierTribunal.dossier',
             ])
+            ->auFond()
             ->where('est_definitif', false)
             ->doesntHave('recours')
             ->whereDate('date_jugement', '<=', today()->subDays(self::SEUIL_JUGEMENT_JOURS))

@@ -43,6 +43,13 @@ class RecoursController extends Controller
             'numero_dossier_tribunal.regex' => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2026 / 1101 / 894).',
         ]);
 
+        // RG — Un jugement préparatoire (حكم تمهيدي) n'est pas attaquable séparément :
+        // le recours se dépose contre le jugement sur le fond.
+        if ($jugement->estPreparatoire()) {
+            return redirect()->back()
+                ->with('error', 'لا يمكن الطعن في الحكم التمهيدي استقلالاً. يتم الطعن في الحكم الفاصل في الموضوع.');
+        }
+
         // RG — Impossible si le jugement est déjà définitif
         if ($jugement->est_definitif) {
             return redirect()->back()
@@ -125,6 +132,11 @@ class RecoursController extends Controller
     public function cloturerSansRecours(Jugement $jugement): RedirectResponse
     {
         $this->authorize('update', $jugement->dossierTribunal->dossier);
+
+        if ($jugement->estPreparatoire()) {
+            return redirect()->back()
+                ->with('error', 'لا يمكن إغلاق حكم تمهيدي: الدرجة القضائية تستمر إلى حين صدور الحكم الفاصل في الموضوع.');
+        }
 
         if ($jugement->recours()->exists()) {
             return redirect()->back()
@@ -569,7 +581,7 @@ class RecoursController extends Controller
             ->latest('date_fin')
             ->first();
 
-        return $dtAppel?->jugements()->latest('date_jugement')->first();
+        return $dtAppel?->jugements()->auFond()->latest('date_jugement')->first();
     }
 
     /**

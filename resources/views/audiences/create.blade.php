@@ -31,16 +31,6 @@
     </a>
 </div>
 
-@if($errors->any())
-<div class="alert alert-danger mb-4">
-    <ul class="mb-0">
-        @foreach($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-</div>
-@endif
-
 <form method="POST" action="{{ route('audiences.store') }}" id="audienceForm" dir="rtl">
     @csrf
 

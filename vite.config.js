@@ -23,11 +23,6 @@ export default defineConfig({
                 'resources/js/audience-create.js', 
                 'resources/js/audience-edit.js',       
                 'resources/js/dossier-mahakim.js',    
-                   
- 
-
-        
-
 
             ],
             refresh: true,

@@ -17,6 +17,7 @@ class StoreJugementRequest extends FormRequest
         return [
             'id_dossier_tribunal' => 'required|exists:dossier_tribunaux,id',
             'id_juge'             => 'required|exists:juges,id',
+            'id_type_jugement'    => 'required|exists:type_jugements,id',
             'date_jugement'       => 'required|date|before_or_equal:today',
             'contenu_dispositif'  => 'required|string|min:10',
             'est_definitif'       => 'boolean',
@@ -33,6 +34,9 @@ class StoreJugementRequest extends FormRequest
         return [
             'id_dossier_tribunal.required' => 'يرجى اختيار الملف/المحكمة.',
             'id_dossier_tribunal.exists'   => 'الملف أو المحكمة المحددة غير موجودة.',
+
+            'id_type_jugement.required'    => 'يرجى تحديد نوع الحكم.',
+            'id_type_jugement.exists'      => 'نوع الحكم المحدد غير موجود.',
 
             'id_juge.required'             => 'القاضي مطلوب.',
             'id_juge.exists'               => 'القاضي المحدد غير موجود.',
@@ -61,6 +65,7 @@ class StoreJugementRequest extends FormRequest
         return [
             'id_dossier_tribunal' => 'الملف القضائي',
             'id_juge' => 'القاضي',
+            'id_type_jugement' => 'نوع الحكم',
             'date_jugement' => 'تاريخ الحكم',
             'contenu_dispositif' => 'منطوق الحكم',
             'position_institution_etab' => 'المنصب',
@@ -71,6 +76,9 @@ class StoreJugementRequest extends FormRequest
     {
         $this->merge([
             'est_definitif' => $this->boolean('est_definitif'),
+            // Par défaut : jugement sur le fond (comportement historique du formulaire)
+            'id_type_jugement' => $this->input('id_type_jugement')
+                ?: \App\Models\TypeJugement::idAuFond(),
         ]);
     }
 }

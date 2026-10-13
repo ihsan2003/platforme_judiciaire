@@ -100,6 +100,52 @@ class DossierTribunal extends Model
     }
 
     /**
+     * RG — Indique si cette instance possède un jugement sur le fond
+     * (حكم فاصل في الموضوع). Seul ce jugement verrouille l'instance :
+     * un jugement préparatoire (حكم تمهيدي) laisse l'instruction se poursuivre.
+     */
+    public function aUnJugementAuFond(): bool
+    {
+        return $this->jugements()->auFond()->exists();
+    }
+
+    public function jugementAuFond(): ?Jugement
+    {
+        return $this->jugements()->auFond()->latest('date_jugement')->first();
+    }
+
+    /**
+     * Dernier jugement préparatoire rendu dans cette instance, ou null.
+     */
+    public function dernierJugementPreparatoire(): ?Jugement
+    {
+        return $this->jugements()->preparatoires()->latest('date_jugement')->first();
+    }
+
+    /**
+     * RG — Audience "الحكم" sur laquelle le jugement sur le fond doit être
+     * enregistré : la plus récente, et postérieure au dernier jugement
+     * préparatoire s'il y en a un (le jugement préparatoire peut avoir été
+     * rendu à une audience "الحكم" qui ne doit pas être réutilisée).
+     */
+    public function audienceHoukmPourJugementAuFond(): ?Audience
+    {
+        $audience = $this->audienceHoukm();
+
+        if (! $audience) {
+            return null;
+        }
+
+        $preparatoire = $this->dernierJugementPreparatoire();
+
+        if ($preparatoire && $audience->date_audience->lte($preparatoire->date_jugement)) {
+            return null;
+        }
+
+        return $audience;
+    }
+
+    /**
      * RG — Indique si cette instance est encore ouverte (sans date de fin).
      * Une instance clôturée ne peut plus recevoir d'audiences ni de jugement.
      */
@@ -169,7 +215,9 @@ class DossierTribunal extends Model
      */
     public function appelDansDelai(int $delaiJours): bool
     {
+        // Le délai court à partir du jugement sur le fond uniquement.
         $dernierJugement = $this->jugements()
+            ->auFond()
             ->latest('date_jugement')
             ->first();
 
@@ -180,6 +228,7 @@ class DossierTribunal extends Model
         $dateLimite = $dernierJugement->date_jugement->copy()->addDays($delaiJours);
 
         return $this->jugements()
+            ->auFond()
             ->whereHas('recours', fn($q) =>
                 $q->where('date_recours', '<=', $dateLimite)
                   ->whereHas('typeRecours', fn($q) =>
@@ -199,17 +248,20 @@ class DossierTribunal extends Model
     public function getStatutLabelAttribute(): string
     {
         if ($this->estOuverte()) {
-            if ($this->aUnJugement()) {
+            if ($this->aUnJugementAuFond()) {
                 return 'Jugement rendu';
             }
-            if ($this->audienceHoukm()) {
+            if ($this->audienceHoukmPourJugementAuFond()) {
                 return 'En délibéré';
+            }
+            if ($this->dernierJugementPreparatoire()) {
+                return 'Jugement préparatoire rendu';
             }
             return 'En cours';
         }
 
-        // Clôturée — chercher la raison
-        $jugement = $this->jugements()->with('recours.typeRecours')->latest('date_jugement')->first();
+        // Clôturée — chercher la raison (jugement sur le fond)
+        $jugement = $this->jugements()->auFond()->with('recours.typeRecours')->latest('date_jugement')->first();
 
         if ($jugement && $jugement->recours->isNotEmpty()) {
             $typeRecours = $jugement->recours->first()->typeRecours?->type_recours ?? 'Recours';
@@ -227,11 +279,14 @@ class DossierTribunal extends Model
         if (!$this->estOuverte()) {
             return 'secondary';
         }
-        if ($this->aUnJugement()) {
+        if ($this->aUnJugementAuFond()) {
             return 'info';
         }
-        if ($this->audienceHoukm()) {
+        if ($this->audienceHoukmPourJugementAuFond()) {
             return 'warning';
+        }
+        if ($this->dernierJugementPreparatoire()) {
+            return 'primary';
         }
         return 'success';
     }

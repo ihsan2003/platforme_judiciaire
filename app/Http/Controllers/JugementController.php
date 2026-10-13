@@ -6,6 +6,7 @@ use App\Http\Requests\Jugements\StoreJugementRequest;
 use App\Http\Requests\Jugements\UpdateJugementRequest;
 use App\Http\Controllers\Concerns\AuthorizesViaDossier;
 use App\Models\Jugement;
+use App\Models\TypeJugement;
 use App\Models\DossierTribunal;
 use App\Models\Juge;
 use App\Models\Partie;
@@ -37,11 +38,16 @@ class JugementController extends Controller
                 'dossierTribunal.tribunal',
                 'dossierTribunal.degre',
                 'juge',
+                'typeJugement',
                 'parties',
                 'createdBy',
                 'recours',
                 'executions.statut',
             ])
+
+            // Filtre type de jugement (تمهيدي / فاصل في الموضوع)
+            ->when(request('type_jugement'), fn($q, $v) =>
+                $q->where('id_type_jugement', $v))
 
             ->when(request('recherche'), function ($q, $v) {
                 $q->where(function ($sub) use ($v) {
@@ -152,10 +158,11 @@ class JugementController extends Controller
             ->withQueryString();
 
         $stats = [
-            'total'      => Jugement::count(),
-            'definitifs' => Jugement::where('est_definitif', true)->count(),
-            'en_appel'   => Jugement::whereHas('recours')->count(),
-            'executes'   => Jugement::whereHas('executions')->count(),
+            'total'        => Jugement::count(),
+            'definitifs'   => Jugement::where('est_definitif', true)->count(),
+            'en_appel'     => Jugement::whereHas('recours')->count(),
+            'executes'     => Jugement::whereHas('executions')->count(),
+            'preparatoires' => Jugement::preparatoires()->count(),
         ];
 
         // ─── Répartition pour / contre / partiel (source: position_institutions) ──
@@ -177,11 +184,14 @@ class JugementController extends Controller
         // IMPORTANT
         $degres = DegreeJuridiction::orderBy('degre_juridiction')->get();
 
+        $typesJugement = TypeJugement::orderBy('id')->get();
+
         return view('jugements.index', compact(
             'jugements',
             'stats',
             'degres',
-            'positionsParId'
+            'positionsParId',
+            'typesJugement'
         ));
     }
 
@@ -197,12 +207,19 @@ class JugementController extends Controller
             ->whereHas('dossier', fn($q) => $q->actifs())
             ->get()
             ->filter(function ($dt) {
-                return $dt->peutAvoirJugement()
-                    || ($dt->estOuverte() && $dt->jugements()->doesntExist());
+                // Un jugement sur le fond existant verrouille l'instance.
+                if ($dt->aUnJugementAuFond()) {
+                    return false;
+                }
+
+                // Instance ouverte : un jugement préparatoire reste possible à tout moment ;
+                // le jugement sur le fond exige une audience الحكم (contrôlé côté formulaire/store).
+                return $dt->estOuverte() || $dt->audienceHoukmPourJugementAuFond() !== null;
             });
 
         $juges              = Juge::with('tribunal')->orderBy('nom_complet')->get();
         $positionsInstitution = \App\Models\PositionInstitution::orderBy('position')->get();
+        $typesJugement      = TypeJugement::orderBy('id')->get();
 
         // Parties du dossier si dossier_id fourni
         $partiesDossier = collect();
@@ -226,6 +243,7 @@ class JugementController extends Controller
             'juges',
             'partiesDossier',
             'positionsInstitution',
+            'typesJugement',
             'defaultDossierTribunalId'
         ));
     }
@@ -251,51 +269,101 @@ class JugementController extends Controller
             );
         }
 
-        // ── RG03 : audience الحكم obligatoire ─────────────────────
+        // ── Type de jugement (حكم تمهيدي / حكم فاصل في الموضوع) ───
+        $typeJugement    = TypeJugement::findOrFail($request->id_type_jugement);
+        $estPreparatoire = $typeJugement->type_jugement === TypeJugement::PREPARATOIRE;
+
+        // ── RG03 : au moins une audience dans l'instance ──────────
         if ($dossierTribunal->audiences->isEmpty()) {
             return back()->with('error',
                 'يتعذر إنشاء حكم: لا توجد أي جلسة لهذا الملف/المحكمة.'
             );
         }
 
-        $audienceHoukm = $dossierTribunal->audienceHoukm();
-
-        if (! $audienceHoukm) {
-            return back()->with('error',
-                'يتعذر إنشاء حكم: لم يتم تسجيل أي جلسة من نوع "الحكم".'
-            );
-        }
-
-        // ── RG03 : un seul jugement par instance ──────────────────
-        if ($dossierTribunal->jugements->isNotEmpty()) {
+        // ── RG03 : un seul jugement sur le fond par instance ──────
+        // (les jugements préparatoires, eux, peuvent être plusieurs)
+        if ($dossierTribunal->aUnJugementAuFond()) {
             return back()->with('error',
                 'يوجد بالفعل حكم مسجل لهذه الدرجة القضائية.'
             );
         }
 
-        // ── RG02 : date = date audience الحكم ─────────────────────
-        $dateAttendue = $audienceHoukm->date_audience->toDateString();
+        $dernierPrep = $dossierTribunal->dernierJugementPreparatoire();
 
-        if ($request->date_jugement !== $dateAttendue) {
-            return back()->withErrors([
-                'date_jugement' =>
-                    "يجب أن يطابق تاريخ الحكم تاريخ جلسة \"الحكم\" ({$audienceHoukm->date_audience->format('d/m/Y')}).",
-            ])->withInput();
+        if ($estPreparatoire) {
+
+            // ── Jugement préparatoire : l'instance doit être ouverte ──
+            if (! $dossierTribunal->estOuverte()) {
+                return back()->with('error',
+                    'يتعذر تسجيل حكم تمهيدي: هذه الدرجة القضائية مغلقة.'
+                );
+            }
+
+            // ── RG02-bis : date = date d'une audience de l'instance
+            //    (tous types d'audience confondus) ──────────────────
+            $audienceDuJugement = $dossierTribunal->audiences
+                ->first(fn($a) => $a->date_audience->toDateString() === $request->date_jugement);
+
+            if (! $audienceDuJugement) {
+                return back()->withErrors([
+                    'date_jugement' =>
+                        'يجب أن يطابق تاريخ الحكم التمهيدي تاريخ إحدى جلسات هذه الدرجة القضائية.',
+                ])->withInput();
+            }
+
+            // ── Postérieur au jugement préparatoire précédent ───────
+            if ($dernierPrep && $request->date_jugement <= $dernierPrep->date_jugement->toDateString()) {
+                return back()->withErrors([
+                    'date_jugement' =>
+                        "يجب أن يكون تاريخ الحكم التمهيدي لاحقاً لتاريخ الحكم التمهيدي السابق ({$dernierPrep->date_jugement->format('d/m/Y')}).",
+                ])->withInput();
+            }
+
+        } else {
+
+            // ── Jugement sur le fond : audience الحكم obligatoire, ──
+            //    postérieure au dernier jugement préparatoire
+            $audienceHoukm = $dossierTribunal->audienceHoukmPourJugementAuFond();
+
+            if (! $audienceHoukm) {
+                $message = $dernierPrep
+                    ? "يتعذر إنشاء حكم: يجب تسجيل جلسة جديدة من نوع \"الحكم\" بعد الحكم التمهيدي بتاريخ {$dernierPrep->date_jugement->format('d/m/Y')}."
+                    : 'يتعذر إنشاء حكم: لم يتم تسجيل أي جلسة من نوع "الحكم".';
+
+                return back()->with('error', $message);
+            }
+
+            // ── RG02 : date = date audience الحكم ─────────────────
+            $dateAttendue = $audienceHoukm->date_audience->toDateString();
+
+            if ($request->date_jugement !== $dateAttendue) {
+                return back()->withErrors([
+                    'date_jugement' =>
+                        "يجب أن يطابق تاريخ الحكم تاريخ جلسة \"الحكم\" ({$audienceHoukm->date_audience->format('d/m/Y')}).",
+                ])->withInput();
+            }
+
+            if ($audienceHoukm->date_audience->isFuture()) {
+                return back()->withErrors([
+                    'date_jugement' => 'لا يمكن أن يكون تاريخ الحكم في المستقبل.',
+                ])->withInput();
+            }
         }
 
-        if ($audienceHoukm->date_audience->isFuture()) {
-            return back()->withErrors([
-                'date_jugement' => 'لا يمكن أن يكون تاريخ الحكم في المستقبل.',
-            ])->withInput();
-        }
-
-        $jugement = DB::transaction(function () use ($request, $dossierTribunal) {
+        $jugement = DB::transaction(function () use ($request, $dossierTribunal, $estPreparatoire) {
 
             // ── Créer le jugement ──────────────────────────────────
             $jugement = Jugement::create([
                 ...$request->safe()->except('parties', 'montants', 'position_institution_etab'),
+                // Un jugement préparatoire ne peut jamais être "définitif"
+                'est_definitif' => $estPreparatoire ? false : $request->boolean('est_definitif'),
                 'created_by' => Auth::id(),
             ]);
+
+            // ── Jugement préparatoire : pas de parties/montants/finance ──
+            if ($estPreparatoire) {
+                return $jugement;
+            }
 
             // ── Sync des parties avec position et montant ──────────
             if ($request->filled('parties')) {
@@ -361,7 +429,9 @@ class JugementController extends Controller
 
         return redirect()
             ->route('jugements.show', $jugement)
-            ->with('success', 'تم إنشاء الحكم بنجاح.');
+            ->with('success', $estPreparatoire
+                ? 'تم تسجيل الحكم التمهيدي بنجاح. يمكنكم متابعة تسجيل الجلسات.'
+                : 'تم إنشاء الحكم بنجاح.');
     }
     // ─────────────────────────────────────────
     // SHOW
@@ -421,11 +491,36 @@ class JugementController extends Controller
     {
         $this->authorizeDossier('update', $jugement);
         
-        DB::transaction(function () use ($request, $jugement) {
+        $estPreparatoire = $jugement->estPreparatoire();
 
-            $jugement->update(
-                $request->safe()->except('parties', 'montants', 'position_institution_etab')
-            );
+        // Jugement préparatoire : la date doit rester celle d'une audience de l'instance
+        if ($estPreparatoire
+            && $request->date_jugement !== $jugement->date_jugement->toDateString()
+            && ! $jugement->dossierTribunal->audiences()
+                    ->whereDate('date_audience', $request->date_jugement)->exists()
+        ) {
+            return back()->withErrors([
+                'date_jugement' =>
+                    'يجب أن يطابق تاريخ الحكم التمهيدي تاريخ إحدى جلسات هذه الدرجة القضائية.',
+            ])->withInput();
+        }
+
+        DB::transaction(function () use ($request, $jugement, $estPreparatoire) {
+
+            // Le type de jugement n'est pas modifiable après création (il conditionne
+            // parties, finance, recours et clôture de l'instance).
+            $jugement->update([
+                ...$request->safe()->except(
+                    'parties', 'montants', 'position_institution_etab', 'id_type_jugement'
+                ),
+                // Un jugement préparatoire ne peut jamais être "définitif"
+                'est_definitif' => $estPreparatoire ? false : $request->boolean('est_definitif'),
+            ]);
+
+            // Jugement préparatoire : ni parties/positions, ni montants, ni finance
+            if ($estPreparatoire) {
+                return;
+            }
 
             $syncData = collect($request->parties ?? [])
                 ->mapWithKeys(function ($partieId) use ($request) {
