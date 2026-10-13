@@ -169,11 +169,7 @@
                         @enderror
                     </div>
 
-<<<<<<< HEAD
-                    {{-- حكم نهائي (حكم فاصل في الموضوع فقط) --}}
-=======
                     {{-- حكم نهائي (حكم ختامي فقط) --}}
->>>>>>> feature/jugement-preparatoire
                     @unless($estPrep)
                     <div class="col-12">
                         <div class="form-check form-switch">
