@@ -245,6 +245,7 @@ class ExecutionController extends Controller
     {
         // Jugements définitifs sans exécution en cours ou terminée
         $jugements = Jugement::with(['dossierTribunal.dossier', 'dossierTribunal.tribunal', 'juge', 'parties'])
+            ->auFond()
             ->where('est_definitif', true)
             ->doesntHave('executions')
             ->orderBy('date_jugement', 'desc')
@@ -276,6 +277,10 @@ class ExecutionController extends Controller
 
         $jugement = \App\Models\Jugement::findOrFail($request->id_jugement);
         $this->authorizeDossier('update', $jugement);
+
+        if ($jugement->estPreparatoire()) {
+            return back()->with('error', 'لا يمكن تسجيل تنفيذ لحكم تمهيدي.')->withInput();
+        }
 
         $execution = Execution::create([
             ...$request->validated(),

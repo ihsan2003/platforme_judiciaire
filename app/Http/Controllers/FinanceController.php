@@ -94,7 +94,7 @@ class FinanceController extends Controller
 
     public function create()
     {
-        $jugements = Jugement::with('dossierTribunal')->get();
+        $jugements = Jugement::auFond()->with('dossierTribunal')->get();
 
         return view('finances.create', compact('jugements'));
     }

@@ -58,7 +58,44 @@
                     </div>
 
                     <div class="card-body p-4">
+                        @php
+                            $idPrep  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::PREPARATOIRE)?->id;
+                            $idFond  = $typesJugement->firstWhere('type_jugement', \App\Models\TypeJugement::AU_FOND)?->id;
+                            $typeSel = old('id_type_jugement', $idFond);
+                        @endphp
+
                         <div class="row g-3">
+
+                            {{-- نوع الحكم --}}
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small text-dark">
+                                    نوع الحكم <span class="text-danger">*</span>
+                                </label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($typesJugement as $tj)
+                                        <div>
+                                            <input type="radio" class="btn-check"
+                                                   name="id_type_jugement"
+                                                   id="type_jugement_{{ $tj->id }}"
+                                                   value="{{ $tj->id }}"
+                                                   autocomplete="off"
+                                                   @checked((string) $typeSel === (string) $tj->id)>
+                                            <label class="btn btn-sm {{ $tj->id === $idPrep ? 'btn-outline-warning' : 'btn-outline-primary' }}"
+                                                   for="type_jugement_{{ $tj->id }}">
+                                                {{ $tj->type_jugement }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                @error('id_type_jugement')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div id="hint-preparatoire" class="alert alert-warning small mt-2 mb-0 d-none">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    الحكم التمهيدي لا ينهي الدرجة القضائية: تستمر الجلسات إلى حين صدور الحكم الفاصل في الموضوع،
+                                    ولا يُطعن فيه استقلالاً ولا تترتب عنه مبالغ أو تنفيذ.
+                                </div>
+                            </div>
 
                             {{-- الملف / المحكمة --}}
                             <div class="col-md-6">
@@ -132,10 +169,17 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                <div id="date_houkm_hint" class="form-text d-none">
+                                    التاريخ مطابق لجلسة "الحكم" لهذه الدرجة.
+                                </div>
+                                <div id="date_prep_hint" class="form-text d-none">
+                                    يجب أن يطابق تاريخ إحدى جلسات هذه الدرجة:
+                                    <span id="date_prep_list" class="fw-semibold"></span>
+                                </div>
                             </div>
 
                             {{-- حكم نهائي --}}
-                            <div class="col-md-6 d-flex align-items-end pb-1">
+                            <div class="col-md-6 d-flex align-items-end pb-1" id="bloc-definitif">
                                 <div class="form-check">
                                     <input class="form-check-input"
                                         type="checkbox"
@@ -174,6 +218,7 @@
                 {{-- ─────────────────────────────────────────────────────────────────
                     بطاقة نتيجة الحكم - المؤسسة
                 ───────────────────────────────────────────────────────────────── --}}
+                <div id="bloc-fond">
                 @php
                     $institution   = $partiesDossier->first(fn($dp) => $dp->partie?->est_entraide);
                     $autresParties = $partiesDossier->filter(fn($dp) => !$dp->partie?->est_entraide);
@@ -429,6 +474,7 @@
                     لا يوجد طرف محدد كمؤسسة في هذا الملف.
                 </div>
                 @endif
+                </div>{{-- /#bloc-fond --}}
 
                 {{-- ─────────────────────────────────────────────────────────────────
                     أزرار الإرسال والإلغاء
@@ -438,7 +484,7 @@
                     <button type="submit"
                             class="btn btn-primary">
                         <i class="bi bi-check-lg me-2"></i>
-                        إنشاء الحكم
+                        <span id="submit-label">إنشاء الحكم</span>
                     </button>
 
                     <a href="{{ route('jugements.index') }}"
@@ -766,9 +812,10 @@
     // ══════════════════════════════════════════════════════════════════
     const dtMap = {
         @foreach($dossierTribunaux as $dt)
-            @php $ah = $dt->audienceHoukm(); @endphp
+            @php $ah = $dt->audienceHoukmPourJugementAuFond(); @endphp
             {{ $dt->id }}: {
                 date      : "{{ $ah?->date_audience?->format('Y-m-d') ?? '' }}",
+                dates     : @json($dt->audiences->map(fn($a) => $a->date_audience->format('Y-m-d'))->unique()->sort()->values()),
                 tribunalId: {{ $dt->id_tribunal }}
             },
         @endforeach
@@ -780,6 +827,20 @@
     const selectDt    = document.getElementById('id_dossier_tribunal');
     const dateInput   = document.getElementById('date_jugement');
     const dateHint    = document.getElementById('date_houkm_hint');
+    const datePrepHint = document.getElementById('date_prep_hint');
+    const datePrepList = document.getElementById('date_prep_list');
+
+    // نوع الحكم : تمهيدي / فاصل في الموضوع
+    const ID_PREPARATOIRE = "{{ $idPrep }}";
+    const typeRadios      = document.querySelectorAll('input[name="id_type_jugement"]');
+    const blocFond        = document.getElementById('bloc-fond');
+    const blocDefinitif   = document.getElementById('bloc-definitif');
+    const hintPrep        = document.getElementById('hint-preparatoire');
+    const submitLabel     = document.getElementById('submit-label');
+
+    function estPreparatoire() {
+        return document.querySelector('input[name="id_type_jugement"]:checked')?.value === ID_PREPARATOIRE;
+    }
 
     // ══════════════════════════════════════════════════════════════════
     // القاضي — حقل بحث TomSelect (يُعبَّأ ديناميكياً حسب المحكمة)
@@ -811,15 +872,29 @@
         const info = dtMap[dtId];
 
         // تاريخ الحكم
-        const date = info?.date ?? '';
+        // - حكم فاصل : يُفرض تاريخ جلسة "الحكم" (للقراءة فقط)
+        // - حكم تمهيدي : تاريخ حر يطابق إحدى جلسات الدرجة (يُتحقق منه في الخادم)
+        const prep = estPreparatoire();
+        const date = prep ? '' : (info?.date ?? '');
 
         if (dateInput) {
-            dateInput.value    = date;
-            dateInput.readOnly = !!date;
+            if (prep) {
+                if (dateInput.readOnly) dateInput.value = '';
+                dateInput.readOnly = false;
+            } else {
+                dateInput.value    = date;
+                dateInput.readOnly = !!date;
+            }
         }
 
         if (dateHint) {
-            dateHint.classList.toggle('d-none', !date);
+            dateHint.classList.toggle('d-none', prep || !date);
+        }
+
+        if (datePrepHint) {
+            const dates = info?.dates ?? [];
+            datePrepList.textContent = dates.map(d => d.split('-').reverse().join('/')).join(' ، ');
+            datePrepHint.classList.toggle('d-none', !(prep && dates.length));
         }
 
         // القضاة حسب المحكمة
@@ -879,6 +954,29 @@
     }
 
     selectDt?.addEventListener('change', onDtChange);
+
+    function onTypeChange() {
+        const prep = estPreparatoire();
+
+        blocFond?.classList.toggle('d-none', prep);
+        blocDefinitif?.classList.toggle('d-none', prep);
+        hintPrep?.classList.toggle('d-none', !prep);
+
+        // Les champs "fond" ne sont pas envoyés pour un حكم تمهيدي
+        blocFond?.querySelectorAll('input, select, textarea').forEach(el => el.disabled = prep);
+        if (prep) {
+            const def = document.getElementById('est_definitif');
+            if (def) def.checked = false;
+        }
+
+        if (submitLabel) {
+            submitLabel.textContent = prep ? 'تسجيل الحكم التمهيدي' : 'إنشاء الحكم';
+        }
+
+        if (selectDt?.value) onDtChange();
+    }
+
+    typeRadios.forEach(r => r.addEventListener('change', onTypeChange));
 
     // ══════════════════════════════════════════════════════════════════
     // وضعية المؤسسة → إظهار/إخفاء البلوكات
@@ -964,8 +1062,7 @@
     // ══════════════════════════════════════════════════════════════════
     window.addEventListener('DOMContentLoaded', () => {
 
-        if (selectDt?.value)
-            onDtChange();
+        onTypeChange();   // applique le type puis, si un dossier est choisi, onDtChange()
 
         const checkedRadio =
             document.querySelector('input[name="position_institution_etab"]:checked');

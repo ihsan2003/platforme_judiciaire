@@ -23,7 +23,8 @@ class CheckDelaisRecours extends Command
 
     public function handle(): int
     {
-        $jugements = Jugement::where('est_definitif', false)
+        $jugements = Jugement::auFond()
+            ->where('est_definitif', false)
             ->whereDoesntHave('recours')
             ->with(['dossierTribunal.dossier'])
             ->get();

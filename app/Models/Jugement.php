@@ -18,6 +18,7 @@ class Jugement extends Model
     protected $fillable = [
         'id_dossier_tribunal',
         'id_juge',
+        'id_type_jugement',
         'date_jugement',
         'contenu_dispositif',
         'est_definitif',
@@ -46,6 +47,51 @@ class Jugement extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function typeJugement()
+    {
+        return $this->belongsTo(TypeJugement::class, 'id_type_jugement');
+    }
+
+    // ─────────────────────────────────────────
+    // TYPE DE JUGEMENT (حكم تمهيدي / حكم فاصل في الموضوع)
+    // ─────────────────────────────────────────
+
+    /**
+     * RG — Un jugement préparatoire (حكم تمهيدي) ordonne une mesure
+     * d'instruction : il ne clôt pas l'instance, n'a ni montants, ni
+     * exécution, ni délai de recours propre (il n'est attaquable qu'avec
+     * le jugement sur le fond).
+     */
+    public function estPreparatoire(): bool
+    {
+        return $this->id_type_jugement !== null
+            && (int) $this->id_type_jugement === (int) TypeJugement::idPreparatoire();
+    }
+
+    public function scopePreparatoires($query)
+    {
+        $id = TypeJugement::idPreparatoire();
+
+        return $id ? $query->where('id_type_jugement', $id) : $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * Jugements sur le fond (tout ce qui n'est pas préparatoire).
+     */
+    public function scopeAuFond($query)
+    {
+        $id = TypeJugement::idPreparatoire();
+
+        if (! $id) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($id) {
+            $q->where('id_type_jugement', '!=', $id)
+              ->orWhereNull('id_type_jugement');
+        });
     }
 
     public function parties()
@@ -148,6 +194,12 @@ class Jugement extends Model
      */
     public function verifierEtMarquerDefinitif(): bool
     {
+        // Un jugement préparatoire ne devient jamais définitif : l'instance
+        // continue et seul le jugement sur le fond peut le devenir.
+        if ($this->estPreparatoire()) {
+            return false;
+        }
+
         // Déjà définitif ou recours déjà déposé : rien à faire
         if ($this->est_definitif || $this->recours()->exists()) {
             return false;
@@ -185,6 +237,11 @@ class Jugement extends Model
      */
     public function peutFaireObjetRecours(): bool
     {
+        // Un jugement préparatoire n'est pas attaquable séparément.
+        if ($this->estPreparatoire()) {
+            return false;
+        }
+
         if ($this->est_definitif) {
             return false;
         }
@@ -215,6 +272,11 @@ class Jugement extends Model
      */
     public function getDelaiRecoursRestantAttribute(): ?int
     {
+        // Pas de délai de recours propre pour un jugement préparatoire.
+        if ($this->estPreparatoire()) {
+            return null;
+        }
+
         if ($this->est_definitif) {
             return 0;
         }
@@ -235,6 +297,10 @@ class Jugement extends Model
      */
     public function getStatutRecoursLabelAttribute(): string
     {
+        if ($this->estPreparatoire()) {
+            return 'لا يُطعن فيه استقلالاً';
+        }
+
         if ($this->est_definitif) {
             return 'نهائي';
         }
@@ -269,8 +335,9 @@ class Jugement extends Model
         return LogOptions::defaults() 
             ->logOnly([ 
                 'id_dossier_tribunal', 
-                'id_juge', 
-                'date_jugement', 
+                'id_juge',
+                'id_type_jugement',
+                'date_jugement',
                 'contenu_dispositif', 
                 'est_definitif', 
                 'created_by', 

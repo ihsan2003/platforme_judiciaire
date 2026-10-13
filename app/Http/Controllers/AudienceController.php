@@ -138,10 +138,11 @@ class AudienceController extends Controller
 
         // RG — Une instance qui a déjà une audience الحكم ne peut plus recevoir d'audiences
         // (le cycle est terminé pour cette instance — on attend le jugement)
+        // Un jugement préparatoire (حكم تمهيدي) rend à l'instance sa capacité à recevoir
+        // des audiences : seule une audience الحكم postérieure au dernier jugement
+        // préparatoire (ou sans jugement préparatoire) bloque les nouvelles audiences.
         $dossierTribunaux = $dossierTribunaux->filter(function ($dt) {
-            // Bloquer si l'audience الحكم existe déjà ET un jugement existe aussi
-            // (si الحكم existe mais pas de jugement, on bloque aussi les nouvelles audiences)
-            return $dt->audienceHoukm() === null;
+            return $dt->audienceHoukmPourJugementAuFond() === null;
         });
 
         if ($dossierTribunaux->isEmpty()) {
@@ -207,7 +208,8 @@ class AudienceController extends Controller
         }
 
         // RG3 — Si une audience الحكم existe déjà dans CETTE instance, on ne peut plus en ajouter
-        if ($dossierTribunal->audienceHoukm() !== null) {
+        // (une audience الحكم antérieure à un jugement préparatoire ne compte pas : l'instruction continue)
+        if ($dossierTribunal->audienceHoukmPourJugementAuFond() !== null) {
             return back()->withErrors([
                 'id_dossier_tribunal' => "تم تسجيل جلسة من نوع \"الحكم\" مسبقاً لهذه الدرجة القضائية. يرجى تسجيل الحكم."
             ]);
@@ -218,8 +220,9 @@ class AudienceController extends Controller
 
         if ($typeAudience && $typeAudience->type_audience === 'الحكم') {
 
-            // Vérifier qu'il n'y a pas déjà un jugement dans cette instance
-            if ($dossierTribunal->aUnJugement()) {
+            // Vérifier qu'il n'y a pas déjà un jugement sur le fond dans cette instance
+            // (un jugement préparatoire n'empêche pas une nouvelle audience الحكم)
+            if ($dossierTribunal->aUnJugementAuFond()) {
                 return back()->withErrors([
                     'id_type_audience' => "يوجد حكم مسجل مسبقاً لهذه الدرجة القضائية. لا يمكن إضافة جلسة من نوع \"الحكم\"."
                 ]);
@@ -290,9 +293,14 @@ class AudienceController extends Controller
 
         if ($typeAudience && $typeAudience->type_audience === 'الحكم') {
 
+            // Les audiences الحكم antérieures au dernier jugement préparatoire sont
+            // déjà "consommées" et ne comptent pas.
+            $dernierPrep = $dossierTribunal->dernierJugementPreparatoire();
+
             $autreHoukm = Audience::where('id_dossier_tribunal', $audience->id_dossier_tribunal)
                 ->where('id', '!=', $audience->id)
                 ->whereHas('typeAudience', fn($q) => $q->where('type_audience', 'الحكم'))
+                ->when($dernierPrep, fn($q) => $q->whereDate('date_audience', '>', $dernierPrep->date_jugement))
                 ->exists();
 
             if ($autreHoukm) {
@@ -318,11 +326,24 @@ class AudienceController extends Controller
         $typeAudience = $audience->typeAudience;
 
         if ($typeAudience?->type_audience === 'الحكم') {
-            if ($audience->dossierTribunal->aUnJugement()) {
+            if ($audience->dossierTribunal->aUnJugementAuFond()) {
                 return redirect()
                     ->route('audiences.show', $audience)
                     ->with('error', 'يتعذر حذف جلسة "الحكم" لأنه تم تسجيل حكم مسبقاً لهذه الدرجة القضائية.');
             }
+        }
+
+        // RG — Impossible de supprimer une audience (tout type) à laquelle est rattaché
+        // un jugement préparatoire (même date dans la même instance)
+        $preparatoireRattache = $audience->dossierTribunal->jugements()
+            ->preparatoires()
+            ->whereDate('date_jugement', $audience->date_audience)
+            ->exists();
+
+        if ($preparatoireRattache) {
+            return redirect()
+                ->route('audiences.show', $audience)
+                ->with('error', 'يتعذر حذف هذه الجلسة لأنه تم تسجيل حكم تمهيدي بتاريخها.');
         }
 
         $date = $audience->date_audience->format('d/m/Y');

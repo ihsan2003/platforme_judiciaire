@@ -71,7 +71,7 @@
                 </a>
 
                 @role('admin')
-                    @if(!$isHoukm || !$dt->aUnJugement())
+                    @if(!$isHoukm || !$dt->aUnJugementAuFond())
                         <x-modal-delete
                             :action="route('audiences.destroy', $audience)"
                             modal-id="deleteAudience{{ $audience->id }}"

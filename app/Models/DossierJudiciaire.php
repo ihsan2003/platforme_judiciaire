@@ -298,6 +298,7 @@ class DossierJudiciaire extends Model
         return $this->dossierTribunaux
             ->sortByDesc(fn($dt) => $dt->degre?->ordre ?? 0)
             ->flatMap->jugements
+            ->reject(fn($j) => $j->estPreparatoire()) // un حكم تمهيدي n'est jamais le jugement "valide"
             ->sortByDesc('date_jugement')
             ->first();
     }
@@ -347,6 +348,7 @@ class DossierJudiciaire extends Model
             ->with(['jugements.executions'])
             ->get()
             ->flatMap(fn($dt) => $dt->jugements)
+            ->reject(fn($j) => $j->estPreparatoire()) // un حكم تمهيدي ne change pas le statut du dossier
             ->sortByDesc('date_jugement');
 
         // Cas 1 : Aucun jugement → Statut "جاري"

@@ -484,6 +484,10 @@ class RapportStatistiqueService
                 'jugements.id_dossier_tribunal'
             )
             ->whereBetween('jugements.date_jugement', [$this->debut, $this->fin])
+            // Les jugements préparatoires (حكم تمهيدي) sont exclus des statistiques de jugements
+            ->when(\App\Models\TypeJugement::idPreparatoire(), fn($q, $id) =>
+                $q->where(fn($w) => $w->whereNull('jugements.id_type_jugement')
+                                      ->orWhere('jugements.id_type_jugement', '!=', $id)))
             ->select([
                 'jugements.id',
                 'jugements.date_jugement',

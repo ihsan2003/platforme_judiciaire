@@ -25,7 +25,10 @@
             <div>
                 <h5 class="fw-bold mb-1">
                     <i class="bi bi-hammer ms-2 text-primary"></i>
-                    حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
+                    {{ $jugement->estPreparatoire() ? 'حكم تمهيدي' : 'حكم' }} بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
+                    <span class="badge {{ $jugement->estPreparatoire() ? 'bg-warning text-dark' : 'bg-primary' }} fs-6 me-2">
+                        {{ $jugement->typeJugement?->type_jugement ?? '—' }}
+                    </span>
                 </h5>
 
                 <div class="text-muted small">
@@ -45,7 +48,12 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
 
                 {{-- حالة الطعن --}}
-                @if($jugement->est_definitif)
+                @if($jugement->estPreparatoire())
+                    <span class="badge bg-warning bg-opacity-15 text-black border border-warning border-opacity-25 fs-6 px-3 py-2">
+                        <i class="bi bi-hourglass-split ms-1"></i>
+                        الدرجة القضائية متواصلة
+                    </span>
+                @elseif($jugement->est_definitif)
                     <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25 fs-6 px-3 py-2">
                         <i class="bi bi-check-circle ms-1"></i>
                         حكم نهائي
@@ -293,6 +301,34 @@
     {{-- ── العمود الجانبي ── --}}
     <div class="col-lg-4">
 
+        @if($jugement->estPreparatoire())
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-arrow-repeat ms-2 text-warning"></i>
+                    الطعن والتنفيذ
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning py-2 small mb-3">
+                    <i class="bi bi-info-circle ms-1"></i>
+                    حكم تمهيدي: لا يُطعن فيه استقلالاً، ولا يترتب عنه تنفيذ. تبدأ مهلة الطعن من تاريخ الحكم الفاصل في الموضوع.
+                </div>
+                @if($jugement->dossierTribunal->estOuverte() && ! $jugement->dossierTribunal->aUnJugementAuFond())
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('audiences.create', ['dossier_id' => $jugement->dossierTribunal->id_dossier]) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-calendar-plus ms-1"></i> تسجيل جلسة جديدة
+                        </a>
+                        <a href="{{ route('jugements.create', ['dossier_id' => $jugement->dossierTribunal->id_dossier]) }}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-hammer ms-1"></i> تسجيل حكم آخر
+                        </a>
+                    </div>
+                @endif
+            </div>
+        </div>
+        @else
         {{-- إجراءات الطعن --}}
         <div class="card border-0 shadow-sm mb-4">
 
@@ -462,6 +498,7 @@
 
             </div>
         </div>
+        @endif{{-- /estPreparatoire --}}
 
         {{-- التنفيذ --}}
         @if($jugement->est_definitif && $jugement->executions->isEmpty())

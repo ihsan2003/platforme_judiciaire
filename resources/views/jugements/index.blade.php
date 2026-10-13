@@ -143,6 +143,22 @@
  
             <div class="col-md-4 col-lg-2">
                 <label class="form-label small text-muted fw-semibold">
+                    نوع الحكم
+                </label>
+
+                <select name="type_jugement" class="form-select">
+                    <option value="">الكل</option>
+                    @foreach($typesJugement as $tj)
+                        <option value="{{ $tj->id }}"
+                                @selected(request('type_jugement') == $tj->id)>
+                            {{ $tj->type_jugement }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-2">
+                <label class="form-label small text-muted fw-semibold">
                     الدرجة
                 </label>
  
@@ -335,7 +351,14 @@
 
                     <td>
 
-                        @if($jugement->est_definitif)
+                        @if($jugement->estPreparatoire())
+
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-hourglass-split ms-1"></i>
+                                حكم تمهيدي
+                            </span>
+
+                        @elseif($jugement->est_definitif)
 
                             <span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25">
                                 <i class="bi bi-check-circle ms-1"></i>
@@ -444,7 +467,7 @@
 
                         لا توجد أحكام
 
-                        @if(request()->hasAny(['juge','definitif']))
+                        @if(request()->hasAny(['juge','definitif','type_jugement']))
                             —
                             <a href="{{ route('jugements.index') }}">
                                 إعادة تعيين الفلاتر
