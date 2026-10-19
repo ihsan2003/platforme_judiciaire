@@ -20,7 +20,7 @@ class StoreDossierRequest extends FormRequest
             'numero_dossier_tribunal' => [
                 'nullable',
                 'string',
-                'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/',
+                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,4}$/',
                 'unique:dossier_judiciaires,numero_dossier_tribunal',
             ],
             'id_type_affaire'         => 'required|exists:type_affaires,id',
