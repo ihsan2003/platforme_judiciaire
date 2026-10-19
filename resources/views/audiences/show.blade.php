@@ -387,8 +387,8 @@
                     </a>
                 @endif
 
-                {{-- حكم تمهيدي : possible après tout type d'audience (تحقيق، بحث، خبرة…) --}}
-                @if($dt && $dt->estOuverte() && ! $dt->aUnJugementAuFond())
+                {{-- حكم تمهيدي : un seul par audience, jamais après une audience "الحكم" --}}
+                @if($dt && $dt->audiencePeutRecevoirPreparatoire($audience))
                     <a href="{{ route('jugements.create', ['dossier_id' => $dossier?->id, 'type' => 'preparatoire']) }}"
                        class="btn btn-outline-warning w-100 btn-sm">
                         <i class="bi bi-hourglass-split ms-1"></i>

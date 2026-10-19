@@ -1127,7 +1127,7 @@
                     <div class="d-flex justify-content-center align-items-center flex-wrap gap-3 my-3">
 
                         {{-- Bouton d'ajout d'un jugement préparatoire --}}
-                        @if(!$isClosed && !$jugement)
+                        @if(!$isClosed && !$jugement && $dt->peutRecevoirPreparatoire())
                             <a href="{{ route('jugements.create', [
                                 'dossier_id' => $dossier->id,
                                 'type' => 'preparatoire'

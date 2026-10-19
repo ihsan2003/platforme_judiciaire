@@ -13,8 +13,11 @@ class DossierTribunal extends Model
 {
     use HasFactory, LogsActivity;
 
+    /** Libellé du type d'audience "الحكم" (type_audiences.type_audience). */
+    public const TYPE_AUDIENCE_HOUKM = 'الحكم';
+
     protected $table = 'dossier_tribunaux';
-    
+
     protected $fillable = [
         'id_dossier',
         'id_tribunal',
@@ -119,6 +122,82 @@ class DossierTribunal extends Model
     public function dernierJugementPreparatoire(): ?Jugement
     {
         return $this->jugements()->preparatoires()->latest('date_jugement')->first();
+    }
+
+    /**
+     * RG — Un seul حكم تمهيدي peut être enregistré après chaque audience,
+     * sauf après une audience de type "الحكم" (où c'est le jugement sur le
+     * fond qui est rendu : aucun jugement préparatoire n'y est accepté).
+     *
+     * Le jugement préparatoire est rattaché à une audience par sa date
+     * (date_jugement = date_audience, cf. JugementController::store).
+     *
+     * @param  string    $date               Date du jugement (Y-m-d)
+     * @param  int|null  $ignorerJugementId  Jugement à ignorer (cas d'une modification)
+     * @return string|null  Message d'erreur, ou null si la règle est respectée
+     *                      (ou s'il n'y a aucune audience à cette date : la
+     *                      correspondance date/audience est contrôlée ailleurs).
+     */
+    public function erreurPreparatoireAuDate(string $date, ?int $ignorerJugementId = null): ?string
+    {
+        $audiences = $this->audiences()->with('typeAudience')
+            ->whereDate('date_audience', $date)
+            ->get();
+
+        if ($audiences->isEmpty()) {
+            return null;
+        }
+
+        $audiencesNonHoukm = $audiences->reject(
+            fn($a) => $a->typeAudience?->type_audience === self::TYPE_AUDIENCE_HOUKM
+        );
+
+        if ($audiencesNonHoukm->isEmpty()) {
+            return 'لا يمكن تسجيل حكم تمهيدي بعد جلسة من نوع "الحكم".';
+        }
+
+        $preparatoiresExistants = $this->jugements()
+            ->preparatoires()
+            ->whereDate('date_jugement', $date)
+            ->when($ignorerJugementId, fn($q) => $q->where('id', '!=', $ignorerJugementId))
+            ->count();
+
+        if ($preparatoiresExistants >= $audiencesNonHoukm->count()) {
+            return 'يوجد بالفعل حكم تمهيدي مسجل بعد هذه الجلسة. لا يمكن تسجيل أكثر من حكم تمهيدي واحد بعد كل جلسة.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Cette audience peut-elle encore recevoir un حكم تمهيدي ?
+     * (instance ouverte, pas de jugement sur le fond, audience hors "الحكم",
+     * pas de حكم تمهيدي déjà rendu à cette date, et date postérieure au
+     * dernier حكم تمهيدي, comme l'exige JugementController::store).
+     */
+    public function audiencePeutRecevoirPreparatoire(Audience $audience): bool
+    {
+        if (! $this->estOuverte() || $this->aUnJugementAuFond()) {
+            return false;
+        }
+
+        $date = $audience->date_audience->toDateString();
+
+        $dernierPrep = $this->dernierJugementPreparatoire();
+        if ($dernierPrep && $date <= $dernierPrep->date_jugement->toDateString()) {
+            return false;
+        }
+
+        return $this->erreurPreparatoireAuDate($date) === null;
+    }
+
+    /**
+     * Au moins une audience de l'instance peut-elle encore recevoir un حكم تمهيدي ?
+     */
+    public function peutRecevoirPreparatoire(): bool
+    {
+        return $this->audiences()->with('typeAudience')->get()
+            ->contains(fn($a) => $this->audiencePeutRecevoirPreparatoire($a));
     }
 
     /**

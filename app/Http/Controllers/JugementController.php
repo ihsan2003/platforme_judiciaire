@@ -310,8 +310,14 @@ class JugementController extends Controller
                 ])->withInput();
             }
 
+            // ── RG — un seul حكم تمهيدي après chaque audience, ──────
+            //    et aucun après une audience de type "الحكم" ─────────
+            if ($erreur = $dossierTribunal->erreurPreparatoireAuDate($request->date_jugement)) {
+                return back()->withErrors(['date_jugement' => $erreur])->withInput();
+            }
+
             // ── Postérieur au jugement préparatoire précédent ───────
-            if ($dernierPrep && $request->date_jugement <= $dernierPrep->date_jugement->toDateString()) {
+            if ($dernierPrep &&$request->date_jugement <= $dernierPrep->date_jugement->toDateString()) {
                 return back()->withErrors([
                     'date_jugement' =>
                         "يجب أن يكون تاريخ الحكم التمهيدي لاحقاً لتاريخ الحكم التمهيدي السابق ({$dernierPrep->date_jugement->format('d/m/Y')}).",
@@ -502,6 +508,16 @@ class JugementController extends Controller
                 'date_jugement' =>
                     'يجب أن يطابق تاريخ الحكم التمهيدي تاريخ إحدى جلسات هذه الدرجة القضائية.',
             ])->withInput();
+        }
+
+        // RG — un seul حكم تمهيدي après chaque audience, aucun après une audience "الحكم"
+        // (le jugement en cours de modification est ignoré dans le décompte)
+        if ($estPreparatoire
+            && $request->date_jugement !== $jugement->date_jugement->toDateString()
+            && ($erreur = $jugement->dossierTribunal->erreurPreparatoireAuDate(
+                    $request->date_jugement, $jugement->id))
+        ) {
+            return back()->withErrors(['date_jugement' => $erreur])->withInput();
         }
 
         DB::transaction(function () use ($request, $jugement, $estPreparatoire) {

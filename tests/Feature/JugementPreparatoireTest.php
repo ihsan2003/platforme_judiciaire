@@ -281,12 +281,6 @@ class JugementPreparatoireTest extends TestCase
 
         $this->audience($this->typeExpertise, '2026-04-01');
         $this->get(route('jugements.create', ['dossier_id' => 1]))
-<<<<<<< HEAD
-            ->assertOk()->assertSee('نوع الحكم')->assertSee('حكم فاصل في الموضوع');
-        $this->get(route('jugements.edit', $prep))
-            ->assertOk()->assertSee('نوع الحكم غير قابل للتعديل');
-    }
-=======
             ->assertOk()->assertSee('نوع الحكم')->assertSee('حكم ختامي');
         $this->get(route('jugements.edit', $prep))
             ->assertOk()->assertSee('نوع الحكم غير قابل للتعديل');
@@ -325,22 +319,126 @@ class JugementPreparatoireTest extends TestCase
         $this->get(route('dossiers.show', 1))->assertOk()->assertSee('حكم تمهيدي');
     }
 
-    public function test_houkm_audience_page_offers_both_buttons_then_only_preparatoire_is_removed_after_merits(): void
+    public function test_houkm_audience_page_offers_only_the_merits_button_then_none_after_merits(): void
     {
         $this->withoutVite();
         $this->actingAsUser();
 
         $houkm = $this->audience($this->typeHoukm, '2026-05-01');
 
+        // RG : aucun حكم تمهيدي après une audience "الحكم" → seul "تسجيل الحكم" est proposé
         $this->get(route('audiences.show', $houkm))
-            ->assertOk()->assertSee('تسجيل الحكم')->assertSee('تسجيل حكم تمهيدي');
+            ->assertOk()->assertSee('تسجيل الحكم')->assertDontSee('تسجيل حكم تمهيدي');
 
         $this->post(route('jugements.store'), $this->payload(false, '2026-05-01'))
             ->assertSessionHasNoErrors();
 
         // Jugement final rendu : plus aucun des deux boutons
         $this->get(route('audiences.show', $houkm))
-            ->assertOk()->assertDontSee('تسجيل حكم تمهيدي');
+            ->assertOk()->assertDontSee('تسجيل الحكم')->assertDontSee('تسجيل حكم تمهيدي');
     }
->>>>>>> feature/jugement-preparatoire
+
+    // ─────────────────────────────────────────────────────────────
+    // RG : un seul حكم تمهيدي après chaque audience, sauf "الحكم"
+    // ─────────────────────────────────────────────────────────────
+
+    public function test_only_one_preparatoire_per_audience(): void
+    {
+        $this->actingAsUser();
+        $this->audience($this->typeExpertise, '2026-03-01');
+        $this->audience($this->typeExpertise, '2026-04-01');
+        $dt = DossierTribunal::find($this->dtId);
+
+        $this->post(route('jugements.store'), $this->payload(true, '2026-03-01'))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(1, Jugement::preparatoires()->count());
+
+        // Second حكم تمهيدي après la même audience → refusé
+        $this->post(route('jugements.store'), $this->payload(true, '2026-03-01'))
+            ->assertSessionHasErrors('date_jugement');
+        $this->assertStringContainsString(
+            'حكم تمهيدي مسجل بعد هذه الجلسة',
+            session('errors')->first('date_jugement')
+        );
+        $this->assertSame(1, Jugement::preparatoires()->count());
+
+        // L'audience suivante, elle, peut recevoir le sien
+        $this->post(route('jugements.store'), $this->payload(true, '2026-04-01'))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(2, Jugement::preparatoires()->count());
+
+        $this->assertFalse($dt->peutRecevoirPreparatoire(), 'toutes les audiences ont déjà leur حكم تمهيدي');
+    }
+
+    public function test_no_preparatoire_after_a_houkm_audience(): void
+    {
+        $this->actingAsUser();
+        $this->audience($this->typeHoukm, '2026-05-01');
+
+        $this->post(route('jugements.store'), $this->payload(true, '2026-05-01'))
+            ->assertSessionHasErrors('date_jugement');
+        $this->assertStringContainsString(
+            'جلسة من نوع "الحكم"',
+            session('errors')->first('date_jugement')
+        );
+        $this->assertSame(0, Jugement::preparatoires()->count());
+
+        $dt = DossierTribunal::find($this->dtId);
+        $this->assertNotNull($dt->erreurPreparatoireAuDate('2026-05-01'));
+        $this->assertFalse($dt->peutRecevoirPreparatoire());
+    }
+
+    public function test_houkm_exception_only_applies_to_the_houkm_audience_of_that_date(): void
+    {
+        $this->actingAsUser();
+
+        // Deux audiences le même jour : une "الحكم" et une "الخبرة" → la seconde accepte un préparatoire
+        $this->audience($this->typeHoukm, '2026-05-01');
+        $this->audience($this->typeExpertise, '2026-05-01');
+
+        $this->post(route('jugements.store'), $this->payload(true, '2026-05-01'))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(1, Jugement::preparatoires()->count());
+
+        // …mais un seul (l'audience "الحكم" n'en reçoit jamais)
+        $this->post(route('jugements.store'), $this->payload(true, '2026-05-01'))
+            ->assertSessionHasErrors('date_jugement');
+        $this->assertSame(1, Jugement::preparatoires()->count());
+    }
+
+    public function test_update_cannot_move_a_preparatoire_to_an_audience_that_already_has_one_or_to_houkm(): void
+    {
+        $this->actingAsUser();
+        $this->audience($this->typeExpertise, '2026-03-01');
+        $this->audience($this->typeExpertise, '2026-04-01');
+        $this->audience($this->typeHoukm, '2026-05-01');
+
+        $this->jugement(true, '2026-03-01');
+        $second = $this->jugement(true, '2026-04-01');
+
+        // Déplacer le second sur l'audience du premier → refusé
+        $this->put(route('jugements.update', $second), $this->payload(true, '2026-03-01'))
+            ->assertSessionHasErrors('date_jugement');
+        // Déplacer le second sur l'audience "الحكم" → refusé
+        $this->put(route('jugements.update', $second), $this->payload(true, '2026-05-01'))
+            ->assertSessionHasErrors('date_jugement');
+        $this->assertSame('2026-04-01', $second->fresh()->date_jugement->toDateString());
+
+        // Modifier le contenu sans changer la date reste possible
+        $this->put(route('jugements.update', $second), $this->payload(true, '2026-04-01'))
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_preparatoire_button_hidden_on_audience_that_already_has_one(): void
+    {
+        $this->withoutVite();
+        $this->actingAsUser();
+        $aud = $this->audience($this->typeExpertise, '2026-03-01');
+
+        $this->get(route('audiences.show', $aud))->assertOk()->assertSee('تسجيل حكم تمهيدي');
+
+        $this->jugement(true, '2026-03-01');
+
+        $this->get(route('audiences.show', $aud))->assertOk()->assertDontSee('تسجيل حكم تمهيدي');
+    }
 }
