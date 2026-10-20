@@ -76,7 +76,7 @@ class DataSeeder extends Seeder
         ];
 
         foreach ($typesAffaire as $type) {
-            DB::table('type_affaires')->insert([
+            DB::table('type_affaires')->updateOrInsert([
                 'affaire' => $type['affaire'],
                 'code' => $type['code'],
                 'created_at' => now(),
