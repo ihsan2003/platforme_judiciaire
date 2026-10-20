@@ -61,6 +61,18 @@ class DataSeeder extends Seeder
                 'affaire' => 'جرائم الأموال',
                 'code' => '2105',
             ],
+            [
+                'affaire' => 'مدني عقاري',
+                'code' => '0000',
+            ],
+            [
+                'affaire' => 'جنحي',
+                'code' => '0000',
+            ],
+            [
+                'affaire' => 'حوادث السير',
+                'code' => '0000',
+            ],
         ];
 
         foreach ($typesAffaire as $type) {
