@@ -27,7 +27,12 @@ class PartieController extends Controller
     // =========================================================
     public function index(Request $request)
     {
-        $query = Partie::query();
+        // withCount évite une requête COUNT par ligne dans la vue (N+1)
+        $query = Partie::query()->withCount([
+            'dossiers',
+            'avertissementsDemandeur',
+            'avertissementsDefendeur',
+        ]);
 
         // Recherche dynamique
         if ($request->filled('search')) {
@@ -99,6 +104,14 @@ class PartieController extends Controller
             'jugements',
             'dossierParties.affectations.avocat',
             'dossierParties.affectations.degre',
+            'avertissementsDemandeur.typeAffaire',
+            'avertissementsDemandeur.tribunal',
+            'avertissementsDemandeur.statut',
+            'avertissementsDemandeur.defendeur',
+            'avertissementsDefendeur.typeAffaire',
+            'avertissementsDefendeur.tribunal',
+            'avertissementsDefendeur.statut',
+            'avertissementsDefendeur.demandeur',
         ]);
 
         // Avocats de la partie, dossier par dossier
@@ -106,7 +119,10 @@ class PartieController extends Controller
             ->groupBy('id_dossier')
             ->map(fn($g) => $g->flatMap->affectations);
 
-        return view('parties.show', compact('partie', 'affectationsParDossier'));
+        // Avertissements où la partie est demandeur ou défendeur
+        $avertissements = $partie->tousAvertissements();
+
+        return view('parties.show', compact('partie', 'affectationsParDossier', 'avertissements'));
     }
 
     // =========================================================
@@ -115,6 +131,13 @@ class PartieController extends Controller
     public function edit(Partie $partie)
     {
         $typesPartie = TypePartie::orderBy('type_partie')->get();
+
+        // Compteurs pour le résumé latéral (dossiers + avertissements)
+        $partie->loadCount([
+            'dossiers',
+            'avertissementsDemandeur',
+            'avertissementsDefendeur',
+        ]);
 
         return view('parties.edit', compact('partie', 'typesPartie'));
     }

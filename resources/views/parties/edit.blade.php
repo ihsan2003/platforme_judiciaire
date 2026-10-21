@@ -233,8 +233,19 @@
                     <dt class="col-6 text-muted fw-normal">الملفات</dt>
                     <dd class="col-6">
                         <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
-                            {{ $partie->dossiers()->count() }} ملف(ات)
+                            {{ $partie->dossiers_count }} ملف(ات)
                         </span>
+                    </dd>
+
+                    <dt class="col-6 text-muted fw-normal">الإنذارات</dt>
+                    <dd class="col-6">
+                        <span class="badge bg-warning bg-opacity-25 text-dark border border-warning border-opacity-50">
+                            {{ $partie->avertissements_demandeur_count + $partie->avertissements_defendeur_count }} إنذار(ات)
+                        </span>
+                        <div class="text-muted mt-1" style="font-size:.75rem">
+                            مدعي: {{ $partie->avertissements_demandeur_count }}
+                            — مدعى عليه: {{ $partie->avertissements_defendeur_count }}
+                        </div>
                     </dd>
 
                 </dl>

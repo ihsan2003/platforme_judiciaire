@@ -251,6 +251,121 @@
             @endif
 
         </div>
+
+        {{-- ── AVERTISSEMENTS (إنذارات) ── --}}
+        <div class="card border-0 shadow-sm mt-4">
+
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+                    الإنذارات المرتبطة
+                    <span class="badge bg-warning text-dark ms-1">
+                        {{ $avertissements->count() }}
+                    </span>
+                </h6>
+
+            </div>
+
+            @if($avertissements->isEmpty())
+
+                <div class="card-body text-center py-5 text-muted">
+                    <i class="bi bi-exclamation-triangle fs-1 d-block mb-2 opacity-25"></i>
+                    لا توجد إنذارات مرتبطة بهذه الجهة.
+                </div>
+
+            @else
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                        <tr>
+                            <th>الرقم</th>
+                            <th>نوعية الملف</th>
+                            <th>الدور</th>
+                            <th>الطرف الآخر</th>
+                            <th>المحكمة المختصة</th>
+                            <th>الحالة</th>
+                            <th class="text-end">عرض</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+                        @foreach($avertissements as $avertissement)
+
+                            @php
+                                $estDemandeur = $avertissement->role_partie === 'demandeur';
+
+                                $autre = $estDemandeur
+                                    ? $avertissement->defendeur
+                                    : $avertissement->demandeur;
+
+                                $couleur = $avertissement->statut?->couleur_bootstrap ?? 'primary';
+                                $textClass = $couleur === 'warning' ? 'text-dark' : 'text-white';
+                            @endphp
+
+                            <tr>
+
+                                <td>
+                                    <a href="{{ route('avertissements.show', $avertissement) }}"
+                                       class="text-decoration-none fw-semibold text-primary">
+                                        #{{ $avertissement->id }}
+                                    </a>
+                                </td>
+
+                                <td class="text-muted small">
+                                    {{ $avertissement->typeAffaire->affaire ?? '—' }}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-{{ $estDemandeur ? 'primary' : 'danger' }} bg-opacity-10 text-{{ $estDemandeur ? 'primary' : 'danger' }}">
+                                        {{ $estDemandeur ? 'المدعي' : 'المدعى عليه' }}
+                                    </span>
+                                </td>
+
+                                <td class="small">
+                                    @if($autre)
+                                        <a href="{{ route('parties.show', $autre) }}" class="text-decoration-none">
+                                            {{ $autre->nom_partie }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+
+                                <td class="text-muted small">
+                                    {{ $avertissement->tribunal->nom_tribunal ?? '—' }}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-{{ $couleur }} {{ $textClass }}">
+                                        {{ $avertissement->statut->statut_avertissement ?? '—' }}
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    <a href="{{ route('avertissements.show', $avertissement) }}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        @endforeach
+
+                        </tbody>
+                    </table>
+
+                </div>
+
+            @endif
+
+        </div>
+
     </div>
 
     {{-- ── SIDEBAR ── --}}
@@ -289,6 +404,13 @@
                     <dd class="col-6">
                         <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
                             {{ $partie->dossiers->count() }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-6 text-muted">الإنذارات</dt>
+                    <dd class="col-6">
+                        <span class="badge bg-warning bg-opacity-25 text-dark border border-warning border-opacity-50">
+                            {{ $avertissements->count() }}
                         </span>
                     </dd>
 

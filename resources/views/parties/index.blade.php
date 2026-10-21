@@ -344,26 +344,51 @@ body{
 
                     <td>
 
-                        @php $nb = $partie->dossiers()->count(); @endphp
+                        @php
+                            $nb = $partie->dossiers_count;
+                            $nbAvert = $partie->avertissements_demandeur_count
+                                     + $partie->avertissements_defendeur_count;
+                        @endphp
 
-                        @if($nb > 0)
+                        <div class="d-flex flex-wrap gap-1">
 
-                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
+                            @if($nb > 0)
 
-                                <i class="bi bi-folder2 ms-1"></i>
+                                <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25"
+                                      title="الملفات">
 
-                                {{ $nb }}
-                                ملف{{ $nb > 1 ? '' : '' }}
+                                    <i class="bi bi-folder2 ms-1"></i>
 
-                            </span>
+                                    {{ $nb }}
+                                    ملف
 
-                        @else
+                                </span>
 
-                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                لا يوجد
-                            </span>
+                            @endif
 
-                        @endif
+                            @if($nbAvert > 0)
+
+                                <span class="badge bg-warning bg-opacity-25 text-dark border border-warning border-opacity-50"
+                                      title="المدعي: {{ $partie->avertissements_demandeur_count }} — المدعى عليه: {{ $partie->avertissements_defendeur_count }}">
+
+                                    <i class="bi bi-exclamation-triangle ms-1"></i>
+
+                                    {{ $nbAvert }}
+                                    إنذار
+
+                                </span>
+
+                            @endif
+
+                            @if($nb === 0 && $nbAvert === 0)
+
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    لا يوجد
+                                </span>
+
+                            @endif
+
+                        </div>
 
                     </td>
 

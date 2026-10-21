@@ -56,6 +56,39 @@ class Partie extends Model
         return $this->hasMany(DossierPartie::class, 'id_partie');
     }
 
+    /** Avertissements (إنذارات) où cette partie est المدعي. */
+    public function avertissementsDemandeur()
+    {
+        return $this->hasMany(Avertissement::class, 'id_demandeur');
+    }
+
+    /** Avertissements (إنذارات) où cette partie est المدعى عليه. */
+    public function avertissementsDefendeur()
+    {
+        return $this->hasMany(Avertissement::class, 'id_defendeur');
+    }
+
+    /**
+     * Tous les avertissements de la partie (demandeur ou défendeur),
+     * le plus récent d'abord. Chaque élément porte l'attribut `role_partie`
+     * ('demandeur' | 'defendeur').
+     *
+     * Nécessite que les deux relations soient déjà chargées pour éviter
+     * des requêtes supplémentaires.
+     */
+    public function tousAvertissements()
+    {
+        $demandeur = $this->avertissementsDemandeur
+            ->each(fn ($a) => $a->setAttribute('role_partie', 'demandeur'));
+
+        $defendeur = $this->avertissementsDefendeur
+            ->each(fn ($a) => $a->setAttribute('role_partie', 'defendeur'));
+
+        return $demandeur->concat($defendeur)
+            ->sortByDesc('created_at')
+            ->values();
+    }
+
     public function estInstitutionDansDossier($dossierId): bool
     {
         return (bool) $this->est_entraide;
