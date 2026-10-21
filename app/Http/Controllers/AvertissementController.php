@@ -74,6 +74,7 @@ class AvertissementController extends Controller
                     $dir
                 ),
                 'jugements' => fn($q, $dir) => $q->orderBy('jugements_count', $dir),
+                'date_avertissement' => 'date_avertissement',
                 'date'     => 'created_at',
             ], 'id', 'desc')
             ->paginate(15)
@@ -146,7 +147,14 @@ class AvertissementController extends Controller
     // ================= UPDATE =================
     public function update(AvertissementRequest $request, Avertissement $avertissement): RedirectResponse
     {
-        DB::transaction(fn() => $avertissement->update($this->donneesValidees($request)));
+        $data = $this->donneesValidees($request);
+
+        // RG — Jugement final définitif : le statut reste « حفظ », toute valeur soumise est ignorée.
+        if ($avertissement->statutVerrouille()) {
+            unset($data['id_statut_avertissement']);
+        }
+
+        DB::transaction(fn() => $avertissement->update($data));
 
         return redirect()
             ->route('avertissements.show', $avertissement)

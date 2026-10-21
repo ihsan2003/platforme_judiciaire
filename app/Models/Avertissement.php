@@ -21,11 +21,16 @@ class Avertissement extends Model
         'id_tribunal',
         'id_province',
         'id_statut_avertissement',
+        'date_avertissement',
         'action_service',
         'commentaire',
         'id_demandeur',
         'id_defendeur',
         'created_by',
+    ];
+
+    protected $casts = [
+        'date_avertissement' => 'date',
     ];
 
     public function typeAffaire()
@@ -73,8 +78,55 @@ class Avertissement extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    // ─────────────────────────────────────────
+    // RG — Jugement final définitif => statut « حفظ »
+    // ─────────────────────────────────────────
+
+    /** Un jugement final définitif a-t-il été rendu pour cet avertissement ? */
+    public function aJugementFinalDefinitif(): bool
+    {
+        return $this->jugements()->getQuery()->reorder()->finalDefinitif()->exists();
+    }
+
+    /**
+     * Applique « حفظ » si un jugement final définitif existe. Idempotent.
+     */
+    public function appliquerClassementSiJugementFinalDefinitif(): void
+    {
+        $idClassement = StatutAvertissement::idClassement();
+
+        if (! $idClassement) {
+            \Log::warning("Statut 'حفظ' introuvable — classement annulé pour l'avertissement #{$this->id}");
+            return;
+        }
+
+        if ((int) $this->id_statut_avertissement !== (int) $idClassement) {
+            $this->update(['id_statut_avertissement' => $idClassement]);
+        }
+    }
+
+    /** Le statut est verrouillé tant qu'un jugement final définitif existe. */
+    public function statutVerrouille(): bool
+    {
+        return $this->exists && $this->aJugementFinalDefinitif();
+    }
+
     protected static function booted()
     {
+        // Garde-fou : quel que soit le point d'entrée (formulaire, tinker, import…),
+        // aucun autre statut que « حفظ » ne peut être appliqué après un jugement final définitif.
+        static::updating(function (Avertissement $avertissement) {
+            if (! $avertissement->isDirty('id_statut_avertissement') || ! $avertissement->aJugementFinalDefinitif()) {
+                return;
+            }
+
+            $idClassement = StatutAvertissement::idClassement();
+
+            if ($idClassement && (int) $avertissement->id_statut_avertissement !== (int) $idClassement) {
+                $avertissement->id_statut_avertissement = $idClassement;
+            }
+        });
+
         // Statut par défaut « في طور الإجراء » (comme pour les dossiers)
         static::creating(function ($avertissement) {
             if (! $avertissement->id_statut_avertissement) {

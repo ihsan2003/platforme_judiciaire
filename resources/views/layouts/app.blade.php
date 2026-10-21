@@ -388,12 +388,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('avertissements.*') ? 'active' : '' }}"
-                href="{{ route('avertissements.index') }}">
-                    <i class="bi bi-exclamation-triangle"></i> الإنذارات
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('audiences.*') ? 'active' : '' }}"
                 href="{{ route('audiences.index') }}">
                     <i class="bi bi-calendar-event"></i> الجلسات
@@ -415,6 +409,15 @@
                 <a class="nav-link {{ request()->routeIs('finances.*') ? 'active' : '' }}"
                 href="{{ route('finances.index') }}">
                     <i class="bi bi-cash-stack"></i> الحالة المالية
+                </a>
+            </li>
+
+
+            <div class="nav-section">الإنذارات</div>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('avertissements.*') ? 'active' : '' }}"
+                href="{{ route('avertissements.index') }}">
+                    <i class="bi bi-exclamation-triangle"></i> الإنذارات
                 </a>
             </li>
 

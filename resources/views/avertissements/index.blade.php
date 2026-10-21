@@ -160,6 +160,7 @@
                     <x-sortable-th column="region" class="text-muted small fw-semibold">الجهة</x-sortable-th>
                     <x-sortable-th column="ville" class="text-muted small fw-semibold">المدينة</x-sortable-th>
                     <x-sortable-th column="tribunal" class="text-muted small fw-semibold">المحكمة المختصة</x-sortable-th>
+                    <x-sortable-th column="date_avertissement" class="text-muted small fw-semibold">تاريخ الإنذار</x-sortable-th>
                     <th class="text-muted small fw-semibold">المدعي</th>
                     <th class="text-muted small fw-semibold">المدعى عليه</th>
                     <x-sortable-th column="jugements" class="text-muted small fw-semibold">الأحكام</x-sortable-th>
@@ -184,6 +185,7 @@
                                 <i class="bi bi-bank me-1"></i>{{ $avertissement->tribunal->nom_tribunal ?? '—' }}
                             </span>
                         </td>
+                        <td class="text-muted small">{{ $avertissement->date_avertissement?->format('d/m/Y') ?? '—' }}</td>
                         <td>{{ $avertissement->demandeur->nom_partie ?? '—' }}</td>
                         <td>{{ $avertissement->defendeur->nom_partie ?? '—' }}</td>
                         <td>
@@ -238,7 +240,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5 text-muted">
+                        <td colspan="11" class="text-center py-5 text-muted">
                             <i class="bi bi-exclamation-triangle fs-1 d-block mb-2 opacity-25"></i>
                             لا توجد إنذارات
                             @if(request()->hasAny(['search', 'type', 'tribunal', 'statut', 'jugement']))

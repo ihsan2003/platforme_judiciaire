@@ -242,10 +242,6 @@
                         <span class="badge bg-warning bg-opacity-25 text-dark border border-warning border-opacity-50">
                             {{ $partie->avertissements_demandeur_count + $partie->avertissements_defendeur_count }} إنذار(ات)
                         </span>
-                        <div class="text-muted mt-1" style="font-size:.75rem">
-                            مدعي: {{ $partie->avertissements_demandeur_count }}
-                            — مدعى عليه: {{ $partie->avertissements_defendeur_count }}
-                        </div>
                     </dd>
 
                 </dl>

@@ -141,22 +141,83 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-semibold">
-                    <i class="bi bi-flag me-2 text-primary"></i>الحالة
+                    <i class="bi bi-flag me-2 text-primary"></i>الحالة والتاريخ
                 </h6>
             </div>
+            
             <div class="card-body p-4">
-                <label for="id_statut_avertissement" class="form-label fw-semibold small">حالة الإنذار</label>
-                <select name="id_statut_avertissement" id="id_statut_avertissement"
-                        class="form-select @error('id_statut_avertissement') is-invalid @enderror">
-                    @foreach($statuts as $statut)
-                        <option value="{{ $statut->id }}"
-                            @selected(old('id_statut_avertissement', $a?->id_statut_avertissement ?? $idStatutDefaut) == $statut->id)>
-                            {{ $statut->statut_avertissement }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('id_statut_avertissement')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                @php
+                    $statutVerrouille = $a?->statutVerrouille() ?? false;
+                @endphp
+
+                <div class="row g-3">
+
+                    {{-- حالة الإنذار --}}
+                    <div class="col-12">
+                        <label for="id_statut_avertissement"
+                            class="form-label fw-semibold small">
+                            حالة الإنذار
+                        </label>
+
+                        <select
+                            name="id_statut_avertissement"
+                            id="id_statut_avertissement"
+                            class="form-select @error('id_statut_avertissement') is-invalid @enderror"
+                            @disabled($statutVerrouille)
+                        >
+                            @foreach($statuts as $statut)
+                                <option
+                                    value="{{ $statut->id }}"
+                                    @selected(
+                                        old(
+                                            'id_statut_avertissement',
+                                            $a?->id_statut_avertissement ?? $idStatutDefaut
+                                        ) == $statut->id
+                                    )
+                                >
+                                    {{ $statut->statut_avertissement }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        @error('id_statut_avertissement')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+
+                        @if($statutVerrouille)
+                            <div class="form-text text-muted">
+                                <i class="bi bi-lock me-1"></i>
+                                تم تحديد الحالة تلقائيًا بعد صدور حكم نهائي، ولا يمكن تغييرها.
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- تاريخ الإنذار --}}
+                    <div class="col-12">
+                        <label for="date_avertissement"
+                            class="form-label fw-semibold small">
+                            تاريخ الإنذار <span class="text-danger">*</span>
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_avertissement"
+                            id="date_avertissement"
+                            class="form-control @error('date_avertissement') is-invalid @enderror"
+                            value="{{ old('date_avertissement', $a?->date_avertissement?->format('Y-m-d')) }}"
+                            max="{{ now()->format('Y-m-d') }}"
+                            aria-describedby="date_avertissement_help"
+                        >
+
+                        @error('date_avertissement')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                </div>
             </div>
+
         </div>
 
         <div class="card border-0 shadow-sm mb-4">
@@ -171,7 +232,7 @@
                 {{-- المدعي --}}
                 <div class="mb-3">
                     <label for="id_demandeur" class="form-label fw-semibold small">
-                        المدعي
+                        المدعي <span class="text-danger">*</span>
                     </label>
 
                     <select
@@ -203,7 +264,7 @@
                 {{-- المدعى عليه --}}
                 <div>
                     <label for="id_defendeur" class="form-label fw-semibold small">
-                        المدعى عليه
+                        المدعى عليه <span class="text-danger">*</span>
                     </label>
 
                     <select
@@ -241,7 +302,9 @@
                 {{ $a ? 'حفظ التعديلات' : 'حفظ الإنذار' }}
             </button>
             <a href="{{ $a ? route('avertissements.show', $a) : route('avertissements.index') }}"
-               class="btn btn-outline-secondary">إلغاء</a>
+               class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-2"></i>
+               إلغاء</a>
         </div>
     </div>
 

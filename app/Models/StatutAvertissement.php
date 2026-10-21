@@ -10,7 +10,8 @@ class StatutAvertissement extends Model
 {
     use HasFactory;
 
-    public const DEFAUT = 'في طور الإجراء';
+    public const DEFAUT      = 'في طور الإجراء';
+    public const CLASSEMENT  = 'حفظ';
 
     protected $table = 'statut_avertissements';
 
@@ -24,6 +25,12 @@ class StatutAvertissement extends Model
     public static function idDefaut(): ?int
     {
         return static::where('statut_avertissement', self::DEFAUT)->value('id');
+    }
+
+    /** Id du statut « حفظ » (classement), appliqué après un jugement final définitif. */
+    public static function idClassement(): ?int
+    {
+        return static::where('statut_avertissement', self::CLASSEMENT)->value('id');
     }
 
     /** Même palette que StatutDossier (cohérence visuelle des badges). */

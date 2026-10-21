@@ -61,6 +61,33 @@ class AvertissementJugement extends Model
             && (int) $this->id_type_jugement === (int) TypeJugement::idPreparatoire();
     }
 
+    /**
+     * RG — Jugement final définitif : un jugement définitif qui n'est pas
+     * préparatoire (un حكم تمهيدي ne clôt jamais l'instance).
+     */
+    public function scopeFinalDefinitif($query)
+    {
+        $idPrep = TypeJugement::idPreparatoire();
+
+        return $query->where('est_definitif', true)
+            ->when($idPrep, fn ($q) => $q->where('id_type_jugement', '!=', $idPrep));
+    }
+
+    public function estFinalDefinitif(): bool
+    {
+        return $this->est_definitif && ! $this->estPreparatoire();
+    }
+
+    protected static function booted()
+    {
+        // RG — Dès qu'un jugement final définitif existe, l'avertissement passe à « حفظ ».
+        static::saved(function (AvertissementJugement $jugement) {
+            if ($jugement->estFinalDefinitif()) {
+                $jugement->avertissement?->appliquerClassementSiJugementFinalDefinitif();
+            }
+        });
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

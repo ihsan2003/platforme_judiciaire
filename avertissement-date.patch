@@ -1,0 +1,150 @@
+diff -ruN a/app/Http/Controllers/AvertissementController.php b/app/Http/Controllers/AvertissementController.php
+--- a/app/Http/Controllers/AvertissementController.php	2026-10-21 13:14:52.653623533 +0000
++++ b/app/Http/Controllers/AvertissementController.php	2026-10-21 13:14:48.706996248 +0000
+@@ -74,6 +74,7 @@
+                     $dir
+                 ),
+                 'jugements' => fn($q, $dir) => $q->orderBy('jugements_count', $dir),
++                'date_avertissement' => 'date_avertissement',
+                 'date'     => 'created_at',
+             ], 'id', 'desc')
+             ->paginate(15)
+diff -ruN a/app/Http/Requests/Avertissements/AvertissementRequest.php b/app/Http/Requests/Avertissements/AvertissementRequest.php
+--- a/app/Http/Requests/Avertissements/AvertissementRequest.php	2026-10-21 13:14:52.643716769 +0000
++++ b/app/Http/Requests/Avertissements/AvertissementRequest.php	2026-10-21 13:14:48.704396787 +0000
+@@ -22,6 +22,7 @@
+             'id_province'     => 'required|exists:provinces,id',
+             // la محكمة est indépendante de l'إقليم choisi
+             'id_tribunal'     => 'required|exists:tribunaux,id',
++            'date_avertissement' => 'nullable|date|before_or_equal:today',
+             'action_service'  => 'nullable|string|max:5000',
+             'commentaire'     => 'nullable|string|max:5000',
+             'id_statut_avertissement' => 'nullable|exists:statut_avertissements,id',
+@@ -38,6 +39,8 @@
+             'id_province.required'     => 'يرجى اختيار الإقليم / العمالة.',
+             'id_province.exists'       => 'الإقليم / العمالة غير صالح.',
+             'id_statut_avertissement.exists' => 'الحالة غير صالحة.',
++            'date_avertissement.date'            => 'يجب أن يكون تاريخ الإنذار صالحًا.',
++            'date_avertissement.before_or_equal' => 'لا يمكن أن يكون تاريخ الإنذار في المستقبل.',
+             'id_tribunal.required'     => 'يرجى اختيار المحكمة المختصة.',
+             'id_tribunal.exists'       => 'المحكمة المختارة غير صالحة.',
+             'id_demandeur.exists'      => 'المدعي غير صالح.',
+@@ -56,6 +59,7 @@
+             'action_service'  => 'الإجراء المتخذ من طرف مصلحة المنازعات والشؤون القانونية',
+             'commentaire'     => 'ملاحظات',
+             'id_statut_avertissement' => 'الحالة',
++            'date_avertissement' => 'تاريخ الإنذار',
+             'id_demandeur'    => 'المدعي',
+             'id_defendeur'    => 'المدعى عليه',
+         ];
+diff -ruN a/app/Models/Avertissement.php b/app/Models/Avertissement.php
+--- a/app/Models/Avertissement.php	2026-10-21 13:14:52.653721182 +0000
++++ b/app/Models/Avertissement.php	2026-10-21 13:14:48.701445679 +0000
+@@ -21,6 +21,7 @@
+         'id_tribunal',
+         'id_province',
+         'id_statut_avertissement',
++        'date_avertissement',
+         'action_service',
+         'commentaire',
+         'id_demandeur',
+@@ -28,6 +29,10 @@
+         'created_by',
+     ];
+ 
++    protected $casts = [
++        'date_avertissement' => 'date',
++    ];
++
+     public function typeAffaire()
+     {
+         return $this->belongsTo(TypeAffaire::class, 'id_type_affaire');
+diff -ruN a/database/migrations/2026_10_21_150000_add_date_avertissement_to_avertissements_table.php b/database/migrations/2026_10_21_150000_add_date_avertissement_to_avertissements_table.php
+--- a/database/migrations/2026_10_21_150000_add_date_avertissement_to_avertissements_table.php	1970-01-01 00:00:00.000000000 +0000
++++ b/database/migrations/2026_10_21_150000_add_date_avertissement_to_avertissements_table.php	2026-10-21 13:14:48.710069967 +0000
+@@ -0,0 +1,23 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::table('avertissements', function (Blueprint $table) {
++            // Nullable : les avertissements existants n'ont pas de date.
++            $table->date('date_avertissement')->nullable()->after('id_statut_avertissement');
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('avertissements', function (Blueprint $table) {
++            $table->dropColumn('date_avertissement');
++        });
++    }
++};
+diff -ruN a/resources/views/avertissements/_form.blade.php b/resources/views/avertissements/_form.blade.php
+--- a/resources/views/avertissements/_form.blade.php	2026-10-21 13:14:52.653936210 +0000
++++ b/resources/views/avertissements/_form.blade.php	2026-10-21 13:14:48.704601707 +0000
+@@ -58,6 +58,16 @@
+                         @error('id_tribunal')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                     </div>
+ 
++                    {{-- تاريخ الإنذار --}}
++                    <div class="col-6 mb-2">
++                        <label for="date_avertissement" class="form-label fw-semibold small">تاريخ الإنذار</label>
++                        <input type="date" name="date_avertissement" id="date_avertissement"
++                               class="form-control @error('date_avertissement') is-invalid @enderror"
++                               max="{{ date('Y-m-d') }}"
++                               value="{{ old('date_avertissement', $a?->date_avertissement?->format('Y-m-d')) }}">
++                        @error('date_avertissement')<div class="invalid-feedback">{{ $message }}</div>@enderror
++                    </div>
++
+                     {{-- الجهة > الإقليم / العمالة (المدينة) --}}
+                     <div class="col-12">
+                         <div class="p-3 bg-light rounded border">
+diff -ruN a/resources/views/avertissements/index.blade.php b/resources/views/avertissements/index.blade.php
+--- a/resources/views/avertissements/index.blade.php	2026-10-21 13:14:52.648718584 +0000
++++ b/resources/views/avertissements/index.blade.php	2026-10-21 13:14:52.639334131 +0000
+@@ -160,6 +160,7 @@
+                     <x-sortable-th column="region" class="text-muted small fw-semibold">الجهة</x-sortable-th>
+                     <x-sortable-th column="ville" class="text-muted small fw-semibold">المدينة</x-sortable-th>
+                     <x-sortable-th column="tribunal" class="text-muted small fw-semibold">المحكمة المختصة</x-sortable-th>
++                    <x-sortable-th column="date_avertissement" class="text-muted small fw-semibold">تاريخ الإنذار</x-sortable-th>
+                     <th class="text-muted small fw-semibold">المدعي</th>
+                     <th class="text-muted small fw-semibold">المدعى عليه</th>
+                     <x-sortable-th column="jugements" class="text-muted small fw-semibold">الأحكام</x-sortable-th>
+@@ -184,6 +185,7 @@
+                                 <i class="bi bi-bank me-1"></i>{{ $avertissement->tribunal->nom_tribunal ?? '—' }}
+                             </span>
+                         </td>
++                        <td class="text-muted small">{{ $avertissement->date_avertissement?->format('d/m/Y') ?? '—' }}</td>
+                         <td>{{ $avertissement->demandeur->nom_partie ?? '—' }}</td>
+                         <td>{{ $avertissement->defendeur->nom_partie ?? '—' }}</td>
+                         <td>
+@@ -238,7 +240,7 @@
+                     </tr>
+                 @empty
+                     <tr>
+-                        <td colspan="10" class="text-center py-5 text-muted">
++                        <td colspan="11" class="text-center py-5 text-muted">
+                             <i class="bi bi-exclamation-triangle fs-1 d-block mb-2 opacity-25"></i>
+                             لا توجد إنذارات
+                             @if(request()->hasAny(['search', 'type', 'tribunal', 'statut', 'jugement']))
+diff -ruN a/resources/views/avertissements/show.blade.php b/resources/views/avertissements/show.blade.php
+--- a/resources/views/avertissements/show.blade.php	2026-10-21 13:14:52.648729007 +0000
++++ b/resources/views/avertissements/show.blade.php	2026-10-21 13:14:48.704808879 +0000
+@@ -143,6 +143,10 @@
+             <strong>أنشئ بواسطة :</strong> {{ $avertissement->createdBy->name ?? '—' }}
+         </div>
+         <div class="col-sm-3 text-white">
++            <i class="bi bi-calendar-check me-1"></i>
++            <strong>تاريخ الإنذار :</strong> {{ $avertissement->date_avertissement?->format('d/m/Y') ?? '—' }}
++        </div>
++        <div class="col-sm-3 text-white">
+             <i class="bi bi-calendar-event me-1"></i>
+             <strong>تاريخ الإنشاء :</strong> {{ $avertissement->created_at?->format('d/m/Y') }}
+         </div>

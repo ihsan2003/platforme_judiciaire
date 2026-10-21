@@ -20,13 +20,13 @@ class AvertissementRequest extends FormRequest
             'objet_litige'    => 'nullable|string|max:5000',
             'id_type_affaire' => 'required|exists:type_affaires,id',
             'id_province'     => 'required|exists:provinces,id',
-            // la محكمة est indépendante de l'إقليم choisi
             'id_tribunal'     => 'required|exists:tribunaux,id',
+            'date_avertissement' => 'required|date|before_or_equal:today',
             'action_service'  => 'nullable|string|max:5000',
             'commentaire'     => 'nullable|string|max:5000',
             'id_statut_avertissement' => 'nullable|exists:statut_avertissements,id',
-            'id_demandeur'    => 'nullable|exists:parties,id',
-            'id_defendeur'    => 'nullable|exists:parties,id|different:id_demandeur',
+            'id_demandeur'    => 'required|exists:parties,id',
+            'id_defendeur'    => 'required|exists:parties,id|different:id_demandeur',
         ];
     }
 
@@ -38,6 +38,8 @@ class AvertissementRequest extends FormRequest
             'id_province.required'     => 'يرجى اختيار الإقليم / العمالة.',
             'id_province.exists'       => 'الإقليم / العمالة غير صالح.',
             'id_statut_avertissement.exists' => 'الحالة غير صالحة.',
+            'date_avertissement.date'            => 'يجب أن يكون تاريخ الإنذار صالحًا.',
+            'date_avertissement.before_or_equal' => 'لا يمكن أن يكون تاريخ الإنذار في المستقبل.',
             'id_tribunal.required'     => 'يرجى اختيار المحكمة المختصة.',
             'id_tribunal.exists'       => 'المحكمة المختارة غير صالحة.',
             'id_demandeur.exists'      => 'المدعي غير صالح.',
@@ -56,6 +58,7 @@ class AvertissementRequest extends FormRequest
             'action_service'  => 'الإجراء المتخذ من طرف مصلحة المنازعات والشؤون القانونية',
             'commentaire'     => 'ملاحظات',
             'id_statut_avertissement' => 'الحالة',
+            'date_avertissement' => 'تاريخ الإنذار',
             'id_demandeur'    => 'المدعي',
             'id_defendeur'    => 'المدعى عليه',
         ];

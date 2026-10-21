@@ -1,0 +1,205 @@
+diff -ruN '--exclude=vendor' a/app/Http/Controllers/AvertissementController.php b/app/Http/Controllers/AvertissementController.php
+--- a/app/Http/Controllers/AvertissementController.php	2026-10-21 12:35:57.000000000 +0000
++++ b/app/Http/Controllers/AvertissementController.php	2026-10-21 13:06:08.261445897 +0000
+@@ -146,7 +146,14 @@
+     // ================= UPDATE =================
+     public function update(AvertissementRequest $request, Avertissement $avertissement): RedirectResponse
+     {
+-        DB::transaction(fn() => $avertissement->update($this->donneesValidees($request)));
++        $data = $this->donneesValidees($request);
++
++        // RG — Jugement final définitif : le statut reste « حفظ », toute valeur soumise est ignorée.
++        if ($avertissement->statutVerrouille()) {
++            unset($data['id_statut_avertissement']);
++        }
++
++        DB::transaction(fn() => $avertissement->update($data));
+ 
+         return redirect()
+             ->route('avertissements.show', $avertissement)
+diff -ruN '--exclude=vendor' a/app/Models/Avertissement.php b/app/Models/Avertissement.php
+--- a/app/Models/Avertissement.php	2026-10-21 12:35:57.000000000 +0000
++++ b/app/Models/Avertissement.php	2026-10-21 13:06:08.260954763 +0000
+@@ -73,8 +73,55 @@
+         return $this->belongsTo(User::class, 'created_by');
+     }
+ 
++    // ─────────────────────────────────────────
++    // RG — Jugement final définitif => statut « حفظ »
++    // ─────────────────────────────────────────
++
++    /** Un jugement final définitif a-t-il été rendu pour cet avertissement ? */
++    public function aJugementFinalDefinitif(): bool
++    {
++        return $this->jugements()->getQuery()->reorder()->finalDefinitif()->exists();
++    }
++
++    /**
++     * Applique « حفظ » si un jugement final définitif existe. Idempotent.
++     */
++    public function appliquerClassementSiJugementFinalDefinitif(): void
++    {
++        $idClassement = StatutAvertissement::idClassement();
++
++        if (! $idClassement) {
++            \Log::warning("Statut 'حفظ' introuvable — classement annulé pour l'avertissement #{$this->id}");
++            return;
++        }
++
++        if ((int) $this->id_statut_avertissement !== (int) $idClassement) {
++            $this->update(['id_statut_avertissement' => $idClassement]);
++        }
++    }
++
++    /** Le statut est verrouillé tant qu'un jugement final définitif existe. */
++    public function statutVerrouille(): bool
++    {
++        return $this->exists && $this->aJugementFinalDefinitif();
++    }
++
+     protected static function booted()
+     {
++        // Garde-fou : quel que soit le point d'entrée (formulaire, tinker, import…),
++        // aucun autre statut que « حفظ » ne peut être appliqué après un jugement final définitif.
++        static::updating(function (Avertissement $avertissement) {
++            if (! $avertissement->isDirty('id_statut_avertissement') || ! $avertissement->aJugementFinalDefinitif()) {
++                return;
++            }
++
++            $idClassement = StatutAvertissement::idClassement();
++
++            if ($idClassement && (int) $avertissement->id_statut_avertissement !== (int) $idClassement) {
++                $avertissement->id_statut_avertissement = $idClassement;
++            }
++        });
++
+         // Statut par défaut « في طور الإجراء » (comme pour les dossiers)
+         static::creating(function ($avertissement) {
+             if (! $avertissement->id_statut_avertissement) {
+diff -ruN '--exclude=vendor' a/app/Models/AvertissementJugement.php b/app/Models/AvertissementJugement.php
+--- a/app/Models/AvertissementJugement.php	2026-10-21 12:35:57.000000000 +0000
++++ b/app/Models/AvertissementJugement.php	2026-10-21 13:06:08.260727038 +0000
+@@ -61,6 +61,33 @@
+             && (int) $this->id_type_jugement === (int) TypeJugement::idPreparatoire();
+     }
+ 
++    /**
++     * RG — Jugement final définitif : un jugement définitif qui n'est pas
++     * préparatoire (un حكم تمهيدي ne clôt jamais l'instance).
++     */
++    public function scopeFinalDefinitif($query)
++    {
++        $idPrep = TypeJugement::idPreparatoire();
++
++        return $query->where('est_definitif', true)
++            ->when($idPrep, fn ($q) => $q->where('id_type_jugement', '!=', $idPrep));
++    }
++
++    public function estFinalDefinitif(): bool
++    {
++        return $this->est_definitif && ! $this->estPreparatoire();
++    }
++
++    protected static function booted()
++    {
++        // RG — Dès qu'un jugement final définitif existe, l'avertissement passe à « حفظ ».
++        static::saved(function (AvertissementJugement $jugement) {
++            if ($jugement->estFinalDefinitif()) {
++                $jugement->avertissement?->appliquerClassementSiJugementFinalDefinitif();
++            }
++        });
++    }
++
+     public function getActivitylogOptions(): LogOptions
+     {
+         return LogOptions::defaults()
+diff -ruN '--exclude=vendor' a/app/Models/StatutAvertissement.php b/app/Models/StatutAvertissement.php
+--- a/app/Models/StatutAvertissement.php	2026-10-21 12:35:57.000000000 +0000
++++ b/app/Models/StatutAvertissement.php	2026-10-21 13:06:08.260536375 +0000
+@@ -10,7 +10,8 @@
+ {
+     use HasFactory;
+ 
+-    public const DEFAUT = 'في طور الإجراء';
++    public const DEFAUT      = 'في طور الإجراء';
++    public const CLASSEMENT  = 'حفظ';
+ 
+     protected $table = 'statut_avertissements';
+ 
+@@ -26,6 +27,12 @@
+         return static::where('statut_avertissement', self::DEFAUT)->value('id');
+     }
+ 
++    /** Id du statut « حفظ » (classement), appliqué après un jugement final définitif. */
++    public static function idClassement(): ?int
++    {
++        return static::where('statut_avertissement', self::CLASSEMENT)->value('id');
++    }
++
+     /** Même palette que StatutDossier (cohérence visuelle des badges). */
+     public function getCouleurBootstrapAttribute(): string
+     {
+diff -ruN '--exclude=vendor' a/database/migrations/2026_10_21_140000_apply_hifz_on_final_definitive_avertissements.php b/database/migrations/2026_10_21_140000_apply_hifz_on_final_definitive_avertissements.php
+--- a/database/migrations/2026_10_21_140000_apply_hifz_on_final_definitive_avertissements.php	1970-01-01 00:00:00.000000000 +0000
++++ b/database/migrations/2026_10_21_140000_apply_hifz_on_final_definitive_avertissements.php	2026-10-21 13:06:08.267122101 +0000
+@@ -0,0 +1,33 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Support\Facades\DB;
++
++/**
++ * Rattrapage : les avertissements qui ont déjà un jugement final définitif
++ * (définitif et non préparatoire) passent au statut « حفظ ».
++ */
++return new class extends Migration
++{
++    public function up(): void
++    {
++        $idClassement = DB::table('statut_avertissements')->where('statut_avertissement', 'حفظ')->value('id');
++        $idPrep       = DB::table('type_jugements')->where('type_jugement', 'حكم تمهيدي')->value('id');
++
++        if (! $idClassement) {
++            return;
++        }
++
++        $ids = DB::table('avertissement_jugements')
++            ->where('est_definitif', true)
++            ->when($idPrep, fn ($q) => $q->where('id_type_jugement', '!=', $idPrep))
++            ->pluck('id_avertissement');
++
++        DB::table('avertissements')->whereIn('id', $ids)->update(['id_statut_avertissement' => $idClassement]);
++    }
++
++    public function down(): void
++    {
++        // Irréversible : l'ancien statut n'est pas conservé.
++    }
++};
+diff -ruN '--exclude=vendor' a/resources/views/avertissements/_form.blade.php b/resources/views/avertissements/_form.blade.php
+--- a/resources/views/avertissements/_form.blade.php	2026-10-21 12:35:57.000000000 +0000
++++ b/resources/views/avertissements/_form.blade.php	2026-10-21 13:06:08.262177178 +0000
+@@ -146,8 +146,10 @@
+             </div>
+             <div class="card-body p-4">
+                 <label for="id_statut_avertissement" class="form-label fw-semibold small">حالة الإنذار</label>
++                @php $statutVerrouille = $a?->statutVerrouille() ?? false; @endphp
+                 <select name="id_statut_avertissement" id="id_statut_avertissement"
+-                        class="form-select @error('id_statut_avertissement') is-invalid @enderror">
++                        class="form-select @error('id_statut_avertissement') is-invalid @enderror"
++                        @disabled($statutVerrouille)>
+                     @foreach($statuts as $statut)
+                         <option value="{{ $statut->id }}"
+                             @selected(old('id_statut_avertissement', $a?->id_statut_avertissement ?? $idStatutDefaut) == $statut->id)>
+@@ -156,6 +158,11 @@
+                     @endforeach
+                 </select>
+                 @error('id_statut_avertissement')<div class="invalid-feedback">{{ $message }}</div>@enderror
++                @if($statutVerrouille)
++                    <div class="form-text text-muted">
++                        <i class="bi bi-lock me-1"></i>تم تحديد الحالة تلقائيًا (حفظ) بعد صدور حكم نهائي، ولا يمكن تغييرها.
++                    </div>
++                @endif
+             </div>
+         </div>
+ 

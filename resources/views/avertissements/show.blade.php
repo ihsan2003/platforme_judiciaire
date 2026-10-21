@@ -143,6 +143,10 @@
             <strong>أنشئ بواسطة :</strong> {{ $avertissement->createdBy->name ?? '—' }}
         </div>
         <div class="col-sm-3 text-white">
+            <i class="bi bi-calendar-check me-1"></i>
+            <strong>تاريخ الإنذار :</strong> {{ $avertissement->date_avertissement?->format('d/m/Y') ?? '—' }}
+        </div>
+        <div class="col-sm-3 text-white">
             <i class="bi bi-calendar-event me-1"></i>
             <strong>تاريخ الإنشاء :</strong> {{ $avertissement->created_at?->format('d/m/Y') }}
         </div>
