@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Avertissements;
 
+use App\Models\StatutAvertissement;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -24,7 +25,20 @@ class AvertissementRequest extends FormRequest
             'date_avertissement' => 'required|date|before_or_equal:today',
             'action_service'  => 'nullable|string|max:5000',
             'commentaire'     => 'nullable|string|max:5000',
-            'id_statut_avertissement' => 'nullable|exists:statut_avertissements,id',
+            'id_statut_avertissement' => [
+                'nullable',
+                'exists:statut_avertissements,id',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $idClassement = StatutAvertissement::idClassement();
+                    $idCourant    = $this->route('avertissement')?->id_statut_avertissement;
+
+                    // « حفظ » ne peut être posé que par un jugement final définitif ;
+                    // on tolère seulement la valeur déjà enregistrée (réenvoi du formulaire).
+                    if ($idClassement && (int) $value === (int) $idClassement && (int) $idCourant !== (int) $idClassement) {
+                        $fail('لا يمكن تطبيق حالة «حفظ» يدويًا، فهي تُطبَّق تلقائيًا بعد صدور حكم نهائي.');
+                    }
+                },
+            ],
             'id_demandeur'    => 'required|exists:parties,id',
             'id_defendeur'    => 'required|exists:parties,id|different:id_demandeur',
         ];

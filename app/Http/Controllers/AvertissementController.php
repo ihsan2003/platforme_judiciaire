@@ -205,7 +205,15 @@ class AvertissementController extends Controller
 
         return [
             'typesAffaire' => TypeAffaire::orderBy('affaire')->get(),
-            'statuts'      => StatutAvertissement::orderBy('id')->get(),
+            // « حفظ » n'est pas sélectionnable : il est appliqué automatiquement par un jugement
+            // final définitif. On le garde uniquement s'il est déjà le statut de cet avertissement
+            // (sinon le select afficherait à tort une autre valeur).
+            'statuts'      => StatutAvertissement::orderBy('id')
+                ->when(
+                    $avertissement?->statut?->statut_avertissement !== StatutAvertissement::CLASSEMENT,
+                    fn ($q) => $q->where('statut_avertissement', '!=', StatutAvertissement::CLASSEMENT)
+                )
+                ->get(),
             'idStatutDefaut' => StatutAvertissement::idDefaut(),
             'regions'      => Region::orderBy('region')->get(),
             'provinces'    => $idRegion
