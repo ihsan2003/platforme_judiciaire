@@ -163,7 +163,6 @@
 
                         <label class="form-label fw-semibold small">
                             تاريخ الميلاد
-                            <span class="text-danger">*</span>
                         </label>
                         <input type="date"
                             name="date_naissance"

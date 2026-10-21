@@ -1,0 +1,451 @@
+From 394bdc472642c02bb32da306a489adbfe899c99e Mon Sep 17 00:00:00 2001
+From: claude <a@b>
+Date: Wed, 21 Oct 2026 10:59:45 +0000
+Subject: [PATCH] =?UTF-8?q?Avertissements:=20tribunal=20ind=C3=A9pendant,?=
+ =?UTF-8?q?=20parties=20par=20d=C3=A9faut,=20ajout=20via=20create=20partie?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../Controllers/AvertissementController.php   |  45 +----
+ .../Avertissements/AvertissementRequest.php   |  59 +------
+ .../views/avertissements/_form.blade.php      | 161 +++++++-----------
+ routes/web.php                                |   7 +
+ 4 files changed, 87 insertions(+), 185 deletions(-)
+
+diff --git a/app/Http/Controllers/AvertissementController.php b/app/Http/Controllers/AvertissementController.php
+index 9e29c4d..7a7d58d 100644
+--- a/app/Http/Controllers/AvertissementController.php
++++ b/app/Http/Controllers/AvertissementController.php
+@@ -168,8 +168,7 @@ public function destroy(Avertissement $avertissement): RedirectResponse
+     // ─────────────────────────────────────────
+ 
+     /**
+-     * Données prêtes à enregistrer : les champs "partie" sont résolus
+-     * (partie existante, ou création d'une nouvelle partie si "new:...").
++     * Données prêtes à enregistrer.
+      */
+     private function donneesValidees(AvertissementRequest $request): array
+     {
+@@ -180,42 +179,12 @@ private function donneesValidees(AvertissementRequest $request): array
+             unset($data['id_statut_avertissement']);
+         }
+ 
+-        $data['id_demandeur'] = $this->resoudrePartie(
+-            $request->input('id_demandeur'),
+-            $request->input('type_personne_demandeur')
+-        );
+-        $data['id_defendeur'] = $this->resoudrePartie(
+-            $request->input('id_defendeur'),
+-            $request->input('type_personne_defendeur')
+-        );
+-
+-        unset($data['type_personne_demandeur'], $data['type_personne_defendeur']);
+-
+         return $data;
+     }
+ 
+-    private function resoudrePartie(?string $valeur, ?string $typePersonne): ?int
+-    {
+-        if ($valeur === null || $valeur === '') {
+-            return null;
+-        }
+-
+-        if (str_starts_with($valeur, 'new:')) {
+-            // Le CIN est optionnel : on ne déduplique pas, comme dans
+-            // DossierPartieController@store pour une partie sans CIN.
+-            return Partie::create([
+-                'nom_partie'         => trim(mb_substr($valeur, 4)),
+-                'type_personne'      => $typePersonne ?: 'ذاتي',
+-                'identifiant_unique' => null,
+-            ])->id;
+-        }
+-
+-        return (int) $valeur;
+-    }
+-
+     /**
+-     * Données du formulaire. Les listes Région > Province > Tribunal sont
+-     * pré-remplies côté serveur (édition, ou retour après erreur de validation).
++     * Données du formulaire. Région > Province sont
++     * pré-remplies côté serveur (édition, ou retour après erreur de validation) ; la محكمة est une liste complète.
+      */
+     private function formData(?Avertissement $avertissement = null): array
+     {
+@@ -234,11 +203,13 @@ private function formData(?Avertissement $avertissement = null): array
+             'provinces'    => $idRegion
+                 ? Province::where('id_region', $idRegion)->orderBy('province')->get(['id', 'province'])
+                 : collect(),
+-            'tribunaux'    => $idProvince
+-                ? Tribunal::where('id_province', $idProvince)->orderBy('nom_tribunal')->get(['id', 'nom_tribunal'])
+-                : collect(),
++            // Liste complète : la محكمة ne dépend pas de l'إقليم choisi
++            'tribunaux'    => Tribunal::orderBy('nom_tribunal')->get(['id', 'nom_tribunal']),
+             'idRegion'     => $idRegion,
+             'parties'      => Partie::orderBy('nom_partie')->get(['id', 'nom_partie']),
++            // Valeur par défaut du المدعي à la création : l'institution (partie est_entraide)
++            'idDemandeurDefaut' => Partie::where('est_entraide', true)->value('id'),
++            'idDefendeurDefaut' => null,
+         ];
+     }
+ }
+diff --git a/app/Http/Requests/Avertissements/AvertissementRequest.php b/app/Http/Requests/Avertissements/AvertissementRequest.php
+index faf9609..d5472e2 100644
+--- a/app/Http/Requests/Avertissements/AvertissementRequest.php
++++ b/app/Http/Requests/Avertissements/AvertissementRequest.php
+@@ -3,16 +3,9 @@
+ namespace App\Http\Requests\Avertissements;
+ 
+ use Illuminate\Foundation\Http\FormRequest;
+-use Illuminate\Validation\Rule;
+ 
+ /**
+  * Validation commune à la création et à la modification d'un avertissement.
+- *
+- * id_demandeur / id_defendeur acceptent :
+- *   - l'id d'une partie existante ("12")
+- *   - ou un nom saisi dans la liste TomSelect ("new:اسم الطرف") : la partie
+- *     est alors créée par le contrôleur (même principe que le réclamant dans
+- *     reclamations/create).
+  */
+ class AvertissementRequest extends FormRequest
+ {
+@@ -27,55 +20,16 @@ public function rules(): array
+             'objet_litige'    => 'nullable|string|max:5000',
+             'id_type_affaire' => 'required|exists:type_affaires,id',
+             'id_province'     => 'required|exists:provinces,id',
+-            // la محكمة doit appartenir à l'إقليم choisi
+-            'id_tribunal'     => [
+-                'required',
+-                Rule::exists('tribunaux', 'id')->where('id_province', $this->input('id_province')),
+-            ],
++            // la محكمة est indépendante de l'إقليم choisi
++            'id_tribunal'     => 'required|exists:tribunaux,id',
+             'action_service'  => 'nullable|string|max:5000',
+             'commentaire'     => 'nullable|string|max:5000',
+             'id_statut_avertissement' => 'nullable|exists:statut_avertissements,id',
+-            'id_demandeur'    => ['nullable', 'string', $this->partieRule()],
+-            'id_defendeur'    => ['nullable', 'string', $this->partieRule()],
+-            'type_personne_demandeur' => 'nullable|in:ذاتي,اعتباري',
+-            'type_personne_defendeur' => 'nullable|in:ذاتي,اعتباري',
++            'id_demandeur'    => 'nullable|exists:parties,id',
++            'id_defendeur'    => 'nullable|exists:parties,id|different:id_demandeur',
+         ];
+     }
+ 
+-    /** Règle commune aux deux listes de parties : id existant OU "new:nom". */
+-    private function partieRule(): \Closure
+-    {
+-        return function (string $attribute, mixed $value, \Closure $fail) {
+-            if ($value === null || $value === '') {
+-                return;
+-            }
+-
+-            if (str_starts_with($value, 'new:')) {
+-                $nom = trim(mb_substr($value, 4));
+-                if ($nom === '' || mb_strlen($nom) > 255) {
+-                    $fail('اسم الطرف غير صالح.');
+-                }
+-                return;
+-            }
+-
+-            if (! ctype_digit($value) || ! \App\Models\Partie::whereKey((int) $value)->exists()) {
+-                $fail('الطرف المحدد غير موجود.');
+-            }
+-        };
+-    }
+-
+-    public function withValidator($validator): void
+-    {
+-        $validator->after(function ($validator) {
+-            $d = $this->input('id_demandeur');
+-            $f = $this->input('id_defendeur');
+-
+-            if ($d && $f && mb_strtolower(trim($d)) === mb_strtolower(trim($f))) {
+-                $validator->errors()->add('id_defendeur', 'لا يمكن أن يكون المدعي والمدعى عليه نفس الطرف.');
+-            }
+-        });
+-    }
+-
+     public function messages(): array
+     {
+         return [
+@@ -85,7 +39,10 @@ public function messages(): array
+             'id_province.exists'       => 'الإقليم / العمالة غير صالح.',
+             'id_statut_avertissement.exists' => 'الحالة غير صالحة.',
+             'id_tribunal.required'     => 'يرجى اختيار المحكمة المختصة.',
+-            'id_tribunal.exists'       => 'المحكمة المختارة لا تنتمي إلى هذا الإقليم.',
++            'id_tribunal.exists'       => 'المحكمة المختارة غير صالحة.',
++            'id_demandeur.exists'      => 'المدعي غير صالح.',
++            'id_defendeur.exists'      => 'المدعى عليه غير صالح.',
++            'id_defendeur.different'   => 'لا يمكن أن يكون المدعي والمدعى عليه نفس الطرف.',
+         ];
+     }
+ 
+diff --git a/resources/views/avertissements/_form.blade.php b/resources/views/avertissements/_form.blade.php
+index df559b2..f264030 100644
+--- a/resources/views/avertissements/_form.blade.php
++++ b/resources/views/avertissements/_form.blade.php
+@@ -1,6 +1,7 @@
+ {{-- resources/views/avertissements/_form.blade.php
+      Champs communs create/edit. Variable optionnelle : $avertissement
+-     Variables attendues : $typesAffaire, $statuts, $idStatutDefaut, $regions, $provinces, $tribunaux, $idRegion, $parties --}}
++     Variables attendues : $typesAffaire, $statuts, $idStatutDefaut, $regions, $provinces, $tribunaux, $idRegion, $parties,
++     $idDemandeurDefaut, $idDefendeurDefaut --}}
+ @php
+     $a = $avertissement ?? null;
+     $idProvinceSel = old('id_province', $a?->id_province);
+@@ -40,12 +41,12 @@ class="form-select @error('id_type_affaire') is-invalid @enderror" required>
+                         @error('id_type_affaire')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                     </div>
+ 
+-                    {{-- الجهة > الإقليم / العمالة > المحكمة المختصة --}}
++                    {{-- الجهة > الإقليم / العمالة (المدينة) --}}
+                     <div class="col-12">
+                         <div class="p-3 bg-light rounded border">
+                             <div class="row g-3">
+ 
+-                                <div class="col-lg-4">
++                                <div class="col-lg-6">
+                                     <label for="id_region" class="form-label fw-semibold small">
+                                         الجهة <span class="text-danger">*</span>
+                                     </label>
+@@ -59,7 +60,7 @@ class="form-select @error('id_type_affaire') is-invalid @enderror" required>
+                                     </select>
+                                 </div>
+ 
+-                                <div class="col-lg-4">
++                                <div class="col-lg-6">
+                                     <label for="id_province" class="form-label fw-semibold small">
+                                         الإقليم / العمالة (المدينة) <span class="text-danger">*</span>
+                                     </label>
+@@ -80,31 +81,27 @@ class="form-select @error('id_province') is-invalid @enderror"
+                                     @error('id_province')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                 </div>
+ 
+-                                <div class="col-lg-4">
+-                                    <label for="id_tribunal" class="form-label fw-semibold small">
+-                                        المحكمة المختصة <span class="text-danger">*</span>
+-                                    </label>
+-                                    <select name="id_tribunal" id="id_tribunal"
+-                                            class="form-select @error('id_tribunal') is-invalid @enderror"
+-                                            @disabled($tribunaux->isEmpty()) required>
+-                                        @if($tribunaux->isEmpty())
+-                                            <option value="">— اختر الإقليم أولاً —</option>
+-                                        @else
+-                                            <option value="">— اختر المحكمة —</option>
+-                                            @foreach($tribunaux as $tribunal)
+-                                                <option value="{{ $tribunal->id }}" @selected($idTribunalSel == $tribunal->id)>
+-                                                    {{ $tribunal->nom_tribunal }}
+-                                                </option>
+-                                            @endforeach
+-                                        @endif
+-                                    </select>
+-                                    @error('id_tribunal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+-                                </div>
+-
+                             </div>
+                         </div>
+                     </div>
+ 
++                    {{-- المحكمة المختصة : liste complète, indépendante de l'إقليم --}}
++                    <div class="col-12 mb-2">
++                        <label for="id_tribunal" class="form-label fw-semibold small">
++                            المحكمة المختصة <span class="text-danger">*</span>
++                        </label>
++                        <select name="id_tribunal" id="id_tribunal"
++                                class="@error('id_tribunal') is-invalid @enderror" required>
++                            <option value="">— اختر المحكمة —</option>
++                            @foreach($tribunaux as $tribunal)
++                                <option value="{{ $tribunal->id }}" @selected($idTribunalSel == $tribunal->id)>
++                                    {{ $tribunal->nom_tribunal }}
++                                </option>
++                            @endforeach
++                        </select>
++                        @error('id_tribunal')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
++                    </div>
++
+                     {{-- موضوع النزاع --}}
+                     <div class="col-12 mb-2">
+                         <label for="objet_litige" class="form-label fw-semibold small">موضوع النزاع</label>
+@@ -178,20 +175,12 @@ class="form-select @error('id_statut_avertissement') is-invalid @enderror">
+                         <option value=""></option>
+                         @foreach($parties as $partie)
+                             <option value="{{ $partie->id }}"
+-                                @selected(old('id_demandeur', $a?->id_demandeur) == $partie->id)>
++                                @selected(old('id_demandeur', $a ? $a->id_demandeur : $idDemandeurDefaut) == $partie->id)>
+                                 {{ $partie->nom_partie }}
+                             </option>
+                         @endforeach
+                     </select>
+                     @error('id_demandeur')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+-
+-                    <div id="bloc-type-demandeur" class="mt-2 d-none">
+-                        <label class="form-label small text-muted mb-1">نوع الشخص (طرف جديد)</label>
+-                        <select name="type_personne_demandeur" class="form-select form-select-sm">
+-                            <option value="ذاتي" @selected(old('type_personne_demandeur') === 'ذاتي')>ذاتي</option>
+-                            <option value="اعتباري" @selected(old('type_personne_demandeur') === 'اعتباري')>اعتباري</option>
+-                        </select>
+-                    </div>
+                 </div>
+ 
+                 {{-- المدعى عليه --}}
+@@ -201,20 +190,26 @@ class="form-select @error('id_statut_avertissement') is-invalid @enderror">
+                         <option value=""></option>
+                         @foreach($parties as $partie)
+                             <option value="{{ $partie->id }}"
+-                                @selected(old('id_defendeur', $a?->id_defendeur) == $partie->id)>
++                                @selected(old('id_defendeur', $a ? $a->id_defendeur : $idDefendeurDefaut) == $partie->id)>
+                                 {{ $partie->nom_partie }}
+                             </option>
+                         @endforeach
+                     </select>
+                     @error('id_defendeur')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
++                </div>
+ 
+-                    <div id="bloc-type-defendeur" class="mt-2 d-none">
+-                        <label class="form-label small text-muted mb-1">نوع الشخص (طرف جديد)</label>
+-                        <select name="type_personne_defendeur" class="form-select form-select-sm">
+-                            <option value="ذاتي" @selected(old('type_personne_defendeur') === 'ذاتي')>ذاتي</option>
+-                            <option value="اعتباري" @selected(old('type_personne_defendeur') === 'اعتباري')>اعتباري</option>
+-                        </select>
+-                    </div>
++                {{-- Nouvelle partie : se crée dans la page « طرف جديد » --}}
++                <div class="d-flex flex-wrap gap-2 mt-3 pt-3 border-top">
++                    <a href="{{ route('parties.create') }}" target="_blank" rel="noopener"
++                       class="btn btn-outline-primary btn-sm">
++                        <i class="bi bi-person-plus me-1"></i>طرف جديد
++                    </a>
++                    <button type="button" id="btn-refresh-parties" class="btn btn-outline-secondary btn-sm">
++                        <i class="bi bi-arrow-clockwise me-1"></i>تحديث القائمة
++                    </button>
++                </div>
++                <div class="form-text">
++                    أضف الطرف في صفحة «طرف جديد» (تفتح في تبويب جديد) ثم اضغط «تحديث القائمة».
+                 </div>
+ 
+             </div>
+@@ -236,74 +231,46 @@ class="btn btn-outline-secondary">إلغاء</a>
+ <script>
+ document.addEventListener('DOMContentLoaded', function () {
+ 
+-    /* ── Cascade Région > Province > Tribunal (même principe que dossiers/show) ── */
++    /* ── Cascade Région > Province (المدينة) ── */
+     const selRegion   = document.getElementById('id_region');
+     const selProvince = document.getElementById('id_province');
+-    const selTribunal = document.getElementById('id_tribunal');
+-
+-    function reset(sel, ph) { sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; }
+ 
+     selRegion.addEventListener('change', async function () {
+-        reset(selProvince, '— جاري التحميل... —');
+-        reset(selTribunal, '— اختر الإقليم أولاً —');
+-        if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
++        selProvince.innerHTML = '<option value="">— جاري التحميل... —</option>';
++        selProvince.disabled = true;
++        if (!this.value) {
++            selProvince.innerHTML = '<option value="">— اختر الجهة أولاً —</option>';
++            return;
++        }
+         try {
+             const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
+             selProvince.innerHTML = '<option value="">— اختر الإقليم —</option>';
+             data.forEach(p => selProvince.innerHTML += `<option value="${p.id}">${p.province}</option>`);
+             selProvince.disabled = false;
+-        } catch { reset(selProvince, '— خطأ —'); }
++        } catch { selProvince.innerHTML = '<option value="">— خطأ —</option>'; }
+     });
+ 
+-    selProvince.addEventListener('change', async function () {
+-        reset(selTribunal, '— جاري التحميل... —');
+-        if (!this.value) { reset(selTribunal, '— اختر الإقليم أولاً —'); return; }
++    /* ── Listes de recherche (TomSelect) ── */
++    const opts = { allowEmptyOption: true, maxOptions: 1000, placeholder: 'ابحث...' };
++    new TomSelect('#id_tribunal', opts);
++    const tsDemandeur = new TomSelect('#id_demandeur', opts);
++    const tsDefendeur = new TomSelect('#id_defendeur', opts);
++
++    /* ── Rafraîchir les أطراف après un ajout dans « طرف جديد » ── */
++    document.getElementById('btn-refresh-parties').addEventListener('click', async function () {
++        const btn = this;
++        btn.disabled = true;
+         try {
+-            const data = await (await fetch(`/api/provinces/${this.value}/tribunaux`)).json();
+-            if (!data.length) { reset(selTribunal, '— لا توجد محاكم متاحة —'); return; }
+-            selTribunal.innerHTML = '<option value="">— اختر المحكمة —</option>';
+-            data.forEach(t => selTribunal.innerHTML += `<option value="${t.id}">${t.nom_tribunal}</option>`);
+-            selTribunal.disabled = false;
+-        } catch { reset(selTribunal, '— خطأ —'); }
++            const parties = await (await fetch('/api/parties')).json();
++            [tsDemandeur, tsDefendeur].forEach(ts => {
++                const courant = ts.getValue();
++                ts.clearOptions();
++                parties.forEach(p => ts.addOption({ value: String(p.id), text: p.nom_partie }));
++                ts.setValue(courant, true);
++            });
++        } catch (e) { /* silencieux : la liste reste inchangée */ }
++        btn.disabled = false;
+     });
+-
+-    /* ── TomSelect des أطراف : recherche + ajout d'une nouvelle partie ── */
+-    function partieSelect(selector, blocTypeId) {
+-        const bloc = document.getElementById(blocTypeId);
+-        const toggle = (value) => bloc.classList.toggle('d-none', !String(value || '').startsWith('new:'));
+-
+-        const ts = new TomSelect(selector, {
+-            // Nouvelle partie : valeur "new:<nom>", créée côté serveur à l'enregistrement
+-            create: function (input) { return { value: 'new:' + input.trim(), text: input.trim() }; },
+-            createFilter: input => input.trim().length > 0,
+-            persist: false,
+-            maxOptions: 500,
+-            allowEmptyOption: true,
+-            placeholder: 'ابحث عن طرف موجود أو اكتب اسما جديدا...',
+-            render: {
+-                option_create: (data, escape) =>
+-                    `<div class="create">➕ إضافة طرف جديد باسم "${escape(data.input)}"</div>`,
+-                no_results: () => `<div class="no-results">لا توجد نتائج</div>`
+-            },
+-            onItemAdd:    toggle,
+-            onItemRemove: () => toggle(''),
+-        });
+-
+-        // Retour après erreur de validation avec un nouveau nom saisi
+-        const old = @json([
+-            '#id_demandeur' => old('id_demandeur'),
+-            '#id_defendeur' => old('id_defendeur'),
+-        ])[selector];
+-        if (old && String(old).startsWith('new:')) {
+-            ts.addOption({ value: old, text: old.substring(4) });
+-            ts.setValue(old);
+-            toggle(old);
+-        }
+-        return ts;
+-    }
+-
+-    partieSelect('#id_demandeur', 'bloc-type-demandeur');
+-    partieSelect('#id_defendeur', 'bloc-type-defendeur');
+ });
+ </script>
+ @endpush
+diff --git a/routes/web.php b/routes/web.php
+index ca35ae2..28fe06f 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -59,6 +59,13 @@
+         return response()->json($provinces);
+     });
+ 
++    // Parties (rafraîchir les listes المدعي / المدعى عليه après un ajout via parties.create)
++    Route::get('/parties', function () {
++        return response()->json(
++            \App\Models\Partie::orderBy('nom_partie')->get(['id', 'nom_partie'])
++        );
++    });
++
+     // Tous les tribunaux d'une province (sans filtre de degré) — avertissements
+     Route::get('/provinces/{provinceId}/tribunaux', function ($provinceId) {
+         $tribunaux = \App\Models\Tribunal::where('id_province', $provinceId)
+-- 
+2.43.0
+

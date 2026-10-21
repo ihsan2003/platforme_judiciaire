@@ -388,6 +388,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('avertissements.*') ? 'active' : '' }}"
+                href="{{ route('avertissements.index') }}">
+                    <i class="bi bi-exclamation-triangle"></i> الإنذارات
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('audiences.*') ? 'active' : '' }}"
                 href="{{ route('audiences.index') }}">
                     <i class="bi bi-calendar-event"></i> الجلسات

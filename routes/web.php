@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DossierJudiciaireController;
+use App\Http\Controllers\AvertissementController;
+use App\Http\Controllers\AvertissementJugementController;
 use App\Http\Controllers\AudienceController;
 use App\Http\Controllers\JugementController;
 use App\Http\Controllers\ReclamationController;
@@ -57,6 +59,21 @@ Route::middleware('auth')->prefix('api')->group(function () {
         return response()->json($provinces);
     });
 
+    // Parties (rafraîchir les listes المدعي / المدعى عليه après un ajout via parties.create)
+    Route::get('/parties', function () {
+        return response()->json(
+            \App\Models\Partie::orderBy('nom_partie')->get(['id', 'nom_partie'])
+        );
+    });
+
+    // Tous les tribunaux d'une province (sans filtre de degré) — avertissements
+    Route::get('/provinces/{provinceId}/tribunaux', function ($provinceId) {
+        $tribunaux = \App\Models\Tribunal::where('id_province', $provinceId)
+            ->orderBy('nom_tribunal')
+            ->get(['id', 'nom_tribunal']);
+        return response()->json($tribunaux);
+    });
+
     Route::get('/provinces/{provinceId}/degres', function ($provinceId) {
         $degres = \App\Models\DegreeJuridiction::whereHas('tribunaux',
                 fn($q) => $q->where('id_province', $provinceId)
@@ -95,6 +112,16 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::resource('dossiers', DossierJudiciaireController::class);
+
+    // ── Avertissements (إنذارات) ───────────────────────────────────────────
+    Route::resource('avertissements', AvertissementController::class);
+
+    // Jugements d'un avertissement
+    Route::prefix('avertissements/{avertissement}/jugements')->name('avertissements.jugements.')->group(function () {
+        Route::post('/',               [AvertissementJugementController::class, 'store'])  ->name('store');
+        Route::put('/{jugement}',      [AvertissementJugementController::class, 'update']) ->name('update');
+        Route::delete('/{jugement}',   [AvertissementJugementController::class, 'destroy'])->name('destroy');
+    });
 
     Route::post('dossiers/{dossier}/cloturer', [DossierJudiciaireController::class, 'cloturer'])
      ->name('dossiers.cloturer');

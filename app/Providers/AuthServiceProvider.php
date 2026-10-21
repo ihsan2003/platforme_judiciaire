@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Models\DossierJudiciaire;
 use App\Policies\DossierPolicy;
+use App\Models\Avertissement;
+use App\Policies\AvertissementPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -13,6 +15,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         DossierJudiciaire::class => DossierPolicy::class,
+        Avertissement::class     => AvertissementPolicy::class,
     ];
 
     /**

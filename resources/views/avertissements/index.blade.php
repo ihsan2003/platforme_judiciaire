@@ -1,0 +1,259 @@
+@extends('layouts.app')
+
+@section('title', 'الإنذارات')
+
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">الرئيسية</a></li>
+    <li class="breadcrumb-item active">الإنذارات</li>
+@endsection
+
+@section('content')
+
+{{-- ══ الإحصائيات السريعة ══ --}}
+<div class="row g-3 mb-4">
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                    <i class="bi bi-exclamation-triangle fs-4 text-primary"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold lh-1">{{ $stats['total'] }}</div>
+                    <div class="text-muted small">إجمالي الإنذارات</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                    <i class="bi bi-hammer fs-4 text-success"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold lh-1">{{ $stats['avec_jugement'] }}</div>
+                    <div class="text-muted small">إنذارات صدر فيها حكم</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                    <i class="bi bi-hourglass-split fs-4 text-danger"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold lh-1">{{ $stats['sans_jugement'] }}</div>
+                    <div class="text-muted small">بدون حكم</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                    <i class="bi bi-calendar-plus fs-4 text-warning"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold lh-1">{{ $stats['ce_mois'] }}</div>
+                    <div class="text-muted small">خلال هذا الشهر</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{-- ══ الفلاتر ══ --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+
+            <div class="col-md-4 col-lg-2">
+                <label class="form-label small text-muted fw-semibold">بحث</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0"
+                           placeholder="المدعي، المدعى عليه، الحكم، الإجراء..."
+                           value="{{ request('search') }}">
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-2">
+                <label class="form-label small text-muted fw-semibold">نوعية الملف</label>
+                <select name="type" class="form-select">
+                    <option value="">الكل</option>
+                    @foreach($typesAffaire as $type)
+                        <option value="{{ $type->id }}" @selected(request('type') == $type->id)>{{ $type->affaire }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-2">
+                <label class="form-label small text-muted fw-semibold">المحكمة المختصة</label>
+                <select name="tribunal" class="form-select">
+                    <option value="">الكل</option>
+                    @foreach($tribunaux as $tribunal)
+                        <option value="{{ $tribunal->id }}" @selected(request('tribunal') == $tribunal->id)>{{ $tribunal->nom_tribunal }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-2">
+                <label class="form-label small text-muted fw-semibold">الحالة</label>
+                <select name="statut" class="form-select">
+                    <option value="">جميع الحالات</option>
+                    @foreach($statuts as $statut)
+                        <option value="{{ $statut->id }}" @selected(request('statut') == $statut->id)>{{ $statut->statut_avertissement }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-2">
+                <label class="form-label small text-muted fw-semibold">الحكم</label>
+                <select name="jugement" class="form-select">
+                    <option value="">الكل</option>
+                    <option value="avec" @selected(request('jugement') === 'avec')>صدر فيه حكم</option>
+                    <option value="sans" @selected(request('jugement') === 'sans')>بدون حكم</option>
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex gap-1">
+                <button class="btn btn-primary flex-fill" title="تصفية"><i class="bi bi-funnel-fill"></i></button>
+                <a href="{{ route('avertissements.index') }}" class="btn btn-outline-secondary" title="إعادة التعيين">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{{-- ══ الجدول ══ --}}
+<div class="card border-0 shadow-sm">
+
+    <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+        <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>الإنذارات
+            <span class="badge bg-primary ms-2">{{ $avertissements->total() }}</span>
+        </h5>
+
+        @can('create', App\Models\Avertissement::class)
+            <a href="{{ route('avertissements.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>إنذار جديد
+            </a>
+        @endcan
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <x-sortable-th column="id" class="text-muted small fw-semibold ps-3">الرقم</x-sortable-th>
+                    <x-sortable-th column="type" class="text-muted small fw-semibold">نوعية الملف</x-sortable-th>
+                    <x-sortable-th column="region" class="text-muted small fw-semibold">الجهة</x-sortable-th>
+                    <x-sortable-th column="ville" class="text-muted small fw-semibold">المدينة</x-sortable-th>
+                    <x-sortable-th column="tribunal" class="text-muted small fw-semibold">المحكمة المختصة</x-sortable-th>
+                    <th class="text-muted small fw-semibold">المدعي</th>
+                    <th class="text-muted small fw-semibold">المدعى عليه</th>
+                    <x-sortable-th column="jugements" class="text-muted small fw-semibold">الأحكام</x-sortable-th>
+                    <x-sortable-th column="statut" class="text-muted small fw-semibold">الحالة</x-sortable-th>
+                    <th class="text-muted small fw-semibold pe-3">الإجراءات</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @forelse($avertissements as $avertissement)
+                    <tr>
+                        <td class="ps-3 fw-semibold">{{ $avertissement->id }}</td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-15 text-white border border-info border-opacity-25">
+                                {{ $avertissement->typeAffaire->affaire ?? '—' }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">{{ $avertissement->province?->region?->region ?? '—' }}</td>
+                        <td class="text-muted small">{{ $avertissement->province->province ?? '—' }}</td>
+                        <td>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                <i class="bi bi-bank me-1"></i>{{ $avertissement->tribunal->nom_tribunal ?? '—' }}
+                            </span>
+                        </td>
+                        <td>{{ $avertissement->demandeur->nom_partie ?? '—' }}</td>
+                        <td>{{ $avertissement->defendeur->nom_partie ?? '—' }}</td>
+                        <td>
+                            @if($avertissement->jugements_count)
+                                <span class="badge bg-success">
+                                    <i class="bi bi-hammer me-1"></i>{{ $avertissement->jugements_count }}
+                                </span>
+                            @else
+                                <span class="badge bg-secondary bg-opacity-25 text-muted">بدون حكم</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @php
+                                $couleur = $avertissement->statut?->couleur_bootstrap ?? 'primary';
+                                $textClass = $couleur === 'warning' ? 'text-dark' : 'text-white';
+                            @endphp
+                            <span class="badge bg-{{ $couleur }} {{ $textClass }}">
+                                {{ $avertissement->statut->statut_avertissement ?? '—' }}
+                            </span>
+                        </td>
+
+                        <td class="text-end pe-3">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="{{ route('avertissements.show', $avertissement) }}"
+                                   class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                @can('update', $avertissement)
+                                    <a href="{{ route('avertissements.edit', $avertissement) }}"
+                                       class="btn btn-sm btn-outline-warning" title="تعديل">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                @endcan
+
+                                @can('delete', $avertissement)
+                                    <x-modal-delete
+                                        :action="route('avertissements.destroy', $avertissement)"
+                                        modal-id="deleteAvertissement{{ $avertissement->id }}"
+                                        trigger-label=""
+                                        trigger-class="btn btn-sm btn-outline-danger"
+                                        trigger-icon="bi-trash"
+                                        title="حذف الإنذار"
+                                        :description="'الإنذار رقم #' . $avertissement->id"
+                                        warning="هل أنت متأكد من حذف هذا الإنذار؟"
+                                        confirm-label="نعم، حذف"
+                                    />
+                                @endcan
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            <i class="bi bi-exclamation-triangle fs-1 d-block mb-2 opacity-25"></i>
+                            لا توجد إنذارات
+                            @if(request()->hasAny(['search', 'type', 'tribunal', 'statut', 'jugement']))
+                                — <a href="{{ route('avertissements.index') }}">إعادة تعيين الفلاتر</a>
+                            @endif
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    @if($avertissements->hasPages())
+        <div class="card-footer bg-white">{{ $avertissements->links() }}</div>
+    @endif
+</div>
+
+@endsection
