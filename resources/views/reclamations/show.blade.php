@@ -121,6 +121,12 @@
             <span class="badge bg-warning text-dark me-1">{{ $reclamation->documents->count() }}</span>
         </button>
     </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-jugements">
+            <i class="bi bi-hammer me-1"></i>الأحكام
+            <span class="badge bg-success me-1">{{ $reclamation->jugements->count() }}</span>
+        </button>
+    </li>
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom bg-white shadow-sm p-4" id="reclamationTabContent">
@@ -680,7 +686,161 @@
         </div>
         @endif
     </div>
+
+
+    {{-- ══ التبويب 4 : الأحكام ══ --}}
+    <div class="tab-pane fade" id="tab-jugements">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-hammer me-1 text-success"></i>الأحكام</h6>
+            <button type="button" class="btn btn-sm btn-primary"
+                    data-bs-toggle="modal" data-bs-target="#modalAjouterJugement">
+                <i class="bi bi-plus-lg me-1"></i>إضافة حكم
+            </button>
+        </div>
+
+        @forelse($reclamation->jugements as $jugement)
+            @php $prep = $jugement->estPreparatoire(); @endphp
+
+            <div class="card border mb-3 {{ $prep ? 'border-purple' : '' }}"
+                 style="border-width:2px !important; border-color: {{ $prep ? '#7c3aed' : '#0f766e' }} !important;">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <div class="fw-bold" style="color: {{ $prep ? '#6b21a8' : '#0f766e' }}">
+                            <i class="bi bi-hammer me-1"></i>
+                            حكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="badge {{ $prep ? 'bg-purple' : 'bg-success' }} bg-opacity-10 border"
+                                  style="color: {{ $prep ? '#6b21a8' : '#166534' }}">
+                                {{ $jugement->typeJugement->type_jugement ?? '—' }}
+                            </span>
+                            @if($jugement->est_definitif)
+                                <span class="badge bg-warning bg-opacity-25 text-dark border border-warning">
+                                    <i class="bi bi-lock me-1"></i>نهائي
+                                </span>
+                            @endif
+
+                            <button type="button" class="btn btn-sm btn-outline-warning"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalEditJugement{{ $jugement->id }}"
+                                    title="تعديل">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+
+                            @role('admin')
+                            <x-modal-delete
+                                :action="route('reclamations.jugements.destroy', [$reclamation, $jugement])"
+                                modal-id="deleteJugement{{ $jugement->id }}"
+                                trigger-label=""
+                                trigger-class="btn btn-sm btn-outline-danger"
+                                trigger-icon="bi-trash"
+                                title="حذف الحكم"
+                                :description="'حكم بتاريخ ' . $jugement->date_jugement->format('d/m/Y')"
+                                warning="هل أنت متأكد من حذف هذا الحكم؟"
+                                confirm-label="نعم، حذف"
+                            />
+                            @endrole
+                        </div>
+                    </div>
+
+                    <div class="small text-muted mb-2">
+                        <i class="bi bi-person-badge me-1"></i>القاضي : {{ $jugement->juge->nom_complet ?? '—' }}
+                    </div>
+
+                    <div class="small lh-lg bg-white border rounded-2 p-2" style="white-space: pre-line;">{{ $jugement->contenu_dispositif }}</div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-hammer fs-1 d-block mb-2 opacity-25"></i>
+                لم يُسجَّل أي حكم لهذه الشكاية بعد.
+            </div>
+        @endforelse
+    </div>
 </div>
+
+
+{{-- ══════════════════════════════════════════════════════════
+     المودالات — الأحكام
+══════════════════════════════════════════════════════════ --}}
+@php
+    $champsJugement = function ($j = null) use ($typesJugement, $juges) {
+        return compact('j', 'typesJugement', 'juges');
+    };
+@endphp
+
+{{-- Ajouter --}}
+<div class="modal fade" id="modalAjouterJugement" tabindex="-1" dir="rtl">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-semibold mb-0">
+                    <i class="bi bi-hammer me-1 text-primary"></i>إضافة حكم
+                </h5>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAjouterJugement"
+                      action="{{ route('reclamations.jugements.store', $reclamation) }}" method="POST">
+                    @csrf
+                    @include('reclamations._jugement_fields', $champsJugement(null))
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="submit" form="formAjouterJugement" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>حفظ الحكم
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Modifier --}}
+@foreach($reclamation->jugements as $jugement)
+    <div class="modal fade" id="modalEditJugement{{ $jugement->id }}" tabindex="-1" dir="rtl">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title fw-semibold mb-0">
+                        <i class="bi bi-pencil me-1 text-warning"></i>
+                        تعديل الحكم بتاريخ {{ $jugement->date_jugement->format('d/m/Y') }}
+                    </h5>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditJugement{{ $jugement->id }}"
+                          action="{{ route('reclamations.jugements.update', [$reclamation, $jugement]) }}"
+                          method="POST">
+                        @csrf @method('PUT')
+                        @include('reclamations._jugement_fields', $champsJugement($jugement))
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" form="formEditJugement{{ $jugement->id }}" class="btn btn-warning">
+                        <i class="bi bi-check-lg me-1"></i>حفظ التعديلات
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+
+{{-- Erreurs de validation : on rouvre l'onglet et la modale d'ajout --}}
+@if($errors->hasAny(['date_jugement', 'contenu_dispositif', 'id_type_jugement', 'id_juge']))
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tab = document.querySelector('[data-bs-target="#tab-jugements"]');
+            if (tab) new bootstrap.Tab(tab).show();
+            const m = document.getElementById('modalAjouterJugement');
+            if (m) bootstrap.Modal.getOrCreateInstance(m).show();
+        });
+    </script>
+    @endpush
+@endif
 
 @endsection
 @push('scripts')

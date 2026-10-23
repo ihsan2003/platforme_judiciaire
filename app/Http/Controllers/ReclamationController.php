@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Juge;
 use App\Models\Reclamation;
 use App\Models\Reclamant;
+use App\Models\TypeJugement;
 use App\Models\StatutReclamation;
 use App\Models\TypeReclamant;
 use App\Models\TypeReclamation;
@@ -222,7 +224,14 @@ class ReclamationController extends Controller
             'statut',
             'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy'])->latest(),
             'documents.typeDocument',
+            'jugements.juge', 'jugements.typeJugement',
         ]);
+
+        $typesJugement = TypeJugement::orderBy('id')->get();
+        // Une réclamation n'est pas liée à un tribunal : on propose tous les juges.
+        $juges = Juge::with('tribunal:id,nom_tribunal')
+            ->orderBy('nom_complet')
+            ->get(['id', 'nom_complet', 'grade', 'id_tribunal']);
 
         $typesAction    = TypeAction::orderBy('type_action')->get();
         $structures = Structure::with(['typeStructure', 'enfants.enfants'])
@@ -232,7 +241,8 @@ class ReclamationController extends Controller
         $typesDocuments = TypeDocument::all();
 
         return view('reclamations.show', compact(
-            'reclamation', 'typesAction', 'structures', 'statuts', 'typesDocuments'
+            'reclamation', 'typesAction', 'structures', 'statuts', 'typesDocuments',
+            'typesJugement', 'juges'
         ));
     }
 

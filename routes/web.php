@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DossierJudiciaireController;
 use App\Http\Controllers\AvertissementController;
 use App\Http\Controllers\AvertissementJugementController;
+use App\Http\Controllers\ReclamationJugementController;
 use App\Http\Controllers\AudienceController;
 use App\Http\Controllers\JugementController;
 use App\Http\Controllers\ReclamationController;
@@ -205,6 +206,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{reclamation}',       [ReclamationController::class, 'update']) ->name('update');
         Route::delete('/{reclamation}',    [ReclamationController::class, 'destroy'])->name('destroy');
         Route::post('/{reclamation}/actions', [ReclamationController::class, 'addAction'])->name('actions.store');
+
+        // Jugements d'une réclamation
+        Route::post('/{reclamation}/jugements',              [ReclamationJugementController::class, 'store'])  ->name('jugements.store');
+        Route::put('/{reclamation}/jugements/{jugement}',    [ReclamationJugementController::class, 'update']) ->name('jugements.update');
+        Route::delete('/{reclamation}/jugements/{jugement}', [ReclamationJugementController::class, 'destroy'])->name('jugements.destroy');
         Route::get('/{reclamation}/documents/{document}/download', [ReclamationController::class, 'downloadDocument'])->name('documents.download');
     });
 

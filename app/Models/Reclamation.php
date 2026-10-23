@@ -100,6 +100,12 @@ class Reclamation extends Model
         return $this->hasMany(Document::class, 'id_reclamation');
     }
 
+    /** Jugements rendus pour cette réclamation (le plus récent d'abord). */
+    public function jugements()
+    {
+        return $this->hasMany(ReclamationJugement::class, 'id_reclamation')
+                    ->orderByDesc('date_jugement');
+    }
 
 
     public function getDerniereActionAttribute()
