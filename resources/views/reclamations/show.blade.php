@@ -203,6 +203,15 @@
                             <dt class="col-5 text-muted fw-semibold">تاريخ الاستلام</dt>
                             <dd class="col-7">{{ $reclamation->date_reception?->format('Y/m/d') ?? '—' }}</dd>
 
+                            <dt class="col-5 text-muted fw-semibold">الجهة</dt>
+                            <dd class="col-7">{{ $reclamation->province?->region?->region ?? '—' }}</dd>
+
+                            <dt class="col-5 text-muted fw-semibold">الإقليم / العمالة</dt>
+                            <dd class="col-7">{{ $reclamation->province?->province ?? '—' }}</dd>
+
+                            <dt class="col-5 text-muted fw-semibold">الجماعة</dt>
+                            <dd class="col-7">{{ $reclamation->commune?->commune ?? '—' }}</dd>
+
                             <dt class="col-5 text-muted fw-semibold">الحالة</dt>
                             <dd class="col-7">
                                 <span class="badge bg-{{ $color }} bg-opacity-15 {{ $textColor }} border border-{{ $color }} border-opacity-25">
@@ -220,6 +229,10 @@
                             <input type="hidden" name="details" value="{{ $reclamation->details }}">
                             <input type="hidden" name="id_type_reclamation" value="{{ $reclamation->id_type_reclamation }}">
                             <input type="hidden" name="id_reclamant" value="{{ $reclamation->id_reclamant }}">
+                            {{-- Conserver la localisation : update() la réécrit à chaque appel --}}
+                            <input type="hidden" name="id_region" value="{{ $reclamation->province?->id_region }}">
+                            <input type="hidden" name="id_province" value="{{ $reclamation->id_province }}">
+                            <input type="hidden" name="id_commune" value="{{ $reclamation->id_commune }}">
                             <label class="form-label fw-semibold small text-muted">تغيير الحالة</label>
                             <div class="input-group input-group-sm">
                                 <select name="id_statut_reclamation" class="form-select form-select-sm" required>

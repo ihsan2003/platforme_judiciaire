@@ -42,7 +42,7 @@
             <div class="row g-4">
                 {{-- القسم الأول: معلومات الشكاية --}}
                 <div class="col-md-8">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
                             <div class="mb-4">
                                 <label class="form-label fw-semibold small">الموضوع <span class="text-danger">*</span></label>
@@ -57,6 +57,9 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- الموقع الجغرافي : الجهة > الإقليم > الجماعة --}}
+                    @include('reclamations._localisation')
                 </div>
 
                 {{-- القسم الثاني: الإعدادات والحالة --}}

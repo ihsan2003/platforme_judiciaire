@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Commune;
 use App\Models\Juge;
+use App\Models\Province;
+use App\Models\Region;
 use App\Models\Reclamation;
 use App\Models\Reclamant;
 use App\Models\TypeJugement;
@@ -20,6 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ReclamationController extends Controller
 {
@@ -127,7 +131,7 @@ class ReclamationController extends Controller
         $reclamants       = Reclamant::orderBy('nom')->get();
         $typesDocuments   = TypeDocument::orderBy('type_document')->get();
 
-        return view('reclamations.create', compact(
+        return view('reclamations.create', $this->donneesLocalisation() + compact(
             'typesReclamant', 'statuts', 'typesReclamation', 'reclamants', 'typesDocuments'
         ));
     }
@@ -151,9 +155,9 @@ class ReclamationController extends Controller
             'date_reception'     => 'required|date',
             'details'            => 'nullable|string',
 
-            'document'           => 'nullable|file|max:10240', 
+            'document'           => 'nullable|file|max:10240',
             'id_type_document'   => 'nullable|exists:type_documents,id',
-        ]);
+        ] + $this->reglesLocalisation($request));
 
         DB::transaction(function () use ($validated, $request) {
 
@@ -182,6 +186,8 @@ class ReclamationController extends Controller
                 'date_reception'        => $validated['date_reception'],
                 'id_statut_reclamation' => $statutId,
                 'details'               => $validated['details'] ?? null,
+                'id_province'           => $validated['id_province'] ?? null,
+                'id_commune'            => $validated['id_commune'] ?? null,
             ]);
 
             // Upload document joint (optionnel)
@@ -222,6 +228,8 @@ class ReclamationController extends Controller
             'reclamant.typeReclamant',
             'typeReclamation',
             'statut',
+            'province.region',
+            'commune',
             'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy'])->latest(),
             'documents.typeDocument',
             'jugements.juge', 'jugements.typeJugement',
@@ -275,7 +283,8 @@ class ReclamationController extends Controller
         $reclamation->load([
             'reclamant.typeReclamant',
             'typeReclamation',
-            'statut'
+            'statut',
+            'province',
         ]);
 
         // Tous les réclamants avec leur type (nécessaire pour TomSelect)
@@ -290,7 +299,7 @@ class ReclamationController extends Controller
         $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
 
 
-        return view('reclamations.edit', compact(
+        return view('reclamations.edit', $this->donneesLocalisation($reclamation) + compact(
             'reclamation',
             'reclamants',
             'typesReclamant',
@@ -317,7 +326,7 @@ class ReclamationController extends Controller
             // Réclamant
             'id_reclamant'          => 'required|exists:reclamants,id',
 
-        ]);
+        ] + $this->reglesLocalisation($request));
 
 
         DB::transaction(function () use ($validated, $reclamation) {
@@ -337,6 +346,10 @@ class ReclamationController extends Controller
                 'details'               => $validated['details'] ?? null,
 
                 'id_statut_reclamation' => $validated['id_statut_reclamation'],
+
+                'id_province'           => $validated['id_province'] ?? null,
+
+                'id_commune'            => $validated['id_commune'] ?? null,
 
             ]);
 
@@ -449,5 +462,63 @@ class ReclamationController extends Controller
         $reclamation->update(['id_statut_reclamation' => $request->id_statut_reclamation]);
 
         return back()->with('success', 'تم تحديث حالة الشكاية بنجاح.');
+    }
+
+    // ─────────────────────────────────────────
+    // LOCALISATION : الجهة > الإقليم / العمالة > الجماعة
+    // ─────────────────────────────────────────
+
+    /**
+     * Données de la cascade Région > Province > Commune.
+     * Pré-remplies côté serveur à l'édition, ou au retour d'une erreur de validation.
+     * Seuls id_province / id_commune sont stockés : la région se déduit de la province.
+     */
+    private function donneesLocalisation(?Reclamation $reclamation = null): array
+    {
+        $idProvince = old('id_province', $reclamation?->id_province);
+        $idCommune  = old('id_commune', $reclamation?->id_commune);
+        $idRegion   = old('id_region', $reclamation?->province?->id_region);
+
+        if (! $idRegion && $idProvince) {
+            $idRegion = Province::whereKey($idProvince)->value('id_region');
+        }
+
+        return [
+            'regions'       => Region::orderBy('region')->get(),
+            'provinces'     => $idRegion
+                ? Province::where('id_region', $idRegion)->orderBy('province')->get(['id', 'province'])
+                : collect(),
+            'communes'      => $idProvince
+                ? Commune::where('id_province', $idProvince)->orderBy('commune')->get(['id', 'commune'])
+                : collect(),
+            'idRegion'      => $idRegion,
+            'idProvinceSel' => $idProvince,
+            'idCommuneSel'  => $idCommune,
+        ];
+    }
+
+    /**
+     * Règles de validation de la localisation (tous les champs sont facultatifs,
+     * les anciennes réclamations n'en ont pas) avec cohérence entre les niveaux.
+     */
+    private function reglesLocalisation(Request $request): array
+    {
+        return [
+            'id_region' => 'nullable|exists:regions,id',
+
+            // L'إقليم doit appartenir à la جهة choisie (si elle est renseignée)
+            'id_province' => [
+                'nullable',
+                $request->filled('id_region')
+                    ? Rule::exists('provinces', 'id')->where('id_region', $request->input('id_region'))
+                    : 'exists:provinces,id',
+            ],
+
+            // La جماعة doit appartenir à l'إقليم choisi
+            'id_commune' => [
+                'nullable',
+                Rule::exists('communes', 'id')->where('id_province', $request->input('id_province')),
+            ],
+        ];
     }
 }

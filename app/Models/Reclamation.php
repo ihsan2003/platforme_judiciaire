@@ -22,7 +22,9 @@ class Reclamation extends Model
         'objet',
         'date_reception',
         'id_statut_reclamation',
-        'details'
+        'details',
+        'id_province',
+        'id_commune',
     ];
 
     protected $casts = [
@@ -42,6 +44,18 @@ class Reclamation extends Model
     public function statut()
     {
         return $this->belongsTo(StatutReclamation::class, 'id_statut_reclamation');
+    }
+
+    /** الإقليم / العمالة (la région s'obtient via province.region) */
+    public function province()
+    {
+        return $this->belongsTo(Province::class, 'id_province');
+    }
+
+    /** الجماعة الترابية */
+    public function commune()
+    {
+        return $this->belongsTo(Commune::class, 'id_commune');
     }
 
     public function historiqueStatuts()
@@ -142,6 +156,8 @@ class Reclamation extends Model
                 'date_reception',
                 'id_statut_reclamation',
                 'details',
+                'id_province',
+                'id_commune',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
