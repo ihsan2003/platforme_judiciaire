@@ -91,6 +91,11 @@
                     <span class="pill pill-white">
                         <i class="bi bi-geo-alt"></i>{{ $avertissement->province->province ?? '—' }}
                     </span>
+                    @if($avertissement->commune)
+                        <span class="pill pill-white">
+                            <i class="bi bi-pin-map"></i>{{ $avertissement->commune->commune }}
+                        </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -137,6 +142,10 @@
         <div class="col-sm-3 text-white">
             <i class="bi bi-globe-europe-africa me-1"></i>
             <strong>الجهة :</strong> {{ $avertissement->province?->region?->region ?? '—' }}
+        </div>
+        <div class="col-sm-3 text-white">
+            <i class="bi bi-pin-map me-1"></i>
+            <strong>الجماعة :</strong> {{ $avertissement->commune->commune ?? '—' }}
         </div>
         <div class="col-sm-3 text-white">
             <i class="bi bi-person me-1"></i>

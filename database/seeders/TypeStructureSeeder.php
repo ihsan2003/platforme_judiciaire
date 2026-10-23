@@ -20,6 +20,8 @@ class TypeStructureSeeder extends Seeder
             'مديرية جهوية',
             'مديرية فرعية',
             'مفتشية',
+            'محامي',
+            'اخر',
         ];
 
         foreach ($types as $type) {

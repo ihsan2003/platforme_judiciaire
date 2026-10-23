@@ -66,6 +66,14 @@ Route::middleware('auth')->prefix('api')->group(function () {
         );
     });
 
+    // Communes d'une province
+    Route::get('/provinces/{provinceId}/communes', function ($provinceId) {
+        $communes = \App\Models\Commune::where('id_province', $provinceId)
+            ->orderBy('commune')
+            ->get(['id', 'commune']);
+        return response()->json($communes);
+    });
+
     // Tous les tribunaux d'une province (sans filtre de degré) — avertissements
     Route::get('/provinces/{provinceId}/tribunaux', function ($provinceId) {
         $tribunaux = \App\Models\Tribunal::where('id_province', $provinceId)

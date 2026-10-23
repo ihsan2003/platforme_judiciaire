@@ -52,7 +52,7 @@
 <div class="row g-4">
 
     {{-- ══ العمود الأيسر ══ --}}
-    <div class="col-lg-7">
+    <div class="col-lg-8">
 
         {{-- معلومات المشتكي --}}
         <div class="card border-0 shadow-sm mb-4">
@@ -93,11 +93,6 @@
                         @error('id_reclamant')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
-
-                        <div class="form-text">
-                            <i class="bi bi-info-circle ms-1"></i>
-                            ابحث عن مشتكي موجود، أو اكتب اسما جديدا للإنشاء.
-                        </div>
 
                     </div>
 
@@ -260,7 +255,7 @@
                                name="objet"
                                class="form-control @error('objet') is-invalid @enderror"
                                value="{{ old('objet') }}"
-                               placeholder="ملخص مختصر للشكاية"
+                               placeholder="موضوع النزاع"
                                required>
 
                         @error('objet')
@@ -280,7 +275,7 @@
                         <textarea name="details"
                                   class="form-control @error('details') is-invalid @enderror"
                                   rows="5"
-                                  placeholder="قم بوصف الشكاية بالتفصيل...">{{ old('details') }}</textarea>
+                                  placeholder="تفاصيل الشكاية ...">{{ old('details') }}</textarea>
 
                         @error('details')
                             <div class="invalid-feedback">
@@ -299,7 +294,7 @@
     </div>
 
     {{-- ══ العمود الأيمن ══ --}}
-    <div class="col-lg-5">
+    <div class="col-lg-4">
 
         {{-- الإعدادات والوثائق --}}
         <div class="card border-0 shadow-sm mb-4">

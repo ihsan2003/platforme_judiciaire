@@ -22,10 +22,16 @@ class Province extends Model
         return $this->belongsTo(Region::class, 'id_region');
     }
 
+    public function communes()
+    {
+        return $this->hasMany(Commune::class, 'id_province');
+    }
+
     public function tribunaux()
     {
         return $this->hasMany(Tribunal::class, 'id_province');
     }
+
 
     public function getActivitylogOptions(): LogOptions
     {

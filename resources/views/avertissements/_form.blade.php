@@ -1,10 +1,11 @@
 {{-- resources/views/avertissements/_form.blade.php
      Champs communs create/edit. Variable optionnelle : $avertissement
-     Variables attendues : $typesAffaire, $statuts, $idStatutDefaut, $regions, $provinces, $tribunaux, $idRegion, $parties,
+     Variables attendues : $typesAffaire, $statuts, $idStatutDefaut, $regions, $provinces, $communes, $tribunaux, $idRegion, $parties,
      $idDemandeurDefaut, $idDefendeurDefaut --}}
 @php
     $a = $avertissement ?? null;
     $idProvinceSel = old('id_province', $a?->id_province);
+    $idCommuneSel  = old('id_commune', $a?->id_commune);
     $idTribunalSel = old('id_tribunal', $a?->id_tribunal);
 @endphp
 
@@ -63,7 +64,7 @@
                         <div class="p-3 bg-light rounded border">
                             <div class="row g-3">
 
-                                <div class="col-lg-6">
+                                <div class="col-lg-4">
                                     <label for="id_region" class="form-label fw-semibold small">
                                         الجهة <span class="text-danger">*</span>
                                     </label>
@@ -77,7 +78,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-lg-6">
+                                <div class="col-lg-4">
                                     <label for="id_province" class="form-label fw-semibold small">
                                         الإقليم / العمالة (المدينة) <span class="text-danger">*</span>
                                     </label>
@@ -96,6 +97,27 @@
                                         @endif
                                     </select>
                                     @error('id_province')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div class="col-lg-4">
+                                    <label for="id_commune" class="form-label fw-semibold small">
+                                        الجماعة الترابية
+                                    </label>
+                                    <select name="id_commune" id="id_commune"
+                                            class="form-select @error('id_commune') is-invalid @enderror"
+                                            @disabled($communes->isEmpty())>
+                                        @if($communes->isEmpty())
+                                            <option value="">— اختر الإقليم أولاً —</option>
+                                        @else
+                                            <option value="">— اختر الجماعة —</option>
+                                            @foreach($communes as $commune)
+                                                <option value="{{ $commune->id }}" @selected($idCommuneSel == $commune->id)>
+                                                    {{ $commune->commune }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    @error('id_commune')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
                             </div>
@@ -314,11 +336,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    /* ── Cascade Région > Province (المدينة) ── */
+    /* ── Cascade Région > Province (المدينة) > Commune (الجماعة) ── */
     const selRegion   = document.getElementById('id_region');
     const selProvince = document.getElementById('id_province');
+    const selCommune  = document.getElementById('id_commune');
+
+    function resetCommunes() {
+        selCommune.innerHTML = '<option value="">— اختر الإقليم أولاً —</option>';
+        selCommune.disabled = true;
+    }
 
     selRegion.addEventListener('change', async function () {
+        resetCommunes();
         selProvince.innerHTML = '<option value="">— جاري التحميل... —</option>';
         selProvince.disabled = true;
         if (!this.value) {
@@ -331,6 +360,22 @@ document.addEventListener('DOMContentLoaded', function () {
             data.forEach(p => selProvince.innerHTML += `<option value="${p.id}">${p.province}</option>`);
             selProvince.disabled = false;
         } catch { selProvince.innerHTML = '<option value="">— خطأ —</option>'; }
+    });
+
+    selProvince.addEventListener('change', async function () {
+        resetCommunes();
+        if (!this.value) return;
+        selCommune.innerHTML = '<option value="">— جاري التحميل... —</option>';
+        try {
+            const data = await (await fetch(`/api/provinces/${this.value}/communes`)).json();
+            if (!data.length) {
+                selCommune.innerHTML = '<option value="">— لا توجد جماعات لهذا الإقليم —</option>';
+                return;
+            }
+            selCommune.innerHTML = '<option value="">— اختر الجماعة —</option>';
+            data.forEach(c => selCommune.innerHTML += `<option value="${c.id}">${c.commune}</option>`);
+            selCommune.disabled = false;
+        } catch { selCommune.innerHTML = '<option value="">— خطأ —</option>'; }
     });
 
     /* ── Listes de recherche (TomSelect) ── */

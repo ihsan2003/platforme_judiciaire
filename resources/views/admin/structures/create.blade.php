@@ -27,7 +27,6 @@
 
 <div class="row g-4">
 
-    {{-- ── النموذج ── --}}
     <div class="col-lg-8">
 
         <form action="{{ route('admin.structures.store') }}" method="POST">
@@ -121,20 +120,9 @@
             </div>
         </div>
 
-        <div class="d-flex gap-2 justify-content-end">
-            <a href="{{ route('admin.structures.index') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-x-lg me-1"></i>إلغاء
-            </a>
-
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-check-lg me-1"></i>إنشاء الهيكل
-            </button>
-        </div>
-
         </form>
     </div>
 
-    {{-- ── الجانب الأيمن ── --}}
     <div class="col-lg-4">
 
         <div class="card border-0 shadow-sm">
@@ -156,6 +144,19 @@
                     <span class="text-muted">هيكل فرعي</span>
                 </div>
             </div>
+        </div>
+
+        <div class="d-grid gap-2 mt-3">
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg ms-1"></i>
+                إنشاء الهيكل
+            </button>
+
+            <a href="{{ route('admin.structures.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>إلغاء
+            </a>
+
         </div>
 
     </div>

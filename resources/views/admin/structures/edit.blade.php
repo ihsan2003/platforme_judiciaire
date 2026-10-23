@@ -163,19 +163,22 @@
             </div>
         </div>
 
-    </div>
-
-</div>
-
-<div class="d-flex gap-2 justify-content-end">
-            <a href="{{ route('admin.structures.show', $structure) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-x-lg me-1"></i>إلغاء
-            </a>
+        <div class="d-grid gap-2 mt-3">
 
             <button type="submit" class="btn btn-warning px-4">
                 <i class="bi bi-check-lg me-1"></i>حفظ التعديلات
             </button>
+
+            <a href="{{ route('admin.structures.show', $structure) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>إلغاء
+            </a>
+
         </div>
+
+    </div>
+
+</div>
+
 
 </form>
 

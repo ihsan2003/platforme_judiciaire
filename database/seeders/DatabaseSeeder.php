@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             JugeSeeder::class,
             TypeStructureSeeder::class,
             StructureSeeder::class,
+            CommuneSeeder::class,
 
         ]);
     }

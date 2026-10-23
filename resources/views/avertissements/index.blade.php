@@ -159,6 +159,7 @@
                     <x-sortable-th column="type" class="text-muted small fw-semibold">نوعية الملف</x-sortable-th>
                     <x-sortable-th column="region" class="text-muted small fw-semibold">الجهة</x-sortable-th>
                     <x-sortable-th column="ville" class="text-muted small fw-semibold">المدينة</x-sortable-th>
+                    <x-sortable-th column="commune" class="text-muted small fw-semibold">الجماعة</x-sortable-th>
                     <x-sortable-th column="tribunal" class="text-muted small fw-semibold">المحكمة المختصة</x-sortable-th>
                     <x-sortable-th column="date_avertissement" class="text-muted small fw-semibold">تاريخ الإنذار</x-sortable-th>
                     <th class="text-muted small fw-semibold">المدعي</th>
@@ -180,6 +181,7 @@
                         </td>
                         <td class="text-muted small">{{ $avertissement->province?->region?->region ?? '—' }}</td>
                         <td class="text-muted small">{{ $avertissement->province->province ?? '—' }}</td>
+                        <td class="text-muted small">{{ $avertissement->commune->commune ?? '—' }}</td>
                         <td>
                             <span class="badge bg-secondary bg-opacity-10 text-secondary">
                                 <i class="bi bi-bank me-1"></i>{{ $avertissement->tribunal->nom_tribunal ?? '—' }}
@@ -240,7 +242,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="11" class="text-center py-5 text-muted">
+                        <td colspan="12" class="text-center py-5 text-muted">
                             <i class="bi bi-exclamation-triangle fs-1 d-block mb-2 opacity-25"></i>
                             لا توجد إنذارات
                             @if(request()->hasAny(['search', 'type', 'tribunal', 'statut', 'jugement']))

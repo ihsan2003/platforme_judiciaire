@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Avertissements\AvertissementRequest;
 use App\Models\Avertissement;
+use App\Models\Commune;
 use App\Models\Juge;
 use App\Models\Partie;
 use App\Models\Province;
@@ -29,7 +30,7 @@ class AvertissementController extends Controller
     public function index(Request $request)
     {
         $avertissements = Avertissement::query()
-            ->with(['typeAffaire', 'statut', 'tribunal', 'province.region', 'demandeur', 'defendeur'])
+            ->with(['typeAffaire', 'statut', 'tribunal', 'province.region', 'commune', 'demandeur', 'defendeur'])
             ->withCount('jugements')
             ->when($request->type, fn($q, $v) => $q->where('id_type_affaire', $v))
             ->when($request->statut, fn($q, $v) => $q->where('id_statut_avertissement', $v))
@@ -64,6 +65,11 @@ class AvertissementController extends Controller
                 'ville'    => fn($q, $dir) => $q->orderBy(
                     Province::select('province')
                         ->whereColumn('provinces.id', 'avertissements.id_province'),
+                    $dir
+                ),
+                'commune'  => fn($q, $dir) => $q->orderBy(
+                    Commune::select('commune')
+                        ->whereColumn('communes.id', 'avertissements.id_commune'),
                     $dir
                 ),
                 'region'   => fn($q, $dir) => $q->orderBy(
@@ -123,7 +129,7 @@ class AvertissementController extends Controller
     public function show(Avertissement $avertissement)
     {
         $avertissement->load([
-            'typeAffaire', 'statut', 'tribunal', 'province.region',
+            'typeAffaire', 'statut', 'tribunal', 'province.region', 'commune',
             'demandeur', 'defendeur', 'createdBy:id,name',
             'jugements.juge', 'jugements.typeJugement',
         ]);
@@ -191,7 +197,7 @@ class AvertissementController extends Controller
     }
 
     /**
-     * Données du formulaire. Région > Province sont
+     * Données du formulaire. Région > Province > Commune sont
      * pré-remplies côté serveur (édition, ou retour après erreur de validation) ; la محكمة est une liste complète.
      */
     private function formData(?Avertissement $avertissement = null): array
@@ -218,6 +224,9 @@ class AvertissementController extends Controller
             'regions'      => Region::orderBy('region')->get(),
             'provinces'    => $idRegion
                 ? Province::where('id_region', $idRegion)->orderBy('province')->get(['id', 'province'])
+                : collect(),
+            'communes'     => $idProvince
+                ? Commune::where('id_province', $idProvince)->orderBy('commune')->get(['id', 'commune'])
                 : collect(),
             // Liste complète : la محكمة ne dépend pas de l'إقليم choisi
             'tribunaux'    => Tribunal::orderBy('nom_tribunal')->get(['id', 'nom_tribunal']),

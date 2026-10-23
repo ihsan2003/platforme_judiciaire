@@ -4,6 +4,7 @@ namespace App\Http\Requests\Avertissements;
 
 use App\Models\StatutAvertissement;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AvertissementRequest extends FormRequest
 {
@@ -20,6 +21,12 @@ class AvertissementRequest extends FormRequest
             'id_type_affaire' => 'required|exists:type_affaires,id',
 
             'id_province' => 'required|exists:provinces,id',
+
+            // الجماعة : facultative, mais doit appartenir à l'إقليم choisi
+            'id_commune' => [
+                'nullable',
+                Rule::exists('communes', 'id')->where('id_province', $this->input('id_province')),
+            ],
 
             'id_tribunal' => 'required|exists:tribunaux,id',
 
@@ -76,6 +83,9 @@ class AvertissementRequest extends FormRequest
             // الإقليم أو العمالة
             'id_province.required' => 'يرجى اختيار الإقليم أو العمالة.',
             'id_province.exists' => 'الإقليم أو العمالة المختارة غير صالحة.',
+
+            // الجماعة
+            'id_commune.exists' => 'الجماعة المختارة غير صالحة أو لا تنتمي إلى الإقليم المحدد.',
 
             // المحكمة المختصة
             'id_tribunal.required' => 'يرجى اختيار المحكمة المختصة.',

@@ -20,6 +20,7 @@ class Avertissement extends Model
         'id_type_affaire',
         'id_tribunal',
         'id_province',
+        'id_commune',
         'id_statut_avertissement',
         'date_avertissement',
         'action_service',
@@ -52,6 +53,12 @@ class Avertissement extends Model
     public function province()
     {
         return $this->belongsTo(Province::class, 'id_province');
+    }
+
+    /** الجماعة الترابية */
+    public function commune()
+    {
+        return $this->belongsTo(Commune::class, 'id_commune');
     }
 
     /** المدعي */
