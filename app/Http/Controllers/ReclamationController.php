@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Commune;
+use App\Models\DegreeJuridiction;
 use App\Models\Juge;
+use App\Models\Partie;
 use App\Models\Province;
 use App\Models\Region;
 use App\Models\Reclamation;
@@ -13,6 +15,8 @@ use App\Models\StatutReclamation;
 use App\Models\TypeReclamant;
 use App\Models\TypeReclamation;
 use App\Models\TypeAction;
+use App\Models\TypeAffaire;
+use App\Models\Tribunal;
 use App\Models\Structure;
 use App\Models\TypeDocument;
 use App\Models\ActionReclamation;
@@ -131,7 +135,7 @@ class ReclamationController extends Controller
         $reclamants       = Reclamant::orderBy('nom')->get();
         $typesDocuments   = TypeDocument::orderBy('type_document')->get();
 
-        return view('reclamations.create', $this->donneesLocalisation() + compact(
+        return view('reclamations.create', $this->donneesLocalisation() + $this->donneesDossier() + compact(
             'typesReclamant', 'statuts', 'typesReclamation', 'reclamants', 'typesDocuments'
         ));
     }
@@ -157,7 +161,7 @@ class ReclamationController extends Controller
 
             'document'           => 'nullable|file|max:10240',
             'id_type_document'   => 'nullable|exists:type_documents,id',
-        ] + $this->reglesLocalisation($request));
+        ] + $this->reglesLocalisation($request) + $this->reglesDossier());
 
         DB::transaction(function () use ($validated, $request) {
 
@@ -188,7 +192,7 @@ class ReclamationController extends Controller
                 'details'               => $validated['details'] ?? null,
                 'id_province'           => $validated['id_province'] ?? null,
                 'id_commune'            => $validated['id_commune'] ?? null,
-            ]);
+            ] + $this->champsDossier($validated, $request, $reclamant));
 
             // Upload document joint (optionnel)
             if ($request->hasFile('document')) {
@@ -230,6 +234,7 @@ class ReclamationController extends Controller
             'statut',
             'province.region',
             'commune',
+            'degre', 'tribunal', 'typeAffaire', 'demandeur', 'defendeur',
             'actions' => fn($q) => $q->with(['typeAction', 'structure', 'createdBy'])->latest(),
             'documents.typeDocument',
             'jugements.juge', 'jugements.typeJugement',
@@ -299,7 +304,7 @@ class ReclamationController extends Controller
         $typesReclamation = TypeReclamation::orderBy('type_reclamation')->get();
 
 
-        return view('reclamations.edit', $this->donneesLocalisation($reclamation) + compact(
+        return view('reclamations.edit', $this->donneesLocalisation($reclamation) + $this->donneesDossier() + compact(
             'reclamation',
             'reclamants',
             'typesReclamant',
@@ -326,10 +331,12 @@ class ReclamationController extends Controller
             // Réclamant
             'id_reclamant'          => 'required|exists:reclamants,id',
 
-        ] + $this->reglesLocalisation($request));
+        ] + $this->reglesLocalisation($request) + $this->reglesDossier());
 
 
-        DB::transaction(function () use ($validated, $reclamation) {
+        DB::transaction(function () use ($validated, $reclamation, $request) {
+
+            $reclamant = Reclamant::findOrFail($validated['id_reclamant']);
 
 
             // Mise à jour de la réclamation
@@ -351,7 +358,7 @@ class ReclamationController extends Controller
 
                 'id_commune'            => $validated['id_commune'] ?? null,
 
-            ]);
+            ] + $this->champsDossier($validated, $request, $reclamant, modification: true));
 
 
         });
@@ -462,6 +469,110 @@ class ReclamationController extends Controller
         $reclamation->update(['id_statut_reclamation' => $request->id_statut_reclamation]);
 
         return back()->with('success', 'تم تحديث حالة الشكاية بنجاح.');
+    }
+
+    // ─────────────────────────────────────────
+    // DOSSIER : réclamations « شكايات مرتبطة بالمنازعات القضائية »
+    // ─────────────────────────────────────────
+
+    /**
+     * Listes du bloc « dossier » (درجة التقاضي، المحكمة، الشعبة، المدعي، المدعى عليه).
+     * La sélection courante est gérée par la vue (old() ou valeurs de la réclamation).
+     */
+    private function donneesDossier(): array
+    {
+        return [
+            'idTypeJudiciaire' => TypeReclamation::idJudiciaire(),
+            'degres'           => DegreeJuridiction::orderBy('ordre')->get(['id', 'degre_juridiction']),
+            'tribunaux'        => Tribunal::orderBy('nom_tribunal')->get(['id', 'nom_tribunal', 'id_degre']),
+            'typesAffaire'     => TypeAffaire::orderBy('affaire')->get(['id', 'affaire']),
+            'parties'          => Partie::orderBy('nom_partie')->get(['id', 'nom_partie']),
+            // المدعي par défaut : l'institution (partie est_entraide = true)
+            'idDemandeurDefaut' => $this->idInstitution(),
+        ];
+    }
+
+    /**
+     * Règles de validation du bloc « dossier ». Tous les champs sont facultatifs
+     * (les anciennes réclamations n'en ont pas) : ils ne sont pris en compte que
+     * pour le type judiciaire (voir champsDossier()).
+     */
+    private function reglesDossier(): array
+    {
+        return [
+            'id_degre'        => 'nullable|exists:degre_juridictions,id',
+            'id_tribunal'     => 'nullable|exists:tribunaux,id',
+            'id_type_affaire' => 'nullable|exists:type_affaires,id',
+            'id_demandeur'    => 'nullable|exists:parties,id',
+            'id_defendeur'    => 'nullable|exists:parties,id|different:id_demandeur',
+        ];
+    }
+
+    /**
+     * Champs « dossier » à enregistrer avec la réclamation.
+     *
+     *  - type ≠ judiciaire : tous remis à null (la réclamation n'est pas un dossier) ;
+     *  - type judiciaire   : valeurs saisies, avec par défaut
+     *      المدعي      = l'institution (partie est_entraide = true),
+     *      المدعى عليه = le réclamant, converti en Partie (créée ou retrouvée par son nom) ;
+     *  - modification sans aucun de ces champs dans la requête (ex. changement rapide
+     *    de statut depuis la fiche) : rien n'est modifié.
+     */
+    private function champsDossier(array $validated, Request $request, Reclamant $reclamant, bool $modification = false): array
+    {
+        $cles = ['id_degre', 'id_tribunal', 'id_type_affaire', 'id_demandeur', 'id_defendeur'];
+
+        $estJudiciaire = (int) $validated['id_type_reclamation'] === TypeReclamation::idJudiciaire();
+
+        if (! $estJudiciaire) {
+            return array_fill_keys($cles, null);
+        }
+
+        if ($modification && ! $request->hasAny($cles)) {
+            return [];
+        }
+
+        return [
+            'id_degre'        => $validated['id_degre'] ?? null,
+            'id_tribunal'     => $validated['id_tribunal'] ?? null,
+            'id_type_affaire' => $validated['id_type_affaire'] ?? null,
+            'id_demandeur'    => $validated['id_demandeur'] ?? $this->idInstitution(),
+            'id_defendeur'    => $validated['id_defendeur'] ?? $this->partieDepuisReclamant($reclamant)->id,
+        ];
+    }
+
+    /** Id de la partie « institution » (parties.est_entraide = true), s'il y en a une. */
+    private function idInstitution(): ?int
+    {
+        return Partie::where('est_entraide', true)->value('id');
+    }
+
+    /**
+     * Partie correspondant au réclamant : celle qui porte déjà son nom si elle existe
+     * (l'institution est exclue), sinon une nouvelle Partie créée à partir de ses coordonnées.
+     */
+    private function partieDepuisReclamant(Reclamant $reclamant): Partie
+    {
+        $existante = Partie::where('nom_partie', $reclamant->nom)
+            ->where('est_entraide', false)
+            ->first();
+
+        if ($existante) {
+            return $existante;
+        }
+
+        $typesPersonneMorale = ['شركة', 'مقاولة', 'مرفق عمومي', 'مؤسسة الوسيط', 'مديرية جهوية', 'مديرية إقليمية'];
+
+        return Partie::create([
+            'nom_partie'         => $reclamant->nom,
+            'type_personne'      => in_array($reclamant->typeReclamant?->type_reclamant, $typesPersonneMorale, true)
+                                        ? 'اعتباري'
+                                        : 'ذاتي',
+            'identifiant_unique' => null,
+            'telephone'          => $reclamant->telephone,
+            'email'              => $reclamant->email,
+            'adresse'            => $reclamant->adresse,
+        ]);
     }
 
     // ─────────────────────────────────────────

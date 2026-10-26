@@ -42,6 +42,10 @@
             <div class="row g-4">
                 <div class="col-md-8">
                     @include('reclamations._localisation')
+
+                    {{-- Visible uniquement pour « شكايات مرتبطة بالمنازعات القضائية » --}}
+                    @include('reclamations._dossier_fields')
+
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
                             <div class="mb-4">

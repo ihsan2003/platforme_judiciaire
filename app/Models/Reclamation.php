@@ -25,6 +25,12 @@ class Reclamation extends Model
         'details',
         'id_province',
         'id_commune',
+        // Champs "dossier" (type شكايات مرتبطة بالمنازعات القضائية)
+        'id_degre',
+        'id_tribunal',
+        'id_type_affaire',
+        'id_demandeur',
+        'id_defendeur',
     ];
 
     protected $casts = [
@@ -56,6 +62,47 @@ class Reclamation extends Model
     public function commune()
     {
         return $this->belongsTo(Commune::class, 'id_commune');
+    }
+
+    // ── Champs "dossier" ───────────────────────────────────────────────────
+
+    /** درجة التقاضي */
+    public function degre()
+    {
+        return $this->belongsTo(DegreeJuridiction::class, 'id_degre');
+    }
+
+    /** المحكمة */
+    public function tribunal()
+    {
+        return $this->belongsTo(Tribunal::class, 'id_tribunal');
+    }
+
+    /** الشعبة / نوع القضية */
+    public function typeAffaire()
+    {
+        return $this->belongsTo(TypeAffaire::class, 'id_type_affaire');
+    }
+
+    /** المدعي */
+    public function demandeur()
+    {
+        return $this->belongsTo(Partie::class, 'id_demandeur');
+    }
+
+    /** المدعى عليه */
+    public function defendeur()
+    {
+        return $this->belongsTo(Partie::class, 'id_defendeur');
+    }
+
+    /**
+     * Cette réclamation est-elle de type « شكايات مرتبطة بالمنازعات القضائية »,
+     * c'est-à-dire traitée comme un dossier (degré, tribunal, type d'affaire, parties) ?
+     */
+    public function estJudiciaire(): bool
+    {
+        return $this->typeReclamation?->type_reclamation === TypeReclamation::JUDICIAIRE;
     }
 
     public function historiqueStatuts()
@@ -158,6 +205,11 @@ class Reclamation extends Model
                 'details',
                 'id_province',
                 'id_commune',
+                'id_degre',
+                'id_tribunal',
+                'id_type_affaire',
+                'id_demandeur',
+                'id_defendeur',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()

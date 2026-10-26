@@ -230,6 +230,9 @@
 
         @include('reclamations._localisation')
 
+        {{-- Visible uniquement pour « شكايات مرتبطة بالمنازعات القضائية » --}}
+        @include('reclamations._dossier_fields')
+
         <div class="card border-0 shadow-sm mb-4">
 
             <div class="card-header bg-white border-bottom py-3">
