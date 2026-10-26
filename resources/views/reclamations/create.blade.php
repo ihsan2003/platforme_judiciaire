@@ -50,11 +50,8 @@
 @csrf
 
 <div class="row g-4">
-
-    {{-- ══ العمود الأيسر ══ --}}
     <div class="col-lg-8">
 
-        {{-- معلومات المشتكي --}}
         <div class="card border-0 shadow-sm mb-4">
 
             <div class="card-header bg-white border-bottom py-3">
@@ -231,7 +228,8 @@
 
         </div>
 
-        {{-- تفاصيل الشكاية --}}
+        @include('reclamations._localisation')
+
         <div class="card border-0 shadow-sm mb-4">
 
             <div class="card-header bg-white border-bottom py-3">
@@ -291,15 +289,10 @@
 
         </div>
 
-        {{-- الموقع الجغرافي : الجهة > الإقليم > الجماعة --}}
-        @include('reclamations._localisation')
-
     </div>
 
-    {{-- ══ العمود الأيمن ══ --}}
     <div class="col-lg-4">
 
-        {{-- الإعدادات والوثائق --}}
         <div class="card border-0 shadow-sm mb-4">
 
             <div class="card-header bg-white border-bottom py-3">
@@ -458,7 +451,6 @@
 
         </div>
 
-        {{-- ══ الأزرار ══ --}}
         <div class="d-grid gap-2 mt-3">
 
             <button type="submit" class="btn btn-primary">

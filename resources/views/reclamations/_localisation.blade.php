@@ -1,8 +1,3 @@
-{{--
-    Localisation de la réclamation : الجهة > الإقليم / العمالة > الجماعة الترابية
-    Variables attendues : $regions, $provinces, $communes, $idRegion, $idProvinceSel, $idCommuneSel
-    Seuls id_province et id_commune sont enregistrés (id_region sert uniquement à filtrer la cascade).
---}}
 <div class="card border-0 shadow-sm mb-4">
 
     <div class="card-header bg-white border-bottom py-3">

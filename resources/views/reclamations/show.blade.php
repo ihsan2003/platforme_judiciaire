@@ -12,7 +12,7 @@
 @section('content')
 
 {{-- ══════════════════════════════════════════════════════════
-     الرأس (EN-TÊTE)
+    (EN-TÊTE)
 ══════════════════════════════════════════════════════════ --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
@@ -101,7 +101,7 @@
 
 
 {{-- ══════════════════════════════════════════════════════════
-     التبويبات (ONGLETS)
+    (ONGLETS)
 ══════════════════════════════════════════════════════════ --}}
 <ul class="nav nav-tabs mb-0" id="reclamationTabs" role="tablist">
     <li class="nav-item">
@@ -116,22 +116,21 @@
         </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-documents">
-            <i class="bi bi-paperclip me-1"></i>المستندات
-            <span class="badge bg-warning text-dark me-1">{{ $reclamation->documents->count() }}</span>
-        </button>
-    </li>
-    <li class="nav-item">
         <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-jugements">
             <i class="bi bi-hammer me-1"></i>الأحكام
             <span class="badge bg-success me-1">{{ $reclamation->jugements->count() }}</span>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#tab-documents">
+            <i class="bi bi-paperclip me-1"></i>المستندات
+            <span class="badge bg-warning text-dark me-1">{{ $reclamation->documents->count() }}</span>
         </button>
     </li>
 </ul>
 
 <div class="tab-content border border-top-0 rounded-bottom bg-white shadow-sm p-4" id="reclamationTabContent">
 
-    {{-- ══ التبويب 1 : المعلومات ══ --}}
     <div class="tab-pane fade show active" id="tab-info">
         <div class="row g-4">
             {{-- المشتكي --}}
@@ -270,7 +269,6 @@
     </div>
 
 
-    {{-- ══ التبويب 2 : المتابعة / الإجراءات ══ --}}
     <div class="tab-pane fade" id="tab-suivi">
 
         <div class="row g-4">
@@ -653,55 +651,6 @@
 
     </div>
 
-
-    {{-- ══ التبويب 3 : المستندات ══ --}}
-    <div class="tab-pane fade" id="tab-documents">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-bold mb-0"><i class="bi bi-paperclip me-1 text-primary"></i>المستندات المرفقة</h6>
-        </div>
-
-        @if($reclamation->documents->isEmpty())
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-file-earmark fs-1 d-block mb-2 opacity-25"></i>
-                لا توجد مستندات مرفقة بهذه الشكاية.
-            </div>
-        @else
-        <div class="row g-3">
-            @foreach($reclamation->documents as $doc)
-            @php
-                $ext  = strtolower(pathinfo($doc->fichier_path ?? '', PATHINFO_EXTENSION));
-                $icon = match($ext) {
-                    'pdf'         => 'bi-file-earmark-pdf text-danger',
-                    'doc','docx'  => 'bi-file-earmark-word text-primary',
-                    'xls','xlsx'  => 'bi-file-earmark-excel text-success',
-                    'jpg','jpeg','png' => 'bi-file-earmark-image text-warning',
-                    default       => 'bi-file-earmark text-secondary',
-                };
-            @endphp
-            <div class="col-md-4 col-lg-3">
-                <div class="card border h-100 text-center">
-                    <div class="card-body py-4">
-                        <i class="bi {{ $icon }} fs-1 mb-2"></i>
-                        <div class="small fw-bold text-truncate w-100" title="{{ $doc->titre_document }}">{{ $doc->titre_document }}</div>
-                        @if($doc->typeDocument)
-                            <span class="badge bg-light text-secondary border small mt-1">{{ $doc->typeDocument->type_document }}</span>
-                        @endif
-                        <div class="text-muted mt-1" style="font-size:.7rem">{{ $doc->date_depot?->format('Y/m/d') ?? '—' }}</div>
-                    </div>
-                    <div class="card-footer bg-white py-2">
-                        <a href="{{ route('reclamations.documents.download', [$reclamation, $doc]) }}" class="btn btn-sm btn-outline-primary w-100">
-                            <i class="bi bi-download me-1"></i>تحميل
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-        @endif
-    </div>
-
-
-    {{-- ══ التبويب 4 : الأحكام ══ --}}
     <div class="tab-pane fade" id="tab-jugements">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h6 class="fw-bold mb-0"><i class="bi bi-hammer me-1 text-success"></i>الأحكام</h6>
@@ -771,12 +720,55 @@
             </div>
         @endforelse
     </div>
+
+    <div class="tab-pane fade" id="tab-documents">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h6 class="fw-bold mb-0"><i class="bi bi-paperclip me-1 text-primary"></i>المستندات المرفقة</h6>
+        </div>
+
+        @if($reclamation->documents->isEmpty())
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-file-earmark fs-1 d-block mb-2 opacity-25"></i>
+                لا توجد مستندات مرفقة بهذه الشكاية.
+            </div>
+        @else
+        <div class="row g-3">
+            @foreach($reclamation->documents as $doc)
+            @php
+                $ext  = strtolower(pathinfo($doc->fichier_path ?? '', PATHINFO_EXTENSION));
+                $icon = match($ext) {
+                    'pdf'         => 'bi-file-earmark-pdf text-danger',
+                    'doc','docx'  => 'bi-file-earmark-word text-primary',
+                    'xls','xlsx'  => 'bi-file-earmark-excel text-success',
+                    'jpg','jpeg','png' => 'bi-file-earmark-image text-warning',
+                    default       => 'bi-file-earmark text-secondary',
+                };
+            @endphp
+            <div class="col-md-4 col-lg-3">
+                <div class="card border h-100 text-center">
+                    <div class="card-body py-4">
+                        <i class="bi {{ $icon }} fs-1 mb-2"></i>
+                        <div class="small fw-bold text-truncate w-100" title="{{ $doc->titre_document }}">{{ $doc->titre_document }}</div>
+                        @if($doc->typeDocument)
+                            <span class="badge bg-light text-secondary border small mt-1">{{ $doc->typeDocument->type_document }}</span>
+                        @endif
+                        <div class="text-muted mt-1" style="font-size:.7rem">{{ $doc->date_depot?->format('Y/m/d') ?? '—' }}</div>
+                    </div>
+                    <div class="card-footer bg-white py-2">
+                        <a href="{{ route('reclamations.documents.download', [$reclamation, $doc]) }}" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-download me-1"></i>تحميل
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+    </div>
+
 </div>
 
 
-{{-- ══════════════════════════════════════════════════════════
-     المودالات — الأحكام
-══════════════════════════════════════════════════════════ --}}
 @php
     $champsJugement = function ($j = null) use ($typesJugement, $juges) {
         return compact('j', 'typesJugement', 'juges');
@@ -856,7 +848,6 @@
 @endif
 
 @endsection
-@push('scripts')
 @push('scripts')
 <script>
 (function () {

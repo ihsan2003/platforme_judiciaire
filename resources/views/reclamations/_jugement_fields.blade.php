@@ -1,5 +1,4 @@
-{{-- resources/views/reclamations/_jugement_fields.blade.php
-     Champs d'un jugement de réclamation. $j = ReclamationJugement|null --}}
+{{-- resources/views/reclamations/_jugement_fields.blade.php --}}
 @php
     $idTypeDefaut = \App\Models\TypeJugement::idAuFond();
     $isNew = ! $j;

@@ -40,8 +40,8 @@
             @method('PUT')
 
             <div class="row g-4">
-                {{-- القسم الأول: معلومات الشكاية --}}
                 <div class="col-md-8">
+                    @include('reclamations._localisation')
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
                             <div class="mb-4">
@@ -57,12 +57,8 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- الموقع الجغرافي : الجهة > الإقليم > الجماعة --}}
-                    @include('reclamations._localisation')
                 </div>
 
-                {{-- القسم الثاني: الإعدادات والحالة --}}
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body pt-0">
