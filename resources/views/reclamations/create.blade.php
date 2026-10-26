@@ -230,9 +230,6 @@
 
         @include('reclamations._localisation')
 
-        {{-- Visible uniquement pour « شكايات مرتبطة بالمنازعات القضائية » --}}
-        @include('reclamations._dossier_fields')
-
         <div class="card border-0 shadow-sm mb-4">
 
             <div class="card-header bg-white border-bottom py-3">
@@ -307,9 +304,9 @@
 
             <div class="card-body">
 
-                <div class="mb-3">
+                <div class="mb-2">
 
-                    <div class="mt-2">
+                    <div>
 
                         <label class="form-label fw-semibold small">
                             نوع الشكاية <span class="text-danger">*</span>
@@ -343,6 +340,8 @@
                         @enderror
 
                     </div>
+
+                    @include('reclamations._dossier_fields')
 
                     <div class="mt-2">
 
@@ -395,15 +394,11 @@
                             </div>
                         @enderror
 
-                        <div class="form-text">
-                            إذا لم يتم تحديد الحالة، سيتم اعتماد "قيد المعالجة" بشكل افتراضي.
-                        </div>
                     </div>
 
                 </div>
 
-                {{-- Nouveau champ pour le type de document --}}
-                <div class="mb-3">
+                <div class="mb-2">
                     <label class="form-label fw-semibold small">
                         نوع الوثيقة (اختياري)
                     </label>
@@ -427,7 +422,7 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
+                <div>
 
                     <label class="form-label fw-semibold small">
                         وثيقة مرفقة (اختياري)

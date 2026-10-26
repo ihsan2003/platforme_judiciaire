@@ -134,7 +134,7 @@
     <div class="tab-pane fade show active" id="tab-info">
         <div class="row g-4">
             {{-- المشتكي --}}
-            <div class="col-md-6">
+            <div class="{{ $reclamation->estJudiciaire() ? 'col-md-4' : 'col-md-6' }}">
                 <div class="card border h-100">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
@@ -187,7 +187,7 @@
             </div>
 
             {{-- تفاصيل الشكاية --}}
-            <div class="col-md-6">
+            <div class="{{ $reclamation->estJudiciaire() ? 'col-md-4' : 'col-md-6' }}">
                 <div class="card border h-100">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
@@ -250,31 +250,30 @@
                 </div>
             </div>
 
-            {{-- بيانات الملف القضائي : شكايات مرتبطة بالمنازعات القضائية (traitée comme un dossier) --}}
             @if($reclamation->estJudiciaire())
-            <div class="col-12">
-                <div class="card border">
+            <div class="col-md-4">
+                <div class="card border h-100">
                     <div class="card-header bg-white py-3">
                         <h6 class="mb-0 fw-semibold">
-                            <i class="bi bi-folder2-open me-1 text-primary"></i>بيانات الملف القضائي
+                            <i class="bi bi-folder2-open me-1 text-primary"></i>البيانات  القضائية
                         </h6>
                     </div>
                     <div class="card-body">
                         <dl class="row mb-0 small">
-                            <dt class="col-md-2 col-5 text-muted fw-semibold">درجة التقاضي</dt>
-                            <dd class="col-md-4 col-7">{{ $reclamation->degre?->degre_juridiction ?? '—' }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">درجة التقاضي</dt>
+                            <dd class="col-7">{{ $reclamation->degre?->degre_juridiction ?? '—' }}</dd>
 
-                            <dt class="col-md-2 col-5 text-muted fw-semibold">المحكمة</dt>
-                            <dd class="col-md-4 col-7">{{ $reclamation->tribunal?->nom_tribunal ?? '—' }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">المحكمة</dt>
+                            <dd class="col-7">{{ $reclamation->tribunal?->nom_tribunal ?? '—' }}</dd>
 
-                            <dt class="col-md-2 col-5 text-muted fw-semibold">نوع القضية</dt>
-                            <dd class="col-md-4 col-7">{{ $reclamation->typeAffaire?->affaire ?? '—' }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">نوع القضية</dt>
+                            <dd class="col-7">{{ $reclamation->typeAffaire?->affaire ?? '—' }}</dd>
 
-                            <dt class="col-md-2 col-5 text-muted fw-semibold">المدعي</dt>
-                            <dd class="col-md-4 col-7 fw-semibold">{{ $reclamation->demandeur?->nom_partie ?? '—' }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">المدعي</dt>
+                            <dd class="col-7 fw-semibold">{{ $reclamation->demandeur?->nom_partie ?? '—' }}</dd>
 
-                            <dt class="col-md-2 col-5 text-muted fw-semibold">المدعى عليه</dt>
-                            <dd class="col-md-4 col-7 fw-semibold mb-0">{{ $reclamation->defendeur?->nom_partie ?? $reclamation->reclamant?->nom ?? '—' }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">المدعى عليه</dt>
+                            <dd class="col-7 fw-semibold mb-0">{{ $reclamation->defendeur?->nom_partie ?? $reclamation->reclamant?->nom ?? '—' }}</dd>
                         </dl>
                     </div>
                 </div>

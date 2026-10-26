@@ -1,13 +1,3 @@
-{{--
-    Bloc « dossier » : affiché uniquement pour le type de réclamation
-    « شكايات مرتبطة بالمنازعات القضائية » (la réclamation est alors traitée comme un dossier).
-
-    Variables attendues : $idTypeJudiciaire, $degres, $tribunaux, $typesAffaire, $parties,
-                          $idDemandeurDefaut ; $reclamation (absent à la création).
-
-    Le bloc se montre / se masque selon la valeur du select name="id_type_reclamation".
-    Les valeurs envoyées pour un autre type sont ignorées par le contrôleur.
---}}
 @php
     $r = $reclamation ?? null;
 
@@ -23,101 +13,112 @@
     $selDefendeur  = old('id_defendeur', $r?->id_defendeur);
 @endphp
 
-<div class="card border-0 shadow-sm mb-4 {{ $visible ? '' : 'd-none' }}" id="bloc-dossier">
+<div class="mb-2 d-none" id="bloc-dossier">
+    <div class="row g-3">
 
-    <div class="card-header bg-white border-bottom py-3">
-        <h6 class="mb-0 fw-semibold">
-            <i class="bi bi-folder2-open ms-2 text-primary"></i>
-            بيانات الملف القضائي
-        </h6>
-        <div class="text-muted small mt-1">
-            هذه الشكاية مرتبطة بنزاع قضائي، لذلك تُعامل كملف.
-        </div>
-    </div>
+                {{-- درجة التقاضي --}}
+                <div class="col-12 pt-2">
+                    <label for="id_degre" class="form-label fw-semibold small">
+                        درجة التقاضي
+                    </label>
+                    <select name="id_degre" id="id_degre"
+                            class="form-select form-select-sm @error('id_degre') is-invalid @enderror">
+                        <option value="">— اختر الدرجة —</option>
+                        @foreach($degres as $degre)
+                            <option value="{{ $degre->id }}"
+                                @selected((string) $selDegre === (string) $degre->id)>
+                                {{ $degre->degre_juridiction }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_degre')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
 
-    <div class="card-body">
-        <div class="row g-3">
+                {{-- المحكمة --}}
+                <div class="col-12 mt-2">
+                    <label for="id_tribunal" class="form-label fw-semibold small">
+                        المحكمة
+                    </label>
+                    <select name="id_tribunal" id="id_tribunal"
+                            class="form-select form-select-sm @error('id_tribunal') is-invalid @enderror">
+                        <option value="">— اختر المحكمة —</option>
+                        @foreach($tribunaux as $tribunal)
+                            <option value="{{ $tribunal->id }}"
+                                @selected((string) $selTribunal === (string) $tribunal->id)>
+                                {{ $tribunal->nom_tribunal }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_tribunal')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
 
-            {{-- درجة التقاضي --}}
-            <div class="col-md-6">
-                <label for="id_degre" class="form-label fw-semibold small">درجة التقاضي</label>
-                <select name="id_degre" id="id_degre"
-                        class="form-select @error('id_degre') is-invalid @enderror">
-                    <option value="">— اختر الدرجة —</option>
-                    @foreach($degres as $degre)
-                        <option value="{{ $degre->id }}" @selected((string) $selDegre === (string) $degre->id)>
-                            {{ $degre->degre_juridiction }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('id_degre')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                {{-- نوع القضية --}}
+                <div class="col-12 mt-2">
+                    <label for="id_type_affaire" class="form-label fw-semibold small">
+                        نوع القضية (الشعبة)
+                    </label>
+                    <select name="id_type_affaire" id="id_type_affaire"
+                            class="form-select form-select-sm @error('id_type_affaire') is-invalid @enderror">
+                        <option value="">— اختر النوع —</option>
+                        @foreach($typesAffaire as $affaire)
+                            <option value="{{ $affaire->id }}"
+                                @selected((string) $selAffaire === (string) $affaire->id)>
+                                {{ $affaire->affaire }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_type_affaire')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- المدعي --}}
+                <div class="col-6 mt-2">
+                    <label for="id_demandeur" class="form-label fw-semibold small">
+                        المدعي
+                    </label>
+                    <select name="id_demandeur" id="id_demandeur"
+                            class="form-select form-select-sm @error('id_demandeur') is-invalid @enderror">
+                        <option value="">— اختر المدعي —</option>
+                        @foreach($parties as $partie)
+                            <option value="{{ $partie->id }}"
+                                @selected((string) $selDemandeur === (string) $partie->id)>
+                                {{ $partie->nom_partie }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_demandeur')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- المدعى عليه --}}
+                <div class="col-6 mt-2">
+                    <label for="id_defendeur" class="form-label fw-semibold small">
+                        المدعى عليه
+                    </label>
+                    <select name="id_defendeur" id="id_defendeur"
+                            class="form-select form-select-sm @error('id_defendeur') is-invalid @enderror">
+                        <option value="">المشتكي (تلقائياً)</option>
+                        @foreach($parties as $partie)
+                            <option value="{{ $partie->id }}"
+                                @selected((string) $selDefendeur === (string) $partie->id)>
+                                {{ $partie->nom_partie }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_defendeur')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+
             </div>
-
-            {{-- المحكمة --}}
-            <div class="col-md-6">
-                <label for="id_tribunal" class="form-label fw-semibold small">المحكمة</label>
-                <select name="id_tribunal" id="id_tribunal"
-                        class="@error('id_tribunal') is-invalid @enderror">
-                    <option value="">— اختر المحكمة —</option>
-                    @foreach($tribunaux as $tribunal)
-                        <option value="{{ $tribunal->id }}" @selected((string) $selTribunal === (string) $tribunal->id)>
-                            {{ $tribunal->nom_tribunal }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('id_tribunal')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            </div>
-
-            {{-- الشعبة / نوع القضية --}}
-            <div class="col-12">
-                <label for="id_type_affaire" class="form-label fw-semibold small">نوع القضية (الشعبة)</label>
-                <select name="id_type_affaire" id="id_type_affaire"
-                        class="form-select @error('id_type_affaire') is-invalid @enderror">
-                    <option value="">— اختر النوع —</option>
-                    @foreach($typesAffaire as $affaire)
-                        <option value="{{ $affaire->id }}" @selected((string) $selAffaire === (string) $affaire->id)>
-                            {{ $affaire->affaire }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('id_type_affaire')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-
-            {{-- المدعي --}}
-            <div class="col-md-6">
-                <label for="id_demandeur" class="form-label fw-semibold small">المدعي</label>
-                <select name="id_demandeur" id="id_demandeur"
-                        class="@error('id_demandeur') is-invalid @enderror">
-                    <option value="">— اختر المدعي —</option>
-                    @foreach($parties as $partie)
-                        <option value="{{ $partie->id }}" @selected((string) $selDemandeur === (string) $partie->id)>
-                            {{ $partie->nom_partie }}
-                        </option>
-                    @endforeach
-                </select>
-                <div class="form-text">افتراضيا: المؤسسة.</div>
-                @error('id_demandeur')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            </div>
-
-            {{-- المدعى عليه --}}
-            <div class="col-md-6">
-                <label for="id_defendeur" class="form-label fw-semibold small">المدعى عليه</label>
-                <select name="id_defendeur" id="id_defendeur"
-                        class="@error('id_defendeur') is-invalid @enderror">
-                    <option value="">المشتكي (تلقائيا)</option>
-                    @foreach($parties as $partie)
-                        <option value="{{ $partie->id }}" @selected((string) $selDefendeur === (string) $partie->id)>
-                            {{ $partie->nom_partie }}
-                        </option>
-                    @endforeach
-                </select>
-                <div class="form-text">افتراضيا: المشتكي، ويُسجَّل كطرف عند الحفظ.</div>
-                @error('id_defendeur')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-            </div>
-
-        </div>
-    </div>
 </div>
+
 
 @push('scripts')
 <script>

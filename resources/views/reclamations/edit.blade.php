@@ -42,10 +42,6 @@
             <div class="row g-4">
                 <div class="col-md-8">
                     @include('reclamations._localisation')
-
-                    {{-- Visible uniquement pour « شكايات مرتبطة بالمنازعات القضائية » --}}
-                    @include('reclamations._dossier_fields')
-
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body">
                             <div class="mb-4">
@@ -66,7 +62,7 @@
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body pt-0">
-                            <div class="mb-3 mt-3">
+                            <div class="mb-2 mt-3">
                                 <label class="form-label fw-semibold small">تاريخ الاستلام <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="date" name="date_reception" class="form-control @error('date_reception') is-invalid @enderror" 
@@ -74,7 +70,7 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            <div>
                                 <label class="form-label fw-semibold small">نوع الشكاية <span class="text-danger">*</span></label>
                                 <select name="id_type_reclamation" class="form-select @error('id_type_reclamation') is-invalid @enderror" required>
                                     @foreach($typesReclamation as $type)
@@ -84,6 +80,9 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            @include('reclamations._dossier_fields')
+
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold small">حالة الشكاية <span class="text-danger">*</span></label>
@@ -123,7 +122,6 @@
                         </div>
                     </div>
 
-                    {{-- ══ الأزرار ══ --}}
                     <div class="d-grid gap-2 mt-3">
 
                         <button type="submit" class="btn btn-primary">
@@ -148,7 +146,6 @@
 
 @push('styles')
 <style>
-    /* تحسينات بصرية للنموذج */
     .form-control:focus, .form-select:focus {
         border-color: #0d6efd;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
