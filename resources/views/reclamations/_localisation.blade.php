@@ -12,7 +12,7 @@
 
             <div class="col-lg-4">
                 <label for="id_region" class="form-label fw-semibold small">
-                    الجهة
+                    الجهة <span class="text-danger">*</span>
                 </label>
                 <select name="id_region" id="id_region"
                         class="form-select @error('id_region') is-invalid @enderror">
@@ -28,7 +28,7 @@
 
             <div class="col-lg-4">
                 <label for="id_province" class="form-label fw-semibold small">
-                    الإقليم / العمالة (المدينة)
+                    الإقليم / العمالة (المدينة) <span class="text-danger">*</span>
                 </label>
                 <select name="id_province" id="id_province"
                         class="form-select @error('id_province') is-invalid @enderror"
@@ -49,7 +49,7 @@
 
             <div class="col-lg-4">
                 <label for="id_commune" class="form-label fw-semibold small">
-                    الجماعة الترابية
+                    الجماعة الترابية <span class="text-danger">*</span>
                 </label>
                 <select name="id_commune" id="id_commune"
                         class="form-select @error('id_commune') is-invalid @enderror"

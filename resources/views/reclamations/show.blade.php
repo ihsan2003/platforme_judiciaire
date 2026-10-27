@@ -228,6 +228,8 @@
                             <input type="hidden" name="details" value="{{ $reclamation->details }}">
                             <input type="hidden" name="id_type_reclamation" value="{{ $reclamation->id_type_reclamation }}">
                             <input type="hidden" name="id_reclamant" value="{{ $reclamation->id_reclamant }}">
+                            {{-- Changement rapide : n'exige pas les champs obligatoires (voir estChangementStatutRapide()) --}}
+                            <input type="hidden" name="statut_rapide" value="1">
                             {{-- Conserver la localisation : update() la réécrit à chaque appel --}}
                             <input type="hidden" name="id_region" value="{{ $reclamation->province?->id_region }}">
                             <input type="hidden" name="id_province" value="{{ $reclamation->id_province }}">

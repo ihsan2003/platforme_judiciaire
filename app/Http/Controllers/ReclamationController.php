@@ -161,7 +161,9 @@ class ReclamationController extends Controller
 
             'document'           => 'nullable|file|max:10240',
             'id_type_document'   => 'nullable|exists:type_documents,id',
-        ] + $this->reglesLocalisation($request) + $this->reglesDossier());
+        ] + $this->reglesLocalisation($request) + $this->reglesDossier($request),
+          $this->messagesDossier() + $this->messagesLocalisation(),
+          $this->attributsDossier() + $this->attributsLocalisation());
 
         DB::transaction(function () use ($validated, $request) {
 
@@ -331,7 +333,9 @@ class ReclamationController extends Controller
             // Réclamant
             'id_reclamant'          => 'required|exists:reclamants,id',
 
-        ] + $this->reglesLocalisation($request) + $this->reglesDossier());
+        ] + $this->reglesLocalisation($request) + $this->reglesDossier($request),
+          $this->messagesDossier() + $this->messagesLocalisation(),
+          $this->attributsDossier() + $this->attributsLocalisation());
 
 
         DB::transaction(function () use ($validated, $reclamation, $request) {
@@ -493,18 +497,64 @@ class ReclamationController extends Controller
     }
 
     /**
-     * Règles de validation du bloc « dossier ». Tous les champs sont facultatifs
-     * (les anciennes réclamations n'en ont pas) : ils ne sont pris en compte que
-     * pour le type judiciaire (voir champsDossier()).
+     * Règles de validation du bloc « dossier ».
+     *
+     *  - type judiciaire : درجة التقاضي، المحكمة et الشعبة sont obligatoires ;
+     *    المدعي / المدعى عليه restent facultatifs (valeurs par défaut : institution / réclamant) ;
+     *  - autres types : tous les champs sont ignorés (remis à null par champsDossier()) ;
+     *  - cohérence : la محكمة doit appartenir à la درجة choisie, et المدعي ≠ المدعى عليه.
      */
-    private function reglesDossier(): array
+    private function reglesDossier(Request $request): array
+    {
+        $judiciaire = ! $this->estChangementStatutRapide($request)
+            && TypeReclamation::idJudiciaire() !== null
+            && (int) $request->input('id_type_reclamation') === (int) TypeReclamation::idJudiciaire();
+
+        $obligatoire = $judiciaire ? 'required' : 'nullable';
+
+        // La محكمة doit être de la درجة choisie (les tribunaux sans degré restent acceptés,
+        // comme dans le filtre JS de _dossier_fields.blade.php)
+        $regleTribunal = [$obligatoire, 'integer'];
+        $regleTribunal[] = $request->filled('id_degre')
+            ? Rule::exists('tribunaux', 'id')->where(
+                fn ($q) => $q->where('id_degre', $request->input('id_degre'))->orWhereNull('id_degre')
+            )
+            : 'exists:tribunaux,id';
+
+        return [
+            'id_degre'        => [$obligatoire, 'integer', 'exists:degre_juridictions,id'],
+            'id_tribunal'     => $regleTribunal,
+            'id_type_affaire' => [$obligatoire, 'integer', 'exists:type_affaires,id'],
+            'id_demandeur'    => ['nullable', 'integer', 'exists:parties,id'],
+            'id_defendeur'    => ['nullable', 'integer', 'exists:parties,id', 'different:id_demandeur'],
+        ];
+    }
+
+    /** رسائل التحقق الخاصة بحقول الملف (باللغة العربية). */
+    private function messagesDossier(): array
     {
         return [
-            'id_degre'        => 'nullable|exists:degre_juridictions,id',
-            'id_tribunal'     => 'nullable|exists:tribunaux,id',
-            'id_type_affaire' => 'nullable|exists:type_affaires,id',
-            'id_demandeur'    => 'nullable|exists:parties,id',
-            'id_defendeur'    => 'nullable|exists:parties,id|different:id_demandeur',
+            'id_degre.required'        => 'يرجى اختيار درجة التقاضي.',
+            'id_degre.exists'          => 'درجة التقاضي المحددة غير موجودة.',
+            'id_tribunal.required'     => 'يرجى اختيار المحكمة.',
+            'id_tribunal.exists'       => 'المحكمة المحددة غير موجودة أو لا تنتمي إلى درجة التقاضي المختارة.',
+            'id_type_affaire.required' => 'يرجى اختيار نوع القضية (الشعبة).',
+            'id_type_affaire.exists'   => 'نوع القضية المحدد غير موجود.',
+            'id_demandeur.exists'      => 'المدعي المحدد غير موجود.',
+            'id_defendeur.exists'      => 'المدعى عليه المحدد غير موجود.',
+            'id_defendeur.different'   => 'لا يمكن أن يكون المدعى عليه هو نفسه المدعي.',
+        ];
+    }
+
+    /** أسماء حقول الملف (باللغة العربية) في رسائل الخطأ. */
+    private function attributsDossier(): array
+    {
+        return [
+            'id_degre'        => 'درجة التقاضي',
+            'id_tribunal'     => 'المحكمة',
+            'id_type_affaire' => 'نوع القضية',
+            'id_demandeur'    => 'المدعي',
+            'id_defendeur'    => 'المدعى عليه',
         ];
     }
 
@@ -609,17 +659,33 @@ class ReclamationController extends Controller
     }
 
     /**
-     * Règles de validation de la localisation (tous les champs sont facultatifs,
-     * les anciennes réclamations n'en ont pas) avec cohérence entre les niveaux.
+     * Le formulaire « تغيير الحالة » de la fiche (show.blade.php) repasse par update()
+     * sans les champs du dossier : les champs obligatoires ne sont pas exigés dans ce cas,
+     * pour ne pas bloquer le changement de statut des anciennes réclamations.
+     */
+    private function estChangementStatutRapide(Request $request): bool
+    {
+        return $request->boolean('statut_rapide');
+    }
+
+    /**
+     * Règles de validation de la localisation, avec cohérence entre les niveaux :
+     * الجهة، الإقليم et الجماعة sont obligatoires (sauf changement rapide de statut).
+     * La جماعة n'est exigée que si l'إقليم choisi en possède (sinon la liste reste vide).
      */
     private function reglesLocalisation(Request $request): array
     {
+        $rapide = $this->estChangementStatutRapide($request);
+
+        $communeObligatoire = ! $rapide && $request->filled('id_province')
+            && Commune::where('id_province', $request->input('id_province'))->exists();
+
         return [
-            'id_region' => 'nullable|exists:regions,id',
+            'id_region' => [$rapide ? 'nullable' : 'required', 'exists:regions,id'],
 
             // L'إقليم doit appartenir à la جهة choisie (si elle est renseignée)
             'id_province' => [
-                'nullable',
+                $rapide ? 'nullable' : 'required',
                 $request->filled('id_region')
                     ? Rule::exists('provinces', 'id')->where('id_region', $request->input('id_region'))
                     : 'exists:provinces,id',
@@ -627,9 +693,30 @@ class ReclamationController extends Controller
 
             // La جماعة doit appartenir à l'إقليم choisi
             'id_commune' => [
-                'nullable',
+                $communeObligatoire ? 'required' : 'nullable',
                 Rule::exists('communes', 'id')->where('id_province', $request->input('id_province')),
             ],
+        ];
+    }
+
+    private function messagesLocalisation(): array
+    {
+        return [
+            'id_region.required'   => 'يرجى اختيار الجهة.',
+            'id_region.exists'     => 'الجهة المحددة غير موجودة.',
+            'id_province.required' => 'يرجى اختيار الإقليم / العمالة.',
+            'id_province.exists'   => 'الإقليم المحدد غير موجود أو لا ينتمي إلى الجهة المختارة.',
+            'id_commune.required'  => 'يرجى اختيار الجماعة الترابية.',
+            'id_commune.exists'    => 'الجماعة المحددة غير موجودة أو لا تنتمي إلى الإقليم المختار.',
+        ];
+    }
+
+    private function attributsLocalisation(): array
+    {
+        return [
+            'id_region'   => 'الجهة',
+            'id_province' => 'الإقليم / العمالة',
+            'id_commune'  => 'الجماعة الترابية',
         ];
     }
 }

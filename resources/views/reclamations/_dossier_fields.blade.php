@@ -19,7 +19,7 @@
                 {{-- درجة التقاضي --}}
                 <div class="col-12 pt-2">
                     <label for="id_degre" class="form-label fw-semibold small">
-                        درجة التقاضي
+                        درجة التقاضي <span class="text-danger">*</span>
                     </label>
                     <select name="id_degre" id="id_degre"
                             class="form-select form-select-sm @error('id_degre') is-invalid @enderror">
@@ -39,7 +39,7 @@
                 {{-- المحكمة --}}
                 <div class="col-12 mt-2">
                     <label for="id_tribunal" class="form-label fw-semibold small">
-                        المحكمة
+                        المحكمة <span class="text-danger">*</span>
                     </label>
                     <select name="id_tribunal" id="id_tribunal"
                             class="form-select form-select-sm @error('id_tribunal') is-invalid @enderror">
@@ -59,7 +59,7 @@
                 {{-- نوع القضية --}}
                 <div class="col-12 mt-2">
                     <label for="id_type_affaire" class="form-label fw-semibold small">
-                        نوع القضية (الشعبة)
+                        نوع القضية (الشعبة) <span class="text-danger">*</span>
                     </label>
                     <select name="id_type_affaire" id="id_type_affaire"
                             class="form-select form-select-sm @error('id_type_affaire') is-invalid @enderror">

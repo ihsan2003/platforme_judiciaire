@@ -1,0 +1,99 @@
+diff --git a/app/Http/Controllers/ReclamationController.php b/app/Http/Controllers/ReclamationController.php
+index 2c0a5ae..84c0364 100644
+--- a/app/Http/Controllers/ReclamationController.php
++++ b/app/Http/Controllers/ReclamationController.php
+@@ -161,7 +161,9 @@ public function store(Request $request): RedirectResponse
+ 
+             'document'           => 'nullable|file|max:10240',
+             'id_type_document'   => 'nullable|exists:type_documents,id',
+-        ] + $this->reglesLocalisation($request) + $this->reglesDossier());
++        ] + $this->reglesLocalisation($request) + $this->reglesDossier($request),
++          $this->messagesDossier(),
++          $this->attributsDossier());
+ 
+         DB::transaction(function () use ($validated, $request) {
+ 
+@@ -331,7 +333,9 @@ public function update(Request $request, Reclamation $reclamation): RedirectResp
+             // Réclamant
+             'id_reclamant'          => 'required|exists:reclamants,id',
+ 
+-        ] + $this->reglesLocalisation($request) + $this->reglesDossier());
++        ] + $this->reglesLocalisation($request) + $this->reglesDossier($request),
++          $this->messagesDossier(),
++          $this->attributsDossier());
+ 
+ 
+         DB::transaction(function () use ($validated, $reclamation, $request) {
+@@ -493,18 +497,63 @@ private function donneesDossier(): array
+     }
+ 
+     /**
+-     * Règles de validation du bloc « dossier ». Tous les champs sont facultatifs
+-     * (les anciennes réclamations n'en ont pas) : ils ne sont pris en compte que
+-     * pour le type judiciaire (voir champsDossier()).
++     * Règles de validation du bloc « dossier ».
++     *
++     *  - type judiciaire : درجة التقاضي، المحكمة et الشعبة sont obligatoires ;
++     *    المدعي / المدعى عليه restent facultatifs (valeurs par défaut : institution / réclamant) ;
++     *  - autres types : tous les champs sont ignorés (remis à null par champsDossier()) ;
++     *  - cohérence : la محكمة doit appartenir à la درجة choisie, et المدعي ≠ المدعى عليه.
+      */
+-    private function reglesDossier(): array
++    private function reglesDossier(Request $request): array
++    {
++        $judiciaire = (int) $request->input('id_type_reclamation') === (int) TypeReclamation::idJudiciaire()
++            && TypeReclamation::idJudiciaire() !== null;
++
++        $obligatoire = $judiciaire ? 'required' : 'nullable';
++
++        // La محكمة doit être de la درجة choisie (les tribunaux sans degré restent acceptés,
++        // comme dans le filtre JS de _dossier_fields.blade.php)
++        $regleTribunal = [$obligatoire, 'integer'];
++        $regleTribunal[] = $request->filled('id_degre')
++            ? Rule::exists('tribunaux', 'id')->where(
++                fn ($q) => $q->where('id_degre', $request->input('id_degre'))->orWhereNull('id_degre')
++            )
++            : 'exists:tribunaux,id';
++
++        return [
++            'id_degre'        => [$obligatoire, 'integer', 'exists:degre_juridictions,id'],
++            'id_tribunal'     => $regleTribunal,
++            'id_type_affaire' => [$obligatoire, 'integer', 'exists:type_affaires,id'],
++            'id_demandeur'    => ['nullable', 'integer', 'exists:parties,id'],
++            'id_defendeur'    => ['nullable', 'integer', 'exists:parties,id', 'different:id_demandeur'],
++        ];
++    }
++
++    /** رسائل التحقق الخاصة بحقول الملف (باللغة العربية). */
++    private function messagesDossier(): array
++    {
++        return [
++            'id_degre.required'        => 'يرجى اختيار درجة التقاضي.',
++            'id_degre.exists'          => 'درجة التقاضي المحددة غير موجودة.',
++            'id_tribunal.required'     => 'يرجى اختيار المحكمة.',
++            'id_tribunal.exists'       => 'المحكمة المحددة غير موجودة أو لا تنتمي إلى درجة التقاضي المختارة.',
++            'id_type_affaire.required' => 'يرجى اختيار نوع القضية (الشعبة).',
++            'id_type_affaire.exists'   => 'نوع القضية المحدد غير موجود.',
++            'id_demandeur.exists'      => 'المدعي المحدد غير موجود.',
++            'id_defendeur.exists'      => 'المدعى عليه المحدد غير موجود.',
++            'id_defendeur.different'   => 'لا يمكن أن يكون المدعى عليه هو نفسه المدعي.',
++        ];
++    }
++
++    /** أسماء حقول الملف (باللغة العربية) في رسائل الخطأ. */
++    private function attributsDossier(): array
+     {
+         return [
+-            'id_degre'        => 'nullable|exists:degre_juridictions,id',
+-            'id_tribunal'     => 'nullable|exists:tribunaux,id',
+-            'id_type_affaire' => 'nullable|exists:type_affaires,id',
+-            'id_demandeur'    => 'nullable|exists:parties,id',
+-            'id_defendeur'    => 'nullable|exists:parties,id|different:id_demandeur',
++            'id_degre'        => 'درجة التقاضي',
++            'id_tribunal'     => 'المحكمة',
++            'id_type_affaire' => 'نوع القضية',
++            'id_demandeur'    => 'المدعي',
++            'id_defendeur'    => 'المدعى عليه',
+         ];
+     }
+ 

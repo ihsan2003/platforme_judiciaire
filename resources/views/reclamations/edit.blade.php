@@ -24,17 +24,6 @@
             </a>
         </div>
 
-        @if ($errors->any())
-            <div class="alert alert-danger shadow-sm border-0 mb-4">
-                <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle ms-2"></i>يرجى تصحيح الأخطاء التالية:</div>
-                <ul class="mb-0 small">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <form action="{{ route('reclamations.update', $reclamation) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')

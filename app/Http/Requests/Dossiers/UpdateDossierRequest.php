@@ -21,7 +21,7 @@ class UpdateDossierRequest extends FormRequest
                 'nullable', 
                 'string', 
                 'max:255',
-                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,4}$/',
+                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,6}$/',
                 Rule::unique('dossier_judiciaires', 'numero_dossier_tribunal')->ignore($dossierId),
             ],
             'id_type_affaire'         => ['required', 'exists:type_affaires,id'],
