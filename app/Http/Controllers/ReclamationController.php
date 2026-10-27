@@ -490,9 +490,9 @@ class ReclamationController extends Controller
             'degres'           => DegreeJuridiction::orderBy('ordre')->get(['id', 'degre_juridiction']),
             'tribunaux'        => Tribunal::orderBy('nom_tribunal')->get(['id', 'nom_tribunal', 'id_degre']),
             'typesAffaire'     => TypeAffaire::orderBy('affaire')->get(['id', 'affaire']),
-            'parties'          => Partie::orderBy('nom_partie')->get(['id', 'nom_partie']),
-            // المدعي par défaut : l'institution (partie est_entraide = true)
-            'idDemandeurDefaut' => $this->idInstitution(),
+            // L'institution (partie est_entraide = true) : l'une des 2 valeurs possibles de
+            // المدعي / المدعى عليه, l'autre étant toujours le réclamant (المشتكي)
+            'institution'      => Partie::where('est_entraide', true)->first(['id', 'nom_partie']),
         ];
     }
 
@@ -525,8 +525,9 @@ class ReclamationController extends Controller
             'id_degre'        => [$obligatoire, 'integer', 'exists:degre_juridictions,id'],
             'id_tribunal'     => $regleTribunal,
             'id_type_affaire' => [$obligatoire, 'integer', 'exists:type_affaires,id'],
-            'id_demandeur'    => ['nullable', 'integer', 'exists:parties,id'],
-            'id_defendeur'    => ['nullable', 'integer', 'exists:parties,id', 'different:id_demandeur'],
+            // 2 valeurs seulement : l'institution (est_entraide) ou le réclamant, l'un en face de l'autre
+            'role_demandeur'  => ['nullable', Rule::in(['institution', 'reclamant'])],
+            'role_defendeur'  => ['nullable', Rule::in(['institution', 'reclamant']), 'different:role_demandeur'],
         ];
     }
 
@@ -540,9 +541,9 @@ class ReclamationController extends Controller
             'id_tribunal.exists'       => 'المحكمة المحددة غير موجودة أو لا تنتمي إلى درجة التقاضي المختارة.',
             'id_type_affaire.required' => 'يرجى اختيار نوع القضية (الشعبة).',
             'id_type_affaire.exists'   => 'نوع القضية المحدد غير موجود.',
-            'id_demandeur.exists'      => 'المدعي المحدد غير موجود.',
-            'id_defendeur.exists'      => 'المدعى عليه المحدد غير موجود.',
-            'id_defendeur.different'   => 'لا يمكن أن يكون المدعى عليه هو نفسه المدعي.',
+            'role_demandeur.in'        => 'قيمة المدعي غير صالحة.',
+            'role_defendeur.in'        => 'قيمة المدعى عليه غير صالحة.',
+            'role_defendeur.different' => 'لا يمكن أن يكون المدعى عليه هو نفسه المدعي.',
         ];
     }
 
@@ -553,8 +554,8 @@ class ReclamationController extends Controller
             'id_degre'        => 'درجة التقاضي',
             'id_tribunal'     => 'المحكمة',
             'id_type_affaire' => 'نوع القضية',
-            'id_demandeur'    => 'المدعي',
-            'id_defendeur'    => 'المدعى عليه',
+            'role_demandeur'  => 'المدعي',
+            'role_defendeur'  => 'المدعى عليه',
         ];
     }
 
@@ -571,6 +572,7 @@ class ReclamationController extends Controller
     private function champsDossier(array $validated, Request $request, Reclamant $reclamant, bool $modification = false): array
     {
         $cles = ['id_degre', 'id_tribunal', 'id_type_affaire', 'id_demandeur', 'id_defendeur'];
+        $clesRequete = ['id_degre', 'id_tribunal', 'id_type_affaire', 'role_demandeur', 'role_defendeur'];
 
         $estJudiciaire = (int) $validated['id_type_reclamation'] === TypeReclamation::idJudiciaire();
 
@@ -578,16 +580,27 @@ class ReclamationController extends Controller
             return array_fill_keys($cles, null);
         }
 
-        if ($modification && ! $request->hasAny($cles)) {
+        if ($modification && ! $request->hasAny($clesRequete)) {
             return [];
         }
+
+        // Défauts : المدعي = institution, المدعى عليه = réclamant. Si l'un des deux est
+        // choisi, l'autre prend automatiquement l'autre valeur.
+        $roleDefendeur = $validated['role_defendeur']
+            ?? (($validated['role_demandeur'] ?? null) === 'reclamant' ? 'institution' : 'reclamant');
+        $roleDemandeur = $validated['role_demandeur']
+            ?? ($roleDefendeur === 'institution' ? 'reclamant' : 'institution');
+
+        $idPartie = fn (string $role) => $role === 'institution'
+            ? $this->idInstitution()
+            : $this->partieDepuisReclamant($reclamant)->id;
 
         return [
             'id_degre'        => $validated['id_degre'] ?? null,
             'id_tribunal'     => $validated['id_tribunal'] ?? null,
             'id_type_affaire' => $validated['id_type_affaire'] ?? null,
-            'id_demandeur'    => $validated['id_demandeur'] ?? $this->idInstitution(),
-            'id_defendeur'    => $validated['id_defendeur'] ?? $this->partieDepuisReclamant($reclamant)->id,
+            'id_demandeur'    => $idPartie($roleDemandeur),
+            'id_defendeur'    => $idPartie($roleDefendeur),
         ];
     }
 

@@ -27,6 +27,7 @@ class DossierTribunalController extends Controller
         $request->validate([
             'id_tribunal' => ['required', 'exists:tribunaux,id'],
             'id_degre'    => ['required', 'exists:degre_juridictions,id'],
+            'id_commune'  => ['nullable', 'exists:communes,id'],
             'date_debut'  => ['required', 'date'],
             'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
@@ -44,6 +45,7 @@ class DossierTribunalController extends Controller
             'id_dossier'  => $dossier->id,
             'id_tribunal' => $request->id_tribunal,
             'id_degre'    => $request->id_degre,
+            'id_commune'  => $request->id_commune ?: null,
             'date_debut'  => $request->date_debut,
             'date_fin'    => $request->date_fin,
         ]);
@@ -66,11 +68,17 @@ class DossierTribunalController extends Controller
 
         $request->validate([
             'id_degre'   => ['required', 'exists:degre_juridictions,id'],
+            'id_commune' => ['nullable', 'exists:communes,id'],
             'date_debut' => ['required', 'date'],
             'date_fin'   => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
 
-        $tribunal->update($request->only(['id_degre', 'date_debut', 'date_fin']));
+        $tribunal->update([
+            'id_degre'   => $request->id_degre,
+            'id_commune' => $request->id_commune ?: null,
+            'date_debut' => $request->date_debut,
+            'date_fin'   => $request->date_fin,
+        ]);
 
         return redirect()
             ->route('dossiers.show', $dossier)

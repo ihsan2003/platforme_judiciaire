@@ -1,0 +1,210 @@
+diff --git a/app/Http/Controllers/DossierTribunalController.php b/app/Http/Controllers/DossierTribunalController.php
+index b001e67..2c1430e 100644
+--- a/app/Http/Controllers/DossierTribunalController.php
++++ b/app/Http/Controllers/DossierTribunalController.php
+@@ -27,6 +27,7 @@ public function store(Request $request, DossierJudiciaire $dossier): RedirectRes
+         $request->validate([
+             'id_tribunal' => ['required', 'exists:tribunaux,id'],
+             'id_degre'    => ['required', 'exists:degre_juridictions,id'],
++            'id_commune'  => ['nullable', 'exists:communes,id'],
+             'date_debut'  => ['required', 'date'],
+             'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
+         ]);
+@@ -44,6 +45,7 @@ public function store(Request $request, DossierJudiciaire $dossier): RedirectRes
+             'id_dossier'  => $dossier->id,
+             'id_tribunal' => $request->id_tribunal,
+             'id_degre'    => $request->id_degre,
++            'id_commune'  => $request->id_commune ?: null,
+             'date_debut'  => $request->date_debut,
+             'date_fin'    => $request->date_fin,
+         ]);
+@@ -66,11 +68,17 @@ public function update(Request $request, DossierJudiciaire $dossier, DossierTrib
+ 
+         $request->validate([
+             'id_degre'   => ['required', 'exists:degre_juridictions,id'],
++            'id_commune' => ['nullable', 'exists:communes,id'],
+             'date_debut' => ['required', 'date'],
+             'date_fin'   => ['nullable', 'date', 'after_or_equal:date_debut'],
+         ]);
+ 
+-        $tribunal->update($request->only(['id_degre', 'date_debut', 'date_fin']));
++        $tribunal->update([
++            'id_degre'   => $request->id_degre,
++            'id_commune' => $request->id_commune ?: null,
++            'date_debut' => $request->date_debut,
++            'date_fin'   => $request->date_fin,
++        ]);
+ 
+         return redirect()
+             ->route('dossiers.show', $dossier)
+diff --git a/app/Models/DossierTribunal.php b/app/Models/DossierTribunal.php
+index d1084bf..5a11902 100644
+--- a/app/Models/DossierTribunal.php
++++ b/app/Models/DossierTribunal.php
+@@ -22,6 +22,7 @@ class DossierTribunal extends Model
+         'id_dossier',
+         'id_tribunal',
+         'id_degre',
++        'id_commune',
+         'date_debut',
+         'date_fin'
+     ];
+@@ -50,6 +51,11 @@ public function degre()
+         return $this->belongsTo(DegreeJuridiction::class, 'id_degre');
+     }
+ 
++    public function commune()
++    {
++        return $this->belongsTo(Commune::class, 'id_commune');
++    }
++
+     public function audiences()
+     {
+         return $this->hasMany(Audience::class, 'id_dossier_tribunal');
+@@ -383,6 +389,7 @@ public function getActivitylogOptions(): LogOptions
+                 'id_dossier',
+                 'id_tribunal',
+                 'id_degre',
++                'id_commune',
+                 'date_debut',
+                 'date_fin',
+             ])
+diff --git a/database/migrations/2026_10_27_100000_add_id_commune_to_dossier_tribunaux_table.php b/database/migrations/2026_10_27_100000_add_id_commune_to_dossier_tribunaux_table.php
+new file mode 100644
+index 0000000..070951a
+--- /dev/null
++++ b/database/migrations/2026_10_27_100000_add_id_commune_to_dossier_tribunaux_table.php
+@@ -0,0 +1,27 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::table('dossier_tribunaux', function (Blueprint $table) {
++            // الجماعة الترابية (facultative : anciennes attributions sans commune)
++            $table->foreignId('id_commune')
++                  ->nullable()
++                  ->after('id_tribunal')
++                  ->constrained('communes')
++                  ->nullOnDelete();
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('dossier_tribunaux', function (Blueprint $table) {
++            $table->dropConstrainedForeignId('id_commune');
++        });
++    }
++};
+diff --git a/resources/views/dossiers/show.blade.php b/resources/views/dossiers/show.blade.php
+index a0e6f1c..b04ccc0 100644
+--- a/resources/views/dossiers/show.blade.php
++++ b/resources/views/dossiers/show.blade.php
+@@ -820,6 +820,9 @@
+                         <div class="deg-title">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
+                         <div class="deg-sub">
+                             <i class="bi bi-bank me-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
++                            @if($dt->commune)
++                                <span class="mx-1">·</span><i class="bi bi-geo-alt me-1"></i>{{ $dt->commune->commune }}
++                            @endif
+                         </div>
+                     </div>
+                 </div>
+@@ -1998,6 +2001,12 @@ class="btn-close ms-auto"
+                             <option value="">— اختر الدرجة أولاً —</option>
+                         </select>
+                     </div>
++                    <div class="col-12">
++                        <label class="form-label fw-semibold small">الجماعة الترابية</label>
++                        <select id="modal_commune" name="id_commune" class="form-select" disabled>
++                            <option value="">— اختر الإقليم أولاً —</option>
++                        </select>
++                    </div>
+ 
+                     <div class="col-sm-6">
+                         <label class="form-label fw-semibold small">تاريخ الإحالة <span class="text-danger">*</span></label>
+@@ -2021,6 +2030,13 @@ class="btn-close ms-auto"
+ </div>
+ 
+ {{-- Modals modifier chaque tribunal (تعديل بيانات المحكمة) ──────────────── --}}
++@php
++    // Communes groupées par province (une seule requête pour tous les modals de modification)
++    $communesParProvince = \App\Models\Commune::whereIn(
++            'id_province',
++            $dossier->dossierTribunaux->map(fn($x) => $x->tribunal?->id_province)->filter()->unique()
++        )->orderBy('commune')->get(['id', 'commune', 'id_province'])->groupBy('id_province');
++@endphp
+ @foreach($dossier->dossierTribunaux as $dt)
+ <div class="modal fade" id="modalEditTribunal{{ $dt->id }}" tabindex="-1" dir="rtl">
+     <div class="modal-dialog">
+@@ -2044,6 +2060,16 @@ class="btn-close ms-auto"
+                             @endforeach
+                         </select>
+                     </div>
++                    @php $communesDt = $communesParProvince->get($dt->tribunal?->id_province, collect()); @endphp
++                    <div class="col-12">
++                        <label class="form-label fw-semibold small">الجماعة الترابية</label>
++                        <select name="id_commune" class="form-select" @disabled($communesDt->isEmpty())>
++                            <option value="">— بدون جماعة —</option>
++                            @foreach($communesDt as $c)
++                                <option value="{{ $c->id }}" @selected($dt->id_commune == $c->id)>{{ $c->commune }}</option>
++                            @endforeach
++                        </select>
++                    </div>
+                     <div class="col-sm-6">
+                         <label class="form-label fw-semibold small">تاريخ الإحالة</label>
+                         <input type="date" name="date_debut" class="form-control" value="{{ $dt->date_debut?->format('Y-m-d') }}" required>
+@@ -2386,6 +2412,7 @@ function renderResults(parties, query) {
+     const selProvince = document.getElementById('modal_province');
+     const selDegre    = document.getElementById('modal_degre');
+     const selTribunal = document.getElementById('modal_tribunal');
++    const selCommune  = document.getElementById('modal_commune');
+ 
+     function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; }
+ 
+@@ -2393,6 +2420,7 @@ function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${p
+         reset(selProvince, '— جاري التحميل... —');
+         reset(selDegre, '— اختر الإقليم أولاً —');
+         reset(selTribunal, '— اختر الدرجة أولاً —');
++        reset(selCommune, '— اختر الإقليم أولاً —');
+         if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
+         try {
+             const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
+@@ -2405,7 +2433,22 @@ function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${p
+     selProvince?.addEventListener('change', async function () {
+         reset(selDegre, '— جاري التحميل... —');
+         reset(selTribunal, '— اختر الدرجة أولاً —');
+-        if (!this.value) { reset(selDegre, '— اختر الإقليم أولاً —'); return; }
++        reset(selCommune, '— جاري التحميل... —');
++        if (!this.value) {
++            reset(selDegre, '— اختر الإقليم أولاً —');
++            reset(selCommune, '— اختر الإقليم أولاً —');
++            return;
++        }
++        // Communes de la province (route déjà utilisée par avertissements/réclamations)
++        fetch(`/api/provinces/${this.value}/communes`)
++            .then(r => r.json())
++            .then(data => {
++                if (!data.length) { reset(selCommune, '— لا توجد جماعات لهذا الإقليم —'); return; }
++                selCommune.innerHTML = '<option value="">— اختر الجماعة —</option>';
++                data.forEach(c => selCommune.innerHTML += `<option value="${c.id}">${c.commune}</option>`);
++                selCommune.disabled = false;
++            })
++            .catch(() => reset(selCommune, '— خطأ —'));
+         try {
+             const data = await (await fetch(`/api/provinces/${this.value}/degres`)).json();
+             selDegre.innerHTML = '<option value="">— اختر درجة التقاضي —</option>';
+@@ -2431,6 +2474,7 @@ function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${p
+         reset(selProvince, '— اختر الجهة أولاً —');
+         reset(selDegre, '— اختر الإقليم أولاً —');
+         reset(selTribunal, '— اختر درجة التقاضي أولاً —');
++        reset(selCommune, '— اختر الإقليم أولاً —');
+     });
+ })();
+ </script>

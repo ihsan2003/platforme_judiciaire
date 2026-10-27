@@ -52,11 +52,28 @@
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body pt-0">
                             <div class="mb-2 mt-3">
-                                <label class="form-label fw-semibold small">تاريخ الاستلام <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="date" name="date_reception" class="form-control @error('date_reception') is-invalid @enderror" 
-                                           value="{{ old('date_reception', $reclamation->date_reception?->format('Y-m-d')) }}" required>
-                                </div>
+
+                                <label class="form-label fw-semibold small">
+                                    المشتكي <span class="text-danger">*</span>
+                                </label>
+
+                                <select id="reclamant-select" class="form-select @error('id_reclamant') is-invalid @enderror">
+                                    <option value=""></option>
+                                    @foreach($reclamants as $r)
+                                        <option value="{{ $r->id }}"
+                                            @selected(old('id_reclamant', $reclamation->id_reclamant) == $r->id)>
+                                            {{ $r->nom }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <input type="hidden" name="id_reclamant" id="id_reclamant_hidden"
+                                    value="{{ old('id_reclamant', $reclamation->id_reclamant) }}">
+
+                                @error('id_reclamant')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+
                             </div>
 
                             <div>
@@ -85,29 +102,13 @@
                             </div>
 
                             <div class="mb-0">
-
-                                <label class="form-label fw-semibold small">
-                                    المشتكي <span class="text-danger">*</span>
-                                </label>
-
-                                <select id="reclamant-select" class="form-select @error('id_reclamant') is-invalid @enderror">
-                                    <option value=""></option>
-                                    @foreach($reclamants as $r)
-                                        <option value="{{ $r->id }}"
-                                            @selected(old('id_reclamant', $reclamation->id_reclamant) == $r->id)>
-                                            {{ $r->nom }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                <input type="hidden" name="id_reclamant" id="id_reclamant_hidden"
-                                    value="{{ old('id_reclamant', $reclamation->id_reclamant) }}">
-
-                                @error('id_reclamant')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-
+                                <label class="form-label fw-semibold small">تاريخ الاستلام <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="date" name="date_reception" class="form-control @error('date_reception') is-invalid @enderror" 
+                                           value="{{ old('date_reception', $reclamation->date_reception?->format('Y-m-d')) }}" required>
+                                </div>
                             </div>
+                            
                         </div>
                     </div>
 

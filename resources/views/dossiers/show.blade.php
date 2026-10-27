@@ -820,6 +820,9 @@
                         <div class="deg-title">{{ $dt->degre?->degre_juridiction ?? '—' }}</div>
                         <div class="deg-sub">
                             <i class="bi bi-bank me-1"></i>{{ $dt->tribunal?->nom_tribunal ?? '—' }}
+                            @if($dt->commune)
+                                <span class="mx-1">·</span><i class="bi bi-geo-alt me-1"></i>{{ $dt->commune->commune }}
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -1987,6 +1990,12 @@
                         </select>
                     </div>
                     <div class="col-12">
+                        <label class="form-label fw-semibold small">الجماعة الترابية</label>
+                        <select id="modal_commune" name="id_commune" class="form-select" disabled>
+                            <option value="">— اختر الإقليم أولاً —</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label fw-semibold small">درجة التقاضي <span class="text-danger">*</span></label>
                         <select id="modal_degre" name="id_degre" class="form-select" disabled required>
                             <option value="">— اختر الإقليم أولاً —</option>
@@ -2021,6 +2030,13 @@
 </div>
 
 {{-- Modals modifier chaque tribunal (تعديل بيانات المحكمة) ──────────────── --}}
+@php
+    // Communes groupées par province (une seule requête pour tous les modals de modification)
+    $communesParProvince = \App\Models\Commune::whereIn(
+            'id_province',
+            $dossier->dossierTribunaux->map(fn($x) => $x->tribunal?->id_province)->filter()->unique()
+        )->orderBy('commune')->get(['id', 'commune', 'id_province'])->groupBy('id_province');
+@endphp
 @foreach($dossier->dossierTribunaux as $dt)
 <div class="modal fade" id="modalEditTribunal{{ $dt->id }}" tabindex="-1" dir="rtl">
     <div class="modal-dialog">
@@ -2041,6 +2057,16 @@
                         <select name="id_degre" class="form-select" required>
                             @foreach($degresJuridiction as $d)
                                 <option value="{{ $d->id }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @php $communesDt = $communesParProvince->get($dt->tribunal?->id_province, collect()); @endphp
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">الجماعة الترابية</label>
+                        <select name="id_commune" class="form-select" @disabled($communesDt->isEmpty())>
+                            <option value="">— بدون جماعة —</option>
+                            @foreach($communesDt as $c)
+                                <option value="{{ $c->id }}" @selected($dt->id_commune == $c->id)>{{ $c->commune }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -2386,6 +2412,7 @@
     const selProvince = document.getElementById('modal_province');
     const selDegre    = document.getElementById('modal_degre');
     const selTribunal = document.getElementById('modal_tribunal');
+    const selCommune  = document.getElementById('modal_commune');
 
     function reset(sel, ph) { if(!sel) return; sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; }
 
@@ -2393,6 +2420,7 @@
         reset(selProvince, '— جاري التحميل... —');
         reset(selDegre, '— اختر الإقليم أولاً —');
         reset(selTribunal, '— اختر الدرجة أولاً —');
+        reset(selCommune, '— اختر الإقليم أولاً —');
         if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
         try {
             const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
@@ -2405,7 +2433,22 @@
     selProvince?.addEventListener('change', async function () {
         reset(selDegre, '— جاري التحميل... —');
         reset(selTribunal, '— اختر الدرجة أولاً —');
-        if (!this.value) { reset(selDegre, '— اختر الإقليم أولاً —'); return; }
+        reset(selCommune, '— جاري التحميل... —');
+        if (!this.value) {
+            reset(selDegre, '— اختر الإقليم أولاً —');
+            reset(selCommune, '— اختر الإقليم أولاً —');
+            return;
+        }
+        // Communes de la province (route déjà utilisée par avertissements/réclamations)
+        fetch(`/api/provinces/${this.value}/communes`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.length) { reset(selCommune, '— لا توجد جماعات لهذا الإقليم —'); return; }
+                selCommune.innerHTML = '<option value="">— اختر الجماعة —</option>';
+                data.forEach(c => selCommune.innerHTML += `<option value="${c.id}">${c.commune}</option>`);
+                selCommune.disabled = false;
+            })
+            .catch(() => reset(selCommune, '— خطأ —'));
         try {
             const data = await (await fetch(`/api/provinces/${this.value}/degres`)).json();
             selDegre.innerHTML = '<option value="">— اختر درجة التقاضي —</option>';
@@ -2431,6 +2474,7 @@
         reset(selProvince, '— اختر الجهة أولاً —');
         reset(selDegre, '— اختر الإقليم أولاً —');
         reset(selTribunal, '— اختر درجة التقاضي أولاً —');
+        reset(selCommune, '— اختر الإقليم أولاً —');
     });
 })();
 </script>

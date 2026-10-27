@@ -1,0 +1,185 @@
+diff --git a/app/Http/Controllers/ReclamationController.php b/app/Http/Controllers/ReclamationController.php
+index e137c35..c648872 100644
+--- a/app/Http/Controllers/ReclamationController.php
++++ b/app/Http/Controllers/ReclamationController.php
+@@ -490,9 +490,9 @@ private function donneesDossier(): array
+             'degres'           => DegreeJuridiction::orderBy('ordre')->get(['id', 'degre_juridiction']),
+             'tribunaux'        => Tribunal::orderBy('nom_tribunal')->get(['id', 'nom_tribunal', 'id_degre']),
+             'typesAffaire'     => TypeAffaire::orderBy('affaire')->get(['id', 'affaire']),
+-            'parties'          => Partie::orderBy('nom_partie')->get(['id', 'nom_partie']),
+-            // المدعي par défaut : l'institution (partie est_entraide = true)
+-            'idDemandeurDefaut' => $this->idInstitution(),
++            // L'institution (partie est_entraide = true) : l'une des 2 valeurs possibles de
++            // المدعي / المدعى عليه, l'autre étant toujours le réclamant (المشتكي)
++            'institution'      => Partie::where('est_entraide', true)->first(['id', 'nom_partie']),
+         ];
+     }
+ 
+@@ -525,8 +525,9 @@ private function reglesDossier(Request $request): array
+             'id_degre'        => [$obligatoire, 'integer', 'exists:degre_juridictions,id'],
+             'id_tribunal'     => $regleTribunal,
+             'id_type_affaire' => [$obligatoire, 'integer', 'exists:type_affaires,id'],
+-            'id_demandeur'    => ['nullable', 'integer', 'exists:parties,id'],
+-            'id_defendeur'    => ['nullable', 'integer', 'exists:parties,id', 'different:id_demandeur'],
++            // 2 valeurs seulement : l'institution (est_entraide) ou le réclamant, l'un en face de l'autre
++            'role_demandeur'  => ['nullable', Rule::in(['institution', 'reclamant'])],
++            'role_defendeur'  => ['nullable', Rule::in(['institution', 'reclamant']), 'different:role_demandeur'],
+         ];
+     }
+ 
+@@ -540,9 +541,9 @@ private function messagesDossier(): array
+             'id_tribunal.exists'       => 'المحكمة المحددة غير موجودة أو لا تنتمي إلى درجة التقاضي المختارة.',
+             'id_type_affaire.required' => 'يرجى اختيار نوع القضية (الشعبة).',
+             'id_type_affaire.exists'   => 'نوع القضية المحدد غير موجود.',
+-            'id_demandeur.exists'      => 'المدعي المحدد غير موجود.',
+-            'id_defendeur.exists'      => 'المدعى عليه المحدد غير موجود.',
+-            'id_defendeur.different'   => 'لا يمكن أن يكون المدعى عليه هو نفسه المدعي.',
++            'role_demandeur.in'        => 'قيمة المدعي غير صالحة.',
++            'role_defendeur.in'        => 'قيمة المدعى عليه غير صالحة.',
++            'role_defendeur.different' => 'لا يمكن أن يكون المدعى عليه هو نفسه المدعي.',
+         ];
+     }
+ 
+@@ -553,8 +554,8 @@ private function attributsDossier(): array
+             'id_degre'        => 'درجة التقاضي',
+             'id_tribunal'     => 'المحكمة',
+             'id_type_affaire' => 'نوع القضية',
+-            'id_demandeur'    => 'المدعي',
+-            'id_defendeur'    => 'المدعى عليه',
++            'role_demandeur'  => 'المدعي',
++            'role_defendeur'  => 'المدعى عليه',
+         ];
+     }
+ 
+@@ -571,6 +572,7 @@ private function attributsDossier(): array
+     private function champsDossier(array $validated, Request $request, Reclamant $reclamant, bool $modification = false): array
+     {
+         $cles = ['id_degre', 'id_tribunal', 'id_type_affaire', 'id_demandeur', 'id_defendeur'];
++        $clesRequete = ['id_degre', 'id_tribunal', 'id_type_affaire', 'role_demandeur', 'role_defendeur'];
+ 
+         $estJudiciaire = (int) $validated['id_type_reclamation'] === TypeReclamation::idJudiciaire();
+ 
+@@ -578,16 +580,27 @@ private function champsDossier(array $validated, Request $request, Reclamant $re
+             return array_fill_keys($cles, null);
+         }
+ 
+-        if ($modification && ! $request->hasAny($cles)) {
++        if ($modification && ! $request->hasAny($clesRequete)) {
+             return [];
+         }
+ 
++        // Défauts : المدعي = institution, المدعى عليه = réclamant. Si l'un des deux est
++        // choisi, l'autre prend automatiquement l'autre valeur.
++        $roleDefendeur = $validated['role_defendeur']
++            ?? (($validated['role_demandeur'] ?? null) === 'reclamant' ? 'institution' : 'reclamant');
++        $roleDemandeur = $validated['role_demandeur']
++            ?? ($roleDefendeur === 'institution' ? 'reclamant' : 'institution');
++
++        $idPartie = fn (string $role) => $role === 'institution'
++            ? $this->idInstitution()
++            : $this->partieDepuisReclamant($reclamant)->id;
++
+         return [
+             'id_degre'        => $validated['id_degre'] ?? null,
+             'id_tribunal'     => $validated['id_tribunal'] ?? null,
+             'id_type_affaire' => $validated['id_type_affaire'] ?? null,
+-            'id_demandeur'    => $validated['id_demandeur'] ?? $this->idInstitution(),
+-            'id_defendeur'    => $validated['id_defendeur'] ?? $this->partieDepuisReclamant($reclamant)->id,
++            'id_demandeur'    => $idPartie($roleDemandeur),
++            'id_defendeur'    => $idPartie($roleDefendeur),
+         ];
+     }
+ 
+diff --git a/resources/views/reclamations/_dossier_fields.blade.php b/resources/views/reclamations/_dossier_fields.blade.php
+index f77b256..95f4139 100644
+--- a/resources/views/reclamations/_dossier_fields.blade.php
++++ b/resources/views/reclamations/_dossier_fields.blade.php
+@@ -7,10 +7,15 @@
+     $selDegre      = old('id_degre', $r?->id_degre);
+     $selTribunal   = old('id_tribunal', $r?->id_tribunal);
+     $selAffaire    = old('id_type_affaire', $r?->id_type_affaire);
+-    // المدعي : valeur enregistrée, sinon l'institution (partie est_entraide)
+-    $selDemandeur  = old('id_demandeur', $r?->id_demandeur ?? $idDemandeurDefaut);
+-    // المدعى عليه : valeur enregistrée, sinon vide = le réclamant (converti en partie à l'enregistrement)
+-    $selDefendeur  = old('id_defendeur', $r?->id_defendeur);
++    // المدعي / المدعى عليه : 2 valeurs seulement, toujours opposées l'une à l'autre
++    //   'institution' = la partie est_entraide, 'reclamant' = le réclamant (المشتكي)
++    //   Défauts : المدعي = institution, المدعى عليه = réclamant
++    $roleDemandeurEnreg = $r?->id_demandeur
++        ? ((int) $r->id_demandeur === (int) ($institution?->id) ? 'institution' : 'reclamant')
++        : 'institution';
++    $selDemandeur = old('role_demandeur', $roleDemandeurEnreg);
++    $selDefendeur = old('role_defendeur', $selDemandeur === 'institution' ? 'reclamant' : 'institution');
++    $libInstitution = $institution?->nom_partie ?? 'المؤسسة';
+ @endphp
+ 
+ <div class="mb-2 d-none" id="bloc-dossier">
+@@ -78,40 +83,26 @@ class="form-select form-select-sm @error('id_type_affaire') is-invalid @enderror
+ 
+                 {{-- المدعي --}}
+                 <div class="col-6 mt-2">
+-                    <label for="id_demandeur" class="form-label fw-semibold small">
+-                        المدعي
+-                    </label>
+-                    <select name="id_demandeur" id="id_demandeur"
+-                            class="form-select form-select-sm @error('id_demandeur') is-invalid @enderror">
+-                        <option value="">— اختر المدعي —</option>
+-                        @foreach($parties as $partie)
+-                            <option value="{{ $partie->id }}"
+-                                @selected((string) $selDemandeur === (string) $partie->id)>
+-                                {{ $partie->nom_partie }}
+-                            </option>
+-                        @endforeach
++                    <label for="role_demandeur" class="form-label fw-semibold small">المدعي</label>
++                    <select name="role_demandeur" id="role_demandeur"
++                            class="form-select form-select-sm @error('role_demandeur') is-invalid @enderror">
++                        <option value="institution" @selected($selDemandeur === 'institution')>{{ $libInstitution }}</option>
++                        <option value="reclamant"   @selected($selDemandeur === 'reclamant')>المشتكي</option>
+                     </select>
+-                    @error('id_demandeur')
++                    @error('role_demandeur')
+                         <div class="invalid-feedback d-block">{{ $message }}</div>
+                     @enderror
+                 </div>
+ 
+                 {{-- المدعى عليه --}}
+                 <div class="col-6 mt-2">
+-                    <label for="id_defendeur" class="form-label fw-semibold small">
+-                        المدعى عليه
+-                    </label>
+-                    <select name="id_defendeur" id="id_defendeur"
+-                            class="form-select form-select-sm @error('id_defendeur') is-invalid @enderror">
+-                        <option value="">المشتكي (تلقائياً)</option>
+-                        @foreach($parties as $partie)
+-                            <option value="{{ $partie->id }}"
+-                                @selected((string) $selDefendeur === (string) $partie->id)>
+-                                {{ $partie->nom_partie }}
+-                            </option>
+-                        @endforeach
++                    <label for="role_defendeur" class="form-label fw-semibold small">المدعى عليه</label>
++                    <select name="role_defendeur" id="role_defendeur"
++                            class="form-select form-select-sm @error('role_defendeur') is-invalid @enderror">
++                        <option value="institution" @selected($selDefendeur === 'institution')>{{ $libInstitution }}</option>
++                        <option value="reclamant"   @selected($selDefendeur === 'reclamant')>المشتكي</option>
+                     </select>
+-                    @error('id_defendeur')
++                    @error('role_defendeur')
+                         <div class="invalid-feedback d-block">{{ $message }}</div>
+                     @enderror
+                 </div>
+@@ -142,8 +133,13 @@ function basculerBloc() {
+     /* ── Listes de recherche ── */
+     const opts = { allowEmptyOption: true, maxOptions: 1000, closeAfterSelect: true };
+     const tsTribunal  = new TomSelect('#id_tribunal',  { ...opts, placeholder: 'ابحث عن المحكمة...' });
+-    new TomSelect('#id_demandeur', { ...opts, placeholder: 'ابحث عن المدعي...' });
+-    new TomSelect('#id_defendeur', { ...opts, placeholder: 'المشتكي (تلقائيا)' });
++
++    /* ── المدعي / المدعى عليه : toujours opposés (institution ⇄ المشتكي) ── */
++    const roleDem = document.getElementById('role_demandeur');
++    const roleDef = document.getElementById('role_defendeur');
++    const opposé  = v => v === 'institution' ? 'reclamant' : 'institution';
++    roleDem.addEventListener('change', () => { roleDef.value = opposé(roleDem.value); });
++    roleDef.addEventListener('change', () => { roleDem.value = opposé(roleDef.value); });
+ 
+     /* ── Les tribunaux proposés dépendent de la درجة choisie ── */
+     function filtrerTribunaux() {

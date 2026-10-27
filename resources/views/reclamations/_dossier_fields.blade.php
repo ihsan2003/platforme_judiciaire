@@ -7,10 +7,15 @@
     $selDegre      = old('id_degre', $r?->id_degre);
     $selTribunal   = old('id_tribunal', $r?->id_tribunal);
     $selAffaire    = old('id_type_affaire', $r?->id_type_affaire);
-    // المدعي : valeur enregistrée, sinon l'institution (partie est_entraide)
-    $selDemandeur  = old('id_demandeur', $r?->id_demandeur ?? $idDemandeurDefaut);
-    // المدعى عليه : valeur enregistrée, sinon vide = le réclamant (converti en partie à l'enregistrement)
-    $selDefendeur  = old('id_defendeur', $r?->id_defendeur);
+    // المدعي / المدعى عليه : 2 valeurs seulement, toujours opposées l'une à l'autre
+    //   'institution' = la partie est_entraide, 'reclamant' = le réclamant (المشتكي)
+    //   Défauts : المدعي = institution, المدعى عليه = réclamant
+    $roleDemandeurEnreg = $r?->id_demandeur
+        ? ((int) $r->id_demandeur === (int) ($institution?->id) ? 'institution' : 'reclamant')
+        : 'institution';
+    $selDemandeur = old('role_demandeur', $roleDemandeurEnreg);
+    $selDefendeur = old('role_defendeur', $selDemandeur === 'institution' ? 'reclamant' : 'institution');
+    $libInstitution = $institution?->nom_partie ?? 'المؤسسة';
 @endphp
 
 <div class="mb-2 d-none" id="bloc-dossier">
@@ -78,40 +83,26 @@
 
                 {{-- المدعي --}}
                 <div class="col-6 mt-2">
-                    <label for="id_demandeur" class="form-label fw-semibold small">
-                        المدعي
-                    </label>
-                    <select name="id_demandeur" id="id_demandeur"
-                            class="form-select form-select-sm @error('id_demandeur') is-invalid @enderror">
-                        <option value="">— اختر المدعي —</option>
-                        @foreach($parties as $partie)
-                            <option value="{{ $partie->id }}"
-                                @selected((string) $selDemandeur === (string) $partie->id)>
-                                {{ $partie->nom_partie }}
-                            </option>
-                        @endforeach
+                    <label for="role_demandeur" class="form-label fw-semibold small">المدعي</label>
+                    <select name="role_demandeur" id="role_demandeur"
+                            class="form-select form-select-sm @error('role_demandeur') is-invalid @enderror">
+                        <option value="institution" @selected($selDemandeur === 'institution')>{{ $libInstitution }}</option>
+                        <option value="reclamant"   @selected($selDemandeur === 'reclamant')>المشتكي</option>
                     </select>
-                    @error('id_demandeur')
+                    @error('role_demandeur')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
 
                 {{-- المدعى عليه --}}
                 <div class="col-6 mt-2">
-                    <label for="id_defendeur" class="form-label fw-semibold small">
-                        المدعى عليه
-                    </label>
-                    <select name="id_defendeur" id="id_defendeur"
-                            class="form-select form-select-sm @error('id_defendeur') is-invalid @enderror">
-                        <option value="">المشتكي (تلقائياً)</option>
-                        @foreach($parties as $partie)
-                            <option value="{{ $partie->id }}"
-                                @selected((string) $selDefendeur === (string) $partie->id)>
-                                {{ $partie->nom_partie }}
-                            </option>
-                        @endforeach
+                    <label for="role_defendeur" class="form-label fw-semibold small">المدعى عليه</label>
+                    <select name="role_defendeur" id="role_defendeur"
+                            class="form-select form-select-sm @error('role_defendeur') is-invalid @enderror">
+                        <option value="institution" @selected($selDefendeur === 'institution')>{{ $libInstitution }}</option>
+                        <option value="reclamant"   @selected($selDefendeur === 'reclamant')>المشتكي</option>
                     </select>
-                    @error('id_defendeur')
+                    @error('role_defendeur')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
@@ -142,8 +133,13 @@
     /* ── Listes de recherche ── */
     const opts = { allowEmptyOption: true, maxOptions: 1000, closeAfterSelect: true };
     const tsTribunal  = new TomSelect('#id_tribunal',  { ...opts, placeholder: 'ابحث عن المحكمة...' });
-    new TomSelect('#id_demandeur', { ...opts, placeholder: 'ابحث عن المدعي...' });
-    new TomSelect('#id_defendeur', { ...opts, placeholder: 'المشتكي (تلقائيا)' });
+
+    /* ── المدعي / المدعى عليه : toujours opposés (institution ⇄ المشتكي) ── */
+    const roleDem = document.getElementById('role_demandeur');
+    const roleDef = document.getElementById('role_defendeur');
+    const opposé  = v => v === 'institution' ? 'reclamant' : 'institution';
+    roleDem.addEventListener('change', () => { roleDef.value = opposé(roleDem.value); });
+    roleDef.addEventListener('change', () => { roleDem.value = opposé(roleDef.value); });
 
     /* ── Les tribunaux proposés dépendent de la درجة choisie ── */
     function filtrerTribunaux() {
