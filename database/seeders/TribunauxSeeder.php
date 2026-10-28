@@ -19,6 +19,8 @@ class TribunauxSeeder extends Seeder
      *   5 = محكمة ابتدائية إدارية
      *   6 = محكمة استئناف إدارية
      *   7 = محكمة النقض
+     *   8 = المحكمة المدنية
+     *   9 = المحكمة الإجتماعية
      *
      * Degrés (id_degre):
      *   1 = الدرجة الأولى
@@ -228,6 +230,12 @@ class TribunauxSeeder extends Seeder
             // محكمة النقض — Siège à Rabat, Type 7, Degré 3
             // ============================================================
             ['nom_tribunal' => 'محكمة النقض بالرباط',                       'id_type_tribunal' => 7, 'id_degre' => 3, 'province' => 'الرباط'],
+
+            // ============================================================
+            // المحكمة الإجتماعية— Siège à Casa, Type 9, Degré 1
+            // ============================================================
+            ['nom_tribunal' => 'المحكمة الإجتماعية بالدار البيضاء',                       'id_type_tribunal' => 9, 'id_degre' => 1, 'province' => 'الدار البيضاء'],
+
         ];
 
         $data = collect($tribunaux)->map(function ($t) use ($provinces) {
@@ -243,6 +251,6 @@ class TribunauxSeeder extends Seeder
             ];
         })->toArray();
 
-        DB::table('tribunaux')->insert($data);
+        DB::table('tribunaux')->updateOrInsert($data);
     }
 }

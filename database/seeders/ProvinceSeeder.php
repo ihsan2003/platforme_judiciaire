@@ -176,7 +176,7 @@ class ProvinceSeeder extends Seeder
         }
 
         foreach (array_chunk($rows, 50) as $chunk) {
-            DB::table('provinces')->insert($chunk);
+            DB::table('provinces')->updateOrInsert($chunk);
         }
 
         $this->command->info(count($rows) . ' provinces / préfectures insérées.');

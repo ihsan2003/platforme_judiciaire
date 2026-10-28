@@ -70,7 +70,7 @@ class StructureSeeder extends Seeder
             &$regionsStructures
         ) {
 
-            $structure = Structure::firstOrCreate(
+            $structure = Structure::updateOrInsert(
 
                 [
                     'nom' => 'المديرية الجهوية ل' . $region->region
@@ -106,7 +106,7 @@ class StructureSeeder extends Seeder
             $parentRegional = $regionsStructures[$province->id_region] ?? null;
 
 
-            Structure::firstOrCreate(
+            Structure::updateOrInsert(
 
                 [
                     'nom' => 'المديرية الإقليمية ب' . $province->province

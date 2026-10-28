@@ -25,7 +25,7 @@ class TypeStructureSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            TypeStructure::firstOrCreate([
+            TypeStructure::updateOrInsert([
                 'type_structure' => $type,
             ]);
         }

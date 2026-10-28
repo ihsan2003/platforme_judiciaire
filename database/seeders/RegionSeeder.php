@@ -24,6 +24,6 @@ class RegionSeeder extends Seeder
             ['region' => 'جهة الداخلة - وادي الذهب'],
         ];
 
-        DB::table('regions')->insert($regions);
+        DB::table('regions')->updateOrInsert($regions);
     }
 }

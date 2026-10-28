@@ -76,7 +76,7 @@ class DataSeeder extends Seeder
         ];
 
         foreach ($typesAffaire as $type) {
-            DB::table('type_affaires')->insertOrIgnore([
+            DB::table('type_affaires')->updateOrInsert([
                 'affaire' => $type['affaire'],
                 'code' => $type['code'],
                 'created_at' => now(),
@@ -97,7 +97,7 @@ class DataSeeder extends Seeder
             'حفظ'
         ];
         foreach ($statuts as $statut) {
-            DB::table('statut_dossiers')->insertOrIgnore(['statut_dossier' => $statut]);
+            DB::table('statut_dossiers')->updateOrInsert(['statut_dossier' => $statut]);
         }
 
         // أنواع الأطراف
@@ -107,7 +107,7 @@ class DataSeeder extends Seeder
             'متدخل'
         ];
         foreach ($typesPartie as $type) {
-            DB::table('type_parties')->insertOrIgnore(['type_partie' => $type]);
+            DB::table('type_parties')->updateOrInsert(['type_partie' => $type]);
         }
 
         // أنواع المحاكم
@@ -119,9 +119,11 @@ class DataSeeder extends Seeder
             'المحكمة الإدارية',
             'محكمة الإستئناف الإدارية',
             'محكمة النقض',
+            'المحكمة المدنية',
+            'المحكمة الإجتماعية',
         ];
         foreach ($typesTribunal as $type) {
-            DB::table('type_tribunaux')->insertOrIgnore(['tribunal' => $type]);
+            DB::table('type_tribunaux')->updateOrInsert(['tribunal' => $type]);
         }
 
         // درجات التقاضي
@@ -133,7 +135,7 @@ class DataSeeder extends Seeder
             'إعادة النظر'
         ];
         foreach ($degres as $degre) {
-            DB::table('degre_juridictions')->insertOrIgnore(['degre_juridiction' => $degre]);
+            DB::table('degre_juridictions')->updateOrInsert(['degre_juridiction' => $degre]);
         }
 
         // أنواع الجلسات
@@ -149,7 +151,7 @@ class DataSeeder extends Seeder
             'آخر',
         ];
         foreach ($typesAudience as $type) {
-            DB::table('type_audiences')->insertOrIgnore(['type_audience' => $type]);
+            DB::table('type_audiences')->updateOrInsert(['type_audience' => $type]);
         }
 
         // مواقف الحكم بالنسبة للمؤسسة
@@ -158,7 +160,7 @@ class DataSeeder extends Seeder
             'ضد',
         ];
         foreach ($positions as $position) {
-            DB::table('position_institutions')->insertOrIgnore(['position' => $position]);
+            DB::table('position_institutions')->updateOrInsert(['position' => $position]);
         }
 
         // أنواع الطعون مع الآجال القانونية
@@ -171,7 +173,7 @@ class DataSeeder extends Seeder
             ['type_recours' => 'نقض مع رفض الطعن', 'delai_legal_jours' => 30],
         ];
         foreach ($recours as $r) {
-            DB::table('type_recours')->insertOrIgnore($r);
+            DB::table('type_recours')->updateOrInsert($r);
         }
 
         // حالات التنفيذ
@@ -181,7 +183,7 @@ class DataSeeder extends Seeder
             'تنفيذ كامل',
         ];
         foreach ($statutsExec as $statut) {
-            DB::table('statut_executions')->insertOrIgnore(['statut_execution' => $statut]);
+            DB::table('statut_executions')->updateOrInsert(['statut_execution' => $statut]);
         }
 
         // أنواع الوثائق
@@ -198,7 +200,7 @@ class DataSeeder extends Seeder
             'مذكرة تعقيبية'
         ];
         foreach ($typesDoc as $type) {
-            DB::table('type_documents')->insertOrIgnore(['type_document' => $type]);
+            DB::table('type_documents')->updateOrInsert(['type_document' => $type]);
         }
 
         // حالات الشكايات
@@ -208,7 +210,7 @@ class DataSeeder extends Seeder
             'مغلقة'
         ];
         foreach ($statutsRecl as $statut) {
-            DB::table('statut_reclamations')->insertOrIgnore(['statut_reclamation' => $statut]);
+            DB::table('statut_reclamations')->updateOrInsert(['statut_reclamation' => $statut]);
         }
 
         // أنواع المشتكين
@@ -224,7 +226,7 @@ class DataSeeder extends Seeder
             'آخر'
         ];
         foreach ($typesReclamant as $type) {
-            DB::table('type_reclamants')->insertOrIgnore(['type_reclamant' => $type]);
+            DB::table('type_reclamants')->updateOrInsert(['type_reclamant' => $type]);
         }
 
         // أنواع الإجراءات
@@ -233,7 +235,7 @@ class DataSeeder extends Seeder
             'إحالة'
         ];
         foreach ($typesAction as $type) {
-            DB::table('type_actions')->insertOrIgnore(['type_action' => $type]);
+            DB::table('type_actions')->updateOrInsert(['type_action' => $type]);
         }
 
         // Reset cached roles and permissions

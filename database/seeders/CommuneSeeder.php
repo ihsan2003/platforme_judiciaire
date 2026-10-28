@@ -1663,7 +1663,7 @@ class CommuneSeeder extends Seeder
         }
 
         foreach (array_chunk($rows, 200) as $chunk) {
-            DB::table('communes')->insertOrIgnore($chunk);
+            DB::table('communes')->updateOrInsert($chunk);
         }
 
         $this->command->info(count($rows) . ' communes insérées.');
