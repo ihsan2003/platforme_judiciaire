@@ -13,30 +13,37 @@ use Illuminate\Support\Facades\Schema;
  *   - 1re instance / appel : année/code/ordre          ex. 2024/7120/1994
  *   - cassation            : année/هيئة/غرفة/ordre      ex. 2025/1/4/6327
  *
- * L'ancienne colonne dossier_judiciaires.numero_dossier_tribunal est conservée
- * (lecture seule, repli d'affichage) pour ne perdre aucune donnée.
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('dossier_tribunaux', function (Blueprint $table) {
-            $table->string('numero_dossier_tribunal', 50)->nullable()->after('id_commune');
-            // Index simple (pas unique) : opposition / révision recréent une instance
-            // au même tribunal avec le même numéro. L'unicité par dossier est
-            // contrôlée dans NumeroDossierValide.
-            $table->index(['id_tribunal', 'numero_dossier_tribunal'], 'dt_tribunal_numero_idx');
-        });
+
+        if (! Schema::hasColumn('dossier_tribunaux', 'numero_dossier_tribunal')) {
+            Schema::table('dossier_tribunaux', function (Blueprint $table) {
+                $table->string('numero_dossier_tribunal', 50)->nullable()->after('id_commune');
+            });
+        }
+
+        if (! Schema::hasIndex('dossier_tribunaux', 'dt_tribunal_numero_idx')) {
+            Schema::table('dossier_tribunaux', function (Blueprint $table) {
+               
+                $table->index(['id_tribunal', 'numero_dossier_tribunal'], 'dt_tribunal_numero_idx');
+            });
+        }
 
         $this->reprendreAnciensNumeros();
     }
 
     public function down(): void
     {
-        Schema::table('dossier_tribunaux', function (Blueprint $table) {
-            $table->dropIndex('dt_tribunal_numero_idx');
-            $table->dropColumn('numero_dossier_tribunal');
-        });
+        if (Schema::hasIndex('dossier_tribunaux', 'dt_tribunal_numero_idx')) {
+            Schema::table('dossier_tribunaux', fn (Blueprint $t) => $t->dropIndex('dt_tribunal_numero_idx'));
+        }
+
+        if (Schema::hasColumn('dossier_tribunaux', 'numero_dossier_tribunal')) {
+            Schema::table('dossier_tribunaux', fn (Blueprint $t) => $t->dropColumn('numero_dossier_tribunal'));
+        }
     }
 
     /**
@@ -64,6 +71,7 @@ return new class extends Migration
 
                     DB::table('dossier_tribunaux')
                         ->where('id', $premiere->id)
+                        ->where(fn ($q) => $q->whereNull('numero_dossier_tribunal')->orWhere('numero_dossier_tribunal', ''))
                         ->update([
                             'numero_dossier_tribunal' => preg_replace('/\s+/u', '', $dossier->numero_dossier_tribunal),
                         ]);
