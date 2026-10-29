@@ -37,6 +37,8 @@ class StoreDossierRequest extends FormRequest
                 Rule::exists('tribunaux', 'id')->when($premierDegre, fn ($r) => $r->where('id_degre', $premierDegre->id)),
             ],
             'id_commune'              => ['nullable', 'exists:communes,id'],
+            // La chambre doit appartenir au tribunal choisi
+            'id_chambre'              => ['nullable', Rule::exists('chambres', 'id')->where('id_tribunal', $this->input('id_tribunal'))],
             'numero_dossier_tribunal' => [
                 'nullable',
                 'string',
@@ -66,6 +68,7 @@ class StoreDossierRequest extends FormRequest
             'id_tribunal.required'           => 'يرجى اختيار المحكمة الابتدائية.',
             'id_tribunal.exists'             => 'المحكمة غير صالحة: يجب اختيار محكمة من الدرجة الأولى.',
             'id_commune.exists'              => 'الجماعة الترابية غير صالحة.',
+            'id_chambre.exists'              => 'الغرفة المحددة لا تنتمي إلى المحكمة المختارة.',
         ];
     }
 
@@ -75,6 +78,7 @@ class StoreDossierRequest extends FormRequest
             'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
             'id_tribunal' => 'المحكمة',
             'id_commune' => 'الجماعة الترابية',
+            'id_chambre' => 'الغرفة',
             'id_type_affaire' => 'الشعبة',
             'objet_litige' => 'موضوع النزاع',
             'action_service' => 'الإجراء المتخذ من طرف المصلحة',

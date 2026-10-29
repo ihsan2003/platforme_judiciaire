@@ -143,6 +143,7 @@ class DossierJudiciaireController extends Controller
                 'id_tribunal'             => $request->id_tribunal,
                 'id_degre'                => DegreeJuridiction::premierDegre()->id,
                 'id_commune'              => $request->id_commune ?: null,
+                'id_chambre'              => $request->id_chambre ?: null,
                 'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
                 'date_debut'              => $request->date_ouverture,
             ]);

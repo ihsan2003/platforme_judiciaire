@@ -49,7 +49,6 @@ class ProvinceSeeder extends Seeder
                 'تاونات',
                 'تازة',
                 'تحناوت',
-                'إمنتانوت',
                 'أزرو',
                 'ابن جرير'
             ],

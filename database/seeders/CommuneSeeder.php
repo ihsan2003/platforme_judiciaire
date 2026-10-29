@@ -461,9 +461,7 @@ class CommuneSeeder extends Seeder
                 'اهديل',
                 'سيدي امحمد دليل',
                 'السعيدات',
-            ],
-
-            'إمنتانوت' => [
+                'امنتانوت',
                 'سيدي عبد المومن',
                 'تاولوكلت',
                 'كماسة',
@@ -474,6 +472,21 @@ class CommuneSeeder extends Seeder
                 'أسيف المال',
                 'اداسيل',
                 'إمندونيت',
+                'بوابوض',
+                'سيدي غانم',
+                'للا عزيزة',
+                'أفلا إيسن',
+                'تمزكدوين',
+                'بوابوض امدلان',
+                'نفيفة',
+                'اشمرارن',
+                'تمليلت',
+                'آيت حدو يوسف',
+                'إروهالن',
+                'واد البور',
+                'رحالة',
+                'عين تزيتونت',
+                'كوزمت',
             ],
 
             'قلعة السراغنة' => [
@@ -939,6 +952,7 @@ class CommuneSeeder extends Seeder
                 'زاكموزن',
                 'تزكزاوين',
                 'أزرار',
+                'ولاد تايمة'
             ],
 
             'تزنيت' => [
@@ -1663,7 +1677,11 @@ class CommuneSeeder extends Seeder
         }
 
         foreach (array_chunk($rows, 200) as $chunk) {
-            DB::table('communes')->updateOrInsert($chunk);
+            DB::table('communes')->upsert(
+                $chunk,
+                ['commune', 'id_province'],
+                ['updated_at']
+            );
         }
 
         $this->command->info(count($rows) . ' communes insérées.');

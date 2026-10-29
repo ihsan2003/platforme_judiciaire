@@ -90,13 +90,13 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-3">
                                             <label class="small mb-1">الإقليم / العمالة</label>
                                             <select id="create_province" class="form-select form-select-sm" disabled>
                                                 <option value="">— اختر الجهة أولاً —</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-3">
                                             <label class="small mb-1">الجماعة الترابية</label>
                                             <select id="create_commune" name="id_commune" class="form-select form-select-sm" disabled>
                                                 <option value="">— اختر الإقليم أولاً —</option>
@@ -110,6 +110,14 @@
                                                 <option value="">— اختر الإقليم أولاً —</option>
                                             </select>
                                             @error('id_tribunal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small mb-1">الغرفة</label>
+                                            <select id="create_chambre" name="id_chambre"
+                                                    class="form-select form-select-sm @error('id_chambre') is-invalid @enderror" disabled>
+                                                <option value="">— اختر المحكمة أولاً —</option>
+                                            </select>
+                                            @error('id_chambre')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
                                     </div>
                                 </div>
@@ -232,6 +240,7 @@
         const selProvince = document.getElementById('create_province');
         const selCommune  = document.getElementById('create_commune');
         const selTribunal = document.getElementById('create_tribunal');
+        const selChambre  = document.getElementById('create_chambre');
         if (!selRegion || !selProvince || !selTribunal) return;
 
         const degreId = selTribunal.dataset.degre;
@@ -246,6 +255,7 @@
             reset(selProvince, '— جاري التحميل... —');
             reset(selCommune, '— اختر الإقليم أولاً —');
             reset(selTribunal, '— اختر الإقليم أولاً —');
+            reset(selChambre, '— اختر المحكمة أولاً —');
             if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
             try {
                 const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
@@ -256,6 +266,7 @@
         selProvince.addEventListener('change', async function () {
             reset(selCommune, '— جاري التحميل... —');
             reset(selTribunal, '— جاري التحميل... —');
+            reset(selChambre, '— اختر المحكمة أولاً —');
             if (!this.value) {
                 reset(selCommune, '— اختر الإقليم أولاً —');
                 reset(selTribunal, '— اختر الإقليم أولاً —');
@@ -271,6 +282,20 @@
                 remplir(selTribunal, data, '— اختر المحكمة —', 'nom_tribunal');
             } catch { reset(selTribunal, '— خطأ —'); }
         });
+
+        // Chambres du tribunal choisi (facultatif)
+        async function chargerChambres(idTribunal, preselect = '') {
+            if (!selChambre) return;
+            if (!idTribunal) { reset(selChambre, '— اختر المحكمة أولاً —'); return; }
+            reset(selChambre, '— جاري التحميل... —');
+            try {
+                const data = await (await fetch(`/api/tribunaux/${idTribunal}/chambres`)).json();
+                if (!data.length) { reset(selChambre, '— لا توجد غرف لهذه المحكمة —'); return; }
+                remplir(selChambre, data, '— بدون غرفة —', 'chambre');
+                if (preselect) selChambre.value = preselect;
+            } catch { reset(selChambre, '— خطأ —'); }
+        }
+        selTribunal.addEventListener('change', function () { chargerChambres(this.value); });
     })();
     </script>
 @endpush
