@@ -11,6 +11,8 @@ use App\Models\Recours;
 use App\Models\StatutDossier;
 use App\Models\Tribunal;
 use App\Models\TypeRecours;
+use App\Rules\NumeroDossierValide;
+use App\Support\NumeroDossier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +33,14 @@ class RecoursController extends Controller
     {
         $this->authorize('update', $jugement->dossierTribunal->dossier);
 
+        // Le format du numéro dépend de la juridiction visée par le recours :
+        // année/code/ordre (appel…) ou année/هيئة/غرفة/ordre (cassation).
+        $formatNumero = NumeroDossier::formatPourTypeRecours(
+            TypeRecours::find($request->input('id_type_recours'))?->type_recours,
+            $jugement->dossierTribunal->degre
+        );
+        NumeroDossier::fusionner($request, $formatNumero);
+
         $request->validate([
             'id_type_recours'         => ['required', 'exists:type_recours,id'],
             'date_recours'            => ['required', 'date', 'after_or_equal:' . $jugement->date_jugement->toDateString()],
@@ -38,9 +48,9 @@ class RecoursController extends Controller
             // Numéro attribué par la nouvelle juridiction (appel/cassation) au dossier.
             // Optionnel : peut être saisi plus tard depuis la fiche de l'instance si le
             // greffe ne l'a pas encore communiqué au moment du recours.
-            'numero_dossier_tribunal' => ['nullable', 'string', 'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'],
-        ], [
-            'numero_dossier_tribunal.regex' => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2026 / 1101 / 894).',
+            // (Unicité par tribunal non contrôlée ici : le tribunal cible n'est
+            // déterminé qu'à la création de l'instance.)
+            'numero_dossier_tribunal' => ['nullable', 'string', new NumeroDossierValide($formatNumero)],
         ]);
 
         // RG — Un jugement préparatoire (حكم تمهيدي) n'est pas attaquable séparément :

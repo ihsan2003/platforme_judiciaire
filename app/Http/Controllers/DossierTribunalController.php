@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\DegreeJuridiction;
 use App\Models\DossierJudiciaire;
 use App\Models\DossierTribunal;
 use App\Models\Tribunal;
+use App\Rules\NumeroDossierValide;
+use App\Support\NumeroDossier;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
@@ -25,12 +28,19 @@ class DossierTribunalController extends Controller
     {
         $this->authorize('update', $dossier);
 
+        $format = NumeroDossier::formatPourDegre(DegreeJuridiction::find($request->input('id_degre')));
+        NumeroDossier::fusionner($request, $format);
+
         $request->validate([
             'id_tribunal' => ['required', 'exists:tribunaux,id'],
             'id_degre'    => ['required', 'exists:degre_juridictions,id'],
             'id_commune'  => ['nullable', 'exists:communes,id'],
             // La chambre doit appartenir au tribunal choisi
             'id_chambre'  => ['nullable', Rule::exists('chambres', 'id')->where('id_tribunal', $request->id_tribunal)],
+            'numero_dossier_tribunal' => [
+                'nullable', 'string',
+                new NumeroDossierValide($format, (int) $request->input('id_tribunal') ?: null, $dossier->id),
+            ],
             'date_debut'  => ['required', 'date'],
             'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
@@ -50,6 +60,7 @@ class DossierTribunalController extends Controller
             'id_degre'    => $request->id_degre,
             'id_commune'  => $request->id_commune ?: null,
             'id_chambre'  => $request->id_chambre ?: null,
+            'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
             'date_debut'  => $request->date_debut,
             'date_fin'    => $request->date_fin,
         ]);
@@ -70,10 +81,17 @@ class DossierTribunalController extends Controller
         $this->authorize('update', $dossier);
         abort_unless($tribunal->id_dossier === $dossier->id, 403);
 
+        $format = NumeroDossier::formatPourDegre(DegreeJuridiction::find($request->input('id_degre')));
+        NumeroDossier::fusionner($request, $format);
+
         $request->validate([
             'id_degre'   => ['required', 'exists:degre_juridictions,id'],
             'id_commune' => ['nullable', 'exists:communes,id'],
             'id_chambre' => ['nullable', Rule::exists('chambres', 'id')->where('id_tribunal', $tribunal->id_tribunal)],
+            'numero_dossier_tribunal' => [
+                'nullable', 'string',
+                new NumeroDossierValide($format, $tribunal->id_tribunal, $dossier->id),
+            ],
             'date_debut' => ['required', 'date'],
             'date_fin'   => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
@@ -82,6 +100,7 @@ class DossierTribunalController extends Controller
             'id_degre'   => $request->id_degre,
             'id_commune' => $request->id_commune ?: null,
             'id_chambre' => $request->id_chambre ?: null,
+            'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
             'date_debut' => $request->date_debut,
             'date_fin'   => $request->date_fin,
         ]);

@@ -107,7 +107,7 @@
                                         @foreach($dossierTribunaux as $dt)
                                             <option value="{{ $dt->id }}"
                                                 @selected(old('id_dossier_tribunal', $defaultDossierTribunalId ?? null) == $dt->id)>
-                                                {{ $dt->dossier->numero_dossier_tribunal ?? '—' }}
+                                                {{ $dt->numero_dossier_tribunal ?? '—' }}
                                                 · {{ $dt->tribunal->nom_tribunal ?? '—' }}
                                                 · {{ $dt->degre->degre_juridiction ?? '—' }}
                                             </option>
@@ -859,7 +859,7 @@
                 dates     : @json($dt->audiences->map(fn($a) => $a->date_audience->format('Y-m-d'))->unique()->sort()->values()),
                 tribunalId: {{ $dt->id_tribunal }},
                 // ملخص الملف (حكم تمهيدي)
-                numero    : @json($dt->dossier->numero_dossier_tribunal ?? '—'),
+                numero    : @json($dt->numero_dossier_tribunal ?? '—'),
                 tribunal  : @json($dt->tribunal->nom_tribunal ?? '—'),
                 degre     : @json($dt->degre->degre_juridiction ?? '—'),
                 debut     : @json($dt->date_debut?->format('d/m/Y') ?? '—'),

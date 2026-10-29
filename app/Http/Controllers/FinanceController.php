@@ -42,7 +42,7 @@ class FinanceController extends Controller
             // ══ Recherche (numéro de dossier ou tribunal) ══
             ->when(request('search'), function ($q, $v) {
                 $q->where(function ($sub) use ($v) {
-                    $sub->where('dossier_judiciaires.numero_dossier_tribunal', 'like', "%{$v}%")
+                    $sub->where('dossier_tribunaux.numero_dossier_tribunal', 'like', '%' . preg_replace('/\s+/u', '', $v) . '%')
                         ->orWhere('tribunaux.nom_tribunal', 'like', "%{$v}%");
                 });
             })
@@ -68,7 +68,7 @@ class FinanceController extends Controller
 
                 'tribunal'  => 'tribunaux.nom_tribunal',
 
-                'dossier'   => 'dossier_judiciaires.numero_dossier_tribunal',
+                'dossier'   => 'dossier_tribunaux.numero_dossier_tribunal',
 
                 // ── Position de l'institution (source: position_institutions, voir JugementController) ──
                 'position' => fn($q, $dir) => $q->orderBy(

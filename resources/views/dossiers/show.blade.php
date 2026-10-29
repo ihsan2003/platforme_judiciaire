@@ -827,6 +827,9 @@
                                 <span class="mx-1">·</span><i class="bi bi-diagram-3 me-1"></i>{{ $dt->chambre->chambre }}
                             @endif
                         </div>
+                        <div class="deg-sub" dir="ltr" style="text-align:start">
+                            <i class="bi bi-hash me-1"></i>{{ $dt->numero_dossier_tribunal ?: '— لم يُحدَّد بعد —' }}
+                        </div>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -2017,6 +2020,11 @@
                         </select>
                     </div>
 
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">رقم الملف بهذه المحكمة</label>
+                        <x-numero-dossier format="standard" driver="#modal_degre" />
+                    </div>
+
                     <div class="col-sm-6">
                         <label class="form-label fw-semibold small">تاريخ الإحالة <span class="text-danger">*</span></label>
                         <input type="date" name="date_debut" class="form-control" value="{{ date('Y-m-d') }}" required>
@@ -2037,6 +2045,10 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    @vite('resources/js/numero-dossier.js')
+@endpush
 
 {{-- Modals modifier chaque tribunal (تعديل بيانات المحكمة) ──────────────── --}}
 @php
@@ -2069,11 +2081,17 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label fw-semibold small">درجة التقاضي</label>
-                        <select name="id_degre" class="form-select" required>
+                        <select name="id_degre" id="editDegre{{ $dt->id }}" class="form-select" required>
                             @foreach($degresJuridiction as $d)
-                                <option value="{{ $d->id }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
+                                <option value="{{ $d->id }}" data-numero-format="{{ \App\Support\NumeroDossier::formatPourDegre($d) }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small">رقم الملف بهذه المحكمة</label>
+                        <x-numero-dossier :format="\App\Support\NumeroDossier::formatPourDegre($dt->degre)"
+                                          :value="$dt->numero_dossier_tribunal"
+                                          driver="#editDegre{{ $dt->id }}" />
                     </div>
                     @php $communesDt = $communesParProvince->get($dt->tribunal?->id_province, collect()); @endphp
                     <div class="col-12">

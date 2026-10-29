@@ -252,9 +252,9 @@
                     </td>
 
                     <td>
-                        @if($execution->jugement?->dossierTribunal?->dossier?->numero_dossier_tribunal)
+                        @if($execution->jugement?->dossierTribunal?->numero_dossier_tribunal)
                             <span class="fw-semibold">
-                                {{ $execution->jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
+                                {{ $execution->jugement->dossierTribunal->numero_dossier_tribunal }}
                             </span>
                         @else
                             <span class="text-muted">—</span>
@@ -267,7 +267,7 @@
                             <a href="{{ route('dossiers.show', $execution->jugement->dossierTribunal->dossier) }}"
                                class="text-decoration-none fw-semibold text-primary d-block">
 
-                                {{ $execution->jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
+                                {{ $execution->jugement->dossierTribunal->numero_dossier_tribunal }}
 
                             </a>
 

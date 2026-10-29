@@ -53,7 +53,7 @@ class JugementController extends Controller
                 $q->where(function ($sub) use ($v) {
                     $sub->whereHas('juge', fn($q) => $q->where('nom_complet', 'like', "%{$v}%"))
                         ->orWhereHas('dossierTribunal.tribunal', fn($q) => $q->where('nom_tribunal', 'like', "%{$v}%"))
-                        ->orWhereHas('dossierTribunal.dossier', fn($q) => $q->where('numero_dossier_tribunal', 'like', "%{$v}%"));
+                        ->orWhereHas('dossierTribunal', fn($q) => $q->where('numero_dossier_tribunal', 'like', '%' . preg_replace('/\s+/u', '', $v) . '%'));
                 });
             })
             ->when(request('date_jugement'), fn($q, $v) =>
@@ -98,8 +98,7 @@ class JugementController extends Controller
                 'date' => 'date_jugement',
 
                 'dossier' => fn($q, $dir) => $q->orderBy(
-                    \App\Models\DossierJudiciaire::select('dossier_judiciaires.numero_dossier_tribunal')
-                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
+                    \App\Models\DossierTribunal::select('numero_dossier_tribunal')
                         ->whereColumn('dossier_tribunaux.id', 'jugements.id_dossier_tribunal')
                         ->limit(1),
                     $dir

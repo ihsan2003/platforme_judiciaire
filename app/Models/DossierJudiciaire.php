@@ -259,6 +259,27 @@ class DossierJudiciaire extends Model
     // ACCESSEURS
     // ─────────────────────────────────────────
 
+    /**
+     * Le numéro appartient à l'instance (DossierTribunal::numero_dossier_tribunal).
+     * Au niveau du dossier on expose le numéro de l'instance la plus récente
+     * qui en possède un ; repli sur l'ancienne colonne pour les dossiers sans
+     * instance numérotée. Les vues qui lisent $dossier->numero_dossier_tribunal
+     * continuent donc de fonctionner.
+     */
+    public function getNumeroDossierTribunalAttribute($valeurHeritee): ?string
+    {
+        $instances = $this->relationLoaded('dossierTribunaux')
+            ? $this->dossierTribunaux
+            : $this->dossierTribunaux()->get(['id', 'id_dossier', 'date_debut', 'numero_dossier_tribunal']);
+
+        $courante = $instances
+            ->filter(fn ($dt) => filled($dt->numero_dossier_tribunal))
+            ->sortByDesc(fn ($dt) => sprintf('%s-%010d', $dt->date_debut?->format('Ymd') ?? '00000000', $dt->id))
+            ->first();
+
+        return $courante?->numero_dossier_tribunal ?? $valeurHeritee;
+    }
+
     public function getEstActifAttribute(): bool
     {
         $statut = $this->statut?->statut_dossier ?? '';

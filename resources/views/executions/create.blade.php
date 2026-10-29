@@ -137,7 +137,7 @@
                                         @if($selectedJugement->dossierTribunal->dossier ?? null)
                                             <span class="mx-1">·</span>
                                             <i class="bi bi-folder2 ms-1"></i>
-                                            {{ $selectedJugement->dossierTribunal->dossier->numero_dossier_tribunal }}
+                                            {{ $selectedJugement->dossierTribunal->numero_dossier_tribunal }}
                                         @endif
                                     </div>
                                 </div>
@@ -182,7 +182,7 @@
                                         — {{ $jug->date_jugement->format('d/m/Y') }}
                                         — {{ $jug->dossierTribunal->tribunal->nom_tribunal ?? '' }}
                                         @if($jug->dossierTribunal->dossier ?? null)
-                                            ({{ $jug->dossierTribunal->dossier->numero_dossier_tribunal }})
+                                            ({{ $jug->dossierTribunal->numero_dossier_tribunal }})
                                         @endif
                                         @if($jug->juge)
                                             — {{ $jug->juge->nom_complet }}

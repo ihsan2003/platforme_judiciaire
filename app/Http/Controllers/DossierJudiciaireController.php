@@ -46,17 +46,30 @@ class DossierJudiciaireController extends Controller
             ->when($request->statut, fn($q, $v) => $q->whereHas(
                 'statut', fn($q) => $q->where('id', $v)
             ))
-            ->when($request->search, fn($q, $v) =>
+            ->when($request->search, function ($q, $v) {
+                // Le numéro est stocké sans espaces, au niveau de chaque instance
+                // (l'ancienne colonne du dossier reste interrogée pour les données historiques).
+                $numero = preg_replace('/\s+/u', '', $v);
+
                 $q->where(fn($q) =>
-                    $q->where('numero_dossier_tribunal', 'like', "%{$v}%")
+                    $q->whereHas('dossierTribunaux', fn($d) => $d->where('numero_dossier_tribunal', 'like', "%{$numero}%"))
+                      ->orWhere('numero_dossier_tribunal', 'like', "%{$v}%")
                       ->orWhere('id', 'like', "%{$v}%")
-                )
-            )
+                );
+            })
             ->when($request->date_debut, fn($q, $v) => $q->where('date_ouverture', '>=', $v))
             ->when($request->date_fin, fn($q, $v) => $q->where('date_ouverture', '<=', $v))
             ->sortable([
                 'id' => 'id',
-                'numero' => 'numero_dossier_tribunal',
+                'numero' => fn($q, $dir) => $q->orderBy(
+                    DossierTribunal::select('numero_dossier_tribunal')
+                        ->whereColumn('dossier_tribunaux.id_dossier', 'dossier_judiciaires.id')
+                        ->whereNotNull('numero_dossier_tribunal')
+                        ->orderByDesc('date_debut')
+                        ->orderByDesc('id')
+                        ->limit(1),
+                    $dir
+                ),
                 'type' => fn($q, $dir) => $q->orderBy(
                     TypeAffaire::select('affaire')
                         ->whereColumn('type_affaires.id', 'dossier_judiciaires.id_type_affaire'),
@@ -104,20 +117,17 @@ class DossierJudiciaireController extends Controller
     {
         $typesAffaire = TypeAffaire::orderBy('affaire')->get();
         $typesDocuments   = TypeDocument::orderBy('type_document')->get();
+        $regions          = Region::orderBy('region')->get();
+        $premierDegre     = DegreeJuridiction::premierDegre();
 
-        
-        return view('dossiers.create', compact('typesAffaire', 'typesDocuments'));
+        return view('dossiers.create', compact('typesAffaire', 'typesDocuments', 'regions', 'premierDegre'));
     }
 
     // ================= STORE =================
     public function store(StoreDossierRequest $request): RedirectResponse
     {
-        // Assemblage du numéro Mahakim à partir des 3 champs
-        $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
-
-        DB::transaction(function () use ($request, $numero_mahakim) {
+        DB::transaction(function () use ($request) {
             $dossier = DossierJudiciaire::create([
-                'numero_dossier_tribunal' => $numero_mahakim,
                 'objet_litige'            => $request->objet_litige,
                 'action_service'          => $request->action_service,
                 'id_type_affaire'         => $request->id_type_affaire,
@@ -125,6 +135,16 @@ class DossierJudiciaireController extends Controller
                 'date_cloture'            => $request->date_cloture,
                 'created_by'              => Auth::id(),
 
+            ]);
+
+            // Instance de première instance : porte le tribunal et le numéro attribué par cette juridiction.
+            DossierTribunal::create([
+                'id_dossier'              => $dossier->id,
+                'id_tribunal'             => $request->id_tribunal,
+                'id_degre'                => DegreeJuridiction::premierDegre()->id,
+                'id_commune'              => $request->id_commune ?: null,
+                'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
+                'date_debut'              => $request->date_ouverture,
             ]);
 
             if ($request->hasFile('document')) {
@@ -240,11 +260,7 @@ class DossierJudiciaireController extends Controller
     // ================= UPDATE =================
     public function update(UpdateDossierRequest $request, DossierJudiciaire $dossier): RedirectResponse
     {
-        // Assemblage du numéro Mahakim à partir des 3 champs
-        $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
-
         $dossier->update([
-            'numero_dossier_tribunal' => $numero_mahakim,
             'objet_litige'            => $request->objet_litige,
             'action_service'          => $request->action_service,
             'id_type_affaire'         => $request->id_type_affaire,

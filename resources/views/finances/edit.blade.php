@@ -63,7 +63,7 @@
 
                         <div class="form-control bg-light text-muted">
                             حكم بتاريخ {{ $jugement?->date_jugement?->format('d/m/Y') ?? '—' }}
-                            · {{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
+                            · {{ $dt?->numero_dossier_tribunal ?? '—' }}
                             · {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
                         </div>
 

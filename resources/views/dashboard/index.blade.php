@@ -373,7 +373,7 @@
                         <div class="agenda-title">
                             @if($aud->dossierTribunal?->dossier)
                                 <a href="{{ route('dossiers.show', $aud->dossierTribunal->dossier) }}" style="color:#1a3a5c;text-decoration:none">
-                                    {{ $aud->dossierTribunal->dossier->numero_dossier_tribunal }}
+                                    {{ $aud->dossierTribunal->numero_dossier_tribunal }}
                                 </a>
                             @else <span class="text-muted">—</span> @endif
                         </div>

@@ -84,9 +84,9 @@ class ExecutionController extends Controller
                         )
 
                         ->orWhere(
-                            'dossier_judiciaires.numero_dossier_tribunal',
+                            'dossier_tribunaux.numero_dossier_tribunal',
                             'like',
-                            "%{$v}%"
+                            '%' . preg_replace('/\s+/u', '', $v) . '%'
                         )
 
                         ->orWhere(
@@ -151,7 +151,7 @@ class ExecutionController extends Controller
 
                 'numero' => 'executions.numero_dossier_execution',
 
-                'dossier' => 'dossier_judiciaires.numero_dossier_tribunal',
+                'dossier' => 'dossier_tribunaux.numero_dossier_tribunal',
 
                 'jugement' => 'jugements.date_jugement',
 

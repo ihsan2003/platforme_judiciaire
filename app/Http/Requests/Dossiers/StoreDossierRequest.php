@@ -2,7 +2,11 @@
 
 namespace App\Http\Requests\Dossiers;
 
+use App\Models\DegreeJuridiction;
+use App\Rules\NumeroDossierValide;
+use App\Support\NumeroDossier;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validation des données pour la création d'un dossier judiciaire.
@@ -14,14 +18,29 @@ class StoreDossierRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Le dossier naît avec son instance de première instance : le numéro saisi
+     * est celui de cette juridiction (format standard année/code/ordre).
+     */
+    protected function prepareForValidation(): void
+    {
+        NumeroDossier::fusionner($this, NumeroDossier::STANDARD);
+    }
+
     public function rules(): array
     {
+        $premierDegre = DegreeJuridiction::premierDegre();
+
         return [
+            'id_tribunal' => [
+                'required',
+                Rule::exists('tribunaux', 'id')->when($premierDegre, fn ($r) => $r->where('id_degre', $premierDegre->id)),
+            ],
+            'id_commune'              => ['nullable', 'exists:communes,id'],
             'numero_dossier_tribunal' => [
                 'nullable',
                 'string',
-                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,6}$/',
-                'unique:dossier_judiciaires,numero_dossier_tribunal',
+                new NumeroDossierValide(NumeroDossier::STANDARD, (int) $this->input('id_tribunal') ?: null),
             ],
             'id_type_affaire'         => 'required|exists:type_affaires,id',
             'date_ouverture'          => 'required|date',
@@ -44,8 +63,9 @@ class StoreDossierRequest extends FormRequest
 
             'date_cloture.date'              => 'تاريخ الإغلاق غير صالح.',
             'date_cloture.after'             => 'يجب أن يكون تاريخ الإغلاق بعد تاريخ الفتح.',
-            'numero_dossier_tribunal.regex'  => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
-            'numero_dossier_tribunal.unique' => 'رقم الملف بالمحكمة موجود بالفعل لملف آخر.',
+            'id_tribunal.required'           => 'يرجى اختيار المحكمة الابتدائية.',
+            'id_tribunal.exists'             => 'المحكمة غير صالحة: يجب اختيار محكمة من الدرجة الأولى.',
+            'id_commune.exists'              => 'الجماعة الترابية غير صالحة.',
         ];
     }
 
@@ -53,6 +73,8 @@ class StoreDossierRequest extends FormRequest
     {
         return [
             'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
+            'id_tribunal' => 'المحكمة',
+            'id_commune' => 'الجماعة الترابية',
             'id_type_affaire' => 'الشعبة',
             'objet_litige' => 'موضوع النزاع',
             'action_service' => 'الإجراء المتخذ من طرف المصلحة',

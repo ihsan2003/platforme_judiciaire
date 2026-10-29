@@ -14,6 +14,16 @@ class DegreeJuridiction extends Model
     
     protected $fillable = ['degre_juridiction', 'ordre'];
 
+    /**
+     * Degré « première instance » : même critère de libellé que le reste de
+     * l'application (الدرجة الأولى), repli sur ordre = 1.
+     */
+    public static function premierDegre(): ?self
+    {
+        return self::where('degre_juridiction', 'LIKE', '%الأولى%')->first()
+            ?? self::where('ordre', 1)->orderBy('id')->first();
+    }
+
     public function dossierTribunaux()
     {
         return $this->hasMany(DossierTribunal::class, 'id_degre');

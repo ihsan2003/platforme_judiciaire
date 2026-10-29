@@ -289,9 +289,9 @@
                     </td>
 
                     <td>
-                        @if($dt?->dossier?->numero_dossier_tribunal)
+                        @if($dt?->numero_dossier_tribunal)
                             <span class="fw-semibold">
-                                {{ $dt->dossier->numero_dossier_tribunal }}
+                                {{ $dt->numero_dossier_tribunal }}
                             </span>
                         @else
                             <span class="text-muted">—</span>

@@ -306,7 +306,7 @@
                             <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
                                class="text-decoration-none fw-semibold text-primary">
 
-                                {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
+                                {{ $jugement->dossierTribunal->numero_dossier_tribunal }}
 
                             </a>
 

@@ -40,7 +40,7 @@
 
                     <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
                        class="text-decoration-none">
-                        {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal ?? '—' }}
+                        {{ $jugement->dossierTribunal->numero_dossier_tribunal ?? '—' }}
                     </a>
                 </div>
             </div>
@@ -413,7 +413,7 @@
                                 نوع الطعن <span class="text-danger">*</span>
                             </label>
 
-                            <select name="id_type_recours" class="form-select form-select-sm" required>
+                            <select name="id_type_recours" id="select_type_recours" class="form-select form-select-sm" required>
                                 <option value="">— اختر —</option>
                                 @php
                                     $ordreActuel = $jugement->dossierTribunal->degre?->ordre ?? 1;
@@ -435,7 +435,8 @@
                                 @endphp
 
                                 @foreach($typesDisponibles as $tr)
-                                    <option value="{{ $tr->id }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
+                                    <option value="{{ $tr->id }}"
+                                            data-numero-format="{{ \App\Support\NumeroDossier::formatPourTypeRecours($tr->type_recours, $jugement->dossierTribunal->degre) }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
                                 @endforeach
                             </select>
 
@@ -459,6 +460,17 @@
                             @error('date_recours')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">
+                                رقم الملف لدى المحكمة المحال عليها
+                            </label>
+                            <x-numero-dossier format="standard" driver="#select_type_recours" />
+                            @error('numero_dossier_tribunal')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">اختياري — يمكن إضافته لاحقاً من فقرة المحكمة في صفحة الملف.</div>
                         </div>
 
                         <div class="mb-3">
@@ -570,3 +582,6 @@
 
 
 @endsection
+@push('scripts')
+    @vite('resources/js/numero-dossier.js')
+@endpush

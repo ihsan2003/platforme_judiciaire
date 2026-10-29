@@ -72,71 +72,55 @@
                                 @enderror
                             </div>
 
-                            {{-- Génération numéro Mahakim --}}
+                            {{-- المحكمة (الدرجة الأولى) + رقم الملف بهذه المحكمة --}}
                             <div class="col-12">
-
                                 <div class="p-3 bg-light rounded border">
-
-                                    <div class="row g-2 align-items-end">
-
-                                        <div class="col-lg-4 col-md-12">
-                                            <label class="small mb-1">السنة</label>
-                                            <input
-                                                type="number"
-                                                name="annee_mahakim"
-                                                id="annee_mahakim"
-                                                class="form-control text-center fw-bold"
-                                                value="{{ date('Y') }}"
-                                                min="1900"
-                                                max="2100">
-                                        </div>
-
-                                        <div class="col-lg-3 col-md-6">
-                                            <label class="small mb-1">رمز الفئة</label>
-                                            <input
-                                                type="text"
-                                                name="code_mahakim"
-                                                id="code_mahakim"
-                                                class="form-control text-center bg-white fw-bold"
-                                                maxlength="4"
-                                                inputmode="numeric"
-                                                placeholder="مثال: 1201"
-                                                value="{{ old('code_mahakim') }}">
-                                        </div>
-
-                                        <div class="col-lg-5 col-md-6">
-                                            <label class="small mb-1">رقم الترتيب</label>
-                                            <input
-                                                type="number"
-                                                name="ordre_mahakim"
-                                                id="ordre_mahakim"
-                                                class="form-control text-center fw-bold"
-                                                placeholder="مثال: 450"
-                                                value="{{ old('ordre_mahakim') }}">
-                                        </div>
-
+                                    <div class="small fw-semibold mb-2">
+                                        <i class="bi bi-bank me-1 text-primary"></i>
+                                        المحكمة{{ $premierDegre ? ' — ' . $premierDegre->degre_juridiction : '' }}
+                                        <span class="text-danger">*</span>
                                     </div>
-
-                                    <div class="mt-3 text-center">
-                                        <div class="small text-muted mb-1">
-                                            الرقم النهائي الذي سيتم تسجيله
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="small mb-1">الجهة</label>
+                                            <select id="create_region" class="form-select form-select-sm">
+                                                <option value="">— اختر الجهة —</option>
+                                                @foreach($regions as $region)
+                                                    <option value="{{ $region->id }}">{{ $region->region }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
-
-                                        <div
-                                            id="preview_mahakim"
-                                            class="h5 fw-bold text-dark border-bottom d-inline-block px-4 pb-1"
-                                            style="letter-spacing:2px;">
-                                            — / — / —
+                                        <div class="col-md-6">
+                                            <label class="small mb-1">الإقليم / العمالة</label>
+                                            <select id="create_province" class="form-select form-select-sm" disabled>
+                                                <option value="">— اختر الجهة أولاً —</option>
+                                            </select>
                                         </div>
-
-                                        <input
-                                            type="hidden"
-                                            name="numero_dossier_tribunal"
-                                            id="numero_dossier_tribunal">
+                                        <div class="col-md-6">
+                                            <label class="small mb-1">الجماعة الترابية</label>
+                                            <select id="create_commune" name="id_commune" class="form-select form-select-sm" disabled>
+                                                <option value="">— اختر الإقليم أولاً —</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="small mb-1">المحكمة <span class="text-danger">*</span></label>
+                                            <select id="create_tribunal" name="id_tribunal"
+                                                    class="form-select form-select-sm @error('id_tribunal') is-invalid @enderror"
+                                                    data-degre="{{ $premierDegre?->id }}" disabled required>
+                                                <option value="">— اختر الإقليم أولاً —</option>
+                                            </select>
+                                            @error('id_tribunal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        </div>
                                     </div>
-
                                 </div>
+                            </div>
 
+                            <div class="col-12">
+                                <div class="small fw-semibold mb-2">رقم الملف بالمحكمة</div>
+                                <x-numero-dossier format="standard" :use-old="true" />
+                                @error('numero_dossier_tribunal')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             {{-- موضوع النزاع --}}
@@ -240,12 +224,59 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/dossier-mahakim.js')
+    @vite('resources/js/numero-dossier.js')
+    <script>
+    /* Cascade Région > Province > (Commune) / Tribunal de première instance */
+    (function () {
+        const selRegion   = document.getElementById('create_region');
+        const selProvince = document.getElementById('create_province');
+        const selCommune  = document.getElementById('create_commune');
+        const selTribunal = document.getElementById('create_tribunal');
+        if (!selRegion || !selProvince || !selTribunal) return;
+
+        const degreId = selTribunal.dataset.degre;
+        const reset = (sel, ph) => { sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; };
+        const remplir = (sel, items, ph, label) => {
+            sel.innerHTML = `<option value="">${ph}</option>` +
+                items.map(i => `<option value="${i.id}">${i[label]}</option>`).join('');
+            sel.disabled = false;
+        };
+
+        selRegion.addEventListener('change', async function () {
+            reset(selProvince, '— جاري التحميل... —');
+            reset(selCommune, '— اختر الإقليم أولاً —');
+            reset(selTribunal, '— اختر الإقليم أولاً —');
+            if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
+            try {
+                const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
+                remplir(selProvince, data, '— اختر الإقليم —', 'province');
+            } catch { reset(selProvince, '— خطأ —'); }
+        });
+
+        selProvince.addEventListener('change', async function () {
+            reset(selCommune, '— جاري التحميل... —');
+            reset(selTribunal, '— جاري التحميل... —');
+            if (!this.value) {
+                reset(selCommune, '— اختر الإقليم أولاً —');
+                reset(selTribunal, '— اختر الإقليم أولاً —');
+                return;
+            }
+            fetch(`/api/provinces/${this.value}/communes`).then(r => r.json()).then(data => {
+                if (!data.length) { reset(selCommune, '— لا توجد جماعات لهذا الإقليم —'); return; }
+                remplir(selCommune, data, '— اختر الجماعة —', 'commune');
+            }).catch(() => reset(selCommune, '— خطأ —'));
+            try {
+                const data = await (await fetch(`/api/provinces/${this.value}/degres/${degreId}/tribunaux`)).json();
+                if (!data.length) { reset(selTribunal, '— لا توجد محاكم متاحة —'); return; }
+                remplir(selTribunal, data, '— اختر المحكمة —', 'nom_tribunal');
+            } catch { reset(selTribunal, '— خطأ —'); }
+        });
+    })();
+    </script>
 @endpush
 
 @push('styles')
 <style>
     .form-control:focus, .form-select:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1); }
-    #preview_mahakim { direction: ltr; }
 </style>
 @endpush

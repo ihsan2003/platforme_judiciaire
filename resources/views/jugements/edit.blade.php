@@ -115,7 +115,7 @@
                     <div class="col-12">
                         <label class="form-label fw-semibold small">الملف القضائي</label>
                         <div class="form-control bg-light text-muted">
-                            {{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
+                            {{ $dt?->numero_dossier_tribunal ?? '—' }}
                             ·
                             {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
                             ({{ $dt?->degre?->degre_juridiction ?? '—' }})
@@ -442,7 +442,7 @@
                 <dl class="row mb-0">
                     <dt class="col-6 text-muted fw-normal">الملف</dt>
                     <dd class="col-6 fw-semibold">
-                        <a></a>{{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
+                        <a></a>{{ $dt?->numero_dossier_tribunal ?? '—' }}
                     </dd>
 
                     <dt class="col-6 text-muted fw-normal">المحكمة</dt>

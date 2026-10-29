@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Dossiers;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateDossierRequest extends FormRequest
 {
@@ -14,16 +13,9 @@ class UpdateDossierRequest extends FormRequest
 
     public function rules(): array
     {
-        $dossierId = $this->route('dossier')->id;
-
+        // Le numéro n'est plus modifiable ici : il appartient à chaque instance
+        // (modal « تعديل بيانات المحكمة » → DossierTribunalController::update).
         return [
-            'numero_dossier_tribunal' => [
-                'nullable', 
-                'string', 
-                'max:255',
-                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,6}$/',
-                Rule::unique('dossier_judiciaires', 'numero_dossier_tribunal')->ignore($dossierId),
-            ],
             'id_type_affaire'         => ['required', 'exists:type_affaires,id'],
             'id_statut_dossier'       => ['required', 'exists:statut_dossiers,id'],
             'date_ouverture'          => ['required', 'date'],
@@ -50,15 +42,12 @@ class UpdateDossierRequest extends FormRequest
 
             'date_cloture.date'               => 'تاريخ الإغلاق غير صالح.',
             'date_cloture.after_or_equal'     => 'يجب أن يكون تاريخ الإغلاق بعد أو يساوي تاريخ الفتح.',
-            'numero_dossier_tribunal.regex'   => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
-            'numero_dossier_tribunal.unique'  => 'رقم الملف بالمحكمة موجود بالفعل لملف آخر.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
             'id_type_affaire' => 'الشعبة',
             'objet_litige' => 'موضوع النزاع',
             'action_service' => 'الإجراء المتخذ من طرف المصلحة',

@@ -144,7 +144,7 @@
                         @if($audience->dossierTribunal?->dossier)
                             <a href="{{ route('dossiers.show', $audience->dossierTribunal->dossier) }}"
                                class="text-decoration-none fw-semibold text-primary">
-                                {{ $audience->dossierTribunal->dossier->numero_dossier_tribunal }}
+                                {{ $audience->dossierTribunal->numero_dossier_tribunal }}
                             </a>
                         @else
                             <span class="text-muted">—</span>

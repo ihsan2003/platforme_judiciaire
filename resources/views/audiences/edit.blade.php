@@ -88,7 +88,7 @@
                                         <option value="{{ $dt->id }}"
                                                 data-tribunal-id="{{ $dt->id_tribunal }}"
                                                 @selected(old('id_dossier_tribunal', $audience->id_dossier_tribunal) == $dt->id)>
-                                            {{ $dt->dossier?->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
+                                            {{ $dt->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
                                             — {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
                                         </option>
                                     @endforeach

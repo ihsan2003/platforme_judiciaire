@@ -22,7 +22,7 @@ export default defineConfig({
                 'resources/js/tribunaux-edit.js',    
                 'resources/js/audience-create.js', 
                 'resources/js/audience-edit.js',       
-                'resources/js/dossier-mahakim.js',    
+                'resources/js/numero-dossier.js',    
 
             ],
             refresh: true,

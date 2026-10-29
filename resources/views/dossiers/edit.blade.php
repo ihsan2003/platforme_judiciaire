@@ -60,36 +60,14 @@
                         @error('id_type_affaire')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
-                    {{-- تعديل رقم المحكمة --}}
-                    @php
-                        // Extraction des composants du numéro existant (ex: 2024 / 1201 / 450)
-                        $parts = explode(' / ', $dossier->numero_dossier_tribunal);
-                        $annee = $parts[0] ?? date('Y');
-                        $code  = $parts[1] ?? '';
-                        $ordre = $parts[2] ?? '';
-                    @endphp
-
+                    {{-- رقم الملف: خاص بكل محكمة (درجة) — يُعدَّل من نافذة « تعديل بيانات المحكمة » في تبويب المحاكم --}}
                     <div class="col-12">
-                        <div class="p-3 bg-light rounded border border-warning border-opacity-25">
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-4">
-                                    <label class="small mb-1">السنة</label>
-                                    <input type="number" name="annee_mahakim" id="annee_mahakim" class="form-control text-center fw-bold" value="{{ old('annee_mahakim', $annee) }}" min="1900" max="2100">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="small mb-1">رمز الفئة</label>
-                                    <input type="text" name="code_mahakim" id="code_mahakim" class="form-control text-center bg-white fw-bold" maxlength="4" inputmode="numeric" placeholder="مثال: 1201" value="{{ old('code_mahakim', $code) }}">
-                                </div>
-                                <div class="col-md-5">
-                                    <label class="small mb-1">رقم الترتيب</label>
-                                    <input type="number" name="ordre_mahakim" id="ordre_mahakim" class="form-control text-center fw-bold" placeholder="مثال: 450" value="{{ old('ordre_mahakim', $ordre) }}">
-                                </div>
-                            </div>
-                            <div class="mt-3 text-center">
-                                <div class="small text-muted mb-1">الرقم النهائي:</div>
-                                <div id="preview_mahakim" class="h5 fw-bold text-dark border-bottom d-inline-block px-4 pb-1" style="letter-spacing: 2px;">{{ $dossier->numero_dossier_tribunal ?? '— / — / —' }}</div>
-                                <input type="hidden" name="numero_dossier_tribunal" id="numero_dossier_tribunal" value="{{ $dossier->numero_dossier_tribunal }}">
-                            </div>
+                        <div class="p-3 bg-light rounded border small text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            رقم الملف خاص بكل محكمة (ابتدائية، استئناف، نقض). لتعديله، افتح تبويب المحاكم في صفحة الملف ثم « تعديل بيانات المحكمة ».
+                            @if($dossier->numero_dossier_tribunal)
+                                <div class="mt-1 fw-semibold text-dark" dir="ltr">{{ $dossier->numero_dossier_tribunal }}</div>
+                            @endif
                         </div>
                     </div>
 
@@ -169,12 +147,4 @@
 
 @endsection
 
-@push('scripts')
-    @vite('resources/js/dossier-mahakim.js')
-@endpush
 
-@push('styles')
-<style>
-    #preview_mahakim { direction: ltr; }
-</style>
-@endpush

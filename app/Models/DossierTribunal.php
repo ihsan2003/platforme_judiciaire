@@ -24,6 +24,7 @@ class DossierTribunal extends Model
         'id_degre',
         'id_commune',
         'id_chambre',
+        'numero_dossier_tribunal',
         'date_debut',
         'date_fin'
     ];
@@ -397,6 +398,7 @@ class DossierTribunal extends Model
                 'id_degre',
                 'id_commune',
                 'id_chambre',
+                'numero_dossier_tribunal',
                 'date_debut',
                 'date_fin',
             ])
