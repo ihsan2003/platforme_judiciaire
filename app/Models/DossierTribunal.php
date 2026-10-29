@@ -23,6 +23,7 @@ class DossierTribunal extends Model
         'id_tribunal',
         'id_degre',
         'id_commune',
+        'id_chambre',
         'date_debut',
         'date_fin'
     ];
@@ -54,6 +55,11 @@ class DossierTribunal extends Model
     public function commune()
     {
         return $this->belongsTo(Commune::class, 'id_commune');
+    }
+
+    public function chambre()
+    {
+        return $this->belongsTo(Chambre::class, 'id_chambre');
     }
 
     public function audiences()
@@ -390,6 +396,7 @@ class DossierTribunal extends Model
                 'id_tribunal',
                 'id_degre',
                 'id_commune',
+                'id_chambre',
                 'date_debut',
                 'date_fin',
             ])

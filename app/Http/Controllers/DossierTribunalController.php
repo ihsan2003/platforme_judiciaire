@@ -8,6 +8,7 @@ use App\Models\DossierTribunal;
 use App\Models\Tribunal;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
 
 class DossierTribunalController extends Controller
 {
@@ -28,6 +29,8 @@ class DossierTribunalController extends Controller
             'id_tribunal' => ['required', 'exists:tribunaux,id'],
             'id_degre'    => ['required', 'exists:degre_juridictions,id'],
             'id_commune'  => ['nullable', 'exists:communes,id'],
+            // La chambre doit appartenir au tribunal choisi
+            'id_chambre'  => ['nullable', Rule::exists('chambres', 'id')->where('id_tribunal', $request->id_tribunal)],
             'date_debut'  => ['required', 'date'],
             'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
@@ -46,6 +49,7 @@ class DossierTribunalController extends Controller
             'id_tribunal' => $request->id_tribunal,
             'id_degre'    => $request->id_degre,
             'id_commune'  => $request->id_commune ?: null,
+            'id_chambre'  => $request->id_chambre ?: null,
             'date_debut'  => $request->date_debut,
             'date_fin'    => $request->date_fin,
         ]);
@@ -69,6 +73,7 @@ class DossierTribunalController extends Controller
         $request->validate([
             'id_degre'   => ['required', 'exists:degre_juridictions,id'],
             'id_commune' => ['nullable', 'exists:communes,id'],
+            'id_chambre' => ['nullable', Rule::exists('chambres', 'id')->where('id_tribunal', $tribunal->id_tribunal)],
             'date_debut' => ['required', 'date'],
             'date_fin'   => ['nullable', 'date', 'after_or_equal:date_debut'],
         ]);
@@ -76,6 +81,7 @@ class DossierTribunalController extends Controller
         $tribunal->update([
             'id_degre'   => $request->id_degre,
             'id_commune' => $request->id_commune ?: null,
+            'id_chambre' => $request->id_chambre ?: null,
             'date_debut' => $request->date_debut,
             'date_fin'   => $request->date_fin,
         ]);

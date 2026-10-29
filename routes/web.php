@@ -100,6 +100,15 @@ Route::middleware('auth')->prefix('api')->group(function () {
         return response()->json($tribunaux);
     });
 
+    // Chambres d'un tribunal
+    Route::get('/tribunaux/{tribunalId}/chambres', function ($tribunalId) {
+        $chambres = \App\Models\Chambre::where('id_tribunal', $tribunalId)
+            ->orderBy('id_type_chambre')
+            ->orderBy('numero')
+            ->get(['id', 'chambre']);
+        return response()->json($chambres);
+    });
+
     Route::get('/tribunaux/{tribunalId}/juges', function ($tribunalId) {
         $juges = \App\Models\Juge::where('id_tribunal', $tribunalId)
             ->orderBy('nom_complet')

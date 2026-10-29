@@ -1,0 +1,1750 @@
+diff --git a/app/Http/Controllers/AudienceController.php b/app/Http/Controllers/AudienceController.php
+index 7264b74..ef6b548 100644
+--- a/app/Http/Controllers/AudienceController.php
++++ b/app/Http/Controllers/AudienceController.php
+@@ -39,7 +39,7 @@ public function index()
+                 $q->where(function ($sub) use ($v) {
+                     $sub->whereHas('juge', fn($q) => $q->where('nom_complet', 'like', "%{$v}%"))
+                         ->orWhereHas('dossierTribunal.tribunal', fn($q) => $q->where('nom_tribunal', 'like', "%{$v}%"))
+-                        ->orWhereHas('dossierTribunal.dossier', fn($q) => $q->where('numero_dossier_tribunal', 'like', "%{$v}%"));
++                        ->orWhereHas('dossierTribunal', fn($q) => $q->where('numero_dossier_tribunal', 'like', '%' . preg_replace('/\s+/u', '', $v) . '%'));
+                 });
+             })
+             ->when(request('type'),       fn($q, $v) => $q->where('id_type_audience', $v))
+@@ -52,8 +52,7 @@ public function index()
+                 'date' => 'date_audience',
+ 
+                 'dossier' => fn($q, $dir) => $q->orderBy(
+-                    DossierJudiciaire::select('numero_dossier_tribunal')
+-                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
++                    \App\Models\DossierTribunal::select('numero_dossier_tribunal')
+                         ->whereColumn('dossier_tribunaux.id', 'audiences.id_dossier_tribunal')
+                         ->limit(1),
+                     $dir
+diff --git a/app/Http/Controllers/DossierJudiciaireController.php b/app/Http/Controllers/DossierJudiciaireController.php
+index f1a7fb2..c094a13 100644
+--- a/app/Http/Controllers/DossierJudiciaireController.php
++++ b/app/Http/Controllers/DossierJudiciaireController.php
+@@ -46,17 +46,30 @@ public function index(Request $request)
+             ->when($request->statut, fn($q, $v) => $q->whereHas(
+                 'statut', fn($q) => $q->where('id', $v)
+             ))
+-            ->when($request->search, fn($q, $v) =>
++            ->when($request->search, function ($q, $v) {
++                // Le numéro est stocké sans espaces, au niveau de chaque instance
++                // (l'ancienne colonne du dossier reste interrogée pour les données historiques).
++                $numero = preg_replace('/\s+/u', '', $v);
++
+                 $q->where(fn($q) =>
+-                    $q->where('numero_dossier_tribunal', 'like', "%{$v}%")
++                    $q->whereHas('dossierTribunaux', fn($d) => $d->where('numero_dossier_tribunal', 'like', "%{$numero}%"))
++                      ->orWhere('numero_dossier_tribunal', 'like', "%{$v}%")
+                       ->orWhere('id', 'like', "%{$v}%")
+-                )
+-            )
++                );
++            })
+             ->when($request->date_debut, fn($q, $v) => $q->where('date_ouverture', '>=', $v))
+             ->when($request->date_fin, fn($q, $v) => $q->where('date_ouverture', '<=', $v))
+             ->sortable([
+                 'id' => 'id',
+-                'numero' => 'numero_dossier_tribunal',
++                'numero' => fn($q, $dir) => $q->orderBy(
++                    DossierTribunal::select('numero_dossier_tribunal')
++                        ->whereColumn('dossier_tribunaux.id_dossier', 'dossier_judiciaires.id')
++                        ->whereNotNull('numero_dossier_tribunal')
++                        ->orderByDesc('date_debut')
++                        ->orderByDesc('id')
++                        ->limit(1),
++                    $dir
++                ),
+                 'type' => fn($q, $dir) => $q->orderBy(
+                     TypeAffaire::select('affaire')
+                         ->whereColumn('type_affaires.id', 'dossier_judiciaires.id_type_affaire'),
+@@ -104,20 +117,17 @@ public function create()
+     {
+         $typesAffaire = TypeAffaire::orderBy('affaire')->get();
+         $typesDocuments   = TypeDocument::orderBy('type_document')->get();
++        $regions          = Region::orderBy('region')->get();
++        $premierDegre     = DegreeJuridiction::premierDegre();
+ 
+-        
+-        return view('dossiers.create', compact('typesAffaire', 'typesDocuments'));
++        return view('dossiers.create', compact('typesAffaire', 'typesDocuments', 'regions', 'premierDegre'));
+     }
+ 
+     // ================= STORE =================
+     public function store(StoreDossierRequest $request): RedirectResponse
+     {
+-        // Assemblage du numéro Mahakim à partir des 3 champs
+-        $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
+-
+-        DB::transaction(function () use ($request, $numero_mahakim) {
++        DB::transaction(function () use ($request) {
+             $dossier = DossierJudiciaire::create([
+-                'numero_dossier_tribunal' => $numero_mahakim,
+                 'objet_litige'            => $request->objet_litige,
+                 'action_service'          => $request->action_service,
+                 'id_type_affaire'         => $request->id_type_affaire,
+@@ -127,6 +137,16 @@ public function store(StoreDossierRequest $request): RedirectResponse
+ 
+             ]);
+ 
++            // Instance de première instance : porte le tribunal et le numéro attribué par cette juridiction.
++            DossierTribunal::create([
++                'id_dossier'              => $dossier->id,
++                'id_tribunal'             => $request->id_tribunal,
++                'id_degre'                => DegreeJuridiction::premierDegre()->id,
++                'id_commune'              => $request->id_commune ?: null,
++                'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
++                'date_debut'              => $request->date_ouverture,
++            ]);
++
+             if ($request->hasFile('document')) {
+                 $file = $request->file('document');
+                 $path = $file->storeAs(
+@@ -240,11 +260,7 @@ public function edit(DossierJudiciaire $dossier)
+     // ================= UPDATE =================
+     public function update(UpdateDossierRequest $request, DossierJudiciaire $dossier): RedirectResponse
+     {
+-        // Assemblage du numéro Mahakim à partir des 3 champs
+-        $numero_mahakim = $request->annee_mahakim . ' / ' . $request->code_mahakim . ' / ' . $request->ordre_mahakim;
+-
+         $dossier->update([
+-            'numero_dossier_tribunal' => $numero_mahakim,
+             'objet_litige'            => $request->objet_litige,
+             'action_service'          => $request->action_service,
+             'id_type_affaire'         => $request->id_type_affaire,
+diff --git a/app/Http/Controllers/DossierTribunalController.php b/app/Http/Controllers/DossierTribunalController.php
+index 2c1430e..7e14afc 100644
+--- a/app/Http/Controllers/DossierTribunalController.php
++++ b/app/Http/Controllers/DossierTribunalController.php
+@@ -3,9 +3,12 @@
+ namespace App\Http\Controllers;
+ 
+ use App\Http\Controllers\Controller;
++use App\Models\DegreeJuridiction;
+ use App\Models\DossierJudiciaire;
+ use App\Models\DossierTribunal;
+ use App\Models\Tribunal;
++use App\Rules\NumeroDossierValide;
++use App\Support\NumeroDossier;
+ use Illuminate\Http\Request;
+ use Illuminate\Http\RedirectResponse;
+ 
+@@ -24,10 +27,17 @@ public function store(Request $request, DossierJudiciaire $dossier): RedirectRes
+     {
+         $this->authorize('update', $dossier);
+ 
++        $format = NumeroDossier::formatPourDegre(DegreeJuridiction::find($request->input('id_degre')));
++        NumeroDossier::fusionner($request, $format);
++
+         $request->validate([
+             'id_tribunal' => ['required', 'exists:tribunaux,id'],
+             'id_degre'    => ['required', 'exists:degre_juridictions,id'],
+             'id_commune'  => ['nullable', 'exists:communes,id'],
++            'numero_dossier_tribunal' => [
++                'nullable', 'string',
++                new NumeroDossierValide($format, (int) $request->input('id_tribunal') ?: null, $dossier->id),
++            ],
+             'date_debut'  => ['required', 'date'],
+             'date_fin'    => ['nullable', 'date', 'after_or_equal:date_debut'],
+         ]);
+@@ -46,6 +56,7 @@ public function store(Request $request, DossierJudiciaire $dossier): RedirectRes
+             'id_tribunal' => $request->id_tribunal,
+             'id_degre'    => $request->id_degre,
+             'id_commune'  => $request->id_commune ?: null,
++            'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
+             'date_debut'  => $request->date_debut,
+             'date_fin'    => $request->date_fin,
+         ]);
+@@ -66,9 +77,16 @@ public function update(Request $request, DossierJudiciaire $dossier, DossierTrib
+         $this->authorize('update', $dossier);
+         abort_unless($tribunal->id_dossier === $dossier->id, 403);
+ 
++        $format = NumeroDossier::formatPourDegre(DegreeJuridiction::find($request->input('id_degre')));
++        NumeroDossier::fusionner($request, $format);
++
+         $request->validate([
+             'id_degre'   => ['required', 'exists:degre_juridictions,id'],
+             'id_commune' => ['nullable', 'exists:communes,id'],
++            'numero_dossier_tribunal' => [
++                'nullable', 'string',
++                new NumeroDossierValide($format, $tribunal->id_tribunal, $dossier->id),
++            ],
+             'date_debut' => ['required', 'date'],
+             'date_fin'   => ['nullable', 'date', 'after_or_equal:date_debut'],
+         ]);
+@@ -76,6 +94,7 @@ public function update(Request $request, DossierJudiciaire $dossier, DossierTrib
+         $tribunal->update([
+             'id_degre'   => $request->id_degre,
+             'id_commune' => $request->id_commune ?: null,
++            'numero_dossier_tribunal' => $request->numero_dossier_tribunal,
+             'date_debut' => $request->date_debut,
+             'date_fin'   => $request->date_fin,
+         ]);
+diff --git a/app/Http/Controllers/ExecutionController.php b/app/Http/Controllers/ExecutionController.php
+index 08495e3..5700460 100644
+--- a/app/Http/Controllers/ExecutionController.php
++++ b/app/Http/Controllers/ExecutionController.php
+@@ -84,9 +84,9 @@ public function index()
+                         )
+ 
+                         ->orWhere(
+-                            'dossier_judiciaires.numero_dossier_tribunal',
++                            'dossier_tribunaux.numero_dossier_tribunal',
+                             'like',
+-                            "%{$v}%"
++                            '%' . preg_replace('/\s+/u', '', $v) . '%'
+                         )
+ 
+                         ->orWhere(
+@@ -151,7 +151,7 @@ function ($juge) use ($v) {
+ 
+                 'numero' => 'executions.numero_dossier_execution',
+ 
+-                'dossier' => 'dossier_judiciaires.numero_dossier_tribunal',
++                'dossier' => 'dossier_tribunaux.numero_dossier_tribunal',
+ 
+                 'jugement' => 'jugements.date_jugement',
+ 
+diff --git a/app/Http/Controllers/FinanceController.php b/app/Http/Controllers/FinanceController.php
+index 506407e..c59396a 100644
+--- a/app/Http/Controllers/FinanceController.php
++++ b/app/Http/Controllers/FinanceController.php
+@@ -42,7 +42,7 @@ public function index()
+             // ══ Recherche (numéro de dossier ou tribunal) ══
+             ->when(request('search'), function ($q, $v) {
+                 $q->where(function ($sub) use ($v) {
+-                    $sub->where('dossier_judiciaires.numero_dossier_tribunal', 'like', "%{$v}%")
++                    $sub->where('dossier_tribunaux.numero_dossier_tribunal', 'like', '%' . preg_replace('/\s+/u', '', $v) . '%')
+                         ->orWhere('tribunaux.nom_tribunal', 'like', "%{$v}%");
+                 });
+             })
+@@ -68,7 +68,7 @@ public function index()
+ 
+                 'tribunal'  => 'tribunaux.nom_tribunal',
+ 
+-                'dossier'   => 'dossier_judiciaires.numero_dossier_tribunal',
++                'dossier'   => 'dossier_tribunaux.numero_dossier_tribunal',
+ 
+                 // ── Position de l'institution (source: position_institutions, voir JugementController) ──
+                 'position' => fn($q, $dir) => $q->orderBy(
+diff --git a/app/Http/Controllers/JugementController.php b/app/Http/Controllers/JugementController.php
+index 15ad76c..bb397ec 100644
+--- a/app/Http/Controllers/JugementController.php
++++ b/app/Http/Controllers/JugementController.php
+@@ -53,7 +53,7 @@ public function index()
+                 $q->where(function ($sub) use ($v) {
+                     $sub->whereHas('juge', fn($q) => $q->where('nom_complet', 'like', "%{$v}%"))
+                         ->orWhereHas('dossierTribunal.tribunal', fn($q) => $q->where('nom_tribunal', 'like', "%{$v}%"))
+-                        ->orWhereHas('dossierTribunal.dossier', fn($q) => $q->where('numero_dossier_tribunal', 'like', "%{$v}%"));
++                        ->orWhereHas('dossierTribunal', fn($q) => $q->where('numero_dossier_tribunal', 'like', '%' . preg_replace('/\s+/u', '', $v) . '%'));
+                 });
+             })
+             ->when(request('date_jugement'), fn($q, $v) =>
+@@ -98,8 +98,7 @@ public function index()
+                 'date' => 'date_jugement',
+ 
+                 'dossier' => fn($q, $dir) => $q->orderBy(
+-                    \App\Models\DossierJudiciaire::select('dossier_judiciaires.numero_dossier_tribunal')
+-                        ->join('dossier_tribunaux', 'dossier_tribunaux.id_dossier', '=', 'dossier_judiciaires.id')
++                    \App\Models\DossierTribunal::select('numero_dossier_tribunal')
+                         ->whereColumn('dossier_tribunaux.id', 'jugements.id_dossier_tribunal')
+                         ->limit(1),
+                     $dir
+diff --git a/app/Http/Controllers/RecoursController.php b/app/Http/Controllers/RecoursController.php
+index 8c13be4..f3d80d4 100644
+--- a/app/Http/Controllers/RecoursController.php
++++ b/app/Http/Controllers/RecoursController.php
+@@ -11,6 +11,8 @@
+ use App\Models\StatutDossier;
+ use App\Models\Tribunal;
+ use App\Models\TypeRecours;
++use App\Rules\NumeroDossierValide;
++use App\Support\NumeroDossier;
+ use Illuminate\Http\RedirectResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\DB;
+@@ -31,6 +33,14 @@ public function store(Request $request, Jugement $jugement): RedirectResponse
+     {
+         $this->authorize('update', $jugement->dossierTribunal->dossier);
+ 
++        // Le format du numéro dépend de la juridiction visée par le recours :
++        // année/code/ordre (appel…) ou année/هيئة/غرفة/ordre (cassation).
++        $formatNumero = NumeroDossier::formatPourTypeRecours(
++            TypeRecours::find($request->input('id_type_recours'))?->type_recours,
++            $jugement->dossierTribunal->degre
++        );
++        NumeroDossier::fusionner($request, $formatNumero);
++
+         $request->validate([
+             'id_type_recours'         => ['required', 'exists:type_recours,id'],
+             'date_recours'            => ['required', 'date', 'after_or_equal:' . $jugement->date_jugement->toDateString()],
+@@ -38,9 +48,9 @@ public function store(Request $request, Jugement $jugement): RedirectResponse
+             // Numéro attribué par la nouvelle juridiction (appel/cassation) au dossier.
+             // Optionnel : peut être saisi plus tard depuis la fiche de l'instance si le
+             // greffe ne l'a pas encore communiqué au moment du recours.
+-            'numero_dossier_tribunal' => ['nullable', 'string', 'regex:/^\d{4} \/ \d{4} \/ \d{1,6}$/'],
+-        ], [
+-            'numero_dossier_tribunal.regex' => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2026 / 1101 / 894).',
++            // (Unicité par tribunal non contrôlée ici : le tribunal cible n'est
++            // déterminé qu'à la création de l'instance.)
++            'numero_dossier_tribunal' => ['nullable', 'string', new NumeroDossierValide($formatNumero)],
+         ]);
+ 
+         // RG — Un jugement préparatoire (حكم تمهيدي) n'est pas attaquable séparément :
+diff --git a/app/Http/Requests/Dossiers/StoreDossierRequest.php b/app/Http/Requests/Dossiers/StoreDossierRequest.php
+index 94c1374..06aa671 100644
+--- a/app/Http/Requests/Dossiers/StoreDossierRequest.php
++++ b/app/Http/Requests/Dossiers/StoreDossierRequest.php
+@@ -2,7 +2,11 @@
+ 
+ namespace App\Http\Requests\Dossiers;
+ 
++use App\Models\DegreeJuridiction;
++use App\Rules\NumeroDossierValide;
++use App\Support\NumeroDossier;
+ use Illuminate\Foundation\Http\FormRequest;
++use Illuminate\Validation\Rule;
+ 
+ /**
+  * Validation des données pour la création d'un dossier judiciaire.
+@@ -14,14 +18,29 @@ public function authorize(): bool
+         return true;
+     }
+ 
++    /**
++     * Le dossier naît avec son instance de première instance : le numéro saisi
++     * est celui de cette juridiction (format standard année/code/ordre).
++     */
++    protected function prepareForValidation(): void
++    {
++        NumeroDossier::fusionner($this, NumeroDossier::STANDARD);
++    }
++
+     public function rules(): array
+     {
++        $premierDegre = DegreeJuridiction::premierDegre();
++
+         return [
++            'id_tribunal' => [
++                'required',
++                Rule::exists('tribunaux', 'id')->when($premierDegre, fn ($r) => $r->where('id_degre', $premierDegre->id)),
++            ],
++            'id_commune'              => ['nullable', 'exists:communes,id'],
+             'numero_dossier_tribunal' => [
+                 'nullable',
+                 'string',
+-                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,6}$/',
+-                'unique:dossier_judiciaires,numero_dossier_tribunal',
++                new NumeroDossierValide(NumeroDossier::STANDARD, (int) $this->input('id_tribunal') ?: null),
+             ],
+             'id_type_affaire'         => 'required|exists:type_affaires,id',
+             'date_ouverture'          => 'required|date',
+@@ -44,8 +63,9 @@ public function messages(): array
+ 
+             'date_cloture.date'              => 'تاريخ الإغلاق غير صالح.',
+             'date_cloture.after'             => 'يجب أن يكون تاريخ الإغلاق بعد تاريخ الفتح.',
+-            'numero_dossier_tribunal.regex'  => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
+-            'numero_dossier_tribunal.unique' => 'رقم الملف بالمحكمة موجود بالفعل لملف آخر.',
++            'id_tribunal.required'           => 'يرجى اختيار المحكمة الابتدائية.',
++            'id_tribunal.exists'             => 'المحكمة غير صالحة: يجب اختيار محكمة من الدرجة الأولى.',
++            'id_commune.exists'              => 'الجماعة الترابية غير صالحة.',
+         ];
+     }
+ 
+@@ -53,6 +73,8 @@ public function attributes(): array
+     {
+         return [
+             'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
++            'id_tribunal' => 'المحكمة',
++            'id_commune' => 'الجماعة الترابية',
+             'id_type_affaire' => 'الشعبة',
+             'objet_litige' => 'موضوع النزاع',
+             'action_service' => 'الإجراء المتخذ من طرف المصلحة',
+diff --git a/app/Http/Requests/Dossiers/UpdateDossierRequest.php b/app/Http/Requests/Dossiers/UpdateDossierRequest.php
+index 24f8d16..0fb0f7e 100644
+--- a/app/Http/Requests/Dossiers/UpdateDossierRequest.php
++++ b/app/Http/Requests/Dossiers/UpdateDossierRequest.php
+@@ -3,7 +3,6 @@
+ namespace App\Http\Requests\Dossiers;
+ 
+ use Illuminate\Foundation\Http\FormRequest;
+-use Illuminate\Validation\Rule;
+ 
+ class UpdateDossierRequest extends FormRequest
+ {
+@@ -14,16 +13,9 @@ public function authorize(): bool
+ 
+     public function rules(): array
+     {
+-        $dossierId = $this->route('dossier')->id;
+-
++        // Le numéro n'est plus modifiable ici : il appartient à chaque instance
++        // (modal « تعديل بيانات المحكمة » → DossierTribunalController::update).
+         return [
+-            'numero_dossier_tribunal' => [
+-                'nullable', 
+-                'string', 
+-                'max:255',
+-                'regex:/^\d{4} \/ \d{1,4} \/ \d{1,6}$/',
+-                Rule::unique('dossier_judiciaires', 'numero_dossier_tribunal')->ignore($dossierId),
+-            ],
+             'id_type_affaire'         => ['required', 'exists:type_affaires,id'],
+             'id_statut_dossier'       => ['required', 'exists:statut_dossiers,id'],
+             'date_ouverture'          => ['required', 'date'],
+@@ -50,15 +42,12 @@ public function messages(): array
+ 
+             'date_cloture.date'               => 'تاريخ الإغلاق غير صالح.',
+             'date_cloture.after_or_equal'     => 'يجب أن يكون تاريخ الإغلاق بعد أو يساوي تاريخ الفتح.',
+-            'numero_dossier_tribunal.regex'   => 'صيغة رقم المحكمة غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024 / 1201 / 450).',
+-            'numero_dossier_tribunal.unique'  => 'رقم الملف بالمحكمة موجود بالفعل لملف آخر.',
+         ];
+     }
+ 
+     public function attributes(): array
+     {
+         return [
+-            'numero_dossier_tribunal' => 'رقم الملف بالمحكمة',
+             'id_type_affaire' => 'الشعبة',
+             'objet_litige' => 'موضوع النزاع',
+             'action_service' => 'الإجراء المتخذ من طرف المصلحة',
+diff --git a/app/Models/DegreeJuridiction.php b/app/Models/DegreeJuridiction.php
+index 96d8aed..71a3797 100644
+--- a/app/Models/DegreeJuridiction.php
++++ b/app/Models/DegreeJuridiction.php
+@@ -14,6 +14,16 @@ class DegreeJuridiction extends Model
+     
+     protected $fillable = ['degre_juridiction', 'ordre'];
+ 
++    /**
++     * Degré « première instance » : même critère de libellé que le reste de
++     * l'application (الدرجة الأولى), repli sur ordre = 1.
++     */
++    public static function premierDegre(): ?self
++    {
++        return self::where('degre_juridiction', 'LIKE', '%الأولى%')->first()
++            ?? self::where('ordre', 1)->orderBy('id')->first();
++    }
++
+     public function dossierTribunaux()
+     {
+         return $this->hasMany(DossierTribunal::class, 'id_degre');
+diff --git a/app/Models/DossierJudiciaire.php b/app/Models/DossierJudiciaire.php
+index 045b1f8..969c345 100644
+--- a/app/Models/DossierJudiciaire.php
++++ b/app/Models/DossierJudiciaire.php
+@@ -259,6 +259,27 @@ public function historiqueStatuts()
+     // ACCESSEURS
+     // ─────────────────────────────────────────
+ 
++    /**
++     * Le numéro appartient à l'instance (DossierTribunal::numero_dossier_tribunal).
++     * Au niveau du dossier on expose le numéro de l'instance la plus récente
++     * qui en possède un ; repli sur l'ancienne colonne pour les dossiers sans
++     * instance numérotée. Les vues qui lisent $dossier->numero_dossier_tribunal
++     * continuent donc de fonctionner.
++     */
++    public function getNumeroDossierTribunalAttribute($valeurHeritee): ?string
++    {
++        $instances = $this->relationLoaded('dossierTribunaux')
++            ? $this->dossierTribunaux
++            : $this->dossierTribunaux()->get(['id', 'id_dossier', 'date_debut', 'numero_dossier_tribunal']);
++
++        $courante = $instances
++            ->filter(fn ($dt) => filled($dt->numero_dossier_tribunal))
++            ->sortByDesc(fn ($dt) => sprintf('%s-%010d', $dt->date_debut?->format('Ymd') ?? '00000000', $dt->id))
++            ->first();
++
++        return $courante?->numero_dossier_tribunal ?? $valeurHeritee;
++    }
++
+     public function getEstActifAttribute(): bool
+     {
+         $statut = $this->statut?->statut_dossier ?? '';
+diff --git a/app/Models/DossierTribunal.php b/app/Models/DossierTribunal.php
+index 5a11902..3e0dd41 100644
+--- a/app/Models/DossierTribunal.php
++++ b/app/Models/DossierTribunal.php
+@@ -23,6 +23,7 @@ class DossierTribunal extends Model
+         'id_tribunal',
+         'id_degre',
+         'id_commune',
++        'numero_dossier_tribunal',
+         'date_debut',
+         'date_fin'
+     ];
+@@ -390,6 +391,7 @@ public function getActivitylogOptions(): LogOptions
+                 'id_tribunal',
+                 'id_degre',
+                 'id_commune',
++                'numero_dossier_tribunal',
+                 'date_debut',
+                 'date_fin',
+             ])
+diff --git a/app/Rules/NumeroDossierValide.php b/app/Rules/NumeroDossierValide.php
+new file mode 100644
+index 0000000..032bc9a
+--- /dev/null
++++ b/app/Rules/NumeroDossierValide.php
+@@ -0,0 +1,48 @@
++<?php
++
++namespace App\Rules;
++
++use App\Models\DossierTribunal;
++use App\Support\NumeroDossier;
++use Closure;
++use Illuminate\Contracts\Validation\ValidationRule;
++
++/**
++ * Valide le numéro d'une instance selon le format de sa juridiction, et refuse
++ * un numéro déjà porté, au même tribunal, par une instance d'un AUTRE dossier
++ * (un même dossier peut garder son numéro d'une instance à l'autre :
++ * opposition, révision).
++ */
++class NumeroDossierValide implements ValidationRule
++{
++    public function __construct(
++        private string $format,
++        private ?int $idTribunal = null,
++        private ?int $idDossier = null,
++    ) {
++    }
++
++    public function validate(string $attribute, mixed $value, Closure $fail): void
++    {
++        if (! NumeroDossier::estValide((string) $value, $this->format)) {
++            $fail($this->format === NumeroDossier::CASSATION
++                ? 'صيغة رقم الملف بمحكمة النقض غير صحيحة. يجب أن تكون: السنة / رمز الهيئة (1-13) / رمز الغرفة (1-7) / الرقم (مثال: 2025/1/4/6327).'
++                : 'صيغة رقم الملف غير صحيحة. يجب أن تكون: السنة / رمز الفئة / الرقم (مثال: 2024/7120/1994).');
++
++            return;
++        }
++
++        if (! $this->idTribunal) {
++            return;
++        }
++
++        $existe = DossierTribunal::where('id_tribunal', $this->idTribunal)
++            ->where('numero_dossier_tribunal', NumeroDossier::normaliser((string) $value))
++            ->when($this->idDossier, fn ($q) => $q->where('id_dossier', '!=', $this->idDossier))
++            ->exists();
++
++        if ($existe) {
++            $fail('رقم الملف موجود بالفعل بهذه المحكمة لملف آخر.');
++        }
++    }
++}
+diff --git a/app/Support/NumeroDossier.php b/app/Support/NumeroDossier.php
+new file mode 100644
+index 0000000..3d56894
+--- /dev/null
++++ b/app/Support/NumeroDossier.php
+@@ -0,0 +1,168 @@
++<?php
++
++namespace App\Support;
++
++use App\Models\DegreeJuridiction;
++use Illuminate\Http\Request;
++
++/**
++ * Formats des numéros de dossier selon la juridiction.
++ *
++ *  STANDARD  (1re instance, appel, opposition, révision) : année/code/ordre
++ *            ex. 2024/7120/1994
++ *  CASSATION : année/رمز الهيئة (1-13)/الغرفة (1-7)/ordre
++ *            ex. 2025/1/4/6327
++ *
++ * Les valeurs sont stockées sous forme canonique : segments séparés par "/",
++ * sans espaces, chiffres latins.
++ */
++final class NumeroDossier
++{
++    public const STANDARD  = 'standard';
++    public const CASSATION = 'cassation';
++
++    private const REGEX = [
++        self::STANDARD  => '#^\d{4}/\d{1,4}/\d{1,6}$#',
++        self::CASSATION => '#^\d{4}/(?:1[0-3]|[1-9])/[1-7]/\d{1,5}$#',
++    ];
++
++    private const SEGMENTS = [
++        self::STANDARD  => ['annee', 'code', 'ordre'],
++        self::CASSATION => ['annee', 'hay_a', 'chambre', 'ordre'],
++    ];
++
++    private const EXEMPLES = [
++        self::STANDARD  => '2024/7120/1994',
++        self::CASSATION => '2025/1/4/6327',
++    ];
++
++    public const HAY_A_MAX   = 13; // رمز الهيئة : 1 à 13
++    public const CHAMBRE_MAX = 7;  // الغرفة : 1 à 7
++
++    public static function formats(): array
++    {
++        return array_keys(self::REGEX);
++    }
++
++    public static function exemple(string $format): string
++    {
++        return self::EXEMPLES[$format] ?? self::EXEMPLES[self::STANDARD];
++    }
++
++    /** Cassation = degré d'ordre 3 ou libellé contenant « نقض » (même critère que RecoursController). */
++    public static function formatPourDegre(?DegreeJuridiction $degre): string
++    {
++        if ($degre && ((int) $degre->ordre === 3 || str_contains((string) $degre->degre_juridiction, 'نقض'))) {
++            return self::CASSATION;
++        }
++
++        return self::STANDARD;
++    }
++
++    /**
++     * Format du numéro que portera l'instance ouverte par un recours.
++     * Même classification que RecoursController::store().
++     */
++    public static function formatPourTypeRecours(?string $typeRecours, ?DegreeJuridiction $degreOrigine = null): string
++    {
++        $nom = mb_strtolower((string) $typeRecours);
++
++        $pourvoi = (str_contains($nom, 'pourvoi') || str_contains($nom, 'نقض'))
++            && ! str_contains($nom, 'rejet') && ! str_contains($nom, 'رفض')
++            && ! str_contains($nom, 'renvoi') && ! str_contains($nom, 'إحالة');
++
++        if ($pourvoi) {
++            return self::CASSATION;
++        }
++
++        $appel = (str_contains($nom, 'استئناف') || str_contains($nom, 'appel'))
++            && ! str_contains($nom, 'نقض') && ! str_contains($nom, 'cassation');
++
++        $memeDegre = str_contains($nom, 'تعرض') || str_contains($nom, 'opposition')
++            || str_contains($nom, 'إعادة النظر') || str_contains($nom, 'revision');
++
++        if ($memeDegre && ! $appel) {
++            return self::formatPourDegre($degreOrigine);
++        }
++
++        return self::STANDARD;
++    }
++
++    /** Forme canonique : chiffres latins, sans espaces ni marques bidirectionnelles. */
++    public static function normaliser(?string $numero): ?string
++    {
++        if ($numero === null) {
++            return null;
++        }
++
++        $numero = strtr($numero, [
++            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
++            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
++            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
++            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
++            '\\' => '/',
++        ]);
++
++        $numero = preg_replace('/[\s\x{200E}\x{200F}\x{061C}\x{202A}-\x{202E}]+/u', '', $numero);
++
++        return $numero === '' ? null : $numero;
++    }
++
++    public static function estValide(?string $numero, string $format): bool
++    {
++        $numero = self::normaliser($numero);
++
++        return $numero !== null
++            && preg_match(self::REGEX[$format] ?? self::REGEX[self::STANDARD], $numero) === 1;
++    }
++
++    /** Assemble les segments saisis ; null si tous sont vides. */
++    public static function assembler(string $format, array $segments): ?string
++    {
++        $valeurs = [];
++        foreach (self::SEGMENTS[$format] ?? self::SEGMENTS[self::STANDARD] as $cle) {
++            $valeurs[] = self::normaliser((string) ($segments[$cle] ?? '')) ?? '';
++        }
++
++        return implode('', $valeurs) === '' ? null : implode('/', $valeurs);
++    }
++
++    /**
++     * Découpe un numéro stocké pour pré-remplir le formulaire.
++     *
++     * @return array{format:string, annee:?string, code:?string, hay_a:?string, chambre:?string, ordre:?string}
++     */
++    public static function decomposer(?string $numero): array
++    {
++        $vide = ['format' => self::STANDARD, 'annee' => null, 'code' => null, 'hay_a' => null, 'chambre' => null, 'ordre' => null];
++        $parts = explode('/', self::normaliser($numero) ?? '');
++
++        if (count($parts) === 4) {
++            return array_merge($vide, [
++                'format' => self::CASSATION,
++                'annee' => $parts[0], 'hay_a' => $parts[1], 'chambre' => $parts[2], 'ordre' => $parts[3],
++            ]);
++        }
++
++        if (count($parts) === 3) {
++            return array_merge($vide, ['annee' => $parts[0], 'code' => $parts[1], 'ordre' => $parts[2]]);
++        }
++
++        return $vide;
++    }
++
++    /**
++     * Construit `numero_dossier_tribunal` dans la requête à partir des segments
++     * `numero[...]` du composant de saisie (ou normalise une valeur brute).
++     */
++    public static function fusionner(Request $request, string $format): void
++    {
++        $segments = $request->input('numero');
++
++        if (is_array($segments)) {
++            $request->merge(['numero_dossier_tribunal' => self::assembler($format, $segments)]);
++        } elseif ($request->has('numero_dossier_tribunal')) {
++            $request->merge(['numero_dossier_tribunal' => self::normaliser($request->input('numero_dossier_tribunal'))]);
++        }
++    }
++}
+diff --git a/database/migrations/2026_10_29_100000_add_numero_dossier_tribunal_to_dossier_tribunaux_table.php b/database/migrations/2026_10_29_100000_add_numero_dossier_tribunal_to_dossier_tribunaux_table.php
+new file mode 100644
+index 0000000..897ba13
+--- /dev/null
++++ b/database/migrations/2026_10_29_100000_add_numero_dossier_tribunal_to_dossier_tribunaux_table.php
+@@ -0,0 +1,73 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Support\Facades\Schema;
++
++/**
++ * Le numéro de dossier est attribué par chaque juridiction : il appartient à
++ * l'instance (dossier_tribunaux), pas au dossier.
++ *
++ * Forme canonique stockée, sans espaces :
++ *   - 1re instance / appel : année/code/ordre          ex. 2024/7120/1994
++ *   - cassation            : année/هيئة/غرفة/ordre      ex. 2025/1/4/6327
++ *
++ * L'ancienne colonne dossier_judiciaires.numero_dossier_tribunal est conservée
++ * (lecture seule, repli d'affichage) pour ne perdre aucune donnée.
++ */
++return new class extends Migration
++{
++    public function up(): void
++    {
++        Schema::table('dossier_tribunaux', function (Blueprint $table) {
++            $table->string('numero_dossier_tribunal', 50)->nullable()->after('id_commune');
++            // Index simple (pas unique) : opposition / révision recréent une instance
++            // au même tribunal avec le même numéro. L'unicité par dossier est
++            // contrôlée dans NumeroDossierValide.
++            $table->index(['id_tribunal', 'numero_dossier_tribunal'], 'dt_tribunal_numero_idx');
++        });
++
++        $this->reprendreAnciensNumeros();
++    }
++
++    public function down(): void
++    {
++        Schema::table('dossier_tribunaux', function (Blueprint $table) {
++            $table->dropIndex('dt_tribunal_numero_idx');
++            $table->dropColumn('numero_dossier_tribunal');
++        });
++    }
++
++    /**
++     * Copie l'ancien numéro (saisi au niveau du dossier) vers la première
++     * instance du dossier. Un dossier sans instance garde son ancien numéro
++     * en repli (voir DossierJudiciaire::getNumeroDossierTribunalAttribute).
++     */
++    private function reprendreAnciensNumeros(): void
++    {
++        DB::table('dossier_judiciaires')
++            ->whereNotNull('numero_dossier_tribunal')
++            ->where('numero_dossier_tribunal', '!=', '')
++            ->orderBy('id')
++            ->chunkById(200, function ($dossiers) {
++                foreach ($dossiers as $dossier) {
++                    $premiere = DB::table('dossier_tribunaux')
++                        ->where('id_dossier', $dossier->id)
++                        ->orderBy('date_debut')
++                        ->orderBy('id')
++                        ->first();
++
++                    if (! $premiere) {
++                        continue;
++                    }
++
++                    DB::table('dossier_tribunaux')
++                        ->where('id', $premiere->id)
++                        ->update([
++                            'numero_dossier_tribunal' => preg_replace('/\s+/u', '', $dossier->numero_dossier_tribunal),
++                        ]);
++                }
++            });
++    }
++};
+diff --git a/resources/js/dossier-mahakim.js b/resources/js/dossier-mahakim.js
+deleted file mode 100644
+index b125f18..0000000
+--- a/resources/js/dossier-mahakim.js
++++ /dev/null
+@@ -1,38 +0,0 @@
+-document.addEventListener('DOMContentLoaded', function () {
+-    const typeSelect = document.getElementById('id_type_affaire');
+-    const anneeInput = document.getElementById('annee_mahakim');
+-    const codeInput = document.getElementById('code_mahakim');
+-    const ordreInput = document.getElementById('ordre_mahakim');
+-    const preview = document.getElementById('preview_mahakim');
+-    const hiddenInput = document.getElementById('numero_dossier_tribunal');
+-
+-    if (!typeSelect || !anneeInput || !codeInput || !ordreInput || !preview || !hiddenInput) {
+-        return;
+-    }
+-
+-    function updatePreview() {
+-        const annee = anneeInput.value || '—';
+-        const code = codeInput.value || '—';
+-        const ordre = ordreInput.value || '—';
+-
+-        const final = `${annee} / ${code} / ${ordre}`;
+-        preview.innerText = final;
+-        hiddenInput.value = final;
+-    }
+-
+-    // Remplissage automatique du code désactivé : le code (رمز الفئة) est saisi à la main.
+-    // typeSelect.addEventListener('change', function () {
+-    //     const selectedOption = this.options[this.selectedIndex];
+-    //     codeInput.value = selectedOption.getAttribute('data-code') || '';
+-    //     updatePreview();
+-    // });
+-
+-    [anneeInput, codeInput, ordreInput].forEach(el => {
+-        el.addEventListener('input', updatePreview);
+-    });
+-
+-    // Initialiser l'aperçu (retour de validation / page edit)
+-    if (codeInput.value || ordreInput.value) {
+-        updatePreview();
+-    }
+-});
+diff --git a/resources/js/numero-dossier.js b/resources/js/numero-dossier.js
+new file mode 100644
+index 0000000..1045746
+--- /dev/null
++++ b/resources/js/numero-dossier.js
+@@ -0,0 +1,65 @@
++/**
++ * Composant « numéro de dossier » (resources/views/components/numero-dossier.blade.php).
++ *
++ * - Affiche le groupe de champs du format actif (standard | cassation) et
++ *   désactive l'autre, pour que seuls les champs actifs soient soumis.
++ * - Met à jour l'aperçu du numéro final.
++ * - Si data-driver pointe vers un <select>, le format suit l'option choisie :
++ *   data-numero-format de l'option, sinon « cassation » quand son libellé
++ *   contient « نقض » (même critère que le serveur).
++ */
++const FORMATS = ['standard', 'cassation'];
++
++function formatDeLOption(select) {
++    const option = select.options[select.selectedIndex];
++    if (!option || !option.value) return null;
++    if (option.dataset.numeroFormat) return option.dataset.numeroFormat;
++    if (option.dataset.ordre === '3' || option.textContent.includes('نقض')) return 'cassation';
++    return 'standard';
++}
++
++function initWidget(root) {
++    const preview = root.querySelector('[data-numero-preview]');
++    const groups = Object.fromEntries(
++        FORMATS.map(f => [f, root.querySelector(`[data-numero-group="${f}"]`)])
++    );
++    let format = root.dataset.format || 'standard';
++
++    function majApercu() {
++        const champs = groups[format]?.querySelectorAll('input, select') ?? [];
++        const valeurs = Array.from(champs, c => c.value.trim());
++        preview.textContent = valeurs.some(Boolean)
++            ? valeurs.map(v => v || '—').join('/')
++            : '—';
++    }
++
++    function appliquerFormat(nouveau) {
++        if (!groups[nouveau]) return;
++        format = nouveau;
++        root.dataset.format = nouveau;
++        FORMATS.forEach(f => {
++            const actif = f === format;
++            groups[f].hidden = !actif;
++            groups[f].querySelectorAll('input, select').forEach(c => { c.disabled = !actif; });
++            root.querySelector(`[data-numero-exemple="${f}"]`)?.toggleAttribute('hidden', !actif);
++        });
++        majApercu();
++    }
++
++    root.addEventListener('input', majApercu);
++    root.addEventListener('change', majApercu);
++
++    const driver = root.dataset.driver ? document.querySelector(root.dataset.driver) : null;
++    if (driver) {
++        driver.addEventListener('change', () => {
++            const f = formatDeLOption(driver);
++            if (f) appliquerFormat(f);
++        });
++    }
++
++    appliquerFormat(format);
++}
++
++document.addEventListener('DOMContentLoaded', () => {
++    document.querySelectorAll('[data-numero-widget]').forEach(initWidget);
++});
+diff --git a/resources/views/audiences/create.blade.php b/resources/views/audiences/create.blade.php
+index 5541dc5..d9179e0 100644
+--- a/resources/views/audiences/create.blade.php
++++ b/resources/views/audiences/create.blade.php
+@@ -73,7 +73,7 @@ class="form-select border-start-0 @error('id_dossier_tribunal') is-invalid @ende
+                                                 data-tribunal-id="{{ $dt->id_tribunal }}"
+                                                 @selected(old('id_dossier_tribunal',
+                                                     $dossierTribunaux->count() === 1 ? $dt->id : null) == $dt->id)>
+-                                            {{ $dt->dossier?->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
++                                            {{ $dt->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
+                                             — {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
+                                         </option>
+                                     @endforeach
+diff --git a/resources/views/audiences/edit.blade.php b/resources/views/audiences/edit.blade.php
+index 7d5276d..0f44fe2 100644
+--- a/resources/views/audiences/edit.blade.php
++++ b/resources/views/audiences/edit.blade.php
+@@ -88,7 +88,7 @@ class="form-select border-start-0 @error('id_dossier_tribunal') is-invalid @ende
+                                         <option value="{{ $dt->id }}"
+                                                 data-tribunal-id="{{ $dt->id_tribunal }}"
+                                                 @selected(old('id_dossier_tribunal', $audience->id_dossier_tribunal) == $dt->id)>
+-                                            {{ $dt->dossier?->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
++                                            {{ $dt->numero_dossier_tribunal ?? 'ملف #'.$dt->id_dossier }}
+                                             — {{ $dt->tribunal?->nom_tribunal ?? 'محكمة #'.$dt->id_tribunal }}
+                                         </option>
+                                     @endforeach
+diff --git a/resources/views/audiences/index.blade.php b/resources/views/audiences/index.blade.php
+index 89ea9df..f345d18 100644
+--- a/resources/views/audiences/index.blade.php
++++ b/resources/views/audiences/index.blade.php
+@@ -144,7 +144,7 @@ class="btn btn-outline-secondary"
+                         @if($audience->dossierTribunal?->dossier)
+                             <a href="{{ route('dossiers.show', $audience->dossierTribunal->dossier) }}"
+                                class="text-decoration-none fw-semibold text-primary">
+-                                {{ $audience->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                {{ $audience->dossierTribunal->numero_dossier_tribunal }}
+                             </a>
+                         @else
+                             <span class="text-muted">—</span>
+diff --git a/resources/views/components/numero-dossier.blade.php b/resources/views/components/numero-dossier.blade.php
+new file mode 100644
+index 0000000..5544798
+--- /dev/null
++++ b/resources/views/components/numero-dossier.blade.php
+@@ -0,0 +1,90 @@
++{{--
++    Saisie du numéro de dossier d'une instance, selon le format de la juridiction.
++
++      standard  : السنة / رمز الفئة / الرقم          ex. 2024/7120/1994
++      cassation : السنة / رمز الهيئة / الغرفة / الرقم  ex. 2025/1/4/6327
++
++    Les deux groupes sont rendus ; seul le groupe actif est activé (les champs
++    désactivés ne sont pas soumis). resources/js/numero-dossier.js bascule le
++    format quand le champ « driver » change (degré ou type de recours).
++    Le serveur assemble numero[...] via App\Support\NumeroDossier::fusionner().
++
++    Props :
++      format  'standard' | 'cassation'
++      value   numéro stocké (pré-remplissage)
++      driver  sélecteur CSS du <select> qui pilote le format (optionnel)
++      useOld  reprendre old() après une erreur de validation
++--}}
++@props(['format' => 'standard', 'value' => null, 'driver' => null, 'useOld' => false])
++
++@php
++    $p = \App\Support\NumeroDossier::decomposer($value);
++    // Numéro enregistré dans un autre format que celui attendu : on ne pré-remplit pas de segments décalés.
++    // (à faire AVANT de créer $v : une arrow function capture $p par valeur)
++    if ($value && $p['format'] !== $format) { $p = \App\Support\NumeroDossier::decomposer(null); }
++    $v = fn (string $k, $defaut = null) => $useOld ? old("numero.$k", $p[$k] ?? $defaut) : ($p[$k] ?? $defaut);
++    $annee = $v('annee', date('Y'));
++@endphp
++
++<div {{ $attributes->class(['p-3 bg-light rounded border']) }}
++     data-numero-widget
++     data-format="{{ $format }}"
++     @if($driver) data-driver="{{ $driver }}" @endif>
++
++    {{-- Format standard --}}
++    <div class="row g-2 align-items-end" data-numero-group="standard" @if($format !== 'standard') hidden @endif>
++        <div class="col-4">
++            <label class="small mb-1">السنة</label>
++            <input type="number" name="numero[annee]" value="{{ $annee }}" min="1900" max="2100"
++                   class="form-control text-center fw-bold" @disabled($format !== 'standard')>
++        </div>
++        <div class="col-4">
++            <label class="small mb-1">رمز الفئة</label>
++            <input type="text" name="numero[code]" value="{{ $v('code') }}" maxlength="4" inputmode="numeric"
++                   placeholder="7120" class="form-control text-center fw-bold" @disabled($format !== 'standard')>
++        </div>
++        <div class="col-4">
++            <label class="small mb-1">رقم الترتيب</label>
++            <input type="number" name="numero[ordre]" value="{{ $v('ordre') }}" min="1" max="999999"
++                   placeholder="1994" class="form-control text-center fw-bold" @disabled($format !== 'standard')>
++        </div>
++    </div>
++
++    {{-- Format cassation --}}
++    <div class="row g-2 align-items-end" data-numero-group="cassation" @if($format !== 'cassation') hidden @endif>
++        <div class="col-3">
++            <label class="small mb-1">السنة</label>
++            <input type="number" name="numero[annee]" value="{{ $annee }}" min="1900" max="2100"
++                   class="form-control text-center fw-bold" @disabled($format !== 'cassation')>
++        </div>
++        <div class="col-3">
++            <label class="small mb-1">رمز الهيئة</label>
++            <input type="number" name="numero[hay_a]" value="{{ $v('hay_a') }}"
++                   min="1" max="{{ \App\Support\NumeroDossier::HAY_A_MAX }}"
++                   placeholder="1 - {{ \App\Support\NumeroDossier::HAY_A_MAX }}"
++                   class="form-control text-center fw-bold" @disabled($format !== 'cassation')>
++        </div>
++        <div class="col-3">
++            <label class="small mb-1">الغرفة</label>
++            <input type="number" name="numero[chambre]" value="{{ $v('chambre') }}"
++                   min="1" max="{{ \App\Support\NumeroDossier::CHAMBRE_MAX }}"
++                   placeholder="1 - {{ \App\Support\NumeroDossier::CHAMBRE_MAX }}"
++                   class="form-control text-center fw-bold" @disabled($format !== 'cassation')>
++        </div>
++        <div class="col-3">
++            <label class="small mb-1">رقم الترتيب</label>
++            <input type="text" name="numero[ordre]" value="{{ $v('ordre') }}" maxlength="5" inputmode="numeric"
++                   placeholder="6327" class="form-control text-center fw-bold" @disabled($format !== 'cassation')>
++        </div>
++    </div>
++
++    <div class="mt-3 text-center">
++        <div class="small text-muted mb-1">الرقم النهائي الذي سيتم تسجيله</div>
++        <div data-numero-preview dir="ltr" class="h5 fw-bold text-dark border-bottom d-inline-block px-4 pb-1"
++             style="letter-spacing:2px;">—</div>
++        <div class="small text-muted mt-1" dir="ltr">
++            <span data-numero-exemple="standard" @if($format !== 'standard') hidden @endif>{{ \App\Support\NumeroDossier::exemple('standard') }}</span>
++            <span data-numero-exemple="cassation" @if($format !== 'cassation') hidden @endif>{{ \App\Support\NumeroDossier::exemple('cassation') }}</span>
++        </div>
++    </div>
++</div>
+diff --git a/resources/views/dashboard/index.blade.php b/resources/views/dashboard/index.blade.php
+index d0d88bd..2561e72 100644
+--- a/resources/views/dashboard/index.blade.php
++++ b/resources/views/dashboard/index.blade.php
+@@ -373,7 +373,7 @@
+                         <div class="agenda-title">
+                             @if($aud->dossierTribunal?->dossier)
+                                 <a href="{{ route('dossiers.show', $aud->dossierTribunal->dossier) }}" style="color:#1a3a5c;text-decoration:none">
+-                                    {{ $aud->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                    {{ $aud->dossierTribunal->numero_dossier_tribunal }}
+                                 </a>
+                             @else <span class="text-muted">—</span> @endif
+                         </div>
+diff --git a/resources/views/dossiers/create.blade.php b/resources/views/dossiers/create.blade.php
+index 7b1974c..6aecea5 100644
+--- a/resources/views/dossiers/create.blade.php
++++ b/resources/views/dossiers/create.blade.php
+@@ -72,71 +72,55 @@ class="form-select @error('id_type_affaire') is-invalid @enderror"
+                                 @enderror
+                             </div>
+ 
+-                            {{-- Génération numéro Mahakim --}}
++                            {{-- المحكمة (الدرجة الأولى) + رقم الملف بهذه المحكمة --}}
+                             <div class="col-12">
+-
+                                 <div class="p-3 bg-light rounded border">
+-
+-                                    <div class="row g-2 align-items-end">
+-
+-                                        <div class="col-lg-4 col-md-12">
+-                                            <label class="small mb-1">السنة</label>
+-                                            <input
+-                                                type="number"
+-                                                name="annee_mahakim"
+-                                                id="annee_mahakim"
+-                                                class="form-control text-center fw-bold"
+-                                                value="{{ date('Y') }}"
+-                                                min="1900"
+-                                                max="2100">
++                                    <div class="small fw-semibold mb-2">
++                                        <i class="bi bi-bank me-1 text-primary"></i>
++                                        المحكمة{{ $premierDegre ? ' — ' . $premierDegre->degre_juridiction : '' }}
++                                        <span class="text-danger">*</span>
++                                    </div>
++                                    <div class="row g-2">
++                                        <div class="col-md-6">
++                                            <label class="small mb-1">الجهة</label>
++                                            <select id="create_region" class="form-select form-select-sm">
++                                                <option value="">— اختر الجهة —</option>
++                                                @foreach($regions as $region)
++                                                    <option value="{{ $region->id }}">{{ $region->region }}</option>
++                                                @endforeach
++                                            </select>
+                                         </div>
+-
+-                                        <div class="col-lg-3 col-md-6">
+-                                            <label class="small mb-1">رمز الفئة</label>
+-                                            <input
+-                                                type="text"
+-                                                name="code_mahakim"
+-                                                id="code_mahakim"
+-                                                class="form-control text-center bg-white fw-bold"
+-                                                maxlength="4"
+-                                                inputmode="numeric"
+-                                                placeholder="مثال: 1201"
+-                                                value="{{ old('code_mahakim') }}">
++                                        <div class="col-md-6">
++                                            <label class="small mb-1">الإقليم / العمالة</label>
++                                            <select id="create_province" class="form-select form-select-sm" disabled>
++                                                <option value="">— اختر الجهة أولاً —</option>
++                                            </select>
+                                         </div>
+-
+-                                        <div class="col-lg-5 col-md-6">
+-                                            <label class="small mb-1">رقم الترتيب</label>
+-                                            <input
+-                                                type="number"
+-                                                name="ordre_mahakim"
+-                                                id="ordre_mahakim"
+-                                                class="form-control text-center fw-bold"
+-                                                placeholder="مثال: 450"
+-                                                value="{{ old('ordre_mahakim') }}">
++                                        <div class="col-md-6">
++                                            <label class="small mb-1">الجماعة الترابية</label>
++                                            <select id="create_commune" name="id_commune" class="form-select form-select-sm" disabled>
++                                                <option value="">— اختر الإقليم أولاً —</option>
++                                            </select>
+                                         </div>
+-
+-                                    </div>
+-
+-                                    <div class="mt-3 text-center">
+-                                        <div class="small text-muted mb-1">
+-                                            الرقم النهائي الذي سيتم تسجيله
++                                        <div class="col-md-6">
++                                            <label class="small mb-1">المحكمة <span class="text-danger">*</span></label>
++                                            <select id="create_tribunal" name="id_tribunal"
++                                                    class="form-select form-select-sm @error('id_tribunal') is-invalid @enderror"
++                                                    data-degre="{{ $premierDegre?->id }}" disabled required>
++                                                <option value="">— اختر الإقليم أولاً —</option>
++                                            </select>
++                                            @error('id_tribunal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                         </div>
+-
+-                                        <div
+-                                            id="preview_mahakim"
+-                                            class="h5 fw-bold text-dark border-bottom d-inline-block px-4 pb-1"
+-                                            style="letter-spacing:2px;">
+-                                            — / — / —
+-                                        </div>
+-
+-                                        <input
+-                                            type="hidden"
+-                                            name="numero_dossier_tribunal"
+-                                            id="numero_dossier_tribunal">
+                                     </div>
+-
+                                 </div>
++                            </div>
+ 
++                            <div class="col-12">
++                                <div class="small fw-semibold mb-2">رقم الملف بالمحكمة</div>
++                                <x-numero-dossier format="standard" :use-old="true" />
++                                @error('numero_dossier_tribunal')
++                                    <div class="text-danger small mt-1">{{ $message }}</div>
++                                @enderror
+                             </div>
+ 
+                             {{-- موضوع النزاع --}}
+@@ -240,12 +224,59 @@ class="btn btn-outline-secondary">
+ @endsection
+ 
+ @push('scripts')
+-    @vite('resources/js/dossier-mahakim.js')
++    @vite('resources/js/numero-dossier.js')
++    <script>
++    /* Cascade Région > Province > (Commune) / Tribunal de première instance */
++    (function () {
++        const selRegion   = document.getElementById('create_region');
++        const selProvince = document.getElementById('create_province');
++        const selCommune  = document.getElementById('create_commune');
++        const selTribunal = document.getElementById('create_tribunal');
++        if (!selRegion || !selProvince || !selTribunal) return;
++
++        const degreId = selTribunal.dataset.degre;
++        const reset = (sel, ph) => { sel.innerHTML = `<option value="">${ph}</option>`; sel.disabled = true; };
++        const remplir = (sel, items, ph, label) => {
++            sel.innerHTML = `<option value="">${ph}</option>` +
++                items.map(i => `<option value="${i.id}">${i[label]}</option>`).join('');
++            sel.disabled = false;
++        };
++
++        selRegion.addEventListener('change', async function () {
++            reset(selProvince, '— جاري التحميل... —');
++            reset(selCommune, '— اختر الإقليم أولاً —');
++            reset(selTribunal, '— اختر الإقليم أولاً —');
++            if (!this.value) { reset(selProvince, '— اختر الجهة أولاً —'); return; }
++            try {
++                const data = await (await fetch(`/api/regions/${this.value}/provinces`)).json();
++                remplir(selProvince, data, '— اختر الإقليم —', 'province');
++            } catch { reset(selProvince, '— خطأ —'); }
++        });
++
++        selProvince.addEventListener('change', async function () {
++            reset(selCommune, '— جاري التحميل... —');
++            reset(selTribunal, '— جاري التحميل... —');
++            if (!this.value) {
++                reset(selCommune, '— اختر الإقليم أولاً —');
++                reset(selTribunal, '— اختر الإقليم أولاً —');
++                return;
++            }
++            fetch(`/api/provinces/${this.value}/communes`).then(r => r.json()).then(data => {
++                if (!data.length) { reset(selCommune, '— لا توجد جماعات لهذا الإقليم —'); return; }
++                remplir(selCommune, data, '— اختر الجماعة —', 'commune');
++            }).catch(() => reset(selCommune, '— خطأ —'));
++            try {
++                const data = await (await fetch(`/api/provinces/${this.value}/degres/${degreId}/tribunaux`)).json();
++                if (!data.length) { reset(selTribunal, '— لا توجد محاكم متاحة —'); return; }
++                remplir(selTribunal, data, '— اختر المحكمة —', 'nom_tribunal');
++            } catch { reset(selTribunal, '— خطأ —'); }
++        });
++    })();
++    </script>
+ @endpush
+ 
+ @push('styles')
+ <style>
+     .form-control:focus, .form-select:focus { border-color: #0d6efd; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1); }
+-    #preview_mahakim { direction: ltr; }
+ </style>
+ @endpush
+diff --git a/resources/views/dossiers/edit.blade.php b/resources/views/dossiers/edit.blade.php
+index bb91465..7bc88ee 100644
+--- a/resources/views/dossiers/edit.blade.php
++++ b/resources/views/dossiers/edit.blade.php
+@@ -60,36 +60,14 @@
+                         @error('id_type_affaire')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                     </div>
+ 
+-                    {{-- تعديل رقم المحكمة --}}
+-                    @php
+-                        // Extraction des composants du numéro existant (ex: 2024 / 1201 / 450)
+-                        $parts = explode(' / ', $dossier->numero_dossier_tribunal);
+-                        $annee = $parts[0] ?? date('Y');
+-                        $code  = $parts[1] ?? '';
+-                        $ordre = $parts[2] ?? '';
+-                    @endphp
+-
++                    {{-- رقم الملف: خاص بكل محكمة (درجة) — يُعدَّل من نافذة « تعديل بيانات المحكمة » في تبويب المحاكم --}}
+                     <div class="col-12">
+-                        <div class="p-3 bg-light rounded border border-warning border-opacity-25">
+-                            <div class="row g-2 align-items-end">
+-                                <div class="col-md-4">
+-                                    <label class="small mb-1">السنة</label>
+-                                    <input type="number" name="annee_mahakim" id="annee_mahakim" class="form-control text-center fw-bold" value="{{ old('annee_mahakim', $annee) }}" min="1900" max="2100">
+-                                </div>
+-                                <div class="col-md-3">
+-                                    <label class="small mb-1">رمز الفئة</label>
+-                                    <input type="text" name="code_mahakim" id="code_mahakim" class="form-control text-center bg-white fw-bold" maxlength="4" inputmode="numeric" placeholder="مثال: 1201" value="{{ old('code_mahakim', $code) }}">
+-                                </div>
+-                                <div class="col-md-5">
+-                                    <label class="small mb-1">رقم الترتيب</label>
+-                                    <input type="number" name="ordre_mahakim" id="ordre_mahakim" class="form-control text-center fw-bold" placeholder="مثال: 450" value="{{ old('ordre_mahakim', $ordre) }}">
+-                                </div>
+-                            </div>
+-                            <div class="mt-3 text-center">
+-                                <div class="small text-muted mb-1">الرقم النهائي:</div>
+-                                <div id="preview_mahakim" class="h5 fw-bold text-dark border-bottom d-inline-block px-4 pb-1" style="letter-spacing: 2px;">{{ $dossier->numero_dossier_tribunal ?? '— / — / —' }}</div>
+-                                <input type="hidden" name="numero_dossier_tribunal" id="numero_dossier_tribunal" value="{{ $dossier->numero_dossier_tribunal }}">
+-                            </div>
++                        <div class="p-3 bg-light rounded border small text-muted">
++                            <i class="bi bi-info-circle me-1"></i>
++                            رقم الملف خاص بكل محكمة (ابتدائية، استئناف، نقض). لتعديله، افتح تبويب المحاكم في صفحة الملف ثم « تعديل بيانات المحكمة ».
++                            @if($dossier->numero_dossier_tribunal)
++                                <div class="mt-1 fw-semibold text-dark" dir="ltr">{{ $dossier->numero_dossier_tribunal }}</div>
++                            @endif
+                         </div>
+                     </div>
+ 
+@@ -169,12 +147,4 @@ class="form-control @error('action_service') is-invalid @enderror">{{ old('actio
+ 
+ @endsection
+ 
+-@push('scripts')
+-    @vite('resources/js/dossier-mahakim.js')
+-@endpush
+ 
+-@push('styles')
+-<style>
+-    #preview_mahakim { direction: ltr; }
+-</style>
+-@endpush
+diff --git a/resources/views/dossiers/show.blade.php b/resources/views/dossiers/show.blade.php
+index c034212..b24fdc6 100644
+--- a/resources/views/dossiers/show.blade.php
++++ b/resources/views/dossiers/show.blade.php
+@@ -824,6 +824,9 @@
+                                 <span class="mx-1">·</span><i class="bi bi-geo-alt me-1"></i>{{ $dt->commune->commune }}
+                             @endif
+                         </div>
++                        <div class="deg-sub" dir="ltr" style="text-align:start">
++                            <i class="bi bi-hash me-1"></i>{{ $dt->numero_dossier_tribunal ?: '— لم يُحدَّد بعد —' }}
++                        </div>
+                     </div>
+                 </div>
+                 <div class="d-flex flex-wrap gap-2 align-items-center">
+@@ -2008,6 +2011,11 @@ class="btn-close ms-auto"
+                         </select>
+                     </div>
+ 
++                    <div class="col-12">
++                        <label class="form-label fw-semibold small">رقم الملف بهذه المحكمة</label>
++                        <x-numero-dossier format="standard" driver="#modal_degre" />
++                    </div>
++
+                     <div class="col-sm-6">
+                         <label class="form-label fw-semibold small">تاريخ الإحالة <span class="text-danger">*</span></label>
+                         <input type="date" name="date_debut" class="form-control" value="{{ date('Y-m-d') }}" required>
+@@ -2029,6 +2037,10 @@ class="btn-close ms-auto"
+     </div>
+ </div>
+ 
++@push('scripts')
++    @vite('resources/js/numero-dossier.js')
++@endpush
++
+ {{-- Modals modifier chaque tribunal (تعديل بيانات المحكمة) ──────────────── --}}
+ @php
+     // Communes groupées par province (une seule requête pour tous les modals de modification)
+@@ -2054,12 +2066,18 @@ class="btn-close ms-auto"
+                 <div class="row g-3">
+                     <div class="col-12">
+                         <label class="form-label fw-semibold small">درجة التقاضي</label>
+-                        <select name="id_degre" class="form-select" required>
++                        <select name="id_degre" id="editDegre{{ $dt->id }}" class="form-select" required>
+                             @foreach($degresJuridiction as $d)
+-                                <option value="{{ $d->id }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
++                                <option value="{{ $d->id }}" data-numero-format="{{ \App\Support\NumeroDossier::formatPourDegre($d) }}" @selected($dt->id_degre == $d->id)>{{ $d->degre_juridiction }}</option>
+                             @endforeach
+                         </select>
+                     </div>
++                    <div class="col-12">
++                        <label class="form-label fw-semibold small">رقم الملف بهذه المحكمة</label>
++                        <x-numero-dossier :format="\App\Support\NumeroDossier::formatPourDegre($dt->degre)"
++                                          :value="$dt->numero_dossier_tribunal"
++                                          driver="#editDegre{{ $dt->id }}" />
++                    </div>
+                     @php $communesDt = $communesParProvince->get($dt->tribunal?->id_province, collect()); @endphp
+                     <div class="col-12">
+                         <label class="form-label fw-semibold small">الجماعة الترابية</label>
+diff --git a/resources/views/executions/create.blade.php b/resources/views/executions/create.blade.php
+index 9b0660e..be547b3 100644
+--- a/resources/views/executions/create.blade.php
++++ b/resources/views/executions/create.blade.php
+@@ -137,7 +137,7 @@
+                                         @if($selectedJugement->dossierTribunal->dossier ?? null)
+                                             <span class="mx-1">·</span>
+                                             <i class="bi bi-folder2 ms-1"></i>
+-                                            {{ $selectedJugement->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                            {{ $selectedJugement->dossierTribunal->numero_dossier_tribunal }}
+                                         @endif
+                                     </div>
+                                 </div>
+@@ -182,7 +182,7 @@ class="form-select @error('id_jugement') is-invalid @enderror"
+                                         — {{ $jug->date_jugement->format('d/m/Y') }}
+                                         — {{ $jug->dossierTribunal->tribunal->nom_tribunal ?? '' }}
+                                         @if($jug->dossierTribunal->dossier ?? null)
+-                                            ({{ $jug->dossierTribunal->dossier->numero_dossier_tribunal }})
++                                            ({{ $jug->dossierTribunal->numero_dossier_tribunal }})
+                                         @endif
+                                         @if($jug->juge)
+                                             — {{ $jug->juge->nom_complet }}
+diff --git a/resources/views/executions/index.blade.php b/resources/views/executions/index.blade.php
+index 2f71332..a9a853a 100644
+--- a/resources/views/executions/index.blade.php
++++ b/resources/views/executions/index.blade.php
+@@ -252,9 +252,9 @@ class="btn btn-outline-secondary">
+                     </td>
+ 
+                     <td>
+-                        @if($execution->jugement?->dossierTribunal?->dossier?->numero_dossier_tribunal)
++                        @if($execution->jugement?->dossierTribunal?->numero_dossier_tribunal)
+                             <span class="fw-semibold">
+-                                {{ $execution->jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                {{ $execution->jugement->dossierTribunal->numero_dossier_tribunal }}
+                             </span>
+                         @else
+                             <span class="text-muted">—</span>
+@@ -267,7 +267,7 @@ class="btn btn-outline-secondary">
+                             <a href="{{ route('dossiers.show', $execution->jugement->dossierTribunal->dossier) }}"
+                                class="text-decoration-none fw-semibold text-primary d-block">
+ 
+-                                {{ $execution->jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                {{ $execution->jugement->dossierTribunal->numero_dossier_tribunal }}
+ 
+                             </a>
+ 
+diff --git a/resources/views/finances/create.blade.php b/resources/views/finances/create.blade.php
+index 259052d..98cb18d 100644
+--- a/resources/views/finances/create.blade.php
++++ b/resources/views/finances/create.blade.php
+@@ -52,7 +52,7 @@ class="form-select @error('id_jugement') is-invalid @enderror"
+                             @foreach($jugements as $j)
+                                 <option value="{{ $j->id }}" @selected(old('id_jugement') == $j->id)>
+                                     Jugement du {{ $j->date_jugement?->format('d/m/Y') ?? '—' }}
+-                                    · {{ $j->dossierTribunal?->dossier?->numero_dossier_tribunal ?? '—' }}
++                                    · {{ $j->dossierTribunal?->numero_dossier_tribunal ?? '—' }}
+                                     · {{ $j->dossierTribunal?->tribunal?->nom_tribunal ?? '—' }}
+                                 </option>
+                             @endforeach
+diff --git a/resources/views/finances/edit.blade.php b/resources/views/finances/edit.blade.php
+index 393393b..d0c5f65 100644
+--- a/resources/views/finances/edit.blade.php
++++ b/resources/views/finances/edit.blade.php
+@@ -63,7 +63,7 @@
+ 
+                         <div class="form-control bg-light text-muted">
+                             حكم بتاريخ {{ $jugement?->date_jugement?->format('d/m/Y') ?? '—' }}
+-                            · {{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
++                            · {{ $dt?->numero_dossier_tribunal ?? '—' }}
+                             · {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
+                         </div>
+ 
+diff --git a/resources/views/finances/index.blade.php b/resources/views/finances/index.blade.php
+index b865dca..82d07b3 100644
+--- a/resources/views/finances/index.blade.php
++++ b/resources/views/finances/index.blade.php
+@@ -289,9 +289,9 @@ class="form-control"
+                     </td>
+ 
+                     <td>
+-                        @if($dt?->dossier?->numero_dossier_tribunal)
++                        @if($dt?->numero_dossier_tribunal)
+                             <span class="fw-semibold">
+-                                {{ $dt->dossier->numero_dossier_tribunal }}
++                                {{ $dt->numero_dossier_tribunal }}
+                             </span>
+                         @else
+                             <span class="text-muted">—</span>
+diff --git a/resources/views/jugements/create.blade.php b/resources/views/jugements/create.blade.php
+index fc6580c..1ce1257 100644
+--- a/resources/views/jugements/create.blade.php
++++ b/resources/views/jugements/create.blade.php
+@@ -107,7 +107,7 @@ class="form-select border-start-0 @error('id_dossier_tribunal') is-invalid @ende
+                                         @foreach($dossierTribunaux as $dt)
+                                             <option value="{{ $dt->id }}"
+                                                 @selected(old('id_dossier_tribunal', $defaultDossierTribunalId ?? null) == $dt->id)>
+-                                                {{ $dt->dossier->numero_dossier_tribunal ?? '—' }}
++                                                {{ $dt->numero_dossier_tribunal ?? '—' }}
+                                                 · {{ $dt->tribunal->nom_tribunal ?? '—' }}
+                                                 · {{ $dt->degre->degre_juridiction ?? '—' }}
+                                             </option>
+@@ -859,7 +859,7 @@ class="btn btn-outline-secondary">
+                 dates     : @json($dt->audiences->map(fn($a) => $a->date_audience->format('Y-m-d'))->unique()->sort()->values()),
+                 tribunalId: {{ $dt->id_tribunal }},
+                 // ملخص الملف (حكم تمهيدي)
+-                numero    : @json($dt->dossier->numero_dossier_tribunal ?? '—'),
++                numero    : @json($dt->numero_dossier_tribunal ?? '—'),
+                 tribunal  : @json($dt->tribunal->nom_tribunal ?? '—'),
+                 degre     : @json($dt->degre->degre_juridiction ?? '—'),
+                 debut     : @json($dt->date_debut?->format('d/m/Y') ?? '—'),
+diff --git a/resources/views/jugements/edit.blade.php b/resources/views/jugements/edit.blade.php
+index 931b281..a5d4094 100644
+--- a/resources/views/jugements/edit.blade.php
++++ b/resources/views/jugements/edit.blade.php
+@@ -115,7 +115,7 @@ class="btn btn-outline-secondary btn-sm">
+                     <div class="col-12">
+                         <label class="form-label fw-semibold small">الملف القضائي</label>
+                         <div class="form-control bg-light text-muted">
+-                            {{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
++                            {{ $dt?->numero_dossier_tribunal ?? '—' }}
+                             ·
+                             {{ $dt?->tribunal?->nom_tribunal ?? '—' }}
+                             ({{ $dt?->degre?->degre_juridiction ?? '—' }})
+@@ -442,7 +442,7 @@ class="form-control"
+                 <dl class="row mb-0">
+                     <dt class="col-6 text-muted fw-normal">الملف</dt>
+                     <dd class="col-6 fw-semibold">
+-                        <a></a>{{ $dt?->dossier?->numero_dossier_tribunal ?? '—' }}
++                        <a></a>{{ $dt?->numero_dossier_tribunal ?? '—' }}
+                     </dd>
+ 
+                     <dt class="col-6 text-muted fw-normal">المحكمة</dt>
+diff --git a/resources/views/jugements/index.blade.php b/resources/views/jugements/index.blade.php
+index 7d3e12a..0d9edb6 100644
+--- a/resources/views/jugements/index.blade.php
++++ b/resources/views/jugements/index.blade.php
+@@ -306,7 +306,7 @@ class="btn btn-outline-secondary"
+                             <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
+                                class="text-decoration-none fw-semibold text-primary">
+ 
+-                                {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                {{ $jugement->dossierTribunal->numero_dossier_tribunal }}
+ 
+                             </a>
+ 
+diff --git a/resources/views/jugements/show.blade.php b/resources/views/jugements/show.blade.php
+index 27dd37d..d92589e 100644
+--- a/resources/views/jugements/show.blade.php
++++ b/resources/views/jugements/show.blade.php
+@@ -40,7 +40,7 @@
+ 
+                     <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
+                        class="text-decoration-none">
+-                        {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal ?? '—' }}
++                        {{ $jugement->dossierTribunal->numero_dossier_tribunal ?? '—' }}
+                     </a>
+                 </div>
+             </div>
+@@ -413,7 +413,7 @@ class="btn btn-sm btn-outline-secondary">
+                                 نوع الطعن <span class="text-danger">*</span>
+                             </label>
+ 
+-                            <select name="id_type_recours" class="form-select form-select-sm" required>
++                            <select name="id_type_recours" id="select_type_recours" class="form-select form-select-sm" required>
+                                 <option value="">— اختر —</option>
+                                 @php
+                                     $ordreActuel = $jugement->dossierTribunal->degre?->ordre ?? 1;
+@@ -435,7 +435,8 @@ class="btn btn-sm btn-outline-secondary">
+                                 @endphp
+ 
+                                 @foreach($typesDisponibles as $tr)
+-                                    <option value="{{ $tr->id }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
++                                    <option value="{{ $tr->id }}"
++                                            data-numero-format="{{ \App\Support\NumeroDossier::formatPourTypeRecours($tr->type_recours, $jugement->dossierTribunal->degre) }}">{{ $tr->type_recours }} ({{ $tr->delai_legal_jours }} يوم)</option>
+                                 @endforeach
+                             </select>
+ 
+@@ -461,6 +462,17 @@ class="form-control form-control-sm @error('date_recours') is-invalid @enderror"
+                             @enderror
+                         </div>
+ 
++                        <div class="mb-3">
++                            <label class="form-label fw-semibold small">
++                                رقم الملف لدى المحكمة المحال عليها
++                            </label>
++                            <x-numero-dossier format="standard" driver="#select_type_recours" />
++                            @error('numero_dossier_tribunal')
++                                <div class="text-danger small mt-1">{{ $message }}</div>
++                            @enderror
++                            <div class="form-text">اختياري — يمكن إضافته لاحقاً من فقرة المحكمة في صفحة الملف.</div>
++                        </div>
++
+                         <div class="mb-3">
+                             <label class="form-label fw-semibold small">
+                                 أسباب الطعن
+@@ -569,4 +581,7 @@ class="btn btn-outline-primary btn-sm me-2 w-100">
+ 
+ 
+ 
+-@endsection
+\ No newline at end of file
++@endsection
++@push('scripts')
++    @vite('resources/js/numero-dossier.js')
++@endpush
+diff --git a/resources/views/juges/show.blade.php b/resources/views/juges/show.blade.php
+index d377d3b..92ff45d 100644
+--- a/resources/views/juges/show.blade.php
++++ b/resources/views/juges/show.blade.php
+@@ -144,7 +144,7 @@
+                                 @if($audience->dossierTribunal?->dossier)
+                                     <a href="{{ route('dossiers.show', $audience->dossierTribunal->dossier) }}"
+                                        class="text-decoration-none fw-semibold text-primary small">
+-                                        {{ $audience->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                        {{ $audience->dossierTribunal->numero_dossier_tribunal }}
+                                     </a>
+                                 @else
+                                     <span class="text-muted small">—</span>
+@@ -205,7 +205,7 @@ class="btn btn-sm btn-outline-primary">
+                                 @if($jugement->dossierTribunal?->dossier)
+                                     <a href="{{ route('dossiers.show', $jugement->dossierTribunal->dossier) }}"
+                                        class="text-decoration-none fw-semibold text-primary small">
+-                                        {{ $jugement->dossierTribunal->dossier->numero_dossier_tribunal }}
++                                        {{ $jugement->dossierTribunal->numero_dossier_tribunal }}
+                                     </a>
+                                 @else
+                                     <span class="text-muted small">—</span>
+diff --git a/tests/Unit/NumeroDossierTest.php b/tests/Unit/NumeroDossierTest.php
+new file mode 100644
+index 0000000..cdd5bda
+--- /dev/null
++++ b/tests/Unit/NumeroDossierTest.php
+@@ -0,0 +1,151 @@
++<?php
++
++namespace Tests\Unit;
++
++use App\Models\DegreeJuridiction;
++use App\Rules\NumeroDossierValide;
++use App\Support\NumeroDossier;
++use Illuminate\Http\Request;
++use PHPUnit\Framework\Attributes\DataProvider;
++use PHPUnit\Framework\TestCase;
++
++class NumeroDossierTest extends TestCase
++{
++    #[DataProvider('numerosValides')]
++    public function test_numeros_valides(string $numero, string $format): void
++    {
++        $this->assertTrue(NumeroDossier::estValide($numero, $format));
++    }
++
++    public static function numerosValides(): array
++    {
++        return [
++            '1re instance'          => ['2024/7120/1994', NumeroDossier::STANDARD],
++            'appel'                 => ['2025/7205/698',  NumeroDossier::STANDARD],
++            'avec espaces (ancien)' => ['2024 / 7120 / 1994', NumeroDossier::STANDARD],
++            'chiffres arabes'       => ['٢٠٢٤/٧١٢٠/١٩٩٤', NumeroDossier::STANDARD],
++            'cassation'             => ['2025/1/4/6327', NumeroDossier::CASSATION],
++            'cassation hay\'a 13'   => ['2025/13/7/1', NumeroDossier::CASSATION],
++            'cassation 5 chiffres'  => ['2025/10/1/12345', NumeroDossier::CASSATION],
++        ];
++    }
++
++    #[DataProvider('numerosInvalides')]
++    public function test_numeros_invalides(?string $numero, string $format): void
++    {
++        $this->assertFalse(NumeroDossier::estValide($numero, $format));
++    }
++
++    public static function numerosInvalides(): array
++    {
++        return [
++            'cassation donné au format standard' => ['2025/1/4/6327', NumeroDossier::STANDARD],
++            'standard donné au format cassation' => ['2024/7120/1994', NumeroDossier::CASSATION],
++            'hay\'a 14'                          => ['2025/14/4/6327', NumeroDossier::CASSATION],
++            'hay\'a 0'                           => ['2025/0/4/6327', NumeroDossier::CASSATION],
++            'chambre 8'                          => ['2025/1/8/6327', NumeroDossier::CASSATION],
++            'chambre 0'                          => ['2025/1/0/6327', NumeroDossier::CASSATION],
++            'ordre cassation 6 chiffres'         => ['2025/1/4/123456', NumeroDossier::CASSATION],
++            'année sur 2 chiffres'               => ['24/7120/1994', NumeroDossier::STANDARD],
++            'code sur 5 chiffres'                => ['2024/71200/1994', NumeroDossier::STANDARD],
++            'segment vide'                       => ['2024//1994', NumeroDossier::STANDARD],
++            'vide'                               => ['', NumeroDossier::STANDARD],
++            'null'                               => [null, NumeroDossier::STANDARD],
++        ];
++    }
++
++    public function test_normaliser_retire_espaces_et_marques_bidi(): void
++    {
++        $this->assertSame('2024/7120/1994', NumeroDossier::normaliser("2024 / 7120 / 1994"));
++        $this->assertSame('2024/7120/1994', NumeroDossier::normaliser("\u{200F}2024/7120/1994\u{200E}"));
++        $this->assertSame('2024/7120/1994', NumeroDossier::normaliser('2024\\7120\\1994'));
++        $this->assertNull(NumeroDossier::normaliser('   '));
++    }
++
++    public function test_assembler_et_decomposer_sont_inverses(): void
++    {
++        $std = NumeroDossier::assembler(NumeroDossier::STANDARD, ['annee' => '2024', 'code' => '7120', 'ordre' => '1994']);
++        $this->assertSame('2024/7120/1994', $std);
++        $this->assertSame(
++            ['format' => 'standard', 'annee' => '2024', 'code' => '7120', 'hay_a' => null, 'chambre' => null, 'ordre' => '1994'],
++            NumeroDossier::decomposer($std)
++        );
++
++        $cas = NumeroDossier::assembler(NumeroDossier::CASSATION, ['annee' => '2025', 'hay_a' => '1', 'chambre' => '4', 'ordre' => '6327']);
++        $this->assertSame('2025/1/4/6327', $cas);
++        $this->assertSame(
++            ['format' => 'cassation', 'annee' => '2025', 'code' => null, 'hay_a' => '1', 'chambre' => '4', 'ordre' => '6327'],
++            NumeroDossier::decomposer($cas)
++        );
++    }
++
++    public function test_assembler_renvoie_null_si_tout_est_vide(): void
++    {
++        $this->assertNull(NumeroDossier::assembler(NumeroDossier::STANDARD, ['annee' => '', 'code' => '', 'ordre' => '']));
++        $this->assertNull(NumeroDossier::assembler(NumeroDossier::CASSATION, []));
++    }
++
++    public function test_numero_partiel_est_assemble_puis_rejete_par_la_validation(): void
++    {
++        // L'année est pré-remplie : un numéro à moitié saisi ne doit pas passer.
++        $partiel = NumeroDossier::assembler(NumeroDossier::STANDARD, ['annee' => '2024', 'code' => '', 'ordre' => '']);
++        $this->assertSame('2024//', $partiel);
++        $this->assertFalse(NumeroDossier::estValide($partiel, NumeroDossier::STANDARD));
++    }
++
++    public function test_format_selon_le_degre(): void
++    {
++        $this->assertSame(NumeroDossier::STANDARD, NumeroDossier::formatPourDegre(null));
++        $this->assertSame(NumeroDossier::STANDARD, NumeroDossier::formatPourDegre(new DegreeJuridiction(['degre_juridiction' => 'الدرجة الأولى', 'ordre' => 1])));
++        $this->assertSame(NumeroDossier::STANDARD, NumeroDossier::formatPourDegre(new DegreeJuridiction(['degre_juridiction' => 'الإستئناف', 'ordre' => 2])));
++        $this->assertSame(NumeroDossier::CASSATION, NumeroDossier::formatPourDegre(new DegreeJuridiction(['degre_juridiction' => 'النقض', 'ordre' => 3])));
++        // repli sur le libellé quand l'ordre n'est pas renseigné
++        $this->assertSame(NumeroDossier::CASSATION, NumeroDossier::formatPourDegre(new DegreeJuridiction(['degre_juridiction' => 'النقض', 'ordre' => 1])));
++    }
++
++    public function test_format_selon_le_type_de_recours(): void
++    {
++        $appel = new DegreeJuridiction(['degre_juridiction' => 'الإستئناف', 'ordre' => 2]);
++
++        $this->assertSame(NumeroDossier::CASSATION, NumeroDossier::formatPourTypeRecours('الطعن بالنقض', $appel));
++        $this->assertSame(NumeroDossier::CASSATION, NumeroDossier::formatPourTypeRecours('Pourvoi en cassation', $appel));
++        $this->assertSame(NumeroDossier::STANDARD, NumeroDossier::formatPourTypeRecours('استئناف', null));
++        // opposition / révision : même degré que l'instance d'origine
++        $this->assertSame(NumeroDossier::STANDARD, NumeroDossier::formatPourTypeRecours('تعرض', $appel));
++        $cassation = new DegreeJuridiction(['degre_juridiction' => 'النقض', 'ordre' => 3]);
++        $this->assertSame(NumeroDossier::CASSATION, NumeroDossier::formatPourTypeRecours('إعادة النظر', $cassation));
++    }
++
++    public function test_fusionner_assemble_les_segments_de_la_requete(): void
++    {
++        $request = Request::create('/', 'POST', ['numero' => ['annee' => '2025', 'hay_a' => '1', 'chambre' => '4', 'ordre' => '6327']]);
++        NumeroDossier::fusionner($request, NumeroDossier::CASSATION);
++        $this->assertSame('2025/1/4/6327', $request->input('numero_dossier_tribunal'));
++
++        // valeur brute collée par l'utilisateur
++        $request = Request::create('/', 'POST', ['numero_dossier_tribunal' => '2024 / 7120 / 1994']);
++        NumeroDossier::fusionner($request, NumeroDossier::STANDARD);
++        $this->assertSame('2024/7120/1994', $request->input('numero_dossier_tribunal'));
++    }
++
++    public function test_la_regle_signale_un_mauvais_format(): void
++    {
++        $messages = [];
++        $fail = function (string $m) use (&$messages) { $messages[] = $m; };
++
++        (new NumeroDossierValide(NumeroDossier::CASSATION))->validate('numero_dossier_tribunal', '2024/7120/1994', $fail);
++
++        $this->assertCount(1, $messages);
++        $this->assertStringContainsString('محكمة النقض', $messages[0]);
++    }
++
++    public function test_la_regle_accepte_un_bon_format_sans_tribunal(): void
++    {
++        $messages = [];
++        $fail = function (string $m) use (&$messages) { $messages[] = $m; };
++
++        (new NumeroDossierValide(NumeroDossier::STANDARD))->validate('numero_dossier_tribunal', '2024/7120/1994', $fail);
++
++        $this->assertSame([], $messages);
++    }
++}
+diff --git a/vite.config.js b/vite.config.js
+index 0ba8934..d85d4e6 100644
+--- a/vite.config.js
++++ b/vite.config.js
+@@ -22,7 +22,7 @@ export default defineConfig({
+                 'resources/js/tribunaux-edit.js',    
+                 'resources/js/audience-create.js', 
+                 'resources/js/audience-edit.js',       
+-                'resources/js/dossier-mahakim.js',    
++                'resources/js/numero-dossier.js',    
+ 
+             ],
+             refresh: true,

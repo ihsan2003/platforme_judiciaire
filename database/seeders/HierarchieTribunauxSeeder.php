@@ -8,10 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class HierarchieTribunauxSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     * Basé sur le Décret n° 2.23.665 du 10 novembre 2023 (Carte Judiciaire du Maroc).
-     */
+
     public function run(): void
     {
         $this->seedDroitCommun();
