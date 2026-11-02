@@ -7,9 +7,6 @@ use App\Models\TypeStructure;
 
 class TypeStructureSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $types = [
@@ -25,9 +22,16 @@ class TypeStructureSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            TypeStructure::updateOrInsert([
-                'type_structure' => $type,
-            ]);
+            TypeStructure::updateOrCreate(
+                [
+                    'type_structure' => $type,
+                ],
+                []
+            );
         }
+
+        $this->command->info(
+            count($types) . ' types de structures créés ou vérifiés.'
+        );
     }
 }

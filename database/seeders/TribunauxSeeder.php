@@ -73,7 +73,6 @@ class TribunauxSeeder extends Seeder
             ['nom_tribunal' => 'المحكمة الإبتدائية بمراكش',              'id_type_tribunal' => 1, 'id_degre' => 1, 'province' => 'مراكش'],
             ['nom_tribunal' => 'المحكمة الإبتدائية بتحناوت',             'id_type_tribunal' => 1, 'id_degre' => 1, 'province' => 'تحناوت'],
             ['nom_tribunal' => 'المحكمة الإبتدائية بشيشاوة',             'id_type_tribunal' => 1, 'id_degre' => 1, 'province' => 'شيشاوة'],
-            ['nom_tribunal' => 'المحكمة الإبتدائية بإمنتانوت',           'id_type_tribunal' => 1, 'id_degre' => 1, 'province' => 'إمنتانوت'],
             ['nom_tribunal' => 'المحكمة الإبتدائية بقلعة السراغنة',      'id_type_tribunal' => 1, 'id_degre' => 1, 'province' => 'قلعة السراغنة'],
             ['nom_tribunal' => 'المحكمة الإبتدائية بابن جرير',           'id_type_tribunal' => 1, 'id_degre' => 1, 'province' => 'ابن جرير'],
             // Ressort Cour d'appel d'Ouarzazate
@@ -238,9 +237,12 @@ class TribunauxSeeder extends Seeder
 
         ];
 
+        
         $data = collect($tribunaux)->map(function ($t) use ($provinces) {
             if (!isset($provinces[$t['province']])) {
-                throw new \Exception("Province introuvable dans la table `provinces`: {$t['province']} (tribunal: {$t['nom_tribunal']})");
+                throw new \Exception(
+                    "Province introuvable dans la table `provinces`: {$t['province']} (tribunal: {$t['nom_tribunal']})"
+                );
             }
 
             return [
@@ -251,6 +253,16 @@ class TribunauxSeeder extends Seeder
             ];
         })->toArray();
 
-        DB::table('tribunaux')->updateOrInsert($data);
+        // Insertion ou mise à jour par lots
+        foreach (array_chunk($data, 50) as $chunk) {
+            DB::table('tribunaux')->upsert(
+                $chunk,
+                ['nom_tribunal'],
+                ['id_type_tribunal', 'id_degre', 'id_province']
+            );
+        }
+
+        $this->command->info(count($data) . ' tribunaux insérés ou mis à jour.');
+
     }
 }

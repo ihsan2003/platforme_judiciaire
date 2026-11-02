@@ -10,25 +10,34 @@ use App\Models\Province;
 
 class StructureSeeder extends Seeder
 {
-
-    
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        // Récupération des types de structures
         $types = TypeStructure::pluck('id', 'type_structure');
 
+        // Vérification des types nécessaires
+        $requiredTypes = [
+            'إدارة مركزية',
+            'مفتشية',
+            'مديرية جهوية',
+            'مديرية إقليمية',
+        ];
+
+        foreach ($requiredTypes as $type) {
+            if (!isset($types[$type])) {
+                throw new \Exception("Type de structure introuvable : {$type}");
+            }
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | Direction centrale (racine)
+        | Direction centrale
         |--------------------------------------------------------------------------
         */
 
-        $directionCentrale = Structure::firstOrCreate(
+        $directionCentrale = Structure::updateOrCreate(
             [
-                'nom' => 'الإدارة المركزية'
+                'nom' => 'الإدارة المركزية',
             ],
             [
                 'id_type_structure' => $types['إدارة مركزية'],
@@ -36,24 +45,21 @@ class StructureSeeder extends Seeder
             ]
         );
 
-
         /*
         |--------------------------------------------------------------------------
         | Inspection
         |--------------------------------------------------------------------------
         */
 
-        Structure::firstOrCreate(
+        Structure::updateOrCreate(
             [
-                'nom' => 'المفتشية'
+                'nom' => 'المفتشية',
             ],
             [
                 'id_type_structure' => $types['مفتشية'],
                 'id_parent' => $directionCentrale->id,
             ]
         );
-
-
 
         /*
         |--------------------------------------------------------------------------
@@ -63,33 +69,25 @@ class StructureSeeder extends Seeder
 
         $regionsStructures = [];
 
-
         Region::orderBy('id')->get()->each(function ($region) use (
             $types,
             $directionCentrale,
             &$regionsStructures
         ) {
 
-            $structure = Structure::updateOrInsert(
-
+            $structure = Structure::updateOrCreate(
                 [
-                    'nom' => 'المديرية الجهوية ل' . $region->region
+                    'nom' => 'المديرية الجهوية ل' . $region->region,
                 ],
-
                 [
                     'id_type_structure' => $types['مديرية جهوية'],
                     'id_parent' => $directionCentrale->id,
                 ]
-
             );
 
-
-            // mémoriser la direction régionale correspondante
+            // Association ID région => ID structure régionale
             $regionsStructures[$region->id] = $structure->id;
-
         });
-
-
 
         /*
         |--------------------------------------------------------------------------
@@ -102,24 +100,26 @@ class StructureSeeder extends Seeder
             $regionsStructures
         ) {
 
-
+            // Récupération de la direction régionale par id_region
             $parentRegional = $regionsStructures[$province->id_region] ?? null;
 
+            if (!$parentRegional) {
+                throw new \Exception(
+                    "Direction régionale introuvable pour la province : {$province->province}"
+                );
+            }
 
-            Structure::updateOrInsert(
-
+            Structure::updateOrCreate(
                 [
-                    'nom' => 'المديرية الإقليمية ب' . $province->province
+                    'nom' => 'المديرية الإقليمية ب' . $province->province,
                 ],
-
                 [
                     'id_type_structure' => $types['مديرية إقليمية'],
                     'id_parent' => $parentRegional,
                 ]
-
             );
-
         });
 
+        $this->command->info('Structures créées ou mises à jour avec succès.');
     }
 }
