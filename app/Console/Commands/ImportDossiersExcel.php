@@ -109,6 +109,10 @@ class ImportDossiersExcel extends Command
         $this->info(($dry ? '[SIMULATION] ' : '') . count($lignes) . ' ligne(s) à traiter.');
         $barre = $this->output->createProgressBar(count($lignes));
 
+        // Transaction englobante : en simulation, tout est annulé à la fin, mais les
+        // lignes voient les écritures des lignes précédentes (doublons, regroupements).
+        DB::beginTransaction();
+
         foreach ($lignes as $i => $brut) {
             $numLigne = $i + 2; // en-tête = ligne 1
             $row = [];
@@ -133,7 +137,7 @@ class ImportDossiersExcel extends Command
                         'reclamation'   => $this->traiterReclamation($row),
                         default         => $this->traiterDossier($row),
                     };
-                    $dry ? DB::rollBack() : DB::commit();
+                    DB::commit(); // libère le point de sauvegarde de la ligne
                 } catch (\Throwable $e) {
                     DB::rollBack();
                     [$statut, $message] = ['rejete', $e->getMessage()];
@@ -144,6 +148,8 @@ class ImportDossiersExcel extends Command
             $this->rapport[] = [$numLigne, $nature, $statut, $message, $row['ملف عدد'] ?? ''];
             $barre->advance();
         }
+
+        $dry ? DB::rollBack() : DB::commit();
 
         $barre->finish();
         $this->newLine(2);
@@ -427,14 +433,67 @@ class ImportDossiersExcel extends Command
             $messages[] = "Commune introuvable : « {$row['nom_commune']} » (laissée vide)";
         }
 
-        // ── Dossier ────────────────────────────────────────────────
-        $dossier = DossierJudiciaire::create([
-            'objet_litige'      => $this->vide($row['موضوع النزاع'] ?? ''),
-            'action_service'    => $this->vide($row['الإجراء المتخذ من طرف مصلحة المنازعات والشؤون القانونية'] ?? ''),
-            'id_type_affaire'   => $type->id,
-            'date_ouverture'    => $dateOuverture,
-            'created_by'        => $this->createur->id,
-        ]);
+        // ── Parties ────────────────────────────────────────────────
+        [$demandeur, $defendeur] = $this->partiesDeLigne($row);
+        $typeDemandeur = TypePartie::where('type_partie', 'المدعي')->value('id')
+            ?? throw new RuntimeException('Type de partie introuvable : المدعي');
+        $typeDefendeur = TypePartie::where('type_partie', 'المدعى عليه')->value('id')
+            ?? throw new RuntimeException('Type de partie introuvable : المدعى عليه');
+
+        // ── Dossier : les lignes aux mêmes parties forment un seul dossier ──
+        $dossier = null;
+        if ($demandeur && $defendeur) {
+            $idExistant = DB::table('dossier_parties as a')
+                ->join('dossier_parties as b', 'a.id_dossier', '=', 'b.id_dossier')
+                ->join('dossier_judiciaires as d', 'd.id', '=', 'a.id_dossier')
+                ->whereNull('d.deleted_at')
+                ->where('a.id_partie', $demandeur->id)->where('a.id_type_partie', $typeDemandeur)
+                ->where('b.id_partie', $defendeur->id)->where('b.id_type_partie', $typeDefendeur)
+                ->orderBy('a.id_dossier')
+                ->value('a.id_dossier');
+            $dossier = $idExistant ? DossierJudiciaire::find($idExistant) : null;
+        }
+
+        $objet  = $this->vide($row['موضوع النزاع'] ?? '');
+        $action = $this->vide($row['الإجراء المتخذ من طرف مصلحة المنازعات والشؤون القانونية'] ?? '');
+
+        if ($dossier) {
+            $messages[] = "Rattaché au dossier #{$dossier->id} (mêmes parties)";
+            $maj = [];
+            if (! $dossier->objet_litige && $objet) {
+                $maj['objet_litige'] = $objet;
+            }
+            if (! $dossier->action_service && $action) {
+                $maj['action_service'] = $action;
+            }
+            if ($dossier->date_ouverture && $dateOuverture->lt($dossier->date_ouverture)) {
+                $maj['date_ouverture'] = $dateOuverture;
+            }
+            $maj && $dossier->update($maj);
+        } else {
+            $dossier = DossierJudiciaire::create([
+                'objet_litige'    => $objet,
+                'action_service'  => $action,
+                'id_type_affaire' => $type->id,
+                'date_ouverture'  => $dateOuverture,
+                'created_by'      => $this->createur->id,
+            ]);
+
+            foreach ([[$demandeur, $typeDemandeur], [$defendeur, $typeDefendeur]] as [$partie, $idType]) {
+                if (! $partie) {
+                    continue;
+                }
+                DB::table('dossier_parties')->insert([
+                    'id_dossier'      => $dossier->id,
+                    'id_partie'       => $partie->id,
+                    'id_type_partie'  => $idType,
+                    'est_institution' => (bool) $partie->est_entraide,
+                    'date_entree'     => $dateOuverture->toDateString(),
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ]);
+            }
+        }
 
         $degre = $tribunal->id_degre
             ? DegreeJuridiction::find($tribunal->id_degre)
@@ -448,27 +507,6 @@ class ImportDossiersExcel extends Command
             'numero_dossier_tribunal' => $numero,
             'date_debut'              => $dateOuverture,
         ]);
-
-        // ── Parties ────────────────────────────────────────────────
-        foreach ([['المدعي', 'المدعي'], ['المدعى عليه', 'المدعى عليه']] as [$colonne, $libelleType]) {
-            $nom = $this->vide($row[$colonne] ?? '');
-            if (! $nom) {
-                continue;
-            }
-            $typePartie = TypePartie::where('type_partie', $libelleType)->first()
-                ?? throw new RuntimeException("Type de partie introuvable : {$libelleType}");
-            $partie = $this->trouverOuCreerPartie($nom);
-
-            DB::table('dossier_parties')->insert([
-                'id_dossier'      => $dossier->id,
-                'id_partie'       => $partie->id,
-                'id_type_partie'  => $typePartie->id,
-                'est_institution' => (bool) $partie->est_entraide,
-                'date_entree'     => $dateOuverture->toDateString(),
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
-        }
 
         // ── Jugement ───────────────────────────────────────────────
         $texteHukm = $this->vide($row['الحكم'] ?? '');
@@ -505,11 +543,6 @@ class ImportDossiersExcel extends Command
                     ]);
                 }
             }
-        }
-
-        $nbFichiers = (int) $this->chiffresLatins($row['عدد الملفات'] ?? '1');
-        if ($nbFichiers > 1) {
-            $messages[] = "عدد الملفات = {$nbFichiers} : la ligne a été importée comme UN seul dossier";
         }
 
         return ['importe', implode(' | ', $messages)];
@@ -619,15 +652,35 @@ class ImportDossiersExcel extends Command
             ->first(fn ($c) => $this->cle($c->commune) === $nom);
     }
 
+    /** Fragments d'identification de l'institution (défaut : التعاون الوطني). */
+    private function fragmentsInstitution(): array
+    {
+        $f = array_filter((array) $this->option('institution'));
+        return $f ?: ['التعاون الوطني'];
+    }
+
+    private function estInstitution(string $nom): bool
+    {
+        foreach ($this->fragmentsInstitution() as $fragment) {
+            if (str_contains($this->cle($nom), $this->cle($fragment))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function trouverOuCreerPartie(string $nom): Partie
     {
         $existante = Partie::where('nom_partie', $nom)->first();
         if ($existante) {
+            if (! $existante->est_entraide && $this->estInstitution($nom)) {
+                $existante->update(['est_entraide' => true]);
+            }
             return $existante;
         }
 
         $institution = false;
-        foreach ((array) $this->option('institution') as $fragment) {
+        foreach ($this->fragmentsInstitution() as $fragment) {
             if ($fragment !== '' && str_contains($this->cle($nom), $this->cle($fragment))) {
                 $institution = true;
             }
