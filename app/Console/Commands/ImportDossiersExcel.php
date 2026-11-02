@@ -286,15 +286,16 @@ class ImportDossiersExcel extends Command
             throw new RuntimeException('Numéro de dossier (ملف عدد) vide');
         }
 
-        if (NumeroDossier::estValide($numero, NumeroDossier::STANDARD)) {
-            $p = explode('/', $numero);
-            // Ordre inversé probable (ordre/code/année) : 1024/8034/2025 → 2025/8034/1024
-            if (! $this->anneePlausible($p[0]) && $this->anneePlausible($p[2])) {
-                $corrige = "{$p[2]}/{$p[1]}/{$p[0]}";
-                if (NumeroDossier::estValide($corrige, NumeroDossier::STANDARD)) {
-                    return [$corrige, "Numéro « {$numero} » inversé, corrigé en « {$corrige} »"];
-                }
+        $p = explode('/', $numero);
+        if (count($p) === 3 && ! $this->anneePlausible($p[0]) && $this->anneePlausible($p[2])) {
+            // Ordre inversé (ordre/code/année) : 348/7207/2024 → 2024/7207/348
+            $corrige = "{$p[2]}/{$p[1]}/{$p[0]}";
+            if (NumeroDossier::estValide($corrige, NumeroDossier::STANDARD)) {
+                return [$corrige, "Numéro « {$numero} » inversé, corrigé en « {$corrige} »"];
             }
+        }
+
+        if (NumeroDossier::estValide($numero, NumeroDossier::STANDARD)) {
             return [$numero, null];
         }
 
@@ -438,7 +439,10 @@ class ImportDossiersExcel extends Command
     /** Comme cle() mais insensible à l'ordre des mots (« عقاري مدني » = « مدني عقاري »). */
     private function cleSansOrdre(string $s): string
     {
-        $mots = array_filter(explode(' ', $this->cle($s)));
+        $mots = array_filter(array_map(
+            fn ($m) => mb_strlen($m) > 3 && str_starts_with($m, 'ال') ? mb_substr($m, 2) : $m,
+            explode(' ', $this->cle($s))
+        ));
         sort($mots);
         return implode(' ', $mots);
     }
