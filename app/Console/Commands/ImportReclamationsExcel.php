@@ -9,6 +9,7 @@ use App\Models\Reclamant;
 use App\Models\Reclamation;
 use App\Models\ReclamationJugement;
 use App\Models\StatutReclamation;
+use App\Models\Structure;
 use App\Models\TypeAction;
 use App\Models\TypeReclamant;
 use App\Models\TypeReclamation;
@@ -32,7 +33,8 @@ use RuntimeException;
  *                      (défaut : « آخر »)
  *   المدعي           → demandeur (partie institution)
  *   ملاحظات          → détails de la réclamation
- *   نوع الإجراء      → action de la réclamation (رد / إحالة), commentaire = « إحالة الى »
+ *   نوع الإجراء      → action de la réclamation (رد / إحالة)
+ *   إحالة الى        → structure concernée par l'action (id_structure)
  *   ملف عدد          → ignoré (« شكاية » n'est pas un numéro de dossier)
  *
  * Idempotent : même objet + année + tribunal + parties = déjà importée.
@@ -54,11 +56,13 @@ class ImportReclamationsExcel extends Command
 
     private $typesReclamant;
     private $typesAction;
+    private $structures;
 
     public function handle(): int
     {
         $this->typesReclamant = TypeReclamant::all();
         $this->typesAction = TypeAction::all();
+        $this->structures = Structure::all();
 
         return $this->importerFichier(
             colonnesRequises: ['السنة'],
@@ -157,9 +161,15 @@ class ImportReclamationsExcel extends Command
         $reclamation->categorie = 'قضائية';
         $reclamation->save();
 
-        // Action : نوع الإجراء (إحالة / رد) + destinataire « إحالة الى ».
+        // Action : نوع الإجراء (إحالة / رد) + structure concernée « إحالة الى ».
         $libelleAction = $row['نوع الإجراء'] ?? '';
         $referent = $this->vide($row['إحالة الى'] ?? '');
+
+        $structure = $referent ? $this->trouverParLibelle($this->structures, 'nom', $referent) : null;
+        if ($referent && ! $structure) {
+            $messages[] = "Structure inconnue : « {$referent} » (id_structure laissé vide)";
+        }
+
         if ($libelleAction !== '') {
             $typeAction = $this->trouverParLibelle($this->typesAction, 'type_action', $libelleAction);
             if ($typeAction) {
@@ -168,8 +178,8 @@ class ImportReclamationsExcel extends Command
                     'id_type_action' => $typeAction->id,
                     'statut_action'  => null,
                     'date_action'    => $date,
-                    'id_structure'   => null,
-                    'commentaire'    => $referent ? "إحالة الى : {$referent}" : null,
+                    'id_structure'   => $structure?->id,
+                    'commentaire'    => null,
                     'created_by'     => $this->createur->id,
                 ]);
             } else {
