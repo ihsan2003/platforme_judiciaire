@@ -113,6 +113,8 @@ class ImportDossiersExcel extends Command
         // lignes voient les écritures des lignes précédentes (doublons, regroupements).
         DB::beginTransaction();
 
+        $this->assurerReferentiels();
+
         foreach ($lignes as $i => $brut) {
             $numLigne = $i + 2; // en-tête = ligne 1
             $row = [];
@@ -176,6 +178,33 @@ class ImportDossiersExcel extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Crée les valeurs de référence indispensables à l'import si elles manquent
+     * (certaines sont normalement insérées par des migrations, et peuvent
+     * être absentes d'une base recréée ou vidée).
+     */
+    private function assurerReferentiels(): void
+    {
+        $valeurs = [
+            ['type_jugements', 'type_jugement', [TypeJugement::AU_FOND, TypeJugement::PREPARATOIRE]],
+            ['statut_avertissements', 'statut_avertissement', ['في طور الإجراء', 'تم التوصل بالانذار', 'لم يتم التوصل بالانذار', 'حفظ']],
+            ['type_reclamations', 'type_reclamation', ['شكايات مرتبطة بالمنازعات القضائية', 'شكايات الموارد البشرية', 'شكايات المرتفقين', 'شكايات أخرى']],
+            ['statut_dossiers', 'statut_dossier', ['جاري', 'تم الحكم', 'حفظ']],
+            ['statut_reclamations', 'statut_reclamation', ['قيد المعالجة']],
+            ['type_parties', 'type_partie', ['المدعي', 'المدعى عليه']],
+            ['type_reclamants', 'type_reclamant', ['آخر']],
+        ];
+
+        foreach ($valeurs as [$table, $colonne, $libelles]) {
+            foreach ($libelles as $libelle) {
+                if (! DB::table($table)->where($colonne, $libelle)->exists()) {
+                    DB::table($table)->insert([$colonne => $libelle, 'created_at' => now(), 'updated_at' => now()]);
+                    $this->warn("Valeur de référence absente, créée : {$table} « {$libelle} »");
+                }
+            }
+        }
     }
 
     /** dossier | avertissement | reclamation | vide, d'après la colonne « ملف عدد ». */
