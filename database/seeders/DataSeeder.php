@@ -223,6 +223,7 @@ class DataSeeder extends Seeder
             'مؤسسة الوسيط',
             'مديرية جهوية',
             'مديرية إقليمية',
+            'جمعية',
             'آخر'
         ];
         foreach ($typesReclamant as $type) {
